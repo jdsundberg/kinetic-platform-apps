@@ -362,32 +362,50 @@ function injectScripts(html, appSlug) {
                 headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ seed: withSeed, username: me.username || me.displayName })
               })
-              .then(function(r3){ return r3.json(); })
-              .then(function(result) {
-                if (result.log) {
-                  result.log.forEach(function(line) {
-                    var color = '#ccc';
-                    if (line.startsWith('Created')) color = '#4ade80';
-                    else if (line.startsWith('Seeded')) color = '#4ade80';
-                    else if (line.startsWith('Indexes')) color = '#60a5fa';
-                    else if (line.includes('already exists')) color = '#fbbf24';
-                    else if (line.startsWith('FAILED')) color = '#f87171';
-                    addLog(line, color);
+              .then(function(r3) {
+                var reader = r3.body.getReader();
+                var decoder = new TextDecoder();
+                var buffer = '';
+                function colorFor(obj) {
+                  if (obj.fail) return '#f87171';
+                  if (obj.warn) return '#fbbf24';
+                  if (obj.ok) return '#4ade80';
+                  if (obj.step === 'index') return '#60a5fa';
+                  if (obj.step === 'seed') return '#c084fc';
+                  return '#ccc';
+                }
+                function pump() {
+                  return reader.read().then(function(result) {
+                    if (result.value) buffer += decoder.decode(result.value, { stream: true });
+                    var lines = buffer.split('\\n');
+                    buffer = lines.pop();
+                    lines.forEach(function(line) {
+                      if (!line.trim()) return;
+                      try {
+                        var obj = JSON.parse(line);
+                        if (obj.done) {
+                          if (obj.status === 'installed') {
+                            addLog('', '#ccc');
+                            addLog('Installation complete! Reloading...', '#4ade80');
+                            btn.textContent = 'Installed';
+                            btn.style.background = '#34A853';
+                            setTimeout(function(){ window.location.reload(); }, 2000);
+                          } else {
+                            addLog('FAILED: ' + (obj.error || 'Unknown error'), '#f87171');
+                            btn.textContent = 'Install App';
+                            seedBtn.textContent = 'Install App + Seed Data';
+                            btn.disabled = false; seedBtn.disabled = false;
+                            btn.style.opacity = '1'; seedBtn.style.opacity = '1';
+                          }
+                        } else if (obj.msg) {
+                          addLog(obj.msg, colorFor(obj));
+                        }
+                      } catch(e) {}
+                    });
+                    if (!result.done) return pump();
                   });
                 }
-                if (result.status === 'installed') {
-                  addLog('', '#ccc');
-                  addLog('Installation complete! Reloading...', '#4ade80');
-                  btn.textContent = 'Installed';
-                  btn.style.background = '#34A853';
-                  setTimeout(function(){ window.location.reload(); }, 2000);
-                } else {
-                  addLog('FAILED: ' + (result.error || 'Unknown error'), '#f87171');
-                  btn.textContent = 'Install App';
-                  seedBtn.textContent = 'Install App + Seed Data';
-                  btn.disabled = false; seedBtn.disabled = false;
-                  btn.style.opacity = '1'; seedBtn.style.opacity = '1';
-                }
+                return pump();
               })
               .catch(function(err) {
                 addLog('Error: ' + err.message, '#f87171');
@@ -661,16 +679,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Built-in: install app from app.json on disk
+  // Built-in: install app from app.json on disk (streams NDJSON progress)
   const installMatch = pathname.match(/^\/api\/appmgr\/install\/([^/]+)$/);
   if (installMatch && req.method === "POST") {
     const appId = decodeURIComponent(installMatch[1]);
-    try {
-      const body = JSON.parse(await readBody(req) || "{}");
-      const doSeed = body.seed === true;
-      const appsDir = path.resolve(__dir, "..");
-      const auth = req.headers["authorization"];
+    const body = JSON.parse(await readBody(req) || "{}");
+    const doSeed = body.seed === true;
+    const appsDir = path.resolve(__dir, "..");
+    const auth = req.headers["authorization"];
 
+    // Stream NDJSON lines as install progresses
+    res.writeHead(200, {
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "no-cache",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Methods": "*",
+    });
+    function emit(obj) { res.write(JSON.stringify(obj) + "\n"); }
+
+    try {
       // Find app directory by matching app.json slug
       let appDir = null;
       for (const dir of fs.readdirSync(appsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)) {
@@ -678,12 +706,12 @@ const server = http.createServer((req, res) => {
         if (!fs.existsSync(p)) continue;
         try { if (JSON.parse(fs.readFileSync(p, "utf-8")).slug === appId) { appDir = path.join(appsDir, dir); break; } } catch {}
       }
-      if (!appDir) { jsonResp(res, 404, { error: `App '${appId}' not found` }); return; }
+      if (!appDir) { emit({ done: true, error: `App '${appId}' not found` }); res.end(); return; }
 
       const appDef = JSON.parse(fs.readFileSync(path.join(appDir, "app.json"), "utf-8"));
       const kappSlug = body.customSlug || appDef.slug;
       const kappName = body.customName || appDef.name;
-      const log = [];
+      const formCount = appDef.forms.length;
 
       const SYS_IDX = [
         { name: "closedBy", parts: ["closedBy"], unique: false },
@@ -709,40 +737,46 @@ const server = http.createServer((req, res) => {
       }
 
       // Create kapp
+      emit({ step: "kapp", msg: `Creating kapp: ${kappSlug}...` });
       const kr = await kineticRequest("POST", "/kapps", { name: kappName, slug: kappSlug, status: "Active" }, auth);
-      if (kr.status < 300) log.push(`Created kapp: ${kappSlug} (${kappName})`);
-      else if (kr.data?.errorKey === "uniqueness_violation") log.push(`Kapp ${kappSlug} already exists`);
-      else { jsonResp(res, 500, { error: `Failed to create kapp: ${kr.status}`, log }); return; }
+      if (kr.status < 300) emit({ step: "kapp", msg: `Created kapp: ${kappSlug} (${kappName})`, ok: true });
+      else if (kr.data?.errorKey === "uniqueness_violation") emit({ step: "kapp", msg: `Kapp ${kappSlug} already exists`, warn: true });
+      else { emit({ done: true, error: `Failed to create kapp: ${kr.status}` }); res.end(); return; }
 
       // Create forms
-      for (const form of appDef.forms) {
+      for (let fi = 0; fi < appDef.forms.length; fi++) {
+        const form = appDef.forms[fi];
+        emit({ step: "form", msg: `Creating form ${fi + 1}/${formCount}: ${form.name} (${form.fields.length} fields)...` });
         const fb = { slug: form.slug, name: form.name, status: "Active", pages: buildPages(form.fields) };
         if (form.description) fb.description = form.description;
         if (form.submissionLabelExpression) fb.submissionLabelExpression = form.submissionLabelExpression;
         const r = await kineticRequest("POST", `/kapps/${kappSlug}/forms`, fb, auth);
-        if (r.status < 300) log.push(`Created form: ${form.slug} (${form.fields.length} fields)`);
-        else if (r.data?.errorKey === "uniqueness_violation") log.push(`Form ${form.slug} already exists`);
-        else log.push(`FAILED form ${form.slug}: ${r.status}`);
+        if (r.status < 300) emit({ step: "form", msg: `Created form: ${form.slug}`, ok: true });
+        else if (r.data?.errorKey === "uniqueness_violation") emit({ step: "form", msg: `Form ${form.slug} already exists`, warn: true });
+        else emit({ step: "form", msg: `FAILED form ${form.slug}: ${r.status}`, fail: true });
       }
 
       // Build indexes
-      for (const form of appDef.forms.filter(f => f.indexes)) {
+      for (let fi = 0; fi < appDef.forms.length; fi++) {
+        const form = appDef.forms[fi];
+        if (!form.indexes) continue;
         const ix = form.indexes, idxDefs = [...SYS_IDX], custom = [];
         for (const p of (ix.single || [])) { idxDefs.push({ parts: [p], unique: false }); custom.push(p); }
         for (const ps of (ix.compound || [])) { idxDefs.push({ parts: ps, unique: false }); custom.push(ps.join(",")); }
+        if (!custom.length) continue;
+        emit({ step: "index", msg: `Building ${custom.length} indexes on ${form.slug}...` });
         await kineticRequest("PUT", `/kapps/${kappSlug}/forms/${form.slug}`, { indexDefinitions: idxDefs }, auth);
-        if (custom.length) {
-          await kineticRequest("POST", `/kapps/${kappSlug}/forms/${form.slug}/backgroundJobs`, { type: "Build Index", content: { indexes: custom } }, auth);
-          // Wait for indexes to build (up to 30s per form)
-          for (let w = 0; w < 15; w++) {
-            await new Promise(r => setTimeout(r, 2000));
-            const check = await kineticRequest("GET", `/kapps/${kappSlug}/forms/${form.slug}?include=indexDefinitions`, null, auth);
-            const defs = (check.data?.form || check.data)?.indexDefinitions || [];
-            const pending = defs.filter(d => d.status === "New" && custom.includes(d.parts.join(",")));
-            if (!pending.length) break;
-          }
+        await kineticRequest("POST", `/kapps/${kappSlug}/forms/${form.slug}/backgroundJobs`, { type: "Build Index", content: { indexes: custom } }, auth);
+        // Wait for indexes to build (up to 30s per form)
+        for (let w = 0; w < 15; w++) {
+          await new Promise(r => setTimeout(r, 2000));
+          const check = await kineticRequest("GET", `/kapps/${kappSlug}/forms/${form.slug}?include=indexDefinitions`, null, auth);
+          const defs = (check.data?.form || check.data)?.indexDefinitions || [];
+          const pending = defs.filter(d => d.status === "New" && custom.includes(d.parts.join(",")));
+          if (!pending.length) break;
+          emit({ step: "index", msg: `  Waiting for indexes on ${form.slug}... (${pending.length} remaining)` });
         }
-        log.push(`Indexes: ${form.slug} (${custom.length} custom)`);
+        emit({ step: "index", msg: `Indexes built: ${form.slug} (${custom.length} custom)`, ok: true });
       }
 
       // Seed data
@@ -751,7 +785,11 @@ const server = http.createServer((req, res) => {
         const seedPath = path.join(appDir, "seed-data.json");
         if (fs.existsSync(seedPath)) {
           const seedData = JSON.parse(fs.readFileSync(seedPath, "utf-8"));
-          for (const [formSlug, records] of Object.entries(seedData)) {
+          const formSlugs = Object.keys(seedData);
+          for (let si = 0; si < formSlugs.length; si++) {
+            const formSlug = formSlugs[si];
+            const records = seedData[formSlug];
+            emit({ step: "seed", msg: `Seeding ${formSlug}: 0/${records.length}...` });
             let ok = 0;
             for (let i = 0; i < records.length; i += 10) {
               const batch = records.slice(i, i + 10);
@@ -759,15 +797,19 @@ const server = http.createServer((req, res) => {
                 kineticRequest("POST", `/kapps/${kappSlug}/forms/${formSlug}/submissions`, { values, coreState: "Submitted" }, auth)
               ));
               ok += results.filter(r => r.status === "fulfilled" && r.value.status < 300).length;
+              emit({ step: "seed", msg: `Seeding ${formSlug}: ${ok}/${records.length}...` });
             }
             seedCount += ok;
-            log.push(`Seeded ${formSlug}: ${ok}/${records.length}`);
+            emit({ step: "seed", msg: `Seeded ${formSlug}: ${ok}/${records.length}`, ok: true });
           }
-        } else { log.push("No seed-data.json found"); }
+        } else { emit({ step: "seed", msg: "No seed-data.json found", warn: true }); }
       }
 
-      jsonResp(res, 200, { status: "installed", kapp: kappSlug, forms: appDef.forms.length, seeded: seedCount, log });
-    } catch (e) { jsonResp(res, 500, { error: e.message }); }
+      emit({ done: true, status: "installed", kapp: kappSlug, forms: formCount, seeded: seedCount });
+    } catch (e) {
+      emit({ done: true, error: e.message });
+    }
+    res.end();
     return;
   }
 
