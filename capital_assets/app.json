@@ -1,0 +1,579 @@
+{
+  "name": "Capital Assets",
+  "slug": "capital-assets",
+  "description": "Capital asset tracking with facilities, locations, work orders, insurance, and depreciation.",
+  "forms": [
+    {
+      "slug": "facilities",
+      "name": "Facilities",
+      "fields": [
+        {
+          "name": "Facility ID",
+          "required": true
+        },
+        {
+          "name": "Facility Name",
+          "required": true
+        },
+        {
+          "name": "Facility Type"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Year Built"
+        },
+        {
+          "name": "Square Footage"
+        },
+        {
+          "name": "Floors"
+        },
+        {
+          "name": "Condition Score"
+        },
+        {
+          "name": "Last Inspection"
+        },
+        {
+          "name": "Manager"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Hospital and clinic facilities",
+      "submissionLabelExpression": "${values('Facility Name')} (${values('Facility ID')})"
+    },
+    {
+      "slug": "locations",
+      "name": "Locations",
+      "fields": [
+        {
+          "name": "Location ID",
+          "required": true
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Location Name",
+          "required": true
+        },
+        {
+          "name": "Location Type"
+        },
+        {
+          "name": "Floor"
+        },
+        {
+          "name": "Wing"
+        },
+        {
+          "name": "Room Number"
+        },
+        {
+          "name": "Square Footage"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Specific locations within facilities",
+      "submissionLabelExpression": "${values('Location Name')} - ${values('Facility Name')} (${values('Location ID')})"
+    },
+    {
+      "slug": "assets",
+      "name": "Assets",
+      "fields": [
+        {
+          "name": "Asset ID",
+          "required": true
+        },
+        {
+          "name": "Asset Name",
+          "required": true
+        },
+        {
+          "name": "Asset Type"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Manufacturer"
+        },
+        {
+          "name": "Model"
+        },
+        {
+          "name": "Serial Number"
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Purchase Date"
+        },
+        {
+          "name": "Purchase Cost"
+        },
+        {
+          "name": "Useful Life Years"
+        },
+        {
+          "name": "Salvage Value"
+        },
+        {
+          "name": "Current Value"
+        },
+        {
+          "name": "Warranty Expiration"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Capital assets and equipment",
+      "submissionLabelExpression": "${values('Asset Name')} (${values('Asset ID')})",
+      "indexes": {
+        "single": [
+          "values[Asset ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "work-orders",
+      "name": "Work Orders",
+      "fields": [
+        {
+          "name": "WO ID",
+          "required": true
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Asset Name"
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "WO Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Trade"
+        },
+        {
+          "name": "Estimated Cost"
+        },
+        {
+          "name": "Actual Cost"
+        },
+        {
+          "name": "Estimated Hours"
+        },
+        {
+          "name": "Actual Hours"
+        },
+        {
+          "name": "Requested Date"
+        },
+        {
+          "name": "Scheduled Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Maintenance work orders",
+      "submissionLabelExpression": "${values('WO ID')} - ${values('Asset Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Asset ID]",
+          "values[Status]",
+          "values[WO ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "inspections",
+      "name": "Inspections",
+      "fields": [
+        {
+          "name": "Inspection ID",
+          "required": true
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Inspection Type"
+        },
+        {
+          "name": "Inspector"
+        },
+        {
+          "name": "Inspection Date"
+        },
+        {
+          "name": "Next Due Date"
+        },
+        {
+          "name": "Result"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Critical Findings"
+        },
+        {
+          "name": "Corrective Actions Required"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Facility and equipment inspections",
+      "submissionLabelExpression": "${values('Inspection ID')} - ${values('Inspection Type')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Asset ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "maintenance-schedules",
+      "name": "Maintenance Schedules",
+      "fields": [
+        {
+          "name": "Schedule ID",
+          "required": true
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Asset Name"
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Task Description",
+          "rows": 3
+        },
+        {
+          "name": "Frequency"
+        },
+        {
+          "name": "Last Performed"
+        },
+        {
+          "name": "Next Due"
+        },
+        {
+          "name": "Assigned Trade"
+        },
+        {
+          "name": "Estimated Hours"
+        },
+        {
+          "name": "Parts Required"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Preventive maintenance schedules",
+      "submissionLabelExpression": "${values('Schedule ID')} - ${values('Asset Name')} (${values('Frequency')})",
+      "indexes": {
+        "single": [
+          "values[Asset ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "projects",
+      "name": "Projects",
+      "fields": [
+        {
+          "name": "Project ID",
+          "required": true
+        },
+        {
+          "name": "Project Name",
+          "required": true
+        },
+        {
+          "name": "Project Type"
+        },
+        {
+          "name": "Facility ID"
+        },
+        {
+          "name": "Facility Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Project Manager"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Target Completion"
+        },
+        {
+          "name": "Actual Completion"
+        },
+        {
+          "name": "Budget"
+        },
+        {
+          "name": "Spent"
+        },
+        {
+          "name": "Contractor"
+        },
+        {
+          "name": "Phase"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Capital projects and construction",
+      "submissionLabelExpression": "${values('Project Name')} (${values('Project ID')})",
+      "indexes": {
+        "single": [
+          "values[Project ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "depreciation",
+      "name": "Depreciation",
+      "fields": [
+        {
+          "name": "Depreciation ID",
+          "required": true
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Asset Name"
+        },
+        {
+          "name": "Method"
+        },
+        {
+          "name": "Original Cost"
+        },
+        {
+          "name": "Accumulated Depreciation"
+        },
+        {
+          "name": "Book Value"
+        },
+        {
+          "name": "Annual Depreciation"
+        },
+        {
+          "name": "Period"
+        },
+        {
+          "name": "Useful Life Remaining"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Asset depreciation tracking",
+      "submissionLabelExpression": "${values('Depreciation ID')} - ${values('Asset Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Asset ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "budgets",
+      "name": "Budgets",
+      "fields": [
+        {
+          "name": "Budget ID",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Fiscal Year"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Budgeted Amount"
+        },
+        {
+          "name": "Approved Amount"
+        },
+        {
+          "name": "Spent Amount"
+        },
+        {
+          "name": "Committed Amount"
+        },
+        {
+          "name": "Available Amount"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Capital and operating budgets",
+      "submissionLabelExpression": "${values('Department')} - ${values('Category')} FY${values('Fiscal Year')} (${values('Budget ID')})"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Finance"
+}

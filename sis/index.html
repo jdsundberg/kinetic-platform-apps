@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Information System</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size:14px; }
+
+/* Login */
+#login-screen {
+  display:flex; align-items:center; justify-content:center; min-height:100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-box {
+  background: var(--white); padding:40px; border-radius:16px; width:400px;
+  box-shadow: var(--shadow-lg);
+}
+.login-box h1 { font-size:24px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.login-box .subtitle { font-size:13px; color:var(--gray); margin-bottom:16px; }
+.login-box .accent-bar { width:40px; height:3px; background:var(--orange); margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; margin-top:12px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; }
+.login-box input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:10px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; margin-top:20px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* App */
+#app { display:none; }
+.topbar {
+  background:var(--blue); color:white; display:flex; align-items:center;
+  padding:0 24px; height:56px; position:sticky; top:0; z-index:100;
+}
+.topbar .logo { font-size:18px; font-weight:700; }
+.topbar .logo span { color:var(--orange); }
+.topbar .nav-tabs { display:flex; gap:4px; margin-left:32px; }
+.topbar .nav-tab {
+  padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;
+  color:rgba(255,255,255,.7); transition: all .15s;
+}
+.topbar .nav-tab:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar .nav-tab.active { background:var(--orange); color:white; }
+.spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn {
+  background:transparent; color:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.3);
+  padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer;
+}
+.logout-btn:hover { background:var(--orange); color:white; border-color:var(--orange); }
+
+/* Console */
+.console { max-width:1400px; margin:0 auto; padding:24px; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+
+/* KPI */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); }
+.kpi .label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal .val { color:var(--teal); }
+
+/* Card */
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:12px; }
+
+/* Grid */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { background:var(--light); font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; text-align:left; padding:8px 10px; position:sticky; top:56px; z-index:10; }
+.data-table td { padding:8px 10px; font-size:13px; border-bottom:1px solid var(--border); }
+.data-table tbody tr { cursor:pointer; }
+.data-table tbody tr:hover { background:#FAFAFA; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-active { background:#E8F5E9; color:#2E7D32; }
+.badge-inactive { background:#F1F3F4; color:#5F6368; }
+.badge-transferred { background:#FFF3E0; color:#E65100; }
+.badge-graduated { background:#E3F2FD; color:#1565C0; }
+.badge-enrolled { background:#E8F5E9; color:#2E7D32; }
+.badge-completed { background:#E3F2FD; color:#1565C0; }
+.badge-dropped { background:#FDECEA; color:#C62828; }
+.badge-waitlisted { background:#FFF8E1; color:#F9A825; }
+
+/* Toolbar */
+.toolbar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input, .toolbar select {
+  padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;
+}
+.toolbar input:focus, .toolbar select:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.toolbar .btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; }
+.toolbar .btn-primary { background:var(--orange); color:white; }
+.toolbar .btn-primary:hover { background:var(--orange-light); }
+
+/* Pagination */
+.pagination { display:flex; align-items:center; gap:8px; margin-top:12px; justify-content:center; }
+.pagination button {
+  padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid var(--border); background:var(--light); color:var(--blue);
+}
+.pagination button:hover { background:var(--orange); color:white; border-color:var(--orange); }
+.pagination button:disabled { opacity:.4; cursor:default; background:var(--light); color:var(--gray); border-color:var(--border); }
+.pagination span { font-size:12px; color:var(--gray); }
+
+/* Modal */
+#modal {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center;
+}
+#modal.open { display:flex; }
+.modal-content {
+  background:white; border-radius:16px; padding:28px; max-width:700px; width:90%;
+  max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg);
+}
+.modal-content h2 { font-size:18px; font-weight:700; color:var(--blue); margin-bottom:16px; }
+.modal-content .field-row { margin-bottom:10px; }
+.modal-content .field-label { font-size:11px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; }
+.modal-content .field-value { font-size:14px; color:#202124; margin-top:2px; }
+.modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--gray); }
+.modal-close:hover { color:var(--red); }
+
+/* Sub-table in modal */
+.sub-table { width:100%; border-collapse:collapse; margin-top:8px; }
+.sub-table th { background:var(--light); font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; padding:6px 8px; text-align:left; }
+.sub-table td { padding:6px 8px; font-size:12px; border-bottom:1px solid var(--border); }
+
+/* Toast */
+#toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--blue); color:white; padding:12px 24px; border-radius:8px;
+  font-size:13px; font-weight:600; z-index:300; transition:transform .3s;
+  pointer-events:none; opacity:0;
+}
+#toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+/* Chart bars */
+.bar-chart { display:flex; align-items:flex-end; gap:6px; height:140px; margin-top:8px; }
+.bar-col { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+.bar-col .bar { width:100%; min-height:4px; background:var(--orange); border-radius:4px 4px 0 0; transition:height .3s; }
+.bar-col .bar-label { font-size:9px; color:var(--gray); margin-top:4px; font-weight:600; }
+.bar-col .bar-val { font-size:10px; color:var(--blue); font-weight:700; margin-bottom:2px; }
+
+/* Report cards */
+.report-stat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.report-stat:last-child { border-bottom:none; }
+.report-stat .rs-label { color:var(--gray); }
+.report-stat .rs-value { font-weight:600; color:var(--blue); }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Student Information System</h1>
+    <p class="subtitle">Manage students, enrollments, and records</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" type="text" value="https://fifth.tutorial.kineticdata.com">
+    <label>Username</label>
+    <input id="login-user" type="text" value="john">
+    <label>Password</label>
+    <input id="login-pass" type="password" value="john5" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Student <span>SIS</span></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</div>
+      <div class="nav-tab" onclick="switchTab('students')">Students</div>
+      <div class="nav-tab" onclick="switchTab('enrollments')">Enrollments</div>
+      <div class="nav-tab" onclick="switchTab('guardians')">Guardians</div>
+      <div class="nav-tab" onclick="switchTab('reports')">Reports</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- Dashboard -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Student Information System overview</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Grade Distribution</h3>
+          <div class="bar-chart" id="dash-grade-chart"></div>
+        </div>
+        <div class="card">
+          <h3>Recent Enrollments</h3>
+          <div id="dash-recent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div class="tab-panel" id="panel-students">
+      <div class="page-title">Students</div>
+      <div class="page-sub">All student records</div>
+      <div class="toolbar">
+        <input type="text" id="stu-search" placeholder="Search by name or ID..." oninput="debounceStudents()">
+        <select id="stu-grade" onchange="loadStudents()">
+          <option value="">All Grades</option>
+          <option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+        </select>
+        <select id="stu-status" onchange="loadStudents()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Inactive</option><option>Transferred</option><option>Graduated</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Student ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Email</th><th>Phone</th></tr>
+          </thead>
+          <tbody id="stu-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="stu-pagination"></div>
+    </div>
+
+    <!-- Enrollments -->
+    <div class="tab-panel" id="panel-enrollments">
+      <div class="page-title">Enrollments</div>
+      <div class="page-sub">Course enrollments for all students</div>
+      <div class="toolbar">
+        <input type="text" id="enr-search" placeholder="Search by student ID or course..." oninput="debounceEnrollments()">
+        <select id="enr-semester" onchange="loadEnrollments()">
+          <option value="">All Semesters</option>
+          <option>Fall 2025</option><option>Spring 2026</option><option>Fall 2026</option>
+        </select>
+        <select id="enr-status" onchange="loadEnrollments()">
+          <option value="">All Statuses</option>
+          <option>Enrolled</option><option>Completed</option><option>Dropped</option><option>Waitlisted</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Student ID</th><th>Course</th><th>Section</th><th>Teacher</th><th>Semester</th><th>Status</th><th>Grade</th></tr>
+          </thead>
+          <tbody id="enr-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="enr-pagination"></div>
+    </div>
+
+    <!-- Guardians -->
+    <div class="tab-panel" id="panel-guardians">
+      <div class="page-title">Guardians</div>
+      <div class="page-sub">Parent and guardian contact information</div>
+      <div class="toolbar">
+        <input type="text" id="grd-search" placeholder="Search by name or student ID..." oninput="debounceGuardians()">
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Relationship</th><th>Student ID</th><th>Email</th><th>Phone</th><th>Preferred Contact</th></tr>
+          </thead>
+          <tbody id="grd-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="grd-pagination"></div>
+    </div>
+
+    <!-- Reports -->
+    <div class="tab-panel" id="panel-reports">
+      <div class="page-title">Reports</div>
+      <div class="page-sub">Demographics and enrollment statistics</div>
+      <div class="grid-2" id="reports-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// --- Globals ---
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'sis';
+
+// Pagination state
+let stuPage = { hasNext: false, pageKeys: [null], page: 1, search: '' };
+let enrPage = { hasNext: false, pageKeys: [null], page: 1, search: '' };
+let grdPage = { hasNext: false, pageKeys: [null], page: 1, search: '' };
+
+// --- Utilities ---
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function statusBadge(status) {
+  const cls = (status || '').toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge badge-${esc(cls)}">${esc(status)}</span>`;
+}
+
+// --- API ---
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+// --- Login ---
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+    document.getElementById('user-display').textContent = API.displayName;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+// Session restore
+(function checkSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || s.displayName || '';
+      API.displayName = s.displayName || s.user || '';
+      document.getElementById('user-display').textContent = API.displayName;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadDashboard();
+    } catch(e) {}
+  }
+})();
+
+// --- Tabs ---
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => { if (t.textContent.toLowerCase() === name) t.classList.add('active'); });
+  if (name === 'dashboard') loadDashboard();
+  else if (name === 'students') { stuPage = { hasNext: false, pageKeys: [null], page: 1, search: '' }; loadStudents(); }
+  else if (name === 'enrollments') { enrPage = { hasNext: false, pageKeys: [null], page: 1, search: '' }; loadEnrollments(); }
+  else if (name === 'guardians') { grdPage = { token: null, history: [], page: 1, search: '' }; loadGuardians(); }
+  else if (name === 'reports') loadReports();
+}
+
+// --- Dashboard ---
+async function loadDashboard() {
+  try {
+    // Fetch first page of students, enrollments, demographics
+    const [stuRes, enrRes, demoRes] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/students/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/enrollments/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/demographics/submissions?include=values&limit=25`),
+    ]);
+    const students = stuRes.submissions || [];
+    const enrollments = enrRes.submissions || [];
+    const demos = demoRes.submissions || [];
+
+    // KPIs
+    const active = students.filter(s => v(s,'Status') === 'Active').length;
+    const ellCount = demos.filter(d => v(d,'ELL Status') === 'Yes').length;
+    const iepCount = demos.filter(d => v(d,'IEP Status') === 'Yes').length;
+    const kpis = document.getElementById('dash-kpis');
+    kpis.innerHTML = `
+      <div class="kpi orange"><div class="val">${esc(String(students.length))}${stuRes.nextPageToken ? '+' : ''}</div><div class="label">Total Students</div></div>
+      <div class="kpi green"><div class="val">${esc(String(active))}</div><div class="label">Active Students</div></div>
+      <div class="kpi purple"><div class="val">${esc(String(ellCount))}</div><div class="label">ELL Students</div></div>
+      <div class="kpi teal"><div class="val">${esc(String(iepCount))}</div><div class="label">IEP Students</div></div>
+    `;
+
+    // Grade distribution bar chart
+    const gradeCounts = {};
+    ['K','1','2','3','4','5','6','7','8','9','10','11','12'].forEach(g => gradeCounts[g] = 0);
+    students.forEach(s => { const g = v(s,'Grade Level'); if (gradeCounts[g] !== undefined) gradeCounts[g]++; });
+    const maxCount = Math.max(1, ...Object.values(gradeCounts));
+    const chartEl = document.getElementById('dash-grade-chart');
+    chartEl.innerHTML = Object.entries(gradeCounts).map(([grade, count]) => {
+      const pct = Math.round((count / maxCount) * 100);
+      return `<div class="bar-col"><div class="bar-val">${esc(String(count))}</div><div class="bar" style="height:${pct}%"></div><div class="bar-label">${esc(grade)}</div></div>`;
+    }).join('');
+
+    // Recent enrollments
+    const recentEl = document.getElementById('dash-recent');
+    if (enrollments.length === 0) {
+      recentEl.innerHTML = '<p style="color:var(--gray);font-size:13px;">No enrollments found</p>';
+    } else {
+      recentEl.innerHTML = `<table class="sub-table"><thead><tr><th>Student</th><th>Course</th><th>Status</th></tr></thead><tbody>` +
+        enrollments.slice(0, 8).map(e =>
+          `<tr><td>${esc(v(e,'Student ID'))}</td><td>${esc(v(e,'Course Name'))}</td><td>${statusBadge(v(e,'Status'))}</td></tr>`
+        ).join('') + '</tbody></table>';
+    }
+  } catch (e) {
+    toast('Dashboard error: ' + e.message);
+  }
+}
+
+// --- Students ---
+let stuTimer;
+function debounceStudents() { clearTimeout(stuTimer); stuTimer = setTimeout(() => { stuPage = { hasNext: false, pageKeys: [null], page: 1, search: '' }; loadStudents(); }, 300); }
+
+async function loadStudents(direction) {
+  const grade = document.getElementById('stu-grade').value;
+  const status = document.getElementById('stu-status').value;
+  const search = document.getElementById('stu-search').value.trim().toLowerCase();
+
+  if (direction === 'next' && stuPage.hasNext) {
+    stuPage.page++;
+  } else if (direction === 'prev' && stuPage.page > 1) {
+    stuPage.page--;
+  } else if (!direction) {
+    // reset
+  }
+
+  let kql = [];
+  if (grade) kql.push(`values[Grade Level]="${grade}"`);
+  if (status) kql.push(`values[Status]="${status}"`);
+  const lastCreatedAt = stuPage.pageKeys[stuPage.page - 1];
+  if (lastCreatedAt) kql.push('createdAt < "' + lastCreatedAt + '"');
+  let q = `/kapps/${KAPP}/forms/students/submissions?include=values,details&limit=25`;
+  if (kql.length) q += `&q=${encodeURIComponent(kql.join(' AND '))}`;
+
+  try {
+    const res = await api(q);
+    let subs = res.submissions || [];
+    stuPage.hasNext = !!res.nextPageToken;
+    if (stuPage.hasNext && subs.length) stuPage.pageKeys[stuPage.page] = subs[subs.length - 1].createdAt;
+
+    // Client-side search filter
+    if (search) {
+      subs = subs.filter(s =>
+        v(s,'First Name').toLowerCase().includes(search) ||
+        v(s,'Last Name').toLowerCase().includes(search) ||
+        v(s,'Student ID').toLowerCase().includes(search)
+      );
+    }
+
+    const tbody = document.getElementById('stu-tbody');
+    if (subs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px;">No students found</td></tr>';
+    } else {
+      tbody.innerHTML = subs.map(s => `
+        <tr onclick="showStudent('${esc(s.id)}')">
+          <td>${esc(v(s,'Student ID'))}</td>
+          <td>${esc(v(s,'Last Name'))}, ${esc(v(s,'First Name'))}</td>
+          <td>${esc(v(s,'Grade Level'))}</td>
+          <td>${statusBadge(v(s,'Status'))}</td>
+          <td>${esc(v(s,'Email'))}</td>
+          <td>${esc(v(s,'Phone'))}</td>
+        </tr>
+      `).join('');
+    }
+
+    renderPagination('stu-pagination', stuPage, () => loadStudents('prev'), () => loadStudents('next'));
+  } catch (e) {
+    toast('Error loading students: ' + e.message);
+  }
+}
+
+async function showStudent(id) {
+  try {
+    const sub = await api(`/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    const sid = v(s, 'Student ID');
+
+    // Fetch related guardians and enrollments
+    const [grdRes, enrRes] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/guardians/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Student ID]="${sid}"`)}`),
+      api(`/kapps/${KAPP}/forms/enrollments/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Student ID]="${sid}"`)}`),
+    ]);
+    const guardians = grdRes.submissions || [];
+    const enrollments = enrRes.submissions || [];
+
+    let html = `<button class="modal-close" onclick="closeModal()">&times;</button>`;
+    html += `<h2>${esc(v(s,'First Name'))} ${esc(v(s,'Last Name'))}</h2>`;
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">`;
+    const fields = ['Student ID','Grade Level','Status','Date of Birth','Gender','Enrollment Date','Email','Phone','Address','City','State','Zip','Emergency Contact','Emergency Phone'];
+    fields.forEach(f => {
+      html += `<div class="field-row"><div class="field-label">${esc(f)}</div><div class="field-value">${esc(v(s,f)) || '-'}</div></div>`;
+    });
+    html += '</div>';
+    if (v(s,'Notes')) html += `<div class="field-row" style="margin-top:12px;"><div class="field-label">Notes</div><div class="field-value">${esc(v(s,'Notes'))}</div></div>`;
+
+    // Guardians
+    html += `<h3 style="margin-top:20px;">Guardians (${guardians.length})</h3>`;
+    if (guardians.length) {
+      html += `<table class="sub-table"><thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th></tr></thead><tbody>`;
+      guardians.forEach(g => {
+        html += `<tr><td>${esc(v(g,'First Name'))} ${esc(v(g,'Last Name'))}</td><td>${esc(v(g,'Relationship'))}</td><td>${esc(v(g,'Phone'))}</td><td>${esc(v(g,'Email'))}</td></tr>`;
+      });
+      html += '</tbody></table>';
+    } else { html += '<p style="color:var(--gray);font-size:13px;">No guardians on file</p>'; }
+
+    // Enrollments
+    html += `<h3 style="margin-top:20px;">Enrollments (${enrollments.length})</h3>`;
+    if (enrollments.length) {
+      html += `<table class="sub-table"><thead><tr><th>Course</th><th>Semester</th><th>Teacher</th><th>Status</th><th>Grade</th></tr></thead><tbody>`;
+      enrollments.forEach(e => {
+        html += `<tr><td>${esc(v(e,'Course Name'))}</td><td>${esc(v(e,'Semester'))}</td><td>${esc(v(e,'Teacher'))}</td><td>${statusBadge(v(e,'Status'))}</td><td>${esc(v(e,'Final Grade'))}</td></tr>`;
+      });
+      html += '</tbody></table>';
+    } else { html += '<p style="color:var(--gray);font-size:13px;">No enrollments on file</p>'; }
+
+    document.getElementById('modal-body').innerHTML = html;
+    document.getElementById('modal').classList.add('open');
+  } catch (e) {
+    toast('Error loading student: ' + e.message);
+  }
+}
+
+// --- Enrollments ---
+let enrTimer;
+function debounceEnrollments() { clearTimeout(enrTimer); enrTimer = setTimeout(() => { enrPage = { hasNext: false, pageKeys: [null], page: 1, search: '' }; loadEnrollments(); }, 300); }
+
+async function loadEnrollments(direction) {
+  const semester = document.getElementById('enr-semester').value;
+  const status = document.getElementById('enr-status').value;
+  const search = document.getElementById('enr-search').value.trim().toLowerCase();
+
+  if (direction === 'next' && enrPage.hasNext) {
+    enrPage.page++;
+  } else if (direction === 'prev' && enrPage.page > 1) {
+    enrPage.page--;
+  }
+
+  let kql = [];
+  if (semester) kql.push(`values[Semester]="${semester}"`);
+  if (status) kql.push(`values[Status]="${status}"`);
+  const enrLastCreated = enrPage.pageKeys[enrPage.page - 1];
+  if (enrLastCreated) kql.push('createdAt < "' + enrLastCreated + '"');
+  let q = `/kapps/${KAPP}/forms/enrollments/submissions?include=values&limit=25`;
+  if (kql.length) q += `&q=${encodeURIComponent(kql.join(' AND '))}`;
+
+  try {
+    const res = await api(q);
+    let subs = res.submissions || [];
+    enrPage.hasNext = !!res.nextPageToken;
+    if (enrPage.hasNext && subs.length) enrPage.pageKeys[enrPage.page] = subs[subs.length - 1].createdAt;
+
+    if (search) {
+      subs = subs.filter(s =>
+        v(s,'Student ID').toLowerCase().includes(search) ||
+        v(s,'Course Name').toLowerCase().includes(search)
+      );
+    }
+
+    const tbody = document.getElementById('enr-tbody');
+    if (subs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px;">No enrollments found</td></tr>';
+    } else {
+      tbody.innerHTML = subs.map(e => `
+        <tr>
+          <td>${esc(v(e,'Student ID'))}</td>
+          <td>${esc(v(e,'Course Name'))}</td>
+          <td>${esc(v(e,'Section'))}</td>
+          <td>${esc(v(e,'Teacher'))}</td>
+          <td>${esc(v(e,'Semester'))}</td>
+          <td>${statusBadge(v(e,'Status'))}</td>
+          <td>${esc(v(e,'Final Grade'))}</td>
+        </tr>
+      `).join('');
+    }
+
+    renderPagination('enr-pagination', enrPage, () => loadEnrollments('prev'), () => loadEnrollments('next'));
+  } catch (e) {
+    toast('Error loading enrollments: ' + e.message);
+  }
+}
+
+// --- Guardians ---
+let grdTimer;
+function debounceGuardians() { clearTimeout(grdTimer); grdTimer = setTimeout(() => { grdPage = { hasNext: false, pageKeys: [null], page: 1, search: '' }; loadGuardians(); }, 300); }
+
+async function loadGuardians(direction) {
+  const search = document.getElementById('grd-search').value.trim().toLowerCase();
+
+  if (direction === 'next' && grdPage.hasNext) {
+    grdPage.page++;
+  } else if (direction === 'prev' && grdPage.page > 1) {
+    grdPage.page--;
+  }
+
+  const grdLastCreated = grdPage.pageKeys[grdPage.page - 1];
+  let q = `/kapps/${KAPP}/forms/guardians/submissions?include=values&limit=25`;
+  if (grdLastCreated) q += `&q=${encodeURIComponent('createdAt < "' + grdLastCreated + '"')}`;
+
+  try {
+    const res = await api(q);
+    let subs = res.submissions || [];
+    grdPage.hasNext = !!res.nextPageToken;
+    if (grdPage.hasNext && subs.length) grdPage.pageKeys[grdPage.page] = subs[subs.length - 1].createdAt;
+
+    if (search) {
+      subs = subs.filter(g =>
+        v(g,'First Name').toLowerCase().includes(search) ||
+        v(g,'Last Name').toLowerCase().includes(search) ||
+        v(g,'Student ID').toLowerCase().includes(search)
+      );
+    }
+
+    const tbody = document.getElementById('grd-tbody');
+    if (subs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px;">No guardians found</td></tr>';
+    } else {
+      tbody.innerHTML = subs.map(g => `
+        <tr>
+          <td>${esc(v(g,'First Name'))} ${esc(v(g,'Last Name'))}</td>
+          <td>${esc(v(g,'Relationship'))}</td>
+          <td>${esc(v(g,'Student ID'))}</td>
+          <td>${esc(v(g,'Email'))}</td>
+          <td>${esc(v(g,'Phone'))}</td>
+          <td>${esc(v(g,'Preferred Contact'))}</td>
+        </tr>
+      `).join('');
+    }
+
+    renderPagination('grd-pagination', grdPage, () => loadGuardians('prev'), () => loadGuardians('next'));
+  } catch (e) {
+    toast('Error loading guardians: ' + e.message);
+  }
+}
+
+// --- Reports ---
+async function loadReports() {
+  const grid = document.getElementById('reports-grid');
+  grid.innerHTML = '<p style="color:var(--gray);">Loading reports...</p>';
+  try {
+    const [demoRes, enrRes, stuRes] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/demographics/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/enrollments/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/students/submissions?include=values&limit=25`),
+    ]);
+    const demos = demoRes.submissions || [];
+    const enrollments = enrRes.submissions || [];
+    const students = stuRes.submissions || [];
+
+    // Demographics breakdown
+    const ethnicityCounts = {};
+    demos.forEach(d => { const e = v(d,'Ethnicity') || 'Unknown'; ethnicityCounts[e] = (ethnicityCounts[e]||0)+1; });
+    const langCounts = {};
+    demos.forEach(d => { const l = v(d,'Primary Language') || 'Unknown'; langCounts[l] = (langCounts[l]||0)+1; });
+
+    // Enrollment stats
+    const semesterCounts = {};
+    enrollments.forEach(e => { const s = v(e,'Semester') || 'Unknown'; semesterCounts[s] = (semesterCounts[s]||0)+1; });
+    const courseCounts = {};
+    enrollments.forEach(e => { const c = v(e,'Course Name') || 'Unknown'; courseCounts[c] = (courseCounts[c]||0)+1; });
+
+    // Student status
+    const statusCounts = {};
+    students.forEach(s => { const st = v(s,'Status') || 'Unknown'; statusCounts[st] = (statusCounts[st]||0)+1; });
+
+    // Transport
+    const transportCounts = {};
+    demos.forEach(d => { const t = v(d,'Transportation') || 'Unknown'; transportCounts[t] = (transportCounts[t]||0)+1; });
+
+    // Special services
+    const ellYes = demos.filter(d => v(d,'ELL Status') === 'Yes').length;
+    const ellExited = demos.filter(d => v(d,'ELL Status') === 'Exited').length;
+    const iepYes = demos.filter(d => v(d,'IEP Status') === 'Yes').length;
+    const plan504 = demos.filter(d => v(d,'504 Plan') === 'Yes').length;
+    const freeLunch = demos.filter(d => v(d,'Free Lunch') === 'Yes').length;
+    const reducedLunch = demos.filter(d => v(d,'Free Lunch') === 'Reduced').length;
+
+    function renderStats(obj) {
+      return Object.entries(obj).sort((a,b) => b[1]-a[1]).map(([k,ct]) =>
+        `<div class="report-stat"><span class="rs-label">${esc(k)}</span><span class="rs-value">${esc(String(ct))}</span></div>`
+      ).join('');
+    }
+
+    grid.innerHTML = `
+      <div class="card"><h3>Ethnicity Breakdown</h3>${renderStats(ethnicityCounts)}</div>
+      <div class="card"><h3>Primary Language</h3>${renderStats(langCounts)}</div>
+      <div class="card"><h3>Special Services</h3>
+        <div class="report-stat"><span class="rs-label">ELL (Active)</span><span class="rs-value">${esc(String(ellYes))}</span></div>
+        <div class="report-stat"><span class="rs-label">ELL (Exited)</span><span class="rs-value">${esc(String(ellExited))}</span></div>
+        <div class="report-stat"><span class="rs-label">IEP</span><span class="rs-value">${esc(String(iepYes))}</span></div>
+        <div class="report-stat"><span class="rs-label">504 Plan</span><span class="rs-value">${esc(String(plan504))}</span></div>
+        <div class="report-stat"><span class="rs-label">Free Lunch</span><span class="rs-value">${esc(String(freeLunch))}</span></div>
+        <div class="report-stat"><span class="rs-label">Reduced Lunch</span><span class="rs-value">${esc(String(reducedLunch))}</span></div>
+      </div>
+      <div class="card"><h3>Student Status</h3>${renderStats(statusCounts)}</div>
+      <div class="card"><h3>Enrollments by Semester</h3>${renderStats(semesterCounts)}</div>
+      <div class="card"><h3>Top Courses</h3>${renderStats(courseCounts)}</div>
+      <div class="card"><h3>Transportation</h3>${renderStats(transportCounts)}</div>
+    `;
+  } catch (e) {
+    grid.innerHTML = `<p style="color:var(--red);">Error loading reports: ${esc(e.message)}</p>`;
+  }
+}
+
+// --- Pagination ---
+function renderPagination(elId, state, prevFn, nextFn) {
+  const el = document.getElementById(elId);
+  el.innerHTML = `
+    <button ${state.page <= 1 ? 'disabled' : ''} onclick="(${prevFn.toString()})()">Prev</button>
+    <span>Page ${state.page}</span>
+    <button ${!state.hasNext ? 'disabled' : ''} onclick="(${nextFn.toString()})()">Next</button>
+  `;
+}
+
+// --- Modal ---
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

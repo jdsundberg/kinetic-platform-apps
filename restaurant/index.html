@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Man</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+
+/* ── Login ── */
+#login-screen {
+  display: flex; align-items: center; justify-content: center; min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-box {
+  background: var(--white); padding: 40px; border-radius: 16px; width: 400px;
+  box-shadow: var(--shadow-lg);
+}
+.login-box h1 { font-size: 24px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.login-box .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .accent-bar { width: 40px; height: 3px; background: var(--orange); margin-bottom: 24px; border-radius: 2px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
+.login-box input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; margin-bottom: 14px; outline: none;
+}
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box .btn-login {
+  width: 100%; padding: 10px; background: var(--orange); color: white; border: none;
+  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.login-box .btn-login:hover { background: var(--orange-light); }
+.login-box .error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar {
+  background: var(--blue); color: white; display: flex; align-items: center;
+  padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+}
+.topbar .logo { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.topbar .logo span { color: var(--orange); }
+.topbar .nav-tabs { display: flex; gap: 2px; margin-left: 32px; }
+.topbar .nav-tab {
+  padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,.7); border: none; background: transparent; transition: all .15s;
+}
+.topbar .nav-tab:hover { color: white; background: rgba(255,255,255,.08); }
+.topbar .nav-tab.active { color: white; background: var(--orange); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.25);
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+}
+.logout-btn:hover { color: white; border-color: var(--orange); background: rgba(243,108,36,.15); }
+
+/* ── Console Panels ── */
+.console { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── KPI Row ── */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi {
+  background: var(--white); border-radius: 12px; padding: 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.kpi .label { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+.kpi.orange .val { color: var(--orange); }
+.kpi.green .val { color: var(--green); }
+.kpi.red .val { color: var(--red); }
+.kpi.yellow .val { color: var(--yellow); }
+.kpi.blue .val { color: var(--blue); }
+.kpi.purple .val { color: var(--purple); }
+.kpi.teal .val { color: var(--teal); }
+
+/* ── Cards ── */
+.card {
+  background: var(--white); border-radius: 12px; padding: 20px;
+  border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── Grid Layouts ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── Tables ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: 10px; font-weight: 600; color: var(--gray);
+  text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px;
+  background: var(--light); border-bottom: 1px solid var(--border); position: sticky; top: 0;
+}
+.data-table td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.data-table tr.clickable { cursor: pointer; }
+.data-table tr.clickable:hover { background: #FAFAFA; }
+.data-table .empty-row td { text-align: center; color: var(--gray); padding: 32px 10px; }
+.data-table .totals-row { font-weight: 700; background: var(--light); }
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.text-right { text-align: right; }
+
+/* ── Toolbar ── */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar select, .toolbar input[type="date"], .toolbar input[type="text"] {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13px; outline: none; background: var(--white);
+}
+.toolbar select:focus, .toolbar input:focus {
+  border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1);
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: background .15s;
+}
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #d33; }
+.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-red { background: #FDECEA; color: #C62828; }
+.badge-yellow { background: #FFF8E1; color: #F9A825; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-gray { background: #F1F3F4; color: #5F6368; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-purple { background: #F3E5F5; color: #6A1B9A; }
+
+/* ── Pagination ── */
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.pagination .page-info { font-size: 12px; color: var(--gray); }
+
+/* ── Modal ── */
+#modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center;
+}
+#modal.show { display: flex; }
+.modal-content {
+  background: var(--white); border-radius: 16px; padding: 28px; max-width: 650px; width: 90%;
+  max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+}
+.modal-content h2 { font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 20px; }
+.modal-content label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 12px; }
+.modal-content input, .modal-content select, .modal-content textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; outline: none; font-family: inherit;
+}
+.modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
+  border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1);
+}
+.modal-content textarea { min-height: 60px; resize: vertical; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; border-radius: 8px; color: white; font-size: 13px; font-weight: 600;
+  z-index: 300; transition: bottom .3s; white-space: nowrap;
+}
+#toast.show { bottom: 24px; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ════ Login Screen ════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Restaurant Man</h1>
+    <p class="subtitle">Restaurant Management Platform</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input type="text" id="login-url" placeholder="https://server.example.com">
+    <label>Username</label>
+    <input type="text" id="login-user" placeholder="Username">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ════ App Shell ════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Restaurant <span>Man</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="switchTab('menu')">Menu</button>
+      <button class="nav-tab" onclick="switchTab('inventory')">Inventory</button>
+      <button class="nav-tab" onclick="switchTab('reservations')">Reservations</button>
+      <button class="nav-tab" onclick="switchTab('pnl')">P&amp;L</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Restaurant performance overview &middot; restaurant</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Today's Reservations</h3>
+        <div id="dash-reservations"><div class="loading">Loading...</div></div>
+      </div>
+      <div class="card">
+        <h3>Inventory Alerts</h3>
+        <div id="dash-inventory"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Last 7 Days P&amp;L</h3>
+      <div id="dash-pnl"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ── Menu ── -->
+  <div class="console" id="tab-menu">
+    <div class="page-title">Menu Items</div>
+    <div class="page-sub">Manage your menu &middot; restaurant</div>
+    <div class="toolbar">
+      <select id="menu-cat" onchange="loadMenu()">
+        <option value="">All Categories</option>
+        <option>Appetizers</option><option>Entrees</option><option>Desserts</option>
+        <option>Beverages</option><option>Sides</option><option>Specials</option>
+      </select>
+      <select id="menu-status" onchange="loadMenu()">
+        <option value="">All Statuses</option>
+        <option>Active</option><option>Seasonal</option><option>Discontinued</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openMenuModal()">+ Add Item</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div id="menu-table"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="pagination" id="menu-pagination"></div>
+  </div>
+
+  <!-- ── Inventory ── -->
+  <div class="console" id="tab-inventory">
+    <div class="page-title">Inventory</div>
+    <div class="page-sub">Track stock levels &middot; restaurant</div>
+    <div class="toolbar">
+      <select id="inv-cat" onchange="loadInventory()">
+        <option value="">All Categories</option>
+        <option>Produce</option><option>Meat</option><option>Seafood</option>
+        <option>Dairy</option><option>Dry Goods</option><option>Beverages</option><option>Other</option>
+      </select>
+      <select id="inv-status" onchange="loadInventory()">
+        <option value="">All Statuses</option>
+        <option>In Stock</option><option>Low Stock</option><option>Out of Stock</option>
+      </select>
+      <input type="text" id="inv-search" placeholder="Search items..." oninput="loadInventory()">
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openInventoryModal()">+ Add Item</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div id="inv-table"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="pagination" id="inv-pagination"></div>
+  </div>
+
+  <!-- ── Reservations ── -->
+  <div class="console" id="tab-reservations">
+    <div class="page-title">Reservations</div>
+    <div class="page-sub">Manage guest reservations &middot; restaurant</div>
+    <div class="toolbar">
+      <input type="date" id="res-date" onchange="loadReservations()">
+      <select id="res-status" onchange="loadReservations()">
+        <option value="">All Statuses</option>
+        <option>Confirmed</option><option>Seated</option><option>Completed</option>
+        <option>Cancelled</option><option>No Show</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openReservationModal()">+ Add Reservation</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div id="res-table"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="pagination" id="res-pagination"></div>
+  </div>
+
+  <!-- ── P&L ── -->
+  <div class="console" id="tab-pnl">
+    <div class="page-title">Profit &amp; Loss</div>
+    <div class="page-sub">Financial performance &middot; restaurant</div>
+    <div class="toolbar">
+      <select id="pnl-range" onchange="loadPnl()">
+        <option value="this-month">This Month</option>
+        <option value="last-month">Last Month</option>
+        <option value="last-30">Last 30 Days</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openDailySalesModal()">+ Add Daily Entry</button>
+    </div>
+    <div class="kpi-row" id="pnl-kpis"></div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div id="pnl-table"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ Modal ════ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- ════ Toast ════ -->
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   Globals & Helpers
+   ═══════════════════════════════════════════ */
+const KAPP = 'restaurant';
+let API = { url: '', auth: '', user: '', displayName: '' };
+
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+function vn(sub, field) { return parseFloat(sub.values?.[field]) || 0; }
+function fmt$(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--red)' : 'var(--blue)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+/* ═══════════════════════════════════════════
+   API Layer
+   ═══════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': 'Basic ' + API.auth,
+      'Content-Type': 'application/json',
+      ...opts.headers
+    }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchSubs(form, params = {}) {
+  let kql = params.q || '';
+  if (params.lastCreatedAt) {
+    const dateClause = `createdAt < "${params.lastCreatedAt}"`;
+    kql = kql ? `(${kql}) AND ${dateClause}` : dateClause;
+  }
+  let qs = `limit=${params.limit || 25}&include=values`;
+  if (kql) qs += `&q=${encodeURIComponent(kql)}`;
+  if (params.orderBy) qs += `&orderBy=${encodeURIComponent(params.orderBy)}`;
+  const data = await api(`/kapps/${KAPP}/forms/${form}/submissions?${qs}`);
+  return { submissions: data.submissions || [], nextPageToken: data.nextPageToken || null };
+}
+
+async function createSub(form, values) {
+  return api(`/kapps/${KAPP}/forms/${form}/submissions`, {
+    method: 'POST',
+    body: JSON.stringify({ values, coreState: 'Submitted' })
+  });
+}
+
+async function updateSub(id, values) {
+  return api(`/submissions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ values })
+  });
+}
+
+async function deleteSub(id) {
+  const res = await fetch(`${API.url}/app/api/v1/submissions/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Basic ' + API.auth }
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+}
+
+/* ═══════════════════════════════════════════
+   Auth & Login
+   ═══════════════════════════════════════════ */
+function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!user || !pass) { errEl.textContent = 'Enter username and password'; errEl.style.display = 'block'; return; }
+
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+
+  fetch(`${API.url}/app/api/v1/me`, {
+    headers: { 'Authorization': 'Basic ' + API.auth }
+  })
+  .then(r => { if (!r.ok) throw new Error('Invalid credentials'); return r.json(); })
+  .then(data => {
+    API.user = data.username;
+    API.displayName = data.displayName || data.username;
+    enterApp();
+  })
+  .catch(err => {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  });
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = API.displayName;
+  document.getElementById('res-date').value = todayISO();
+  document.getElementById('login-url').value = API.url || window.location.origin;
+  switchTab('dashboard');
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.removeItem('kinetic_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ═══════════════════════════════════════════
+   Tab Switching
+   ═══════════════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => {
+    if (el.textContent.trim().toLowerCase().replace(/&/g, '').replace(/ /g, '') === tab.replace(/-/g, ''))
+      el.classList.add('active');
+  });
+  // Simpler active tab matching
+  const tabMap = { dashboard: 0, menu: 1, inventory: 2, reservations: 3, pnl: 4 };
+  const tabs = document.querySelectorAll('.nav-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabMap[tab] !== undefined) tabs[tabMap[tab]].classList.add('active');
+
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'menu') loadMenu();
+  else if (tab === 'inventory') loadInventory();
+  else if (tab === 'reservations') loadReservations();
+  else if (tab === 'pnl') loadPnl();
+}
+
+/* ═══════════════════════════════════════════
+   Dashboard
+   ═══════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const now = new Date();
+    const y = now.getUTCFullYear();
+    const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const monthStart = `${y}-${m}-01`;
+    const nextMonth = now.getUTCMonth() === 11
+      ? `${y + 1}-01-01`
+      : `${y}-${String(now.getUTCMonth() + 2).padStart(2, '0')}-01`;
+
+    const salesKql = `values[Date] >= "${monthStart}" AND values[Date] < "${nextMonth}"`;
+
+    // Fetch daily sales for current month (max 31 days, single request)
+    const salesPage = await fetchSubs('daily-sales', { q: salesKql, limit: 31, orderBy: 'values[Date]' });
+    let allSales = salesPage.submissions;
+
+    // Fetch today's reservations and inventory alerts in parallel
+    const today = todayISO();
+    const [resData, invData] = await Promise.all([
+      fetchSubs('reservations', { q: `values[Date]="${today}"`, limit: 25 }),
+      fetchSubs('inventory', { q: `values[Status] IN ("Low Stock", "Out of Stock")`, limit: 25 })
+    ]);
+
+    // ── KPIs ──
+    let foodRev = 0, bevRev = 0, foodCost = 0, bevCost = 0, totalCovers = 0;
+    allSales.forEach(s => {
+      foodRev += vn(s, 'Food Revenue');
+      bevRev += vn(s, 'Beverage Revenue');
+      foodCost += vn(s, 'Food Cost');
+      bevCost += vn(s, 'Beverage Cost');
+      totalCovers += vn(s, 'Covers');
+    });
+    const totalRev = foodRev + bevRev;
+    const totalCOGS = foodCost + bevCost;
+    const grossProfit = totalRev - totalCOGS;
+    const grossMargin = totalRev > 0 ? (grossProfit / totalRev * 100) : 0;
+    const foodCostPct = foodRev > 0 ? (foodCost / foodRev * 100) : 0;
+    const avgRevCover = totalCovers > 0 ? totalRev / totalCovers : 0;
+
+    const gpClass = grossProfit >= 0 ? 'green' : 'red';
+    const gmClass = grossMargin > 60 ? 'green' : grossMargin >= 50 ? 'yellow' : 'red';
+    const fcClass = foodCostPct < 32 ? 'green' : foodCostPct <= 35 ? 'yellow' : 'red';
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi orange"><div class="label">Revenue (MTD)</div><div class="val">${esc(fmt$(totalRev))}</div><div class="sub">${esc(allSales.length)} days recorded</div></div>
+      <div class="kpi red"><div class="label">COGS (MTD)</div><div class="val">${esc(fmt$(totalCOGS))}</div><div class="sub">Food + Beverage cost</div></div>
+      <div class="kpi ${gpClass}"><div class="label">Gross Profit</div><div class="val">${esc(fmt$(grossProfit))}</div><div class="sub">Revenue - COGS</div></div>
+      <div class="kpi ${gmClass}"><div class="label">Gross Margin %</div><div class="val">${esc(fmtPct(grossMargin))}</div><div class="sub">${grossMargin > 60 ? 'Healthy' : grossMargin >= 50 ? 'Watch' : 'Below target'}</div></div>
+      <div class="kpi ${fcClass}"><div class="label">Food Cost %</div><div class="val">${esc(fmtPct(foodCostPct))}</div><div class="sub">Target: &lt;32%</div></div>
+      <div class="kpi blue"><div class="label">Avg Rev/Cover</div><div class="val">${esc(fmt$(avgRevCover))}</div><div class="sub">${esc(totalCovers)} total covers</div></div>
+    `;
+
+    // ── Today's Reservations ──
+    const resSubs = resData.submissions.slice(0, 10);
+    if (resSubs.length === 0) {
+      document.getElementById('dash-reservations').innerHTML = '<div class="loading">No reservations today</div>';
+    } else {
+      document.getElementById('dash-reservations').innerHTML = `
+        <table class="data-table">
+          <thead><tr><th>Time</th><th>Guest</th><th>Party Size</th><th>Status</th></tr></thead>
+          <tbody>${resSubs.map(s => {
+            const status = v(s, 'Status');
+            const badge = resBadge(status);
+            return `<tr><td>${esc(v(s, 'Time'))}</td><td>${esc(v(s, 'Guest Name'))}</td><td>${esc(v(s, 'Party Size'))}</td><td>${badge}</td></tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+
+    // ── Inventory Alerts ──
+    if (invData.submissions.length === 0) {
+      document.getElementById('dash-inventory').innerHTML = '<div class="loading">All items in stock</div>';
+    } else {
+      document.getElementById('dash-inventory').innerHTML = `
+        <table class="data-table">
+          <thead><tr><th>Item</th><th>Category</th><th>Qty</th><th>Reorder Lvl</th><th>Status</th></tr></thead>
+          <tbody>${invData.submissions.map(s => {
+            const status = v(s, 'Status');
+            const badge = status === 'Out of Stock'
+              ? '<span class="badge badge-red">Out of Stock</span>'
+              : '<span class="badge badge-yellow">Low Stock</span>';
+            return `<tr><td>${esc(v(s, 'Item Name'))}</td><td>${esc(v(s, 'Category'))}</td><td>${esc(v(s, 'Quantity On Hand'))}</td><td>${esc(v(s, 'Reorder Level'))}</td><td>${badge}</td></tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+
+    // ── Last 7 Days P&L ──
+    const sortedSales = [...allSales].sort((a, b) => (v(b, 'Date') || '').localeCompare(v(a, 'Date') || ''));
+    const last7 = sortedSales.slice(0, 7);
+    if (last7.length === 0) {
+      document.getElementById('dash-pnl').innerHTML = '<div class="loading">No daily sales recorded this month</div>';
+    } else {
+      document.getElementById('dash-pnl').innerHTML = `
+        <table class="data-table">
+          <thead><tr><th>Date</th><th class="text-right">Revenue</th><th class="text-right">COGS</th><th class="text-right">Labor</th><th class="text-right">Other</th><th class="text-right">Net Profit</th><th class="text-right">Covers</th></tr></thead>
+          <tbody>${last7.map(s => {
+            const rev = vn(s, 'Food Revenue') + vn(s, 'Beverage Revenue');
+            const cogs = vn(s, 'Food Cost') + vn(s, 'Beverage Cost');
+            const labor = vn(s, 'Labor Cost');
+            const other = vn(s, 'Other Expenses');
+            const net = rev - cogs - labor - other;
+            const cls = net >= 0 ? 'positive' : 'negative';
+            return `<tr>
+              <td>${esc(v(s, 'Date'))}</td>
+              <td class="text-right">${esc(fmt$(rev))}</td>
+              <td class="text-right">${esc(fmt$(cogs))}</td>
+              <td class="text-right">${esc(fmt$(labor))}</td>
+              <td class="text-right">${esc(fmt$(other))}</td>
+              <td class="text-right ${cls}">${esc(fmt$(net))}</td>
+              <td class="text-right">${esc(v(s, 'Covers'))}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    showToast('Failed to load dashboard: ' + err.message, true);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Menu Items
+   ═══════════════════════════════════════════ */
+let menuPageKeys = [null];
+let menuPage = 1;
+let menuHasNext = false;
+
+async function loadMenu(page) {
+  try {
+    const cat = document.getElementById('menu-cat').value;
+    const status = document.getElementById('menu-status').value;
+
+    // Reset pagination when filters change (no page passed)
+    if (page === undefined) {
+      menuPageKeys = [null];
+      menuPage = 1;
+    } else {
+      menuPage = page;
+    }
+
+    let parts = [];
+    if (cat) parts.push(`values[Category]="${cat}"`);
+    if (status) parts.push(`values[Status]="${status}"`);
+    const kql = parts.length ? parts.join(' AND ') : undefined;
+
+    const data = await fetchSubs('menu-items', { q: kql, lastCreatedAt: menuPageKeys[menuPage - 1] || undefined });
+    menuHasNext = !!data.nextPageToken;
+    if (menuHasNext && data.submissions.length) menuPageKeys[menuPage] = data.submissions[data.submissions.length - 1].createdAt;
+    renderMenuTable(data.submissions);
+    renderPagination('menu-pagination', menuPage, menuHasNext, (pg) => {
+      loadMenu(pg);
+    });
+  } catch (err) {
+    showToast('Failed to load menu: ' + err.message, true);
+  }
+}
+
+function renderMenuTable(subs) {
+  if (subs.length === 0) {
+    document.getElementById('menu-table').innerHTML = '<table class="data-table"><tbody><tr class="empty-row"><td>No menu items found</td></tr></tbody></table>';
+    return;
+  }
+  document.getElementById('menu-table').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Category</th><th class="text-right">Price</th><th class="text-right">Food Cost</th><th class="text-right">Cost %</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const price = vn(s, 'Price');
+        const cost = vn(s, 'Food Cost');
+        const costPct = price > 0 ? (cost / price * 100) : 0;
+        const costCls = costPct < 30 ? 'positive' : costPct <= 35 ? '' : 'negative';
+        const status = v(s, 'Status');
+        const badge = status === 'Active' ? 'badge-green' : status === 'Seasonal' ? 'badge-blue' : 'badge-gray';
+        return `<tr class="clickable" onclick="openMenuModal('${esc(s.id)}')">
+          <td>${esc(v(s, 'Name'))}</td>
+          <td>${esc(v(s, 'Category'))}</td>
+          <td class="text-right">${esc(fmt$(price))}</td>
+          <td class="text-right">${esc(fmt$(cost))}</td>
+          <td class="text-right ${costCls}">${esc(fmtPct(costPct))}</td>
+          <td><span class="badge ${badge}">${esc(status)}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMenuItem('${esc(s.id)}')">Delete</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+async function openMenuModal(id) {
+  let vals = {};
+  if (id) {
+    try {
+      const data = await api(`/submissions/${id}?include=values`);
+      vals = data.submission.values || {};
+    } catch (e) { showToast('Failed to load item', true); return; }
+  }
+  const title = id ? 'Edit Menu Item' : 'Add Menu Item';
+  openModal(`
+    <h2>${title}</h2>
+    <label>Name</label>
+    <input type="text" id="m-name" value="${esc(vals['Name'] || '')}">
+    <label>Category</label>
+    <select id="m-cat">
+      ${['Appetizers','Entrees','Desserts','Beverages','Sides','Specials'].map(c =>
+        `<option ${vals['Category'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Price ($)</label>
+    <input type="number" step="0.01" id="m-price" value="${esc(vals['Price'] || '')}">
+    <label>Food Cost ($)</label>
+    <input type="number" step="0.01" id="m-cost" value="${esc(vals['Food Cost'] || '')}">
+    <label>Status</label>
+    <select id="m-status">
+      ${['Active','Seasonal','Discontinued'].map(c =>
+        `<option ${vals['Status'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Description</label>
+    <textarea id="m-desc">${esc(vals['Description'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMenuItem('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+async function saveMenuItem(id) {
+  const values = {
+    'Name': document.getElementById('m-name').value,
+    'Category': document.getElementById('m-cat').value,
+    'Price': document.getElementById('m-price').value,
+    'Food Cost': document.getElementById('m-cost').value,
+    'Status': document.getElementById('m-status').value,
+    'Description': document.getElementById('m-desc').value,
+  };
+  try {
+    if (id) await updateSub(id, values);
+    else await createSub('menu-items', values);
+    closeModal();
+    showToast(id ? 'Menu item updated' : 'Menu item created');
+    loadMenu();
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, true);
+  }
+}
+
+async function deleteMenuItem(id) {
+  if (!confirm('Delete this menu item?')) return;
+  try {
+    await deleteSub(id);
+    showToast('Menu item deleted');
+    loadMenu();
+  } catch (err) { showToast('Failed to delete: ' + err.message, true); }
+}
+
+/* ═══════════════════════════════════════════
+   Inventory
+   ═══════════════════════════════════════════ */
+let invPageKeys = [null];
+let invPage = 1;
+let invHasNext = false;
+
+async function loadInventory(page) {
+  try {
+    const cat = document.getElementById('inv-cat').value;
+    const status = document.getElementById('inv-status').value;
+    const search = document.getElementById('inv-search').value.trim();
+
+    if (page === undefined) {
+      invPageKeys = [null];
+      invPage = 1;
+    } else {
+      invPage = page;
+    }
+
+    let parts = [];
+    if (cat) parts.push(`values[Category]="${cat}"`);
+    if (status) parts.push(`values[Status]="${status}"`);
+    const kql = parts.length ? parts.join(' AND ') : undefined;
+
+    const data = await fetchSubs('inventory', { q: kql, lastCreatedAt: invPageKeys[invPage - 1] || undefined });
+    let subs = data.submissions;
+
+    // Client-side search filter (name search doesn't have a reliable KQL path)
+    if (search) {
+      const term = search.toLowerCase();
+      subs = subs.filter(s => (v(s, 'Item Name') || '').toLowerCase().includes(term));
+    }
+
+    invHasNext = !!data.nextPageToken;
+    if (invHasNext && data.submissions.length) invPageKeys[invPage] = data.submissions[data.submissions.length - 1].createdAt;
+    renderInventoryTable(subs);
+    renderPagination('inv-pagination', invPage, invHasNext, (pg) => {
+      loadInventory(pg);
+    });
+  } catch (err) {
+    showToast('Failed to load inventory: ' + err.message, true);
+  }
+}
+
+function renderInventoryTable(subs) {
+  if (subs.length === 0) {
+    document.getElementById('inv-table').innerHTML = '<table class="data-table"><tbody><tr class="empty-row"><td>No inventory items found</td></tr></tbody></table>';
+    return;
+  }
+  document.getElementById('inv-table').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Item</th><th>Category</th><th class="text-right">Qty</th><th>Unit</th><th class="text-right">Unit Cost</th><th class="text-right">Reorder Lvl</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const status = v(s, 'Status');
+        const badge = status === 'In Stock' ? 'badge-green' : status === 'Low Stock' ? 'badge-yellow' : 'badge-red';
+        return `<tr class="clickable" onclick="openInventoryModal('${esc(s.id)}')">
+          <td>${esc(v(s, 'Item Name'))}</td>
+          <td>${esc(v(s, 'Category'))}</td>
+          <td class="text-right">${esc(v(s, 'Quantity On Hand'))}</td>
+          <td>${esc(v(s, 'Unit'))}</td>
+          <td class="text-right">${v(s, 'Unit Cost') ? esc(fmt$(vn(s, 'Unit Cost'))) : ''}</td>
+          <td class="text-right">${esc(v(s, 'Reorder Level'))}</td>
+          <td>${esc(v(s, 'Supplier'))}</td>
+          <td><span class="badge ${badge}">${esc(status)}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteInventoryItem('${esc(s.id)}')">Delete</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+async function openInventoryModal(id) {
+  let vals = {};
+  if (id) {
+    try {
+      const data = await api(`/submissions/${id}?include=values`);
+      vals = data.submission.values || {};
+    } catch (e) { showToast('Failed to load item', true); return; }
+  }
+  const title = id ? 'Edit Inventory Item' : 'Add Inventory Item';
+  openModal(`
+    <h2>${title}</h2>
+    <label>Item Name</label>
+    <input type="text" id="i-name" value="${esc(vals['Item Name'] || '')}">
+    <label>Category</label>
+    <select id="i-cat">
+      ${['Produce','Meat','Seafood','Dairy','Dry Goods','Beverages','Other'].map(c =>
+        `<option ${vals['Category'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Quantity On Hand</label>
+    <input type="number" step="0.01" id="i-qty" value="${esc(vals['Quantity On Hand'] || '')}">
+    <label>Unit</label>
+    <select id="i-unit">
+      ${['lb','oz','each','case','gallon','liter'].map(c =>
+        `<option ${vals['Unit'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Unit Cost ($)</label>
+    <input type="number" step="0.01" id="i-cost" value="${esc(vals['Unit Cost'] || '')}">
+    <label>Reorder Level</label>
+    <input type="number" step="0.01" id="i-reorder" value="${esc(vals['Reorder Level'] || '')}">
+    <label>Supplier</label>
+    <input type="text" id="i-supplier" value="${esc(vals['Supplier'] || '')}">
+    <label>Status</label>
+    <select id="i-status">
+      ${['In Stock','Low Stock','Out of Stock'].map(c =>
+        `<option ${vals['Status'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Notes</label>
+    <textarea id="i-notes">${esc(vals['Notes'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInventoryItem('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+async function saveInventoryItem(id) {
+  const values = {
+    'Item Name': document.getElementById('i-name').value,
+    'Category': document.getElementById('i-cat').value,
+    'Quantity On Hand': document.getElementById('i-qty').value,
+    'Unit': document.getElementById('i-unit').value,
+    'Unit Cost': document.getElementById('i-cost').value,
+    'Reorder Level': document.getElementById('i-reorder').value,
+    'Supplier': document.getElementById('i-supplier').value,
+    'Status': document.getElementById('i-status').value,
+    'Notes': document.getElementById('i-notes').value,
+  };
+  try {
+    if (id) await updateSub(id, values);
+    else await createSub('inventory', values);
+    closeModal();
+    showToast(id ? 'Inventory item updated' : 'Inventory item created');
+    loadInventory();
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, true);
+  }
+}
+
+async function deleteInventoryItem(id) {
+  if (!confirm('Delete this inventory item?')) return;
+  try {
+    await deleteSub(id);
+    showToast('Inventory item deleted');
+    loadInventory();
+  } catch (err) { showToast('Failed to delete: ' + err.message, true); }
+}
+
+/* ═══════════════════════════════════════════
+   Reservations
+   ═══════════════════════════════════════════ */
+let resPageKeys = [null];
+let resPage = 1;
+let resHasNext = false;
+
+async function loadReservations(page) {
+  try {
+    const date = document.getElementById('res-date').value;
+    const status = document.getElementById('res-status').value;
+
+    if (page === undefined) {
+      resPageKeys = [null];
+      resPage = 1;
+    } else {
+      resPage = page;
+    }
+
+    let parts = [];
+    if (date) parts.push(`values[Date]="${date}"`);
+    if (status) parts.push(`values[Status]="${status}"`);
+    const kql = parts.length ? parts.join(' AND ') : undefined;
+
+    const data = await fetchSubs('reservations', { q: kql, lastCreatedAt: resPageKeys[resPage - 1] || undefined });
+    resHasNext = !!data.nextPageToken;
+    if (resHasNext && data.submissions.length) resPageKeys[resPage] = data.submissions[data.submissions.length - 1].createdAt;
+    renderReservationsTable(data.submissions);
+    renderPagination('res-pagination', resPage, resHasNext, (pg) => {
+      loadReservations(pg);
+    });
+  } catch (err) {
+    showToast('Failed to load reservations: ' + err.message, true);
+  }
+}
+
+function resBadge(status) {
+  const map = {
+    'Confirmed': 'badge-blue', 'Seated': 'badge-orange', 'Completed': 'badge-green',
+    'Cancelled': 'badge-gray', 'No Show': 'badge-red'
+  };
+  return `<span class="badge ${map[status] || 'badge-gray'}">${esc(status)}</span>`;
+}
+
+function renderReservationsTable(subs) {
+  if (subs.length === 0) {
+    document.getElementById('res-table').innerHTML = '<table class="data-table"><tbody><tr class="empty-row"><td>No reservations found</td></tr></tbody></table>';
+    return;
+  }
+  document.getElementById('res-table').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Time</th><th>Guest</th><th>Party Size</th><th>Phone</th><th>Status</th><th>Special Requests</th><th>Actions</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const status = v(s, 'Status');
+        return `<tr class="clickable" onclick="openReservationModal('${esc(s.id)}')">
+          <td>${esc(v(s, 'Time'))}</td>
+          <td>${esc(v(s, 'Guest Name'))}</td>
+          <td>${esc(v(s, 'Party Size'))}</td>
+          <td>${esc(v(s, 'Phone'))}</td>
+          <td>${resBadge(status)}</td>
+          <td>${esc(v(s, 'Special Requests'))}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteReservation('${esc(s.id)}')">Delete</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+async function openReservationModal(id) {
+  let vals = {};
+  if (id) {
+    try {
+      const data = await api(`/submissions/${id}?include=values`);
+      vals = data.submission.values || {};
+    } catch (e) { showToast('Failed to load reservation', true); return; }
+  }
+  const title = id ? 'Edit Reservation' : 'Add Reservation';
+  const dateVal = vals['Date'] || todayISO();
+  openModal(`
+    <h2>${title}</h2>
+    <label>Guest Name</label>
+    <input type="text" id="r-guest" value="${esc(vals['Guest Name'] || '')}">
+    <label>Date</label>
+    <input type="date" id="r-date" value="${esc(dateVal)}">
+    <label>Time</label>
+    <input type="time" id="r-time" value="${esc(vals['Time'] || '')}">
+    <label>Party Size</label>
+    <input type="number" id="r-party" value="${esc(vals['Party Size'] || '')}">
+    <label>Phone</label>
+    <input type="tel" id="r-phone" value="${esc(vals['Phone'] || '')}">
+    <label>Email</label>
+    <input type="email" id="r-email" value="${esc(vals['Email'] || '')}">
+    <label>Status</label>
+    <select id="r-status">
+      ${['Confirmed','Seated','Completed','Cancelled','No Show'].map(c =>
+        `<option ${vals['Status'] === c ? 'selected' : ''}>${c}</option>`
+      ).join('')}
+    </select>
+    <label>Special Requests</label>
+    <textarea id="r-requests">${esc(vals['Special Requests'] || '')}</textarea>
+    <label>Notes</label>
+    <textarea id="r-notes">${esc(vals['Notes'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReservation('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+async function saveReservation(id) {
+  const values = {
+    'Guest Name': document.getElementById('r-guest').value,
+    'Date': document.getElementById('r-date').value,
+    'Time': document.getElementById('r-time').value,
+    'Party Size': document.getElementById('r-party').value,
+    'Phone': document.getElementById('r-phone').value,
+    'Email': document.getElementById('r-email').value,
+    'Status': document.getElementById('r-status').value,
+    'Special Requests': document.getElementById('r-requests').value,
+    'Notes': document.getElementById('r-notes').value,
+  };
+  try {
+    if (id) await updateSub(id, values);
+    else await createSub('reservations', values);
+    closeModal();
+    showToast(id ? 'Reservation updated' : 'Reservation created');
+    loadReservations();
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, true);
+  }
+}
+
+async function deleteReservation(id) {
+  if (!confirm('Delete this reservation?')) return;
+  try {
+    await deleteSub(id);
+    showToast('Reservation deleted');
+    loadReservations();
+  } catch (err) { showToast('Failed to delete: ' + err.message, true); }
+}
+
+/* ═══════════════════════════════════════════
+   P&L Tab
+   ═══════════════════════════════════════════ */
+async function loadPnl() {
+  try {
+    const range = document.getElementById('pnl-range').value;
+    const now = new Date();
+    let start, end;
+
+    if (range === 'this-month') {
+      const y = now.getUTCFullYear();
+      const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+      start = `${y}-${m}-01`;
+      end = now.getUTCMonth() === 11
+        ? `${y + 1}-01-01`
+        : `${y}-${String(now.getUTCMonth() + 2).padStart(2, '0')}-01`;
+    } else if (range === 'last-month') {
+      const lastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      const y = lastMonth.getUTCFullYear();
+      const m = String(lastMonth.getUTCMonth() + 1).padStart(2, '0');
+      start = `${y}-${m}-01`;
+      const thisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      end = `${thisMonth.getUTCFullYear()}-${String(thisMonth.getUTCMonth() + 1).padStart(2, '0')}-01`;
+    } else {
+      const d30 = new Date(now.getTime() - 30 * 86400000);
+      start = d30.toISOString().slice(0, 10);
+      end = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    }
+
+    const kql = `values[Date] >= "${start}" AND values[Date] < "${end}"`;
+    const salesPage = await fetchSubs('daily-sales', { q: kql, limit: 31, orderBy: 'values[Date]' });
+    let allSales = salesPage.submissions;
+
+    // Sort by date ascending
+    allSales.sort((a, b) => (v(a, 'Date') || '').localeCompare(v(b, 'Date') || ''));
+
+    // Compute totals
+    let tFoodRev = 0, tBevRev = 0, tFoodCost = 0, tBevCost = 0, tLabor = 0, tOther = 0, tCovers = 0;
+    allSales.forEach(s => {
+      tFoodRev += vn(s, 'Food Revenue');
+      tBevRev += vn(s, 'Beverage Revenue');
+      tFoodCost += vn(s, 'Food Cost');
+      tBevCost += vn(s, 'Beverage Cost');
+      tLabor += vn(s, 'Labor Cost');
+      tOther += vn(s, 'Other Expenses');
+      tCovers += vn(s, 'Covers');
+    });
+    const tRev = tFoodRev + tBevRev;
+    const tCOGS = tFoodCost + tBevCost;
+    const tGross = tRev - tCOGS;
+    const tGrossMargin = tRev > 0 ? (tGross / tRev * 100) : 0;
+    const tNet = tRev - tCOGS - tLabor - tOther;
+
+    const gpClass = tGross >= 0 ? 'green' : 'red';
+    const gmClass = tGrossMargin > 60 ? 'green' : tGrossMargin >= 50 ? 'yellow' : 'red';
+    const netClass = tNet >= 0 ? 'green' : 'red';
+
+    document.getElementById('pnl-kpis').innerHTML = `
+      <div class="kpi orange"><div class="label">Total Revenue</div><div class="val">${esc(fmt$(tRev))}</div></div>
+      <div class="kpi red"><div class="label">Total COGS</div><div class="val">${esc(fmt$(tCOGS))}</div></div>
+      <div class="kpi ${gpClass}"><div class="label">Gross Profit</div><div class="val">${esc(fmt$(tGross))}</div></div>
+      <div class="kpi ${gmClass}"><div class="label">Gross Margin %</div><div class="val">${esc(fmtPct(tGrossMargin))}</div></div>
+      <div class="kpi purple"><div class="label">Total Labor</div><div class="val">${esc(fmt$(tLabor))}</div></div>
+      <div class="kpi orange"><div class="label">Total Other</div><div class="val">${esc(fmt$(tOther))}</div></div>
+      <div class="kpi ${netClass}"><div class="label">Net Profit</div><div class="val">${esc(fmt$(tNet))}</div></div>
+      <div class="kpi blue"><div class="label">Total Covers</div><div class="val">${esc(tCovers)}</div></div>
+    `;
+
+    if (allSales.length === 0) {
+      document.getElementById('pnl-table').innerHTML = '<table class="data-table"><tbody><tr class="empty-row"><td>No daily sales for this period</td></tr></tbody></table>';
+      return;
+    }
+
+    document.getElementById('pnl-table').innerHTML = `
+      <table class="data-table">
+        <thead><tr>
+          <th>Date</th><th class="text-right">Food Rev</th><th class="text-right">Bev Rev</th><th class="text-right">Total Rev</th>
+          <th class="text-right">Food Cost</th><th class="text-right">Bev Cost</th><th class="text-right">Total COGS</th>
+          <th class="text-right">Labor</th><th class="text-right">Other</th><th class="text-right">Net Profit</th><th class="text-right">Covers</th>
+        </tr></thead>
+        <tbody>
+          ${allSales.map(s => {
+            const fr = vn(s, 'Food Revenue'), br = vn(s, 'Beverage Revenue');
+            const fc = vn(s, 'Food Cost'), bc = vn(s, 'Beverage Cost');
+            const rev = fr + br, cogs = fc + bc;
+            const labor = vn(s, 'Labor Cost'), other = vn(s, 'Other Expenses');
+            const net = rev - cogs - labor - other;
+            const cls = net >= 0 ? 'positive' : 'negative';
+            return `<tr>
+              <td>${esc(v(s, 'Date'))}</td>
+              <td class="text-right">${esc(fmt$(fr))}</td><td class="text-right">${esc(fmt$(br))}</td><td class="text-right">${esc(fmt$(rev))}</td>
+              <td class="text-right">${esc(fmt$(fc))}</td><td class="text-right">${esc(fmt$(bc))}</td><td class="text-right">${esc(fmt$(cogs))}</td>
+              <td class="text-right">${esc(fmt$(labor))}</td><td class="text-right">${esc(fmt$(other))}</td>
+              <td class="text-right ${cls}">${esc(fmt$(net))}</td>
+              <td class="text-right">${esc(v(s, 'Covers'))}</td>
+            </tr>`;
+          }).join('')}
+          <tr class="totals-row">
+            <td>Totals</td>
+            <td class="text-right">${esc(fmt$(tFoodRev))}</td><td class="text-right">${esc(fmt$(tBevRev))}</td><td class="text-right">${esc(fmt$(tRev))}</td>
+            <td class="text-right">${esc(fmt$(tFoodCost))}</td><td class="text-right">${esc(fmt$(tBevCost))}</td><td class="text-right">${esc(fmt$(tCOGS))}</td>
+            <td class="text-right">${esc(fmt$(tLabor))}</td><td class="text-right">${esc(fmt$(tOther))}</td>
+            <td class="text-right ${tNet >= 0 ? 'positive' : 'negative'}">${esc(fmt$(tNet))}</td>
+            <td class="text-right">${esc(tCovers)}</td>
+          </tr>
+        </tbody>
+      </table>`;
+
+  } catch (err) {
+    console.error('P&L error:', err);
+    showToast('Failed to load P&L: ' + err.message, true);
+  }
+}
+
+/* ── Daily Sales Modal ── */
+async function openDailySalesModal(id) {
+  let vals = {};
+  if (id) {
+    try {
+      const data = await api(`/submissions/${id}?include=values`);
+      vals = data.submission.values || {};
+    } catch (e) { showToast('Failed to load entry', true); return; }
+  }
+  const title = id ? 'Edit Daily Entry' : 'Add Daily Entry';
+  openModal(`
+    <h2>${title}</h2>
+    <label>Date</label>
+    <input type="date" id="ds-date" value="${esc(vals['Date'] || todayISO())}">
+    <label>Food Revenue ($)</label>
+    <input type="number" step="0.01" id="ds-foodrev" value="${esc(vals['Food Revenue'] || '')}">
+    <label>Beverage Revenue ($)</label>
+    <input type="number" step="0.01" id="ds-bevrev" value="${esc(vals['Beverage Revenue'] || '')}">
+    <label>Food Cost ($)</label>
+    <input type="number" step="0.01" id="ds-foodcost" value="${esc(vals['Food Cost'] || '')}">
+    <label>Beverage Cost ($)</label>
+    <input type="number" step="0.01" id="ds-bevcost" value="${esc(vals['Beverage Cost'] || '')}">
+    <label>Labor Cost ($)</label>
+    <input type="number" step="0.01" id="ds-labor" value="${esc(vals['Labor Cost'] || '')}">
+    <label>Other Expenses ($)</label>
+    <input type="number" step="0.01" id="ds-other" value="${esc(vals['Other Expenses'] || '')}">
+    <label>Covers (# of guests)</label>
+    <input type="number" id="ds-covers" value="${esc(vals['Covers'] || '')}">
+    <label>Notes</label>
+    <textarea id="ds-notes">${esc(vals['Notes'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDailySales('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+async function saveDailySales(id) {
+  const values = {
+    'Date': document.getElementById('ds-date').value,
+    'Food Revenue': document.getElementById('ds-foodrev').value,
+    'Beverage Revenue': document.getElementById('ds-bevrev').value,
+    'Food Cost': document.getElementById('ds-foodcost').value,
+    'Beverage Cost': document.getElementById('ds-bevcost').value,
+    'Labor Cost': document.getElementById('ds-labor').value,
+    'Other Expenses': document.getElementById('ds-other').value,
+    'Covers': document.getElementById('ds-covers').value,
+    'Notes': document.getElementById('ds-notes').value,
+  };
+  try {
+    if (id) await updateSub(id, values);
+    else await createSub('daily-sales', values);
+    closeModal();
+    showToast(id ? 'Daily entry updated' : 'Daily entry created');
+    loadPnl();
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, true);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Pagination Helper
+   ═══════════════════════════════════════════ */
+function renderPagination(containerId, page, hasNext, onNav) {
+  const el = document.getElementById(containerId);
+  const hasPrev = page > 1;
+
+  if (!hasPrev && !hasNext) {
+    el.innerHTML = page > 0 ? `<span class="page-info">Page ${page}</span>` : '';
+    return;
+  }
+
+  el.innerHTML = `
+    <button class="btn btn-secondary btn-sm" ${hasPrev ? '' : 'disabled'} id="${containerId}-prev">Prev</button>
+    <span class="page-info">Page ${page}</span>
+    <button class="btn btn-secondary btn-sm" ${hasNext ? '' : 'disabled'} id="${containerId}-next">Next</button>
+  `;
+
+  if (hasPrev) {
+    document.getElementById(containerId + '-prev').onclick = () => onNav(page - 1);
+  }
+  if (hasNext) {
+    document.getElementById(containerId + '-next').onclick = () => onNav(page + 1);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Initialization
+   ═══════════════════════════════════════════ */
+(function init() {
+  // Set default server URL
+  document.getElementById('login-url').value = window.location.origin;
+
+  // Check for session from base launcher
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user;
+      API.displayName = s.displayName || s.user;
+      enterApp();
+    } catch (e) {
+      console.warn('Invalid session:', e);
+    }
+  }
+})();
+</script>
+</body>
+</html>

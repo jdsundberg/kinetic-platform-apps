@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentHub</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+  --cyan: #0097A7;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+
+/* Login */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* Topbar */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:4px; margin-left:24px; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.7); padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; }
+.topbar nav button:hover { background:rgba(255,255,255,.1); color:white; }
+.topbar nav button.active { background:var(--orange); color:white; }
+.topbar .spacer { flex:1; }
+.topbar .user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.topbar .user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+/* Console */
+.console { padding:24px; max-width:1400px; margin:0 auto; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* Cards */
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:12px; }
+
+/* KPI */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); }
+.kpi .lbl { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal .val { color:var(--teal); }
+.kpi.cyan .val { color:var(--cyan); }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; }
+th { background:var(--light); text-align:left; padding:8px 10px; font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; position:sticky; top:0; }
+td { padding:8px 10px; border-bottom:1px solid var(--border); font-size:13px; }
+tr:hover td { background:#FAFAFA; }
+tr.clickable { cursor:pointer; }
+.table-wrap { max-height:500px; overflow-y:auto; border-radius:8px; border:1px solid var(--border); }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-active { background:#E8F5E9; color:#2E7D32; }
+.badge-inactive { background:#F3E5F5; color:#7B1FA2; }
+.badge-paused { background:#FFF3E0; color:#E65100; }
+.badge-ai { background:#E3F2FD; color:#1565C0; }
+.badge-human { background:#F3E5F5; color:#7B1FA2; }
+.badge-resolved { background:#E8F5E9; color:#2E7D32; }
+.badge-escalated { background:#FFF3E0; color:#E65100; }
+.badge-error { background:#FFEBEE; color:#C62828; }
+.badge-partial { background:#FFF8E1; color:#F57F17; }
+.badge-success { background:#E8F5E9; color:#2E7D32; }
+.badge-skipped { background:#ECEFF1; color:#546E7A; }
+.badge-scheduled { background:#E3F2FD; color:#1565C0; }
+.badge-alert { background:#FFEBEE; color:#C62828; }
+.badge-manual { background:#F3E5F5; color:#7B1FA2; }
+.badge-mcp { background:#E0F2F1; color:#00695C; }
+.badge-reasoning { background:#EDE7F6; color:#4527A0; }
+.badge-report { background:#E8EAF6; color:#283593; }
+.badge-query { background:#E1F5FE; color:#0277BD; }
+.badge-submitted { background:#E3F2FD; color:#1565C0; }
+.badge-under-review { background:#FFF3E0; color:#E65100; }
+.badge-approved { background:#E8F5E9; color:#2E7D32; }
+.badge-rejected { background:#FFEBEE; color:#C62828; }
+.badge-deployed { background:#E0F2F1; color:#00695C; }
+.badge-needs-info { background:#FFF8E1; color:#F57F17; }
+
+/* Agent Grid */
+.agent-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; margin-bottom:20px; }
+.agent-card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); cursor:pointer; transition:all .15s; }
+.agent-card:hover { box-shadow:var(--shadow-lg); border-color:var(--orange); }
+.agent-card .agent-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.agent-card .agent-avatar { width:48px; height:48px; border-radius:50%; background:var(--blue); color:white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; flex-shrink:0; }
+.agent-card .agent-avatar.ai { background:linear-gradient(135deg,#1565C0,#0D47A1); }
+.agent-card .agent-avatar.human { background:linear-gradient(135deg,#7B1FA2,#4A148C); }
+.agent-card .agent-name { font-weight:700; font-size:16px; color:var(--blue); }
+.agent-card .agent-meta { font-size:11px; color:var(--gray); margin-top:2px; }
+.agent-card .token-bar { height:6px; background:#E8EAED; border-radius:3px; margin-top:12px; overflow:hidden; }
+.agent-card .token-bar .fill { height:100%; border-radius:3px; transition:width .3s; }
+.agent-card .token-label { display:flex; justify-content:space-between; font-size:10px; color:var(--gray); margin-top:4px; }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:white; border-radius:16px; width:800px; max-width:90vw; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); position:sticky; top:0; background:white; border-radius:16px 16px 0 0; z-index:1; }
+.modal-header h2 { font-size:18px; color:var(--blue); }
+.modal-close { background:none; border:none; font-size:20px; color:var(--gray); padding:4px 8px; border-radius:6px; }
+.modal-close:hover { background:var(--light); }
+.modal-body { padding:24px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-group { margin-bottom:16px; }
+.form-group.full { grid-column:1/-1; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.form-group input, .form-group select, .form-group textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; outline:none; font-size:14px; font-family:inherit; }
+.form-group textarea { resize:vertical; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.form-group input:disabled, .form-group textarea:disabled { background:var(--light); color:var(--gray); }
+
+/* Buttons */
+.btn { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { background:#E8EAED; }
+.btn-success { background:var(--green); color:white; }
+.btn-success:hover { opacity:.9; }
+.btn-danger { background:var(--red); color:white; }
+.btn-danger:hover { opacity:.9; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-row { display:flex; gap:8px; margin-top:16px; }
+
+/* Timeline */
+.timeline { position:relative; padding-left:32px; }
+.timeline::before { content:''; position:absolute; left:12px; top:0; bottom:0; width:2px; background:var(--border); }
+.timeline-step { position:relative; margin-bottom:24px; }
+.timeline-step::before { content:''; position:absolute; left:-26px; top:4px; width:12px; height:12px; border-radius:50%; border:2px solid var(--border); background:white; z-index:1; }
+.timeline-step.success::before { border-color:var(--green); background:var(--green); }
+.timeline-step.error::before { border-color:var(--red); background:var(--red); }
+.timeline-step.escalation::before { border-color:var(--orange); background:var(--orange); }
+.timeline-step .step-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.timeline-step .step-header .step-num { font-weight:700; font-size:12px; color:var(--blue); background:var(--light); padding:2px 8px; border-radius:4px; }
+.timeline-step .step-header .step-time { font-size:11px; color:var(--gray); }
+.timeline-step .step-header .step-fn { font-family:monospace; font-size:12px; color:var(--teal); font-weight:600; }
+.timeline-step .reasoning-block { background:#F5F0FF; border-left:3px solid var(--purple); padding:10px 14px; border-radius:0 8px 8px 0; margin-top:8px; font-size:12px; line-height:1.6; color:#333; }
+.timeline-step .result-block { background:#F0F9F0; border-left:3px solid var(--green); padding:10px 14px; border-radius:0 8px 8px 0; margin-top:8px; font-size:12px; line-height:1.5; color:#333; }
+.timeline-step .params-block { background:#F0F5FF; border-left:3px solid var(--indigo); padding:10px 14px; border-radius:0 8px 8px 0; margin-top:8px; font-size:11px; font-family:monospace; white-space:pre-wrap; word-break:break-all; color:#333; }
+.timeline-step .step-meta { display:flex; gap:16px; margin-top:8px; font-size:11px; color:var(--gray); }
+
+/* Prompt Lab */
+.prompt-display { background:#1E1E2E; color:#CDD6F4; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.7; padding:24px; border-radius:12px; white-space:pre-wrap; word-wrap:break-word; max-height:600px; overflow-y:auto; }
+.prompt-meta { display:flex; gap:24px; margin-bottom:16px; font-size:12px; color:var(--gray); }
+.prompt-meta strong { color:var(--blue); }
+
+/* Filters */
+.filter-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.filter-bar select, .filter-bar input { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; font-family:inherit; outline:none; }
+.filter-bar select:focus, .filter-bar input:focus { border-color:var(--orange); }
+
+/* Section headers */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.section-header h2 { font-size:18px; font-weight:700; color:var(--blue); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#C4C4C4; border-radius:3px; }
+
+/* Request workflow stepper */
+.stepper { display:flex; align-items:center; gap:4px; margin-bottom:16px; }
+.stepper-step { display:flex; align-items:center; gap:4px; font-size:11px; font-weight:600; color:var(--gray); }
+.stepper-step.done { color:var(--green); }
+.stepper-step.current { color:var(--orange); }
+.stepper-step .dot { width:10px; height:10px; border-radius:50%; border:2px solid var(--gray); }
+.stepper-step.done .dot { background:var(--green); border-color:var(--green); }
+.stepper-step.current .dot { background:var(--orange); border-color:var(--orange); }
+.stepper-line { flex:0 0 24px; height:2px; background:var(--border); }
+.stepper-step.done + .stepper-line { background:var(--green); }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>AgentHub</h1>
+    <div class="sub">AI Agent Administration Console</div>
+    <div class="orange-bar"></div>
+    <label>Server</label>
+    <input id="login-server" value="http://localhost:3019" placeholder="http://localhost:3019">
+    <label>Username</label>
+    <input id="login-user" value="">
+    <label>Password</label>
+    <input id="login-pass" type="password" value="">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Agent<span>Hub</span></div>
+    <nav id="main-nav">
+      <button onclick="showTab('dashboard')" data-tab="dashboard" class="active">Dashboard</button>
+      <button onclick="showTab('agents')" data-tab="agents">Agents</button>
+      <button onclick="showTab('runs')" data-tab="runs">Run History</button>
+      <button onclick="showTab('requests')" data-tab="requests">Requests</button>
+      <button onclick="showTab('promptlab')" data-tab="promptlab">Prompt Lab</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span>Signed in as <strong id="display-user"></strong></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="section-header"><h2>Dashboard</h2><button class="btn btn-secondary btn-sm" onclick="loadDashboard()">Refresh</button></div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card"><h3>Agent Status</h3><div id="dash-agents" class="agent-grid"></div></div>
+        <div class="card"><h3>Recent Runs</h3><div class="table-wrap" id="dash-runs"></div></div>
+      </div>
+    </div>
+
+    <!-- Agents Tab -->
+    <div id="tab-agents" class="tab-panel">
+      <div class="section-header">
+        <h2>Agents</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="showNewAgentModal()">+ New Agent</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadAgents()">Refresh</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select id="agent-filter-type" onchange="renderAgentTable()"><option value="">All Types</option><option>AI Agent</option><option>Human Agent</option></select>
+        <select id="agent-filter-status" onchange="renderAgentTable()"><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Paused</option></select>
+      </div>
+      <div class="card"><div class="table-wrap" id="agents-table"></div></div>
+    </div>
+
+    <!-- Run History Tab -->
+    <div id="tab-runs" class="tab-panel">
+      <div class="section-header"><h2>Run History</h2><button class="btn btn-secondary btn-sm" onclick="loadRuns()">Refresh</button></div>
+      <div class="filter-bar">
+        <select id="run-filter-agent" onchange="renderRunTable()"><option value="">All Agents</option></select>
+        <select id="run-filter-outcome" onchange="renderRunTable()"><option value="">All Outcomes</option><option>Resolved</option><option>Escalated</option><option>Error</option><option>Partial</option></select>
+        <select id="run-filter-trigger" onchange="renderRunTable()"><option value="">All Triggers</option><option>Scheduled</option><option>Alert</option><option>Escalation</option><option>Manual</option></select>
+      </div>
+      <div class="card" id="runs-content"></div>
+    </div>
+
+    <!-- Requests Tab -->
+    <div id="tab-requests" class="tab-panel">
+      <div class="section-header">
+        <h2>Agent Requests</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="showNewRequestModal()">+ New Request</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadRequests()">Refresh</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select id="req-filter-status" onchange="renderRequestTable()"><option value="">All Statuses</option><option>Submitted</option><option>Under Review</option><option>Needs Info</option><option>Approved</option><option>Deployed</option><option>Rejected</option></select>
+      </div>
+      <div class="card" id="requests-content"></div>
+    </div>
+
+    <!-- Prompt Lab Tab -->
+    <div id="tab-promptlab" class="tab-panel">
+      <div class="section-header"><h2>Prompt Lab</h2></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;white-space:nowrap;">Select Agent</label>
+          <select id="prompt-agent-select" onchange="loadPromptForAgent()" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+            <option value="">-- Choose an AI Agent --</option>
+          </select>
+          <button class="btn btn-primary" onclick="regeneratePrompt()">Regenerate</button>
+          <button class="btn btn-secondary" onclick="copyPrompt()">Copy to Clipboard</button>
+        </div>
+        <div class="prompt-meta" id="prompt-meta" style="display:none;"></div>
+        <div class="prompt-display" id="prompt-display" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Detail Modal -->
+<div class="modal-overlay" id="agent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="agent-modal-title">Agent Details</h2>
+      <button class="modal-close" onclick="closeModal('agent-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="agent-modal-body"></div>
+  </div>
+</div>
+
+<!-- Run Steps Modal -->
+<div class="modal-overlay" id="steps-modal">
+  <div class="modal" style="width:900px;">
+    <div class="modal-header">
+      <h2 id="steps-modal-title">Run Steps</h2>
+      <button class="modal-close" onclick="closeModal('steps-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="steps-modal-body"></div>
+  </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div class="modal-overlay" id="request-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="request-modal-title">Request Details</h2>
+      <button class="modal-close" onclick="closeModal('request-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="request-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ───── State ───── */
+let API = '';
+let AUTH = '';
+let USERNAME = '';
+let dashData = null;
+let allAgents = [];
+let allRuns = [];
+let allRequests = [];
+
+/* ───── Auth ───── */
+function doLogin() {
+  const server = document.getElementById('login-server').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!server || !user || !pass) { showLoginError('All fields required'); return; }
+  AUTH = 'Basic ' + btoa(user + ':' + pass);
+  API = server;
+  USERNAME = user;
+  fetch(API + '/app/api/v1/me', { headers: { Authorization: AUTH } })
+    .then(r => { if (!r.ok) throw new Error('Auth failed'); return r.json(); })
+    .then(() => {
+      localStorage.setItem('ah_server', server);
+      localStorage.setItem('ah_user', user);
+      localStorage.setItem('ah_pass', pass);
+      enterApp();
+    })
+    .catch(e => showLoginError(e.message));
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('display-user').textContent = USERNAME;
+  loadDashboard();
+}
+
+function doLogout() {
+  localStorage.removeItem('ah_pass');
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+// Auto-login: try launcher session first, then standalone storage
+(function() {
+  // Check for launcher-injected session (running via base server on :3011)
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      setTimeout(enterApp, 50);
+      return;
+    } catch(e) {}
+  }
+  // Fallback: standalone login from localStorage
+  const sv = localStorage.getItem('ah_server');
+  const u = localStorage.getItem('ah_user');
+  const p = localStorage.getItem('ah_pass');
+  if (sv) document.getElementById('login-server').value = sv;
+  if (u) document.getElementById('login-user').value = u;
+  if (p) { document.getElementById('login-pass').value = p; setTimeout(doLogin, 100); }
+})();
+
+/* ───── API helpers ───── */
+function api(method, path, body) {
+  const opts = { method, headers: { Authorization: AUTH, 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(API + path, opts).then(r => r.json());
+}
+
+function fmtNum(n) { return (n||0).toLocaleString(); }
+function fmtDate(iso) { if (!iso) return '-'; const d=new Date(iso); return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateShort(iso) { if (!iso) return '-'; return new Date(iso).toLocaleDateString(); }
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+function badgeFor(val, type) {
+  const cls = {
+    'Active':'active','Inactive':'inactive','Paused':'paused',
+    'AI Agent':'ai','Human Agent':'human',
+    'Resolved':'resolved','Escalated':'escalated','Error':'error','Partial':'partial',
+    'Success':'success','Skipped':'skipped',
+    'Scheduled':'scheduled','Alert':'alert','Manual':'manual','Escalation':'escalated',
+    'MCP Call':'mcp','Reasoning':'reasoning','Report':'report','Query':'query',
+    'Submitted':'submitted','Under Review':'under-review','Approved':'approved',
+    'Rejected':'rejected','Deployed':'deployed','Needs Info':'needs-info',
+  }[val] || 'submitted';
+  return `<span class="badge badge-${cls}">${esc(val)}</span>`;
+}
+
+/* ───── Tabs ───── */
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'agents') loadAgents();
+  else if (tab === 'runs') loadRuns();
+  else if (tab === 'requests') loadRequests();
+  else if (tab === 'promptlab') loadPromptLabAgents();
+}
+
+/* ───── Dashboard ───── */
+function loadDashboard() {
+  document.getElementById('dash-kpis').innerHTML = '<div class="loading">Loading...</div>';
+  api('GET', '/api/ah/dashboard').then(data => {
+    dashData = data;
+    const k = data.kpis;
+    const reqTotal = data.requestStats?.total || 0;
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi green"><div class="val">${k.activeAgents}</div><div class="lbl">Active Agents</div></div>
+      <div class="kpi"><div class="val">${k.aiAgents}</div><div class="lbl">AI Agents</div><div class="sub">${k.humanAgents} human</div></div>
+      <div class="kpi orange"><div class="val">${fmtNum(k.tokensToday)}</div><div class="lbl">Tokens Today</div></div>
+      <div class="kpi purple"><div class="val">${fmtNum(k.tokensThisMonth)}</div><div class="lbl">Tokens This Month</div></div>
+      <div class="kpi teal"><div class="val">${k.totalRuns}</div><div class="lbl">Total Runs</div></div>
+      <div class="kpi cyan"><div class="val">${reqTotal}</div><div class="lbl">Agent Requests</div></div>
+    `;
+
+    // Agent cards
+    const agDiv = document.getElementById('dash-agents');
+    agDiv.className = 'agent-grid';
+    agDiv.innerHTML = data.agentSummary.map(a => {
+      const pct = a.tokenMaxDaily > 0 ? Math.min(100, (a.tokensToday / a.tokenMaxDaily) * 100) : 0;
+      const barColor = pct > 80 ? 'var(--red)' : pct > 50 ? 'var(--orange)' : 'var(--green)';
+      const initials = (a.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2);
+      return `<div class="agent-card" onclick="openAgentDetail('${a.id}')">
+        <div class="agent-header">
+          <div class="agent-avatar ${a.type==='AI Agent'?'ai':'human'}">${esc(initials)}</div>
+          <div>
+            <div class="agent-name">${esc(a.name)}</div>
+            <div class="agent-meta">${badgeFor(a.type)} ${badgeFor(a.status)} ${a.schedule?'<span style="margin-left:4px;font-size:10px;color:var(--gray)">'+esc(a.schedule)+'</span>':''}</div>
+          </div>
+        </div>
+        ${a.type==='AI Agent'?`<div class="token-bar"><div class="fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="token-label"><span>${fmtNum(a.tokensToday)} today</span><span>${a.tokenMaxDaily?fmtNum(a.tokenMaxDaily)+' limit':'no limit'}</span></div>`:''}
+      </div>`;
+    }).join('');
+
+    // Recent runs
+    const runsDiv = document.getElementById('dash-runs');
+    runsDiv.innerHTML = `<table><thead><tr><th>Run</th><th>Agent</th><th>Trigger</th><th>Outcome</th><th>Time</th></tr></thead><tbody>
+      ${data.recentRuns.map(r => `<tr class="clickable" onclick="openRunSteps('${r.id}')">
+        <td style="font-family:monospace;font-size:12px">${esc(r.runId)}</td>
+        <td>${esc(r.agentName)}</td>
+        <td>${badgeFor(r.trigger)}</td>
+        <td>${badgeFor(r.outcome)}</td>
+        <td style="font-size:11px;color:var(--gray)">${fmtDate(r.startedAt)}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  });
+}
+
+/* ───── Agents Tab ───── */
+function loadAgents() {
+  document.getElementById('agents-table').innerHTML = '<div class="loading">Loading...</div>';
+  api('GET', '/api/ah/dashboard').then(data => {
+    allAgents = data.agentSummary;
+    renderAgentTable();
+    // Populate run filter agent dropdown
+    const sel = document.getElementById('run-filter-agent');
+    const existing = sel.querySelectorAll('option:not(:first-child)');
+    existing.forEach(o => o.remove());
+    allAgents.forEach(a => { const o = document.createElement('option'); o.value = a.name; o.textContent = a.name; sel.appendChild(o); });
+  });
+}
+
+function renderAgentTable() {
+  const typeF = document.getElementById('agent-filter-type').value;
+  const statusF = document.getElementById('agent-filter-status').value;
+  let filtered = allAgents;
+  if (typeF) filtered = filtered.filter(a => a.type === typeF);
+  if (statusF) filtered = filtered.filter(a => a.status === statusF);
+
+  document.getElementById('agents-table').innerHTML = `<table><thead><tr>
+    <th>ID</th><th>Name</th><th>Type</th><th>Status</th><th>Model</th><th>Tokens Today</th><th>Schedule</th>
+  </tr></thead><tbody>
+    ${filtered.map(a => `<tr class="clickable" onclick="openAgentDetail('${a.id}')">
+      <td style="font-family:monospace;font-size:12px">${esc(a.agentId)}</td>
+      <td><strong>${esc(a.name)}</strong></td>
+      <td>${badgeFor(a.type)}</td>
+      <td>${badgeFor(a.status)}</td>
+      <td style="font-size:11px;font-family:monospace">${esc(a.model||'-')}</td>
+      <td>${a.type==='AI Agent'?fmtNum(a.tokensToday):'-'}</td>
+      <td style="font-size:11px">${esc(a.schedule)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openAgentDetail(id) {
+  api('GET', '/app/api/v1/submissions/'+id+'?include=values').then(data => {
+    const v = data.submission?.values || {};
+    const isAI = v['Type'] === 'AI Agent';
+    document.getElementById('agent-modal-title').textContent = (v['Name']||'Agent') + ' - Details';
+    document.getElementById('agent-modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group"><label>Agent ID</label><input disabled value="${esc(v['Agent ID'])}"></div>
+        <div class="form-group"><label>Name</label><input disabled value="${esc(v['Name'])}"></div>
+        <div class="form-group"><label>Type</label><input disabled value="${esc(v['Type'])}"></div>
+        <div class="form-group"><label>Status</label><input disabled value="${esc(v['Status'])}"></div>
+        <div class="form-group full"><label>Description</label><textarea disabled rows="3">${esc(v['Description'])}</textarea></div>
+        <div class="form-group full"><label>Personality</label><textarea disabled rows="3">${esc(v['Personality'])}</textarea></div>
+        <div class="form-group full"><label>Security Goals</label><textarea disabled rows="3">${esc(v['Security Goals'])}</textarea></div>
+        <div class="form-group full"><label>Project Goals</label><textarea disabled rows="3">${esc(v['Project Goals'])}</textarea></div>
+        <div class="form-group full"><label>Reports</label><textarea disabled rows="3">${esc(v['Reports'])}</textarea></div>
+        <div class="form-group"><label>Schedule</label><input disabled value="${esc((v['Schedule Start']||'')+' - '+(v['Schedule End']||'')+' '+(v['Schedule Timezone']||''))}"></div>
+        <div class="form-group"><label>Active Days</label><input disabled value="${esc(v['Schedule Days'])}"></div>
+        ${isAI ? `
+        <div class="form-group"><label>LLM Provider</label><input disabled value="${esc(v['LLM Provider'])}"></div>
+        <div class="form-group"><label>LLM Model</label><input disabled value="${esc(v['LLM Model'])}"></div>
+        <div class="form-group"><label>Token Rate Limit</label><input disabled value="${fmtNum(parseInt(v['Token Rate Limit'])||0)}/min"></div>
+        <div class="form-group"><label>Token Max Hourly</label><input disabled value="${fmtNum(parseInt(v['Token Max Hourly'])||0)}"></div>
+        <div class="form-group"><label>Token Max Daily</label><input disabled value="${fmtNum(parseInt(v['Token Max Daily'])||0)}"></div>
+        <div class="form-group"><label>Token Max Monthly</label><input disabled value="${fmtNum(parseInt(v['Token Max Monthly'])||0)}"></div>
+        <div class="form-group"><label>Tokens Used Today</label><input disabled value="${fmtNum(parseInt(v['Tokens Used Today'])||0)}"></div>
+        <div class="form-group"><label>Tokens Used This Month</label><input disabled value="${fmtNum(parseInt(v['Tokens Used This Month'])||0)}"></div>
+        ` : ''}
+        <div class="form-group"><label>Escalation Target</label><input disabled value="${esc(v['Escalation Target'])}"></div>
+        <div class="form-group"><label>Max Interactions Before Escalation</label><input disabled value="${esc(v['Max Interactions Before Escalation'])}"></div>
+      </div>
+      ${isAI ? `<div class="btn-row">
+        <button class="btn btn-primary" onclick="generatePromptFromModal('${id}')">Generate Prompt</button>
+        <button class="btn btn-secondary" onclick="viewAgentRuns('${id}')">View Runs</button>
+      </div>` : ''}
+    `;
+    openModal('agent-modal');
+  });
+}
+
+function generatePromptFromModal(id) {
+  api('POST', '/api/ah/agents/'+id+'/generate-prompt').then(data => {
+    if (data.error) { alert(data.error); return; }
+    alert('Prompt generated! ' + data.charCount + ' characters. View it in Prompt Lab.');
+    closeModal('agent-modal');
+  });
+}
+
+function viewAgentRuns(id) {
+  closeModal('agent-modal');
+  showTab('runs');
+  api('GET', '/api/ah/agents/'+id+'/runs').then(data => {
+    const sel = document.getElementById('run-filter-agent');
+    sel.value = data.agentName;
+    renderRunTable();
+  });
+}
+
+function showNewAgentModal() {
+  document.getElementById('agent-modal-title').textContent = 'New Agent';
+  document.getElementById('agent-modal-body').innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label>Agent ID</label><input id="new-agentid" placeholder="AGT-005"></div>
+      <div class="form-group"><label>Name *</label><input id="new-name" required></div>
+      <div class="form-group"><label>Type</label><select id="new-type"><option>AI Agent</option><option>Human Agent</option></select></div>
+      <div class="form-group"><label>Status</label><select id="new-status"><option>Active</option><option>Inactive</option><option>Paused</option></select></div>
+      <div class="form-group full"><label>Description</label><textarea id="new-desc" rows="3"></textarea></div>
+      <div class="form-group full"><label>Personality</label><textarea id="new-personality" rows="3"></textarea></div>
+      <div class="form-group full"><label>Security Goals</label><textarea id="new-security" rows="3"></textarea></div>
+      <div class="form-group full"><label>Project Goals</label><textarea id="new-goals" rows="3"></textarea></div>
+      <div class="form-group"><label>LLM Provider</label><select id="new-provider"><option>Anthropic</option><option>OpenAI</option><option>Google</option></select></div>
+      <div class="form-group"><label>LLM Model</label><input id="new-model" placeholder="claude-sonnet-4-20250514"></div>
+      <div class="form-group"><label>Schedule Start</label><input id="new-sched-start" placeholder="06:00"></div>
+      <div class="form-group"><label>Schedule End</label><input id="new-sched-end" placeholder="18:00"></div>
+      <div class="form-group"><label>Timezone</label><input id="new-tz" value="America/Chicago"></div>
+      <div class="form-group"><label>Days</label><input id="new-days" value="Mon,Tue,Wed,Thu,Fri"></div>
+      <div class="form-group"><label>Escalation Target</label><input id="new-esc"></div>
+      <div class="form-group"><label>Max Interactions</label><input id="new-maxint" type="number" value="3"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveNewAgent()">Create Agent</button>
+      <button class="btn btn-secondary" onclick="closeModal('agent-modal')">Cancel</button>
+    </div>
+  `;
+  openModal('agent-modal');
+}
+
+function saveNewAgent() {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { alert('Name is required'); return; }
+  const vals = {
+    'Agent ID': document.getElementById('new-agentid').value.trim(),
+    'Name': name,
+    'Type': document.getElementById('new-type').value,
+    'Status': document.getElementById('new-status').value,
+    'Description': document.getElementById('new-desc').value,
+    'Personality': document.getElementById('new-personality').value,
+    'Security Goals': document.getElementById('new-security').value,
+    'Project Goals': document.getElementById('new-goals').value,
+    'LLM Provider': document.getElementById('new-provider').value,
+    'LLM Model': document.getElementById('new-model').value,
+    'Schedule Start': document.getElementById('new-sched-start').value,
+    'Schedule End': document.getElementById('new-sched-end').value,
+    'Schedule Timezone': document.getElementById('new-tz').value,
+    'Schedule Days': document.getElementById('new-days').value,
+    'Escalation Target': document.getElementById('new-esc').value,
+    'Max Interactions Before Escalation': document.getElementById('new-maxint').value,
+    'Tokens Used Today': '0', 'Tokens Used This Month': '0',
+  };
+  api('POST', '/app/api/v1/kapps/agent-hub/forms/agent/submissions', { values: vals }).then(() => {
+    closeModal('agent-modal');
+    loadAgents();
+  });
+}
+
+/* ───── Runs Tab ───── */
+function loadRuns() {
+  document.getElementById('runs-content').innerHTML = '<div class="loading">Loading...</div>';
+  api('GET', '/api/ah/dashboard').then(data => {
+    allAgents = data.agentSummary;
+    allRuns = data.recentRuns;
+    // Also load all runs separately
+    return api('GET', '/app/api/v1/kapps/agent-hub/forms/agent-run/submissions?include=values&limit=100');
+  }).then(data => {
+    const subs = data.submissions || [];
+    allRuns = subs.map(r => {
+      const v = r.values || {};
+      return { id:r.id, runId:v['Run ID']||'', agentName:v['Agent Name']||'', trigger:v['Trigger']||'',
+        outcome:v['Final Outcome']||'', startedAt:v['Started At']||'', duration:v['Duration Seconds']||'',
+        tokens:v['Total Tokens']||'', steps:v['Steps Count']||'', escalatedTo:v['Escalated To']||'', summary:v['Summary']||'' };
+    }).sort((a,b) => (b.startedAt||'').localeCompare(a.startedAt||''));
+    renderRunTable();
+  });
+}
+
+function renderRunTable() {
+  const agentF = document.getElementById('run-filter-agent').value;
+  const outcomeF = document.getElementById('run-filter-outcome').value;
+  const triggerF = document.getElementById('run-filter-trigger').value;
+  let filtered = allRuns;
+  if (agentF) filtered = filtered.filter(r => r.agentName === agentF);
+  if (outcomeF) filtered = filtered.filter(r => r.outcome === outcomeF);
+  if (triggerF) filtered = filtered.filter(r => r.trigger === triggerF);
+
+  document.getElementById('runs-content').innerHTML = `<div class="table-wrap"><table><thead><tr>
+    <th>Run ID</th><th>Agent</th><th>Trigger</th><th>Outcome</th><th>Steps</th><th>Tokens</th><th>Duration</th><th>Started</th>
+  </tr></thead><tbody>
+    ${filtered.map(r => `<tr class="clickable" onclick="openRunSteps('${r.id}')">
+      <td style="font-family:monospace;font-size:12px">${esc(r.runId)}</td>
+      <td><strong>${esc(r.agentName)}</strong></td>
+      <td>${badgeFor(r.trigger)}</td>
+      <td>${badgeFor(r.outcome)}</td>
+      <td>${r.steps}</td>
+      <td>${fmtNum(parseInt(r.tokens)||0)}</td>
+      <td>${r.duration}s</td>
+      <td style="font-size:11px;color:var(--gray)">${fmtDate(r.startedAt)}</td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+function openRunSteps(runId) {
+  document.getElementById('steps-modal-title').textContent = 'Loading...';
+  document.getElementById('steps-modal-body').innerHTML = '<div class="loading">Loading steps...</div>';
+  openModal('steps-modal');
+
+  api('GET', '/api/ah/runs/'+runId+'/steps').then(data => {
+    const steps = data.steps || [];
+    const run = allRuns.find(r => r.id === runId);
+    document.getElementById('steps-modal-title').textContent = (run ? run.runId + ' - ' + run.agentName : data.runId) + ' (' + steps.length + ' steps)';
+
+    if (run) {
+      var summaryHtml = `<div style="background:var(--light);padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:13px;">
+        <strong>Summary:</strong> ${esc(run.summary)}<br>
+        <span style="color:var(--gray);font-size:11px;">${badgeFor(run.trigger)} ${badgeFor(run.outcome)} | ${fmtNum(parseInt(run.tokens)||0)} tokens | ${run.duration}s</span>
+      </div>`;
+    } else { var summaryHtml = ''; }
+
+    document.getElementById('steps-modal-body').innerHTML = summaryHtml + `<div class="timeline">
+      ${steps.map(s => {
+        const statusCls = s.status === 'Error' ? 'error' : s.actionType === 'Escalation' ? 'escalation' : 'success';
+        return `<div class="timeline-step ${statusCls}">
+          <div class="step-header">
+            <span class="step-num">Step ${s.stepNumber}</span>
+            ${badgeFor(s.actionType)}
+            ${s.functionCalled ? `<span class="step-fn">${esc(s.functionCalled)}</span>` : ''}
+            <span class="step-time">${fmtDate(s.timestamp)}</span>
+          </div>
+          ${s.reasoning ? `<div class="reasoning-block">${esc(s.reasoning)}</div>` : ''}
+          ${s.functionParameters ? `<div class="params-block">${esc(tryFormatJSON(s.functionParameters))}</div>` : ''}
+          ${s.functionResultSummary ? `<div class="result-block">${esc(s.functionResultSummary)}</div>` : ''}
+          <div class="step-meta">
+            ${s.tokensUsed ? '<span>'+fmtNum(parseInt(s.tokensUsed))+' tokens</span>' : ''}
+            ${s.durationMs ? '<span>'+s.durationMs+'ms</span>' : ''}
+            <span>${badgeFor(s.status)}</span>
+            ${s.errorDetail ? '<span style="color:var(--red)">'+esc(s.errorDetail)+'</span>' : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+}
+
+function tryFormatJSON(str) {
+  try { return JSON.stringify(JSON.parse(str), null, 2); } catch { return str; }
+}
+
+/* ───── Requests Tab ───── */
+function loadRequests() {
+  document.getElementById('requests-content').innerHTML = '<div class="loading">Loading...</div>';
+  api('GET', '/api/ah/requests').then(data => {
+    allRequests = data.requests || [];
+    renderRequestTable();
+  });
+}
+
+function renderRequestTable() {
+  const statusF = document.getElementById('req-filter-status').value;
+  let filtered = allRequests;
+  if (statusF) filtered = filtered.filter(r => r.status === statusF);
+
+  document.getElementById('requests-content').innerHTML = `<div class="table-wrap"><table><thead><tr>
+    <th>Request ID</th><th>Agent Name</th><th>Type</th><th>Organization</th><th>Budget</th><th>Status</th><th>Submitted</th><th>Duration</th>
+  </tr></thead><tbody>
+    ${filtered.map(r => `<tr class="clickable" onclick="openRequestDetail('${r.id}')">
+      <td style="font-family:monospace;font-size:12px">${esc(r.requestId)}</td>
+      <td><strong>${esc(r.agentName)}</strong></td>
+      <td>${badgeFor(r.agentType||'AI Agent')}</td>
+      <td>${esc(r.organization)}</td>
+      <td>${esc(r.budget)}</td>
+      <td>${badgeFor(r.status)}</td>
+      <td style="font-size:11px;color:var(--gray)">${fmtDateShort(r.submittedAt)}</td>
+      <td style="font-size:11px">${esc(r.duration)}</td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+function openRequestDetail(id) {
+  const r = allRequests.find(x => x.id === id);
+  if (!r) return;
+  const steps = ['Submitted','Under Review','Approved','Deployed'];
+  const currentIdx = steps.indexOf(r.status);
+
+  document.getElementById('request-modal-title').textContent = r.requestId + ' - ' + r.agentName;
+  document.getElementById('request-modal-body').innerHTML = `
+    <div class="stepper">
+      ${steps.map((s, i) => {
+        const cls = i < currentIdx ? 'done' : i === currentIdx ? 'current' : '';
+        return `<div class="stepper-step ${cls}"><span class="dot"></span>${s}</div>${i < steps.length-1 ? '<div class="stepper-line"></div>' : ''}`;
+      }).join('')}
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Request ID</label><input disabled value="${esc(r.requestId)}"></div>
+      <div class="form-group"><label>Status</label><input disabled value="${esc(r.status)}"></div>
+      <div class="form-group"><label>Agent Name</label><input disabled value="${esc(r.agentName)}"></div>
+      <div class="form-group"><label>Agent Type</label><input disabled value="${esc(r.agentType)}"></div>
+      <div class="form-group"><label>Organization</label><input disabled value="${esc(r.organization)}"></div>
+      <div class="form-group"><label>Budget</label><input disabled value="${esc(r.budget)}"></div>
+      <div class="form-group"><label>Date Needed</label><input disabled value="${esc(r.dateNeeded)}"></div>
+      <div class="form-group"><label>Duration</label><input disabled value="${esc(r.duration)}"></div>
+      <div class="form-group full"><label>Justification</label><textarea disabled rows="4">${esc(r.justification)}</textarea></div>
+      <div class="form-group full"><label>Goals</label><textarea disabled rows="3">${esc(r.goals)}</textarea></div>
+      <div class="form-group"><label>Requester</label><input disabled value="${esc(r.requesterName||r.requester)}"></div>
+      <div class="form-group"><label>Submitted</label><input disabled value="${fmtDate(r.submittedAt)}"></div>
+      ${r.reviewedBy ? `<div class="form-group"><label>Reviewed By</label><input disabled value="${esc(r.reviewedBy)}"></div>
+      <div class="form-group"><label>Reviewed At</label><input disabled value="${fmtDate(r.reviewedAt)}"></div>` : ''}
+      ${r.reviewNotes ? `<div class="form-group full"><label>Review Notes</label><textarea disabled rows="3">${esc(r.reviewNotes)}</textarea></div>` : ''}
+      ${r.approvedBy ? `<div class="form-group"><label>Approved By</label><input disabled value="${esc(r.approvedBy)}"></div>
+      <div class="form-group"><label>Approved At</label><input disabled value="${fmtDate(r.approvedAt)}"></div>` : ''}
+      ${r.deployedAt ? `<div class="form-group full"><label>Deployed At</label><input disabled value="${fmtDate(r.deployedAt)}"></div>` : ''}
+    </div>
+    ${buildRequestActions(r)}
+  `;
+  openModal('request-modal');
+}
+
+function buildRequestActions(r) {
+  const transitions = {
+    'Submitted':['Under Review','Rejected'],
+    'Under Review':['Approved','Rejected','Needs Info'],
+    'Needs Info':['Under Review'],
+    'Approved':['Deployed'],
+  };
+  const allowed = transitions[r.status];
+  if (!allowed || !allowed.length) return '';
+
+  return `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="form-group"><label>Action Notes</label><textarea id="req-action-notes" rows="2" placeholder="Add notes for this action..."></textarea></div>
+    <div class="btn-row">
+      ${allowed.map(s => {
+        const cls = s === 'Rejected' ? 'btn-danger' : s === 'Approved' || s === 'Deployed' ? 'btn-success' : 'btn-primary';
+        return `<button class="btn ${cls}" onclick="transitionRequest('${r.id}','${s}')">${s}</button>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function transitionRequest(id, newStatus) {
+  const notes = document.getElementById('req-action-notes')?.value || '';
+  api('POST', '/api/ah/requests/'+id+'/transition', {
+    newStatus, notes, user: USERNAME, displayName: USERNAME
+  }).then(data => {
+    if (data.error) { alert(data.error); return; }
+    closeModal('request-modal');
+    loadRequests();
+  });
+}
+
+function showNewRequestModal() {
+  document.getElementById('request-modal-title').textContent = 'New Agent Request';
+  const nextId = 'REQ-' + new Date().getFullYear() + '-' + String(allRequests.length + 1).padStart(3, '0');
+  document.getElementById('request-modal-body').innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label>Request ID</label><input id="newreq-id" value="${nextId}"></div>
+      <div class="form-group"><label>Agent Name *</label><input id="newreq-name" required></div>
+      <div class="form-group"><label>Agent Type</label><select id="newreq-type"><option>AI Agent</option><option>Human Agent</option></select></div>
+      <div class="form-group"><label>Organization</label><input id="newreq-org"></div>
+      <div class="form-group full"><label>Justification *</label><textarea id="newreq-justification" rows="4" placeholder="Why do you need this agent? What problem does it solve?"></textarea></div>
+      <div class="form-group full"><label>Goals</label><textarea id="newreq-goals" rows="3" placeholder="What should the agent accomplish?"></textarea></div>
+      <div class="form-group"><label>Budget</label><input id="newreq-budget" placeholder="$2,500/month"></div>
+      <div class="form-group"><label>Date Needed</label><input id="newreq-date" type="date"></div>
+      <div class="form-group"><label>Duration</label><select id="newreq-duration"><option>Permanent</option><option>1 week</option><option>1 month</option><option>3 months</option><option>6 months</option><option>1 year</option></select></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submitNewRequest()">Submit Request</button>
+      <button class="btn btn-secondary" onclick="closeModal('request-modal')">Cancel</button>
+    </div>
+  `;
+  openModal('request-modal');
+}
+
+function submitNewRequest() {
+  const name = document.getElementById('newreq-name').value.trim();
+  const justification = document.getElementById('newreq-justification').value.trim();
+  if (!name || !justification) { alert('Agent Name and Justification are required'); return; }
+  const vals = {
+    'Request ID': document.getElementById('newreq-id').value.trim(),
+    'Requester': USERNAME, 'Requester Display Name': USERNAME,
+    'Agent Name': name,
+    'Agent Type': document.getElementById('newreq-type').value,
+    'Justification': justification,
+    'Goals': document.getElementById('newreq-goals').value,
+    'Budget': document.getElementById('newreq-budget').value,
+    'Organization': document.getElementById('newreq-org').value,
+    'Date Needed': document.getElementById('newreq-date').value,
+    'Duration': document.getElementById('newreq-duration').value,
+    'Status': 'Submitted',
+    'Submitted At': new Date().toISOString(),
+  };
+  api('POST', '/app/api/v1/kapps/agent-hub/forms/agent-request/submissions', { values: vals }).then(() => {
+    closeModal('request-modal');
+    loadRequests();
+  });
+}
+
+/* ───── Prompt Lab ───── */
+function loadPromptLabAgents() {
+  api('GET', '/api/ah/dashboard').then(data => {
+    const sel = document.getElementById('prompt-agent-select');
+    sel.innerHTML = '<option value="">-- Choose an AI Agent --</option>';
+    (data.agentSummary||[]).filter(a => a.type === 'AI Agent').forEach(a => {
+      sel.innerHTML += `<option value="${a.id}">${esc(a.name)} (${esc(a.model||'no model')})</option>`;
+    });
+  });
+}
+
+function loadPromptForAgent() {
+  const id = document.getElementById('prompt-agent-select').value;
+  if (!id) { document.getElementById('prompt-meta').style.display='none'; document.getElementById('prompt-display').style.display='none'; return; }
+
+  api('GET', '/app/api/v1/submissions/'+id+'?include=values').then(data => {
+    const v = data.submission?.values || {};
+    const prompt = v['Generated Prompt'] || '(No prompt generated yet. Click "Regenerate" to create one.)';
+    document.getElementById('prompt-meta').style.display = 'flex';
+    document.getElementById('prompt-meta').innerHTML = `
+      <span><strong>Type:</strong> ${esc(v['Type'])}</span>
+      <span><strong>Model:</strong> ${esc(v['LLM Model'])}</span>
+      <span><strong>Last Generated:</strong> ${v['Last Prompt Generated'] ? fmtDate(v['Last Prompt Generated']) : 'Never'}</span>
+      <span><strong>Length:</strong> ${fmtNum(prompt.length)} chars</span>
+    `;
+    document.getElementById('prompt-display').style.display = 'block';
+    document.getElementById('prompt-display').textContent = prompt;
+  });
+}
+
+function regeneratePrompt() {
+  const id = document.getElementById('prompt-agent-select').value;
+  if (!id) { alert('Select an agent first'); return; }
+  api('POST', '/api/ah/agents/'+id+'/generate-prompt').then(data => {
+    if (data.error) { alert(data.error); return; }
+    document.getElementById('prompt-display').textContent = data.prompt;
+    document.getElementById('prompt-meta').innerHTML = `
+      <span><strong>Generated:</strong> ${fmtDate(data.generatedAt)}</span>
+      <span><strong>Length:</strong> ${fmtNum(data.charCount)} chars</span>
+      <span style="color:var(--green);font-weight:600;">Regenerated successfully</span>
+    `;
+  });
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-display').textContent;
+  if (!text || text.startsWith('(No prompt')) { alert('No prompt to copy'); return; }
+  navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+}
+
+/* ───── Modal helpers ───── */
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
+});
+</script>
+</body>
+</html>

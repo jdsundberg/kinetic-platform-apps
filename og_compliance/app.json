@@ -1,0 +1,395 @@
+{
+  "name": "OG Compliance",
+  "slug": "og-compliance",
+  "category": "Industry",
+  "description": "Oil & gas compliance platform with event triage, case management, CAPA tracking, audits, sustainability reporting, and asset/site registry.",
+  "forms": [
+    {
+      "slug": "event",
+      "name": "Event",
+      "description": "Compliance events from monitoring sources",
+      "submissionLabelExpression": "${values('Event ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Event ID" },
+        { "name": "Title" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Severity" },
+        { "name": "Status" },
+        { "name": "Source System" },
+        { "name": "Site" },
+        { "name": "Asset" },
+        { "name": "Event Timestamp" },
+        { "name": "Normalized Category" },
+        { "name": "Related Case ID" },
+        { "name": "Processing Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Severity]",
+          "values[Site]",
+          "values[Source System]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Severity]"]
+        ]
+      }
+    },
+    {
+      "slug": "case",
+      "name": "Case",
+      "description": "Compliance cases with full lifecycle management",
+      "submissionLabelExpression": "${values('Case ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Case ID" },
+        { "name": "Title" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Case Type" },
+        { "name": "Severity" },
+        { "name": "Priority" },
+        { "name": "Status" },
+        { "name": "Site" },
+        { "name": "Asset" },
+        { "name": "Owner" },
+        { "name": "Assigned To" },
+        { "name": "Due Date" },
+        { "name": "SLA Target Date" },
+        { "name": "Regulatory Domain" },
+        { "name": "Business Unit" },
+        { "name": "Root Cause", "rows": 3 },
+        { "name": "Root Cause Category" },
+        { "name": "Remediation Plan", "rows": 3 },
+        { "name": "Closure Date" },
+        { "name": "Closure Approved By" },
+        { "name": "Closure Summary", "rows": 3 },
+        { "name": "Reopen Reason", "rows": 3 }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Severity]",
+          "values[Site]",
+          "values[Case Type]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Severity]"],
+          ["values[Status]", "values[Site]"]
+        ]
+      }
+    },
+    {
+      "slug": "capa",
+      "name": "CAPA",
+      "description": "Corrective and preventive actions",
+      "submissionLabelExpression": "${values('CAPA ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "CAPA ID" },
+        { "name": "Title" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Type" },
+        { "name": "Priority" },
+        { "name": "Status" },
+        { "name": "Site" },
+        { "name": "Owner" },
+        { "name": "Assigned To" },
+        { "name": "Due Date" },
+        { "name": "Related Case ID" },
+        { "name": "Action Plan", "rows": 3 },
+        { "name": "Recurrence Prevention", "rows": 3 },
+        { "name": "Verification Date" },
+        { "name": "Verified By" },
+        { "name": "Verification Notes", "rows": 3 },
+        { "name": "Effectiveness Rating" },
+        { "name": "Completion Date" },
+        { "name": "Completion Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Type]",
+          "values[Site]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Type]"]
+        ]
+      }
+    },
+    {
+      "slug": "audit",
+      "name": "Audit",
+      "description": "Audit schedule and tracking",
+      "submissionLabelExpression": "${values('Audit ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Audit ID" },
+        { "name": "Title" },
+        { "name": "Audit Type" },
+        { "name": "Status" },
+        { "name": "Site" },
+        { "name": "Lead Auditor" },
+        { "name": "Start Date" },
+        { "name": "End Date" },
+        { "name": "Findings Count" },
+        { "name": "Critical Findings Count" },
+        { "name": "Regulatory Domain" },
+        { "name": "Scope", "rows": 3 },
+        { "name": "Findings Summary", "rows": 3 },
+        { "name": "Recommendations", "rows": 3 },
+        { "name": "Sign Off Date" },
+        { "name": "Sign Off By" },
+        { "name": "Sign Off Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Site]",
+          "values[Audit Type]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Audit Type]"]
+        ]
+      }
+    },
+    {
+      "slug": "audit-finding",
+      "name": "Audit Finding",
+      "description": "Individual findings from audits",
+      "submissionLabelExpression": "${values('Finding ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Finding ID" },
+        { "name": "Title" },
+        { "name": "Severity" },
+        { "name": "Related Audit ID" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Severity]",
+          "values[Related Audit ID]"
+        ]
+      }
+    },
+    {
+      "slug": "control",
+      "name": "Control",
+      "description": "Compliance controls library",
+      "submissionLabelExpression": "${values('Control ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Control ID" },
+        { "name": "Name" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Domain" },
+        { "name": "Control Type" },
+        { "name": "Status" },
+        { "name": "Effectiveness Rating" },
+        { "name": "Control Owner" },
+        { "name": "Frequency" },
+        { "name": "Key Control" },
+        { "name": "Automation Level" },
+        { "name": "Last Tested Date" },
+        { "name": "Next Test Date" },
+        { "name": "Test Procedure", "rows": 3 }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Domain]",
+          "values[Effectiveness Rating]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Domain]"],
+          ["values[Domain]", "values[Effectiveness Rating]"]
+        ]
+      }
+    },
+    {
+      "slug": "requirement",
+      "name": "Requirement",
+      "description": "Regulatory and compliance requirements",
+      "submissionLabelExpression": "${values('Requirement ID')} - ${values('Summary')}",
+      "fields": [
+        { "name": "Requirement ID" },
+        { "name": "Summary" },
+        { "name": "Domain" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Domain]"
+        ]
+      }
+    },
+    {
+      "slug": "policy",
+      "name": "Policy",
+      "description": "Policies and standards documents",
+      "submissionLabelExpression": "${values('Policy ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Policy ID" },
+        { "name": "Title" },
+        { "name": "Document Type" },
+        { "name": "Version" },
+        { "name": "Status" },
+        { "name": "Next Review Date" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Document Type]"
+        ]
+      }
+    },
+    {
+      "slug": "playbook",
+      "name": "Playbook",
+      "description": "Response playbooks for compliance events",
+      "submissionLabelExpression": "${values('Playbook ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Playbook ID" },
+        { "name": "Title" },
+        { "name": "Category" },
+        { "name": "Severity Level" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Category]"
+        ]
+      }
+    },
+    {
+      "slug": "site",
+      "name": "Site",
+      "description": "Physical site registry",
+      "submissionLabelExpression": "${values('Site ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Site ID" },
+        { "name": "Name" },
+        { "name": "Site Type" },
+        { "name": "Status" },
+        { "name": "Region" },
+        { "name": "State Province" },
+        { "name": "Country" },
+        { "name": "Business Unit" },
+        { "name": "Risk Rating" },
+        { "name": "Regulatory Jurisdiction" },
+        { "name": "Employee Count" },
+        { "name": "Contractor Count" },
+        { "name": "Last Inspection Date" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Emergency Contact Name" },
+        { "name": "Emergency Contact Phone" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Site Type]",
+          "values[Region]"
+        ]
+      }
+    },
+    {
+      "slug": "asset",
+      "name": "Asset",
+      "description": "Asset registry with criticality tracking",
+      "submissionLabelExpression": "${values('Asset ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Asset ID" },
+        { "name": "Name" },
+        { "name": "Asset Type" },
+        { "name": "Site" },
+        { "name": "Criticality" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Site]",
+          "values[Criticality]",
+          "values[Asset Type]"
+        ]
+      }
+    },
+    {
+      "slug": "vendor",
+      "name": "Vendor",
+      "description": "Third-party vendor registry",
+      "submissionLabelExpression": "${values('Vendor ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Vendor ID" },
+        { "name": "Name" },
+        { "name": "Category" },
+        { "name": "Risk Profile" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Category]",
+          "values[Risk Profile]"
+        ]
+      }
+    },
+    {
+      "slug": "reporting-cycle",
+      "name": "Reporting Cycle",
+      "description": "ESG and sustainability reporting cycles",
+      "submissionLabelExpression": "${values('Cycle ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Cycle ID" },
+        { "name": "Title" },
+        { "name": "Reporting Period" },
+        { "name": "Framework" },
+        { "name": "Status" },
+        { "name": "Submission Deadline" },
+        { "name": "Data Quality Score" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Framework]"
+        ]
+      }
+    },
+    {
+      "slug": "attestation",
+      "name": "Attestation",
+      "description": "Sustainability attestations and sign-offs",
+      "submissionLabelExpression": "${values('Attestation ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Attestation ID" },
+        { "name": "Title" },
+        { "name": "Status" },
+        { "name": "Assigned To" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ]
+      }
+    },
+    {
+      "slug": "evidence",
+      "name": "Evidence",
+      "description": "Evidence records for compliance cases and audits",
+      "submissionLabelExpression": "${values('Evidence ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "Evidence ID" },
+        { "name": "Title" },
+        { "name": "Evidence Type" },
+        { "name": "Related Case ID" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Evidence Type]",
+          "values[Related Case ID]"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,451 @@
+{
+  "name": "Clinical Equipment",
+  "slug": "clinical-equipment",
+  "description": "Medical device management with maintenance, calibration, recalls, and compliance tracking.",
+  "forms": [
+    {
+      "slug": "equipment",
+      "name": "Equipment",
+      "fields": [
+        {
+          "name": "Equipment ID",
+          "required": true
+        },
+        {
+          "name": "Device Name",
+          "required": true
+        },
+        {
+          "name": "Device Type"
+        },
+        {
+          "name": "Manufacturer"
+        },
+        {
+          "name": "Model Number"
+        },
+        {
+          "name": "Serial Number"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Risk Class"
+        },
+        {
+          "name": "FDA Class"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Purchase Date"
+        },
+        {
+          "name": "In-Service Date"
+        },
+        {
+          "name": "Warranty Expiration"
+        },
+        {
+          "name": "Useful Life Years"
+        },
+        {
+          "name": "Asset Value"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Master device registry — ventilators, pumps, monitors, etc.",
+      "submissionLabelExpression": "${values('Equipment ID')} - ${values('Device Name')}",
+      "indexes": {
+        "single": [
+          "values[Department]",
+          "values[Device Type]",
+          "values[Equipment ID]",
+          "values[Risk Class]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Device Type]"
+          ],
+          [
+            "values[Status]",
+            "values[Department]"
+          ],
+          [
+            "values[Status]",
+            "values[Risk Class]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "work-orders",
+      "name": "Work Orders",
+      "fields": [
+        {
+          "name": "WO ID",
+          "required": true
+        },
+        {
+          "name": "Equipment ID"
+        },
+        {
+          "name": "Device Name"
+        },
+        {
+          "name": "WO Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Scheduled Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Labor Hours"
+        },
+        {
+          "name": "Parts Cost"
+        },
+        {
+          "name": "Resolution",
+          "rows": 2
+        }
+      ],
+      "description": "Maintenance work orders — PM, corrective, emergency",
+      "submissionLabelExpression": "${values('WO ID')} - ${values('Device Name')} (${values('WO Type')})",
+      "indexes": {
+        "single": [
+          "values[Equipment ID]",
+          "values[Priority]",
+          "values[Status]",
+          "values[WO Type]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[WO Type]"
+          ],
+          [
+            "values[Status]",
+            "values[Priority]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "recalls",
+      "name": "Recalls",
+      "fields": [
+        {
+          "name": "Recall ID",
+          "required": true
+        },
+        {
+          "name": "Recall Number"
+        },
+        {
+          "name": "Issuing Authority"
+        },
+        {
+          "name": "Recall Class"
+        },
+        {
+          "name": "Device Type"
+        },
+        {
+          "name": "Manufacturer"
+        },
+        {
+          "name": "Model Numbers"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Issue Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Affected Count"
+        },
+        {
+          "name": "Remediated Count"
+        },
+        {
+          "name": "Action Required",
+          "rows": 2
+        },
+        {
+          "name": "Deadline"
+        }
+      ],
+      "description": "FDA/manufacturer recall tracking",
+      "submissionLabelExpression": "${values('Recall ID')} - ${values('Device Type')} (${values('Status')})"
+    },
+    {
+      "slug": "calibrations",
+      "name": "Calibrations",
+      "fields": [
+        {
+          "name": "Cal ID",
+          "required": true
+        },
+        {
+          "name": "Equipment ID"
+        },
+        {
+          "name": "Device Name"
+        },
+        {
+          "name": "Calibration Date"
+        },
+        {
+          "name": "Technician"
+        },
+        {
+          "name": "Standard Used"
+        },
+        {
+          "name": "Result"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Next Due Date"
+        },
+        {
+          "name": "Certificate Number"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Calibration records and certificates",
+      "submissionLabelExpression": "${values('Cal ID')} - ${values('Device Name')} (${values('Result')})",
+      "indexes": {
+        "single": [
+          "values[Equipment ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "inspections",
+      "name": "Inspections",
+      "fields": [
+        {
+          "name": "Inspection ID",
+          "required": true
+        },
+        {
+          "name": "Inspection Type"
+        },
+        {
+          "name": "Inspector"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Inspection Date"
+        },
+        {
+          "name": "Equipment Count"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Critical Findings"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Score"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        },
+        {
+          "name": "Follow Up Required"
+        }
+      ],
+      "description": "Regulatory inspections — CMS, state, Joint Commission",
+      "submissionLabelExpression": "${values('Inspection ID')} - ${values('Inspection Type')} (${values('Status')})"
+    },
+    {
+      "slug": "vendors",
+      "name": "Vendors",
+      "fields": [
+        {
+          "name": "Vendor ID",
+          "required": true
+        },
+        {
+          "name": "Vendor Name",
+          "required": true
+        },
+        {
+          "name": "Vendor Type"
+        },
+        {
+          "name": "Contact Name"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Contract Number"
+        },
+        {
+          "name": "Contract End"
+        },
+        {
+          "name": "SLA Hours"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Manufacturer/service vendor contacts & contracts",
+      "submissionLabelExpression": "${values('Vendor ID')} - ${values('Vendor Name')}"
+    },
+    {
+      "slug": "disposals",
+      "name": "Disposals",
+      "fields": [
+        {
+          "name": "Disposal ID",
+          "required": true
+        },
+        {
+          "name": "Equipment ID"
+        },
+        {
+          "name": "Device Name"
+        },
+        {
+          "name": "Disposal Reason"
+        },
+        {
+          "name": "Disposal Method"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Disposal Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Certificate Number"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "End-of-life decommissioning",
+      "submissionLabelExpression": "${values('Disposal ID')} - ${values('Device Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Equipment ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Details",
+          "rows": 2
+        },
+        {
+          "name": "Related Equipment"
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} ${values('Entity ID')}",
+      "indexes": {
+        "single": [
+          "values[Entity ID]"
+        ],
+        "compound": []
+      }
+    }
+  ],
+  "category": "Healthcare"
+}

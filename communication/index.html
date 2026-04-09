@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent/Student Communication</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+
+/* Login */
+#login-screen { display:none; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* Topbar */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar-nav { display:flex; gap:4px; margin-left:32px; }
+.topbar-nav button { background:none; border:none; color:rgba(255,255,255,.7); padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; font-family:inherit; }
+.topbar-nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar-nav button.active { color:var(--orange); background:rgba(243,108,36,.12); }
+.spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.25); color:white; padding:4px 12px; border-radius:6px; font-size:12px; font-family:inherit; }
+.logout-btn:hover { border-color:var(--orange); background:rgba(255,255,255,.08); }
+
+/* Main */
+.main { padding:24px; max-width:1400px; margin:0 auto; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* KPIs */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:var(--white); border-radius:12px; padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--blue); }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); }
+.kpi .label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.orange { border-left-color:var(--orange); }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green { border-left-color:var(--green); }
+.kpi.green .val { color:var(--green); }
+.kpi.red { border-left-color:var(--red); }
+.kpi.red .val { color:var(--red); }
+.kpi.purple { border-left-color:var(--purple); }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal { border-left-color:var(--teal); }
+.kpi.teal .val { color:var(--teal); }
+
+/* Cards & Sections */
+.card { background:var(--white); border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { font-size:10px; text-transform:uppercase; letter-spacing:.3px; color:var(--gray); padding:8px 10px; text-align:left; background:var(--light); border-bottom:1px solid var(--border); white-space:nowrap; font-weight:600; }
+.data-table td { padding:8px 10px; border-bottom:1px solid var(--border); font-size:13px; }
+.data-table tr:hover { background:#FAFAFA; }
+.data-table tr { cursor:pointer; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-green { background:#E8F5E9; color:#2E7D32; }
+.badge-red { background:#FDECEA; color:#C62828; }
+.badge-orange { background:#FFF3E0; color:#E65100; }
+.badge-yellow { background:#FFF8E1; color:#F9A825; }
+.badge-blue { background:#E3F2FD; color:#1565C0; }
+.badge-gray { background:#F1F3F4; color:#5F6368; }
+.badge-purple { background:#F3E5F5; color:#7B1FA2; }
+.badge-teal { background:#E0F2F1; color:#00695C; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; border:none; transition:all .15s; font-family:inherit; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--orange); color:var(--orange); }
+.btn-danger { background:var(--red); color:white; }
+.btn-sm { padding:4px 10px; font-size:12px; }
+
+/* Filters */
+.filter-bar { display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+.filter-bar select, .filter-bar input { padding:6px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.filter-bar select:focus, .filter-bar input:focus { border-color:var(--orange); }
+
+/* Pagination */
+.pagination { display:flex; gap:8px; align-items:center; justify-content:center; padding:12px 0; }
+.pagination button:disabled { opacity:.4; cursor:default; }
+.page-info { font-size:12px; color:var(--gray); }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--white); border-radius:16px; width:560px; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); padding:28px; }
+.modal h3 { font-size:17px; color:var(--blue); margin-bottom:20px; }
+.modal label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; margin-top:14px; }
+.modal label:first-of-type { margin-top:0; }
+.modal input, .modal select, .modal textarea { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.modal input:focus, .modal select:focus, .modal textarea:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.modal textarea { resize:vertical; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Detail Panel */
+.detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:150; }
+.detail-overlay.open { display:block; }
+.detail-panel { position:fixed; right:0; top:56px; bottom:0; width:500px; background:var(--white); box-shadow:-4px 0 24px rgba(0,0,0,.15); z-index:160; overflow-y:auto; transform:translateX(100%); transition:transform .25s; }
+.detail-panel.open { transform:translateX(0); }
+.detail-header { padding:20px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.detail-header h3 { flex:1; font-size:17px; color:var(--blue); }
+.detail-close { background:none; border:none; font-size:20px; color:var(--gray); padding:4px 8px; }
+.detail-body { padding:20px; }
+.detail-field { margin-bottom:14px; }
+.detail-field .df-label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); margin-bottom:2px; font-weight:600; }
+.detail-field .df-value { font-size:14px; color:#202124; }
+.detail-actions { padding:16px 20px; border-top:1px solid var(--border); display:flex; gap:8px; }
+
+/* Subtabs */
+.subtab-bar { display:flex; gap:4px; margin-bottom:16px; }
+.subtab-bar button { background:none; border:1px solid var(--border); color:var(--gray); padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; }
+.subtab-bar button:hover { border-color:var(--orange); color:var(--orange); }
+.subtab-bar button.active { background:var(--orange); color:white; border-color:var(--orange); }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:300; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+
+/* Conference date groups */
+.conf-date-group { margin-bottom:16px; }
+.conf-date-label { font-size:12px; font-weight:700; color:var(--blue); padding:8px 10px; background:var(--light); border-radius:8px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>School Communication</h1>
+    <div class="sub">Parent-teacher messaging, announcements & conferences</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://myserver.kinops.io">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">School <span>Communication</span></div>
+    <div class="topbar-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('messages')">Messages</button>
+      <button onclick="switchTab('announcements')">Announcements</button>
+      <button onclick="switchTab('conferences')">Conferences</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Recent Messages</h3>
+          <div id="dash-recent-messages"><div class="loading">Loading...</div></div>
+        </div>
+        <div class="card">
+          <h3>Upcoming Conferences</h3>
+          <div id="dash-upcoming-conf"><div class="loading">Loading...</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Active Announcements</h3>
+        <div id="dash-announcements"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div id="tab-messages" class="tab-panel">
+      <div class="filter-bar">
+        <select id="msg-direction" onchange="loadMessages()">
+          <option value="">All Directions</option>
+          <option value="Outbound">Outbound</option>
+          <option value="Inbound">Inbound</option>
+        </select>
+        <select id="msg-status" onchange="loadMessages()">
+          <option value="">All Status</option>
+          <option value="Sent">Sent</option>
+          <option value="Read">Read</option>
+          <option value="Replied">Replied</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <select id="msg-channel" onchange="loadMessages()">
+          <option value="">All Channels</option>
+          <option value="Email">Email</option>
+          <option value="SMS">SMS</option>
+          <option value="App">App</option>
+          <option value="Phone">Phone</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="openModal('compose-modal')">+ New Message</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div id="msg-table-wrap"><div class="loading">Loading...</div></div>
+        <div class="pagination" id="msg-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div id="tab-announcements" class="tab-panel">
+      <div class="filter-bar">
+        <select id="ann-category" onchange="loadAnnouncements()">
+          <option value="">All Categories</option>
+          <option value="General">General</option>
+          <option value="Academic">Academic</option>
+          <option value="Events">Events</option>
+          <option value="Safety">Safety</option>
+          <option value="Athletics">Athletics</option>
+          <option value="Arts">Arts</option>
+          <option value="Policy">Policy</option>
+        </select>
+        <select id="ann-status" onchange="loadAnnouncements()">
+          <option value="">All Status</option>
+          <option value="Draft">Draft</option>
+          <option value="Published">Published</option>
+          <option value="Expired">Expired</option>
+          <option value="Archived">Archived</option>
+        </select>
+        <select id="ann-audience" onchange="loadAnnouncements()">
+          <option value="">All Audiences</option>
+          <option value="All School">All School</option>
+          <option value="Parents Only">Parents Only</option>
+          <option value="Students Only">Students Only</option>
+          <option value="Staff Only">Staff Only</option>
+          <option value="Grade K-5">Grade K-5</option>
+          <option value="Grade 6-8">Grade 6-8</option>
+          <option value="Grade 9-12">Grade 9-12</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="openModal('announcement-modal')">+ New Announcement</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div id="ann-table-wrap"><div class="loading">Loading...</div></div>
+        <div class="pagination" id="ann-pagination"></div>
+      </div>
+    </div>
+
+    <!-- CONFERENCES -->
+    <div id="tab-conferences" class="tab-panel">
+      <div class="filter-bar">
+        <select id="conf-status" onchange="loadConferences()">
+          <option value="">All Status</option>
+          <option value="Scheduled">Scheduled</option>
+          <option value="Confirmed">Confirmed</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="No Show">No Show</option>
+        </select>
+        <select id="conf-teacher" onchange="loadConferences()">
+          <option value="">All Teachers</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="openModal('conference-modal')">+ Schedule Conference</button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div id="conf-table-wrap"><div class="loading">Loading...</div></div>
+        <div class="pagination" id="conf-pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSE MESSAGE MODAL -->
+<div class="modal-overlay" id="compose-modal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <h3>Compose Message</h3>
+    <label>From</label>
+    <input id="cm-from">
+    <label>To</label>
+    <input id="cm-to">
+    <div class="form-row">
+      <div><label>Channel</label>
+        <select id="cm-channel"><option>Email</option><option>SMS</option><option>App</option><option>Phone</option></select>
+      </div>
+      <div><label>Priority</label>
+        <select id="cm-priority"><option>Normal</option><option>Urgent</option><option>Emergency</option></select>
+      </div>
+    </div>
+    <label>Student ID (optional)</label>
+    <input id="cm-studentid" placeholder="STU-XXXX">
+    <label>Subject</label>
+    <input id="cm-subject">
+    <label>Body</label>
+    <textarea id="cm-body" rows="4"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="announcement-modal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <h3>New Announcement</h3>
+    <label>Title</label>
+    <input id="na-title">
+    <div class="form-row">
+      <div><label>Category</label>
+        <select id="na-category"><option>General</option><option>Academic</option><option>Events</option><option>Safety</option><option>Athletics</option><option>Arts</option><option>Policy</option></select>
+      </div>
+      <div><label>Audience</label>
+        <select id="na-audience"><option>All School</option><option>Parents Only</option><option>Students Only</option><option>Staff Only</option><option>Grade K-5</option><option>Grade 6-8</option><option>Grade 9-12</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Priority</label>
+        <select id="na-priority"><option>Normal</option><option>Important</option><option>Urgent</option></select>
+      </div>
+      <div><label>Status</label>
+        <select id="na-status"><option>Draft</option><option>Published</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Publish Date</label><input id="na-pubdate" type="date"></div>
+      <div><label>Expiry Date</label><input id="na-expdate" type="date"></div>
+    </div>
+    <label>Body</label>
+    <textarea id="na-body" rows="4"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="createAnnouncement()">Create Announcement</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE CONFERENCE MODAL -->
+<div class="modal-overlay" id="conference-modal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <h3>Schedule Conference</h3>
+    <div class="form-row">
+      <div><label>Student Name</label><input id="nc-student"></div>
+      <div><label>Student ID</label><input id="nc-studentid" placeholder="STU-XXXX"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Parent Name</label><input id="nc-parent"></div>
+      <div><label>Teacher</label><input id="nc-teacher"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Date</label><input id="nc-date" type="date"></div>
+      <div><label>Time</label><input id="nc-time" type="time"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Duration</label>
+        <select id="nc-duration"><option>15 min</option><option>30 min</option><option selected>45 min</option><option>60 min</option></select>
+      </div>
+      <div><label>Type</label>
+        <select id="nc-type"><option>In-Person</option><option>Virtual</option><option>Phone</option></select>
+      </div>
+    </div>
+    <label>Purpose</label>
+    <select id="nc-purpose"><option>Academic Review</option><option>Behavior</option><option>IEP Meeting</option><option>Progress Report</option><option>General</option></select>
+    <label>Notes</label>
+    <textarea id="nc-notes" rows="3"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="createConference()">Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <h3 id="detail-title">Details</h3>
+    <button class="detail-close" onclick="closeDetail()">&times;</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'communication';
+let currentTab = 'dashboard';
+
+// Pagination tokens per tab
+const pages = {
+  messages: { pageKeys: [null], page: 1, hasNext: false },
+  announcements: { pageKeys: [null], page: 1, hasNext: false },
+  conferences: { pageKeys: [null], page: 1, hasNext: false },
+};
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function badgeClass(val) {
+  const map = {
+    'Sent': 'badge-blue', 'Read': 'badge-green', 'Replied': 'badge-teal', 'Failed': 'badge-red',
+    'Published': 'badge-green', 'Draft': 'badge-yellow', 'Expired': 'badge-gray', 'Archived': 'badge-gray',
+    'Scheduled': 'badge-blue', 'Confirmed': 'badge-green', 'Completed': 'badge-teal', 'Cancelled': 'badge-red', 'No Show': 'badge-orange',
+    'Pending': 'badge-yellow', 'Delivered': 'badge-green',
+    'Normal': 'badge-blue', 'Urgent': 'badge-orange', 'Emergency': 'badge-red', 'Important': 'badge-orange',
+    'Low': 'badge-gray', 'High': 'badge-orange', 'Critical': 'badge-red',
+    'Outbound': 'badge-blue', 'Inbound': 'badge-purple',
+    'Email': 'badge-blue', 'SMS': 'badge-teal', 'App': 'badge-purple', 'Phone': 'badge-gray', 'Push': 'badge-orange', 'All': 'badge-blue',
+  };
+  return map[val] || 'badge-gray';
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ---------------------------------------------------------------------------
+// API
+// ---------------------------------------------------------------------------
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Basic ${API.auth}`,
+      'Content-Type': 'application/json',
+      ...opts.headers,
+    },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function fetchSubs(form, kql, limit = 25, lastCreatedAt) {
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values,details&limit=${limit}`;
+  if (lastCreatedAt) {
+    kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+  }
+  if (kql) path += `&q=${encodeURIComponent(kql)}`;
+  return api(path);
+}
+
+// ---------------------------------------------------------------------------
+// Login / Logout
+// ---------------------------------------------------------------------------
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!user || !pass) { errEl.textContent = 'Username and password required'; errEl.style.display = 'block'; return; }
+
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+    enterApp();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.removeItem('kinetic_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = API.displayName;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || '';
+      API.displayName = s.displayName || s.user || '';
+      enterApp();
+      return;
+    } catch {}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+
+// ---------------------------------------------------------------------------
+// Tab switching
+// ---------------------------------------------------------------------------
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.topbar-nav button').forEach(b => {
+    if (b.textContent.toLowerCase().replace(/\s/g, '') === tab.replace(/\s/g, '')) b.classList.add('active');
+  });
+
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'messages') loadMessages();
+  else if (tab === 'announcements') loadAnnouncements();
+  else if (tab === 'conferences') loadConferences();
+}
+
+// ---------------------------------------------------------------------------
+// DASHBOARD
+// ---------------------------------------------------------------------------
+async function loadDashboard() {
+  try {
+    // Fetch data for KPIs
+    const [msgRes, annRes, confRes, notifRes] = await Promise.all([
+      fetchSubs('messages', null, 25),
+      fetchSubs('announcements', null, 25),
+      fetchSubs('conferences', null, 25),
+      fetchSubs('notifications', null, 25),
+    ]);
+
+    const msgs = msgRes.submissions || [];
+    const anns = annRes.submissions || [];
+    const confs = confRes.submissions || [];
+
+    // KPIs
+    const today = new Date().toISOString().split('T')[0];
+    const msgsToday = msgs.filter(s => v(s, 'Sent Date') === today).length;
+    const unread = msgs.filter(s => v(s, 'Status') === 'Sent').length;
+    const upcomingConf = confs.filter(s => v(s, 'Date') >= today && v(s, 'Status') !== 'Cancelled' && v(s, 'Status') !== 'Completed').length;
+    const activeAnns = anns.filter(s => v(s, 'Status') === 'Published').length;
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi orange"><div class="label">Messages Today</div><div class="val">${msgsToday}</div><div class="sub">From last 24 hours</div></div>
+      <div class="kpi red"><div class="label">Unread Messages</div><div class="val">${unread}</div><div class="sub">Awaiting read confirmation</div></div>
+      <div class="kpi green"><div class="label">Upcoming Conferences</div><div class="val">${upcomingConf}</div><div class="sub">Scheduled ahead</div></div>
+      <div class="kpi purple"><div class="label">Active Announcements</div><div class="val">${activeAnns}</div><div class="sub">Currently published</div></div>
+    `;
+
+    // Recent messages
+    const recent = msgs.slice(0, 8);
+    if (recent.length === 0) {
+      document.getElementById('dash-recent-messages').innerHTML = '<div class="loading">No messages found</div>';
+    } else {
+      document.getElementById('dash-recent-messages').innerHTML = `
+        <table class="data-table"><thead><tr><th>From</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody>${recent.map(s => `<tr onclick="showMessageDetail('${s.id}', this)">
+          <td>${esc(v(s, 'From'))}</td><td>${esc(v(s, 'To'))}</td>
+          <td>${esc(v(s, 'Subject'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Status'))}">${esc(v(s, 'Status'))}</span></td>
+        </tr>`).join('')}</tbody></table>
+      `;
+    }
+
+    // Upcoming conferences
+    const upcoming = confs.filter(s => v(s, 'Date') >= today && v(s, 'Status') !== 'Cancelled').slice(0, 8);
+    if (upcoming.length === 0) {
+      document.getElementById('dash-upcoming-conf').innerHTML = '<div class="loading">No upcoming conferences</div>';
+    } else {
+      document.getElementById('dash-upcoming-conf').innerHTML = `
+        <table class="data-table"><thead><tr><th>Date</th><th>Student</th><th>Teacher</th><th>Status</th></tr></thead>
+        <tbody>${upcoming.map(s => `<tr onclick="showConferenceDetail('${s.id}', this)">
+          <td>${esc(formatDate(v(s, 'Date')))}</td><td>${esc(v(s, 'Student Name'))}</td>
+          <td>${esc(v(s, 'Teacher'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Status'))}">${esc(v(s, 'Status'))}</span></td>
+        </tr>`).join('')}</tbody></table>
+      `;
+    }
+
+    // Active announcements
+    const active = anns.filter(s => v(s, 'Status') === 'Published').slice(0, 6);
+    if (active.length === 0) {
+      document.getElementById('dash-announcements').innerHTML = '<div class="loading">No active announcements</div>';
+    } else {
+      document.getElementById('dash-announcements').innerHTML = `
+        <table class="data-table"><thead><tr><th>Title</th><th>Category</th><th>Audience</th><th>Priority</th><th>Published</th></tr></thead>
+        <tbody>${active.map(s => `<tr onclick="showAnnouncementDetail('${s.id}', this)">
+          <td>${esc(v(s, 'Title'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Category'))}">${esc(v(s, 'Category'))}</span></td>
+          <td>${esc(v(s, 'Audience'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Priority'))}">${esc(v(s, 'Priority'))}</span></td>
+          <td>${esc(formatDate(v(s, 'Publish Date')))}</td>
+        </tr>`).join('')}</tbody></table>
+      `;
+    }
+  } catch (e) {
+    console.error('Dashboard load error:', e);
+    document.getElementById('dash-kpis').innerHTML = '<div class="loading">Error loading dashboard</div>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// MESSAGES
+// ---------------------------------------------------------------------------
+let messagesCache = [];
+
+async function loadMessages(direction) {
+  const pg = pages.messages;
+  if (direction === 'next') { pg.page++; }
+  else if (direction === 'prev' && pg.page > 1) { pg.page--; }
+  else if (!direction) { pg.pageKeys = [null]; pg.page = 1; pg.hasNext = false; }
+
+  const wrap = document.getElementById('msg-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const dirVal = document.getElementById('msg-direction').value;
+    const statVal = document.getElementById('msg-status').value;
+    const chanVal = document.getElementById('msg-channel').value;
+
+    // Build KQL
+    const parts = [];
+    if (dirVal) parts.push(`values[Direction]="${dirVal}"`);
+    if (statVal) parts.push(`values[Status]="${statVal}"`);
+    if (chanVal) parts.push(`values[Channel]="${chanVal}"`);
+    const kql = parts.length ? parts.join(' AND ') : null;
+
+    const data = await fetchSubs('messages', kql, 25, pg.pageKeys[pg.page - 1]);
+    const subs = data.submissions || [];
+    messagesCache = subs;
+    pg.hasNext = !!data.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No messages found</div>';
+      document.getElementById('msg-pagination').innerHTML = '';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="data-table"><thead><tr>
+        <th>Direction</th><th>From</th><th>To</th><th>Subject</th><th>Channel</th><th>Priority</th><th>Status</th><th>Sent</th>
+      </tr></thead><tbody>
+      ${subs.map(s => `<tr onclick="showMessageDetail('${s.id}')">
+        <td><span class="badge ${badgeClass(v(s, 'Direction'))}">${esc(v(s, 'Direction'))}</span></td>
+        <td>${esc(v(s, 'From'))}</td><td>${esc(v(s, 'To'))}</td>
+        <td>${esc(v(s, 'Subject'))}</td>
+        <td><span class="badge ${badgeClass(v(s, 'Channel'))}">${esc(v(s, 'Channel'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s, 'Priority'))}">${esc(v(s, 'Priority'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s, 'Status'))}">${esc(v(s, 'Status'))}</span></td>
+        <td>${esc(formatDate(v(s, 'Sent Date')))}</td>
+      </tr>`).join('')}</tbody></table>
+    `;
+
+    document.getElementById('msg-pagination').innerHTML = `
+      <button class="btn btn-sm btn-secondary" ${pg.page <= 1 ? 'disabled' : ''} onclick="loadMessages('prev')">Prev</button>
+      <span class="page-info">Page ${pg.page}</span>
+      <button class="btn btn-sm btn-secondary" ${!pg.hasNext ? 'disabled' : ''} onclick="loadMessages('next')">Next</button>
+    `;
+  } catch (e) {
+    wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function showMessageDetail(id) {
+  let sub = messagesCache.find(s => s.id === id);
+  if (!sub) {
+    try { sub = (await api(`/submissions/${id}?include=values`)).submission; } catch { toast('Error loading message'); return; }
+  }
+  const fields = ['From', 'To', 'Student ID', 'Subject', 'Body', 'Channel', 'Priority', 'Status', 'Direction', 'Sent Date', 'Read Date'];
+  document.getElementById('detail-title').textContent = v(sub, 'Subject') || 'Message Detail';
+  document.getElementById('detail-body').innerHTML = fields.map(f => {
+    const val = v(sub, f);
+    if (!val) return '';
+    const isBadge = ['Status', 'Priority', 'Direction', 'Channel'].includes(f);
+    return `<div class="detail-field"><div class="df-label">${esc(f)}</div><div class="df-value">${isBadge ? `<span class="badge ${badgeClass(val)}">${esc(val)}</span>` : esc(val)}</div></div>`;
+  }).join('');
+  openDetail();
+}
+
+// ---------------------------------------------------------------------------
+// ANNOUNCEMENTS
+// ---------------------------------------------------------------------------
+let announcementsCache = [];
+
+async function loadAnnouncements(direction) {
+  const pg = pages.announcements;
+  if (direction === 'next') { pg.page++; }
+  else if (direction === 'prev' && pg.page > 1) { pg.page--; }
+  else if (!direction) { pg.pageKeys = [null]; pg.page = 1; pg.hasNext = false; }
+
+  const wrap = document.getElementById('ann-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const catVal = document.getElementById('ann-category').value;
+    const statVal = document.getElementById('ann-status').value;
+    const audVal = document.getElementById('ann-audience').value;
+
+    const parts = [];
+    if (catVal) parts.push(`values[Category]="${catVal}"`);
+    if (statVal) parts.push(`values[Status]="${statVal}"`);
+    if (audVal) parts.push(`values[Audience]="${audVal}"`);
+    const kql = parts.length ? parts.join(' AND ') : null;
+
+    const data = await fetchSubs('announcements', kql, 25, pg.pageKeys[pg.page - 1]);
+    const subs = data.submissions || [];
+    announcementsCache = subs;
+    pg.hasNext = !!data.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No announcements found</div>';
+      document.getElementById('ann-pagination').innerHTML = '';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="data-table"><thead><tr>
+        <th>Title</th><th>Category</th><th>Audience</th><th>Author</th><th>Priority</th><th>Status</th><th>Published</th>
+      </tr></thead><tbody>
+      ${subs.map(s => `<tr onclick="showAnnouncementDetail('${s.id}')">
+        <td>${esc(v(s, 'Title'))}</td>
+        <td><span class="badge ${badgeClass(v(s, 'Category'))}">${esc(v(s, 'Category'))}</span></td>
+        <td>${esc(v(s, 'Audience'))}</td>
+        <td>${esc(v(s, 'Author'))}</td>
+        <td><span class="badge ${badgeClass(v(s, 'Priority'))}">${esc(v(s, 'Priority'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s, 'Status'))}">${esc(v(s, 'Status'))}</span></td>
+        <td>${esc(formatDate(v(s, 'Publish Date')))}</td>
+      </tr>`).join('')}</tbody></table>
+    `;
+
+    document.getElementById('ann-pagination').innerHTML = `
+      <button class="btn btn-sm btn-secondary" ${pg.page <= 1 ? 'disabled' : ''} onclick="loadAnnouncements('prev')">Prev</button>
+      <span class="page-info">Page ${pg.page}</span>
+      <button class="btn btn-sm btn-secondary" ${!pg.hasNext ? 'disabled' : ''} onclick="loadAnnouncements('next')">Next</button>
+    `;
+  } catch (e) {
+    wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function showAnnouncementDetail(id) {
+  let sub = announcementsCache.find(s => s.id === id);
+  if (!sub) {
+    try { sub = (await api(`/submissions/${id}?include=values`)).submission; } catch { toast('Error loading announcement'); return; }
+  }
+  const fields = ['Title', 'Body', 'Author', 'Category', 'Audience', 'Priority', 'Status', 'Publish Date', 'Expiry Date'];
+  document.getElementById('detail-title').textContent = v(sub, 'Title') || 'Announcement Detail';
+  document.getElementById('detail-body').innerHTML = fields.map(f => {
+    const val = v(sub, f);
+    if (!val) return '';
+    const isBadge = ['Status', 'Priority', 'Category'].includes(f);
+    return `<div class="detail-field"><div class="df-label">${esc(f)}</div><div class="df-value">${isBadge ? `<span class="badge ${badgeClass(val)}">${esc(val)}</span>` : esc(val)}</div></div>`;
+  }).join('');
+  openDetail();
+}
+
+// ---------------------------------------------------------------------------
+// CONFERENCES
+// ---------------------------------------------------------------------------
+let conferencesCache = [];
+
+async function loadConferences(direction) {
+  const pg = pages.conferences;
+  if (direction === 'next') { pg.page++; }
+  else if (direction === 'prev' && pg.page > 1) { pg.page--; }
+  else if (!direction) { pg.pageKeys = [null]; pg.page = 1; pg.hasNext = false; }
+
+  const wrap = document.getElementById('conf-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const statVal = document.getElementById('conf-status').value;
+    const teachVal = document.getElementById('conf-teacher').value;
+
+    const parts = [];
+    if (statVal) parts.push(`values[Status]="${statVal}"`);
+    if (teachVal) parts.push(`values[Teacher]="${teachVal}"`);
+    const kql = parts.length ? parts.join(' AND ') : null;
+
+    const data = await fetchSubs('conferences', kql, 25, pg.pageKeys[pg.page - 1]);
+    const subs = data.submissions || [];
+    conferencesCache = subs;
+    pg.hasNext = !!data.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+
+    // Populate teacher filter if empty
+    const teacherSelect = document.getElementById('conf-teacher');
+    if (teacherSelect.options.length <= 1) {
+      const teachers = [...new Set(subs.map(s => v(s, 'Teacher')).filter(Boolean))].sort();
+      teachers.forEach(t => { const opt = document.createElement('option'); opt.value = t; opt.textContent = t; teacherSelect.appendChild(opt); });
+    }
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No conferences found</div>';
+      document.getElementById('conf-pagination').innerHTML = '';
+      return;
+    }
+
+    // Group by date for calendar-style view
+    const grouped = {};
+    subs.forEach(s => {
+      const d = v(s, 'Date') || 'No Date';
+      if (!grouped[d]) grouped[d] = [];
+      grouped[d].push(s);
+    });
+    const sortedDates = Object.keys(grouped).sort();
+
+    let html = '';
+    sortedDates.forEach(date => {
+      const dateLabel = date === 'No Date' ? 'No Date' : formatDate(date);
+      const today = new Date().toISOString().split('T')[0];
+      const isToday = date === today;
+      const isPast = date < today;
+      html += `<div class="conf-date-group">
+        <div class="conf-date-label">${esc(dateLabel)}${isToday ? ' (Today)' : ''}${isPast ? ' (Past)' : ''}</div>
+        <table class="data-table"><thead><tr>
+          <th>Time</th><th>Student</th><th>Parent</th><th>Teacher</th><th>Duration</th><th>Type</th><th>Purpose</th><th>Status</th>
+        </tr></thead><tbody>
+        ${grouped[date].map(s => `<tr onclick="showConferenceDetail('${s.id}')">
+          <td>${esc(v(s, 'Time'))}</td>
+          <td>${esc(v(s, 'Student Name'))}</td>
+          <td>${esc(v(s, 'Parent Name'))}</td>
+          <td>${esc(v(s, 'Teacher'))}</td>
+          <td>${esc(v(s, 'Duration'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Type'))}">${esc(v(s, 'Type'))}</span></td>
+          <td>${esc(v(s, 'Purpose'))}</td>
+          <td><span class="badge ${badgeClass(v(s, 'Status'))}">${esc(v(s, 'Status'))}</span></td>
+        </tr>`).join('')}
+        </tbody></table>
+      </div>`;
+    });
+
+    wrap.innerHTML = html;
+
+    document.getElementById('conf-pagination').innerHTML = `
+      <button class="btn btn-sm btn-secondary" ${pg.page <= 1 ? 'disabled' : ''} onclick="loadConferences('prev')">Prev</button>
+      <span class="page-info">Page ${pg.page}</span>
+      <button class="btn btn-sm btn-secondary" ${!pg.hasNext ? 'disabled' : ''} onclick="loadConferences('next')">Next</button>
+    `;
+  } catch (e) {
+    wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function showConferenceDetail(id) {
+  let sub = conferencesCache.find(s => s.id === id);
+  if (!sub) {
+    try { sub = (await api(`/submissions/${id}?include=values`)).submission; } catch { toast('Error loading conference'); return; }
+  }
+  const fields = ['Student Name', 'Student ID', 'Parent Name', 'Teacher', 'Date', 'Time', 'Duration', 'Type', 'Purpose', 'Status', 'Notes', 'Follow Up'];
+  document.getElementById('detail-title').textContent = `${v(sub, 'Student Name')} - ${v(sub, 'Teacher')}`;
+  document.getElementById('detail-body').innerHTML = fields.map(f => {
+    const val = v(sub, f);
+    if (!val) return '';
+    const isBadge = ['Status', 'Type'].includes(f);
+    return `<div class="detail-field"><div class="df-label">${esc(f)}</div><div class="df-value">${isBadge ? `<span class="badge ${badgeClass(val)}">${esc(val)}</span>` : esc(val)}</div></div>`;
+  }).join('');
+  openDetail();
+}
+
+// ---------------------------------------------------------------------------
+// Modal / Detail helpers
+// ---------------------------------------------------------------------------
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
+
+function openDetail() {
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ---------------------------------------------------------------------------
+// Create actions
+// ---------------------------------------------------------------------------
+async function sendMessage() {
+  const vals = {
+    'From': document.getElementById('cm-from').value,
+    'To': document.getElementById('cm-to').value,
+    'Channel': document.getElementById('cm-channel').value,
+    'Priority': document.getElementById('cm-priority').value,
+    'Student ID': document.getElementById('cm-studentid').value,
+    'Subject': document.getElementById('cm-subject').value,
+    'Body': document.getElementById('cm-body').value,
+    'Direction': 'Outbound',
+    'Status': 'Sent',
+    'Sent Date': new Date().toISOString().split('T')[0],
+  };
+  if (!vals['From'] || !vals['To'] || !vals['Subject'] || !vals['Body']) {
+    toast('Please fill in From, To, Subject, and Body'); return;
+  }
+  try {
+    await api(`/kapps/${KAPP}/forms/messages/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+    closeModals();
+    toast('Message sent');
+    ['cm-from', 'cm-to', 'cm-studentid', 'cm-subject', 'cm-body'].forEach(id => document.getElementById(id).value = '');
+    if (currentTab === 'messages') loadMessages();
+    else if (currentTab === 'dashboard') loadDashboard();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function createAnnouncement() {
+  const vals = {
+    'Title': document.getElementById('na-title').value,
+    'Body': document.getElementById('na-body').value,
+    'Author': API.displayName,
+    'Category': document.getElementById('na-category').value,
+    'Audience': document.getElementById('na-audience').value,
+    'Priority': document.getElementById('na-priority').value,
+    'Status': document.getElementById('na-status').value,
+    'Publish Date': document.getElementById('na-pubdate').value,
+    'Expiry Date': document.getElementById('na-expdate').value,
+  };
+  if (!vals['Title'] || !vals['Body']) {
+    toast('Please fill in Title and Body'); return;
+  }
+  try {
+    await api(`/kapps/${KAPP}/forms/announcements/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+    closeModals();
+    toast('Announcement created');
+    ['na-title', 'na-body', 'na-pubdate', 'na-expdate'].forEach(id => document.getElementById(id).value = '');
+    if (currentTab === 'announcements') loadAnnouncements();
+    else if (currentTab === 'dashboard') loadDashboard();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function createConference() {
+  const vals = {
+    'Student Name': document.getElementById('nc-student').value,
+    'Student ID': document.getElementById('nc-studentid').value,
+    'Parent Name': document.getElementById('nc-parent').value,
+    'Teacher': document.getElementById('nc-teacher').value,
+    'Date': document.getElementById('nc-date').value,
+    'Time': document.getElementById('nc-time').value,
+    'Duration': document.getElementById('nc-duration').value,
+    'Type': document.getElementById('nc-type').value,
+    'Purpose': document.getElementById('nc-purpose').value,
+    'Status': 'Scheduled',
+    'Notes': document.getElementById('nc-notes').value,
+  };
+  if (!vals['Student Name'] || !vals['Student ID'] || !vals['Parent Name'] || !vals['Teacher'] || !vals['Date']) {
+    toast('Please fill in all required fields'); return;
+  }
+  try {
+    await api(`/kapps/${KAPP}/forms/conferences/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+    closeModals();
+    toast('Conference scheduled');
+    ['nc-student', 'nc-studentid', 'nc-parent', 'nc-teacher', 'nc-date', 'nc-time', 'nc-notes'].forEach(id => document.getElementById(id).value = '');
+    if (currentTab === 'conferences') loadConferences();
+    else if (currentTab === 'dashboard') loadDashboard();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+</script>
+</body>
+</html>

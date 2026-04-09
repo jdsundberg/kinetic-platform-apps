@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HotelGuru — Global Hospitality Command</title>
+<style>
+:root {
+  --bg: #0b0e14; --surface: #131820; --surface-2: #1a2030; --surface-3: #212b3d;
+  --border: #2a3444; --border-light: #354050;
+  --text: #e2e8f0; --text-dim: #8892a4; --text-bright: #ffffff;
+  --accent: #58a6ff; --accent-dim: #2d5a8e;
+  --green: #3fb950; --green-dim: rgba(63,185,80,.15);
+  --red: #f85149; --red-dim: rgba(248,81,73,.15);
+  --yellow: #d29922; --yellow-dim: rgba(210,153,34,.15);
+  --cyan: #39d2c0; --cyan-dim: rgba(57,210,192,.15);
+  --orange: #f78166; --orange-dim: rgba(247,129,102,.15);
+  --purple: #bc8cff; --purple-dim: rgba(188,140,255,.15);
+  --brand-blue: #242F4D; --brand-orange: #F36C24;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+button{cursor:pointer;font-family:inherit}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Login */
+#login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#080b12 0%,#0d1420 50%,#111a2e 100%)}
+#app{display:none}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:36px;width:380px;box-shadow:var(--shadow)}
+.login-box h1{color:var(--text-bright);font-size:22px;margin-bottom:2px}
+.login-box .sub{color:var(--text-dim);font-size:12px;margin-bottom:20px}
+.login-box .accent-bar{width:36px;height:2px;background:var(--cyan);border-radius:1px;margin-bottom:20px}
+.login-box label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:3px;letter-spacing:.4px}
+.login-box input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:14px;outline:none;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text)}
+.login-box input:focus{border-color:var(--accent)}
+.login-box button{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:600;font-size:14px}
+.login-box button:hover{background:#4090e8}
+.login-box .error{color:var(--red);font-size:11px;margin-top:6px;display:none}
+
+/* Topbar */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:48px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:15px;color:var(--text-bright);white-space:nowrap;letter-spacing:-.3px}
+.topbar .logo span{color:var(--cyan);font-family:var(--mono);font-weight:800}
+.topbar-nav{display:flex;gap:2px;margin-left:28px}
+.topbar-nav button{background:none;border:none;color:var(--text-dim);padding:6px 12px;border-radius:5px;font-size:12px;font-weight:600;transition:all .12s;font-family:inherit;white-space:nowrap}
+.topbar-nav button:hover{color:var(--text);background:var(--surface-2)}
+.topbar-nav button.active{color:var(--cyan);background:rgba(57,210,192,.08)}
+.spacer{flex:1}
+.user-info{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+.user-info strong{color:var(--text)}
+.logout-btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 10px;border-radius:5px;font-size:11px;font-family:inherit}
+.logout-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* Status bar */
+.status-bar{background:var(--surface);border-top:1px solid var(--border);padding:4px 20px;display:flex;align-items:center;gap:16px;position:fixed;bottom:0;left:0;right:0;z-index:100;font-size:11px;color:var(--text-dim)}
+.status-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}
+.status-bar .sep{color:var(--border)}
+
+/* Main */
+.main{padding:16px 20px 40px;max-width:1600px;margin:0 auto}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* KPI Row */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.kpi .kpi-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi .kpi-val{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--text-bright)}
+.kpi .kpi-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+.kpi.green .kpi-val{color:var(--green)} .kpi.red .kpi-val{color:var(--red)}
+.kpi.yellow .kpi-val{color:var(--yellow)} .kpi.cyan .kpi-val{color:var(--cyan)}
+.kpi.orange .kpi-val{color:var(--orange)} .kpi.purple .kpi-val{color:var(--purple)}
+.kpi .kpi-bar{height:2px;border-radius:1px;margin-top:8px;background:var(--border)}
+.kpi .kpi-bar-fill{height:100%;border-radius:1px}
+
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden}
+.panel-head{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.panel-head h3{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.3px;flex:1}
+.panel-head .badge-count{font-size:11px;font-weight:600;background:var(--surface-3);color:var(--text-dim);padding:2px 8px;border-radius:10px}
+.panel-body{padding:12px 16px}
+.panel-body.flush{padding:0}
+
+/* Tables */
+table.dt{width:100%;border-collapse:collapse}
+table.dt th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);padding:8px 10px;text-align:left;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0}
+table.dt td{padding:7px 10px;border-bottom:1px solid rgba(42,52,68,.5);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+table.dt tr:hover{background:rgba(88,166,255,.04)}
+table.dt tr.clickable{cursor:pointer}
+table.dt .mono{font-family:var(--mono);font-size:11px}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-yellow{background:var(--yellow-dim);color:var(--yellow)}
+.badge-cyan{background:var(--cyan-dim);color:var(--cyan)}
+.badge-orange{background:var(--orange-dim);color:var(--orange)}
+.badge-purple{background:var(--purple-dim);color:var(--purple)}
+.badge-dim{background:rgba(139,148,164,.12);color:var(--text-dim)}
+
+/* Buttons */
+.btn{padding:5px 14px;border-radius:5px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface-2);color:var(--text);transition:all .12s;font-family:inherit}
+.btn:hover{border-color:var(--accent);color:var(--text-bright)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#4090e8}
+.btn-sm{padding:3px 10px;font-size:11px}
+.btn-green{border-color:var(--green);color:var(--green)}.btn-green:hover{background:var(--green-dim)}
+.btn-red{border-color:var(--red);color:var(--red)}.btn-red:hover{background:var(--red-dim)}
+
+/* Filters */
+.filter-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface-2);color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.filter-bar select:focus,.filter-bar input:focus{border-color:var(--accent)}
+.sub-tabs{display:flex;gap:2px;margin-bottom:10px}
+.sub-tab{padding:5px 12px;border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:600;background:var(--surface-2);color:var(--text-dim);cursor:pointer;transition:all .12s;font-family:inherit}
+.sub-tab:hover{color:var(--text);border-color:var(--accent)}
+.sub-tab.active{background:rgba(57,210,192,.1);color:var(--cyan);border-color:var(--cyan)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim)}
+.pagination .spacer{flex:1}
+
+/* Room grid */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;padding:12px}
+.room-card{border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all .12s}
+.room-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.room-card .rm-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text-bright)}
+.room-card .rm-type{font-size:9px;color:var(--text-dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room-card .rm-status{font-size:9px;font-weight:600;margin-top:4px}
+.room-card.available{background:var(--green-dim);border-color:rgba(63,185,80,.3)}
+.room-card.available .rm-status{color:var(--green)}
+.room-card.occupied{background:var(--cyan-dim);border-color:rgba(57,210,192,.3)}
+.room-card.occupied .rm-status{color:var(--cyan)}
+.room-card.dirty{background:var(--yellow-dim);border-color:rgba(210,153,34,.3)}
+.room-card.dirty .rm-status{color:var(--yellow)}
+.room-card.maintenance{background:var(--red-dim);border-color:rgba(248,81,73,.3)}
+.room-card.maintenance .rm-status{color:var(--red)}
+
+/* Detail panel */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200}
+.detail-overlay.open{display:flex;justify-content:flex-end}
+.detail-panel{width:500px;max-width:90vw;background:var(--surface);border-left:1px solid var(--border);height:100%;overflow-y:auto;padding:20px}
+.detail-panel h2{font-size:16px;font-weight:700;color:var(--text-bright);margin-bottom:4px}
+.detail-panel .detail-sub{font-size:12px;color:var(--text-dim);margin-bottom:16px}
+.detail-panel .detail-row{display:flex;padding:6px 0;border-bottom:1px solid rgba(42,52,68,.5)}
+.detail-panel .detail-label{width:140px;font-size:11px;color:var(--text-dim);flex-shrink:0}
+.detail-panel .detail-value{font-size:12px;color:var(--text);word-break:break-word}
+.detail-actions{display:flex;gap:8px;margin-top:16px}
+.close-detail{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer}
+
+/* Two-column layout */
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.cols-2{grid-template-columns:1fr}}
+
+/* Loading */
+.loading{padding:32px;text-align:center;color:var(--text-dim);font-size:12px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--surface-2);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:6px;font-size:12px;font-weight:600;box-shadow:var(--shadow);transition:transform .3s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+/* Property cards */
+.prop-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.prop-card{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;transition:all .12s}
+.prop-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.prop-card .prop-name{font-size:14px;font-weight:700;color:var(--text-bright);margin-bottom:2px}
+.prop-card .prop-meta{font-size:11px;color:var(--text-dim);margin-bottom:8px}
+.prop-card .prop-stats{display:flex;gap:12px}
+.prop-card .prop-stat{font-size:10px;color:var(--text-dim)}
+.prop-card .prop-stat strong{color:var(--text);font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+
+<script>
+if(sessionStorage.getItem('kinetic_session')){document.write('<style>#app{display:block!important}#login-screen{display:none!important}</style>')}
+else{document.write('<style>#login-screen{display:flex!important}#app{display:none!important}</style>')}
+</script>
+
+<!-- LOGIN -->
+<div id="login-screen">
+<div class="login-box">
+<h1>HotelGuru</h1>
+<div class="sub">Global Hospitality Command</div>
+<div class="accent-bar"></div>
+<label>Server URL</label>
+<input id="login-url" value="" placeholder="https://space.kinops.io">
+<label>Username</label>
+<input id="login-user" placeholder="username">
+<label>Password</label>
+<input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+<button onclick="doLogin()">Connect</button>
+<div id="login-error" class="error"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="topbar">
+<div class="logo"><span>GHC</span>&nbsp;HotelGuru</div>
+<div class="topbar-nav" id="nav">
+<button class="active" onclick="switchTab('command')">Command Center</button>
+<button onclick="switchTab('properties')">Properties</button>
+<button onclick="switchTab('rooms')">Room Board</button>
+<button onclick="switchTab('reservations')">Reservations</button>
+<button onclick="switchTab('guests')">Guests</button>
+<button onclick="switchTab('operations')">Operations</button>
+<button onclick="switchTab('revenue')">Revenue</button>
+<button onclick="switchTab('audit')">Audit</button>
+</div>
+<div class="spacer"></div>
+<div class="user-info">
+<strong id="user-display"></strong>
+<button class="logout-btn" onclick="doLogout()">Logout</button>
+</div>
+</div>
+
+<div class="main">
+
+<!-- COMMAND CENTER -->
+<div id="tab-command" class="tab-panel active">
+<div id="cmd-kpis" class="kpi-row"></div>
+<div class="cols-2">
+<div class="panel"><div class="panel-head"><h3>Property Overview</h3></div><div class="panel-body flush"><div id="cmd-props" class="loading"><span class="spinner"></span>Loading...</div></div></div>
+<div class="panel"><div class="panel-head"><h3>Recent Activity</h3></div><div class="panel-body flush"><div id="cmd-activity" class="loading"><span class="spinner"></span>Loading...</div></div></div>
+</div>
+<div class="cols-2">
+<div class="panel"><div class="panel-head"><h3>Reservation Pipeline</h3></div><div class="panel-body flush"><div id="cmd-pipeline" class="loading"><span class="spinner"></span>Loading...</div></div></div>
+<div class="panel"><div class="panel-head"><h3>Operations Queue</h3></div><div class="panel-body flush"><div id="cmd-ops" class="loading"><span class="spinner"></span>Loading...</div></div></div>
+</div>
+</div>
+
+<!-- PROPERTIES -->
+<div id="tab-properties" class="tab-panel">
+<div class="panel"><div class="panel-head"><h3>Global Property Portfolio</h3><div class="filter-bar"><select id="prop-region-filter" onchange="loadProperties()"><option value="">All Regions</option><option>North America</option><option>Europe</option><option>Asia Pacific</option><option>Middle East</option></select><select id="prop-brand-filter" onchange="loadProperties()"><option value="">All Brands</option></select></div></div><div class="panel-body flush"><div id="prop-list" class="loading"><span class="spinner"></span>Loading...</div></div></div>
+</div>
+
+<!-- ROOM BOARD -->
+<div id="tab-rooms" class="tab-panel">
+<div class="panel"><div class="panel-head"><h3>Room Board</h3><div class="filter-bar"><select id="room-prop-filter" onchange="loadRoomBoard()"><option value="">Select Property</option></select><select id="room-status-filter" onchange="filterRoomCards()"><option value="">All Statuses</option><option>Available</option><option>Occupied</option><option>Dirty</option><option>Maintenance</option></select></div></div><div class="panel-body"><div class="room-legend" style="margin-bottom:10px;display:flex;gap:12px;font-size:10px;color:var(--text-dim)"><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--green-dim);border:1px solid rgba(63,185,80,.3)"></span>Available</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--cyan-dim);border:1px solid rgba(57,210,192,.3)"></span>Occupied</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--yellow-dim);border:1px solid rgba(210,153,34,.3)"></span>Dirty</span><span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:var(--red-dim);border:1px solid rgba(248,81,73,.3)"></span>Maintenance</span></div><div id="room-board" class="room-grid" style="min-height:100px"><div class="loading" style="grid-column:1/-1">Select a property to view rooms</div></div></div></div>
+</div>
+
+<!-- RESERVATIONS -->
+<div id="tab-reservations" class="tab-panel">
+<div class="panel"><div class="panel-head"><h3>Reservations</h3><div class="filter-bar"><select id="res-status-filter" onchange="loadReservations()"><option value="">All Statuses</option><option>Created</option><option>Confirmed</option><option>Payment Authorized</option><option>Checked-In</option><option>Checked-Out</option><option>Cancelled</option><option>No Show</option><option>Archived</option></select><select id="res-prop-filter" onchange="loadReservations()"><option value="">All Properties</option></select><input id="res-search" type="text" placeholder="Confirmation #..." onkeydown="if(event.key==='Enter')loadReservations()" style="width:160px"></div></div><div class="panel-body flush"><div id="res-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="res-pager" class="pagination" style="display:none"></div></div>
+</div>
+
+<!-- GUESTS -->
+<div id="tab-guests" class="tab-panel">
+<div class="panel"><div class="panel-head"><h3>Guest Directory</h3><div class="filter-bar"><select id="guest-tier-filter" onchange="loadGuests()"><option value="">All Tiers</option><option>Obsidian</option><option>Platinum</option><option>Gold</option><option>Silver</option><option>Bronze</option><option>Member</option></select><select id="guest-vip-filter" onchange="loadGuests()"><option value="">All VIP</option><option>VVIP</option><option>VIP</option><option>Gold</option><option>Silver</option><option>Bronze</option><option>Standard</option></select><input id="guest-search" type="text" placeholder="Search name..." onkeydown="if(event.key==='Enter')loadGuests()" style="width:150px"></div></div><div class="panel-body flush"><div id="guest-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="guest-pager" class="pagination" style="display:none"></div></div>
+</div>
+
+<!-- OPERATIONS -->
+<div id="tab-operations" class="tab-panel">
+<div class="cols-2">
+<div class="panel"><div class="panel-head"><h3>Housekeeping</h3><div class="filter-bar"><select id="hk-status-filter" onchange="loadHousekeeping()"><option value="">All</option><option>Assigned</option><option>In Progress</option><option>Completed</option><option>Verified</option></select><select id="hk-prop-filter" onchange="loadHousekeeping()"><option value="">All Properties</option></select></div></div><div class="panel-body flush"><div id="hk-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="hk-pager" class="pagination" style="display:none"></div></div>
+<div class="panel"><div class="panel-head"><h3>Maintenance</h3><div class="filter-bar"><select id="mx-status-filter" onchange="loadMaintenance()"><option value="">All</option><option>Open</option><option>Assigned</option><option>Repairing</option><option>Awaiting Parts</option><option>Closed</option></select><select id="mx-sev-filter" onchange="loadMaintenance()"><option value="">All Severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div></div><div class="panel-body flush"><div id="mx-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="mx-pager" class="pagination" style="display:none"></div></div>
+</div>
+</div>
+
+<!-- REVENUE -->
+<div id="tab-revenue" class="tab-panel">
+<div id="rev-kpis" class="kpi-row"></div>
+<div class="panel"><div class="panel-head"><h3>Payment Transactions</h3><div class="filter-bar"><select id="pay-status-filter" onchange="loadPayments()"><option value="">All Statuses</option><option>Pending</option><option>Authorized</option><option>Captured</option><option>Refunded</option></select><select id="pay-type-filter" onchange="loadPayments()"><option value="">All Types</option><option>Credit Card</option><option>Wire Transfer</option><option>Corporate Account</option><option>Points Redemption</option></select></div></div><div class="panel-body flush"><div id="pay-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="pay-pager" class="pagination" style="display:none"></div></div>
+</div>
+
+<!-- AUDIT -->
+<div id="tab-audit" class="tab-panel">
+<div class="panel"><div class="panel-head"><h3>Audit Trail</h3><div class="filter-bar"><select id="audit-entity-filter" onchange="loadAudit()"><option value="">All Entities</option><option>Reservation</option><option>Room</option><option>Payment</option><option>Guest</option><option>Housekeeping</option><option>Maintenance</option><option>Rate Plan</option></select><select id="audit-action-filter" onchange="loadAudit()"><option value="">All Actions</option><option>Created</option><option>Updated</option><option>Status Changed</option><option>Rate Modified</option><option>Payment Captured</option><option>Payment Refunded</option><option>Room Assigned</option><option>Check-In</option><option>Check-Out</option><option>Cancelled</option></select><select id="audit-prop-filter" onchange="loadAudit()"><option value="">All Properties</option></select></div></div><div class="panel-body flush"><div id="audit-table" class="loading"><span class="spinner"></span>Loading...</div></div><div id="audit-pager" class="pagination" style="display:none"></div></div>
+</div>
+
+</div><!-- /main -->
+
+<div class="status-bar">
+<span><span class="dot" id="status-dot"></span><span id="status-text">Connected</span></span>
+<span class="sep">|</span>
+<span id="status-space">—</span>
+<span class="sep">|</span>
+<span id="status-kapp">hotel-guru</span>
+<div class="spacer"></div>
+<span id="status-time"></span>
+</div>
+</div><!-- /app -->
+
+<!-- Detail Panel -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+<div class="detail-panel" style="position:relative">
+<button class="close-detail" onclick="closeDetail()">&times;</button>
+<div id="detail-content"></div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STATE & CONFIG
+   ═══════════════════════════════════════════ */
+const KAPP = 'hotel-guru';
+let API = '', AUTH = '', USERNAME = '', SPACE = '';
+let propertyCache = [];
+let brandCache = [];
+const pageState = {};
+
+function v(sub, field) { return sub?.values?.[field] || ''; }
+
+/* ═══════════════════════════════════════════
+   AUTH
+   ═══════════════════════════════════════════ */
+function initSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    const s = JSON.parse(sess);
+    API = s.url || '';
+    AUTH = 'Basic ' + s.auth;
+    USERNAME = s.displayName || s.user || '';
+    SPACE = s.spaceSlug || '';
+    enterApp();
+    return true;
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+  return false;
+}
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Credentials required'; err.style.display = 'block'; return; }
+  try {
+    API = url; AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await apiFetch('/app/api/v1/me');
+    if (!r.ok) throw new Error('Authentication failed');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    const sp = await apiFetch('/app/api/v1/space');
+    SPACE = (await sp.json())?.space?.slug || '';
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: API, auth: btoa(user+':'+pass), user, displayName: USERNAME, spaceSlug: SPACE }));
+    document.getElementById('login-screen').style.display = 'none';
+    enterApp();
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  sessionStorage.removeItem('base_session');
+  location.reload();
+}
+
+function enterApp() {
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE ? USERNAME + ' \u00b7 ' + SPACE : USERNAME;
+  document.getElementById('status-space').textContent = SPACE || '—';
+  updateClock();
+  setInterval(updateClock, 1000);
+  loadPropertyCache().then(() => {
+    populatePropertyFilters();
+    switchTab('command');
+  });
+}
+
+function updateClock() {
+  document.getElementById('status-time').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+}
+
+/* ═══════════════════════════════════════════
+   API HELPERS
+   ═══════════════════════════════════════════ */
+function apiFetch(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  opts.headers['Authorization'] = AUTH;
+  if (API) opts.headers['X-Kinetic-Server'] = API;
+  return fetch(path, opts);
+}
+
+async function kqlQuery(formSlug, kql, limit, lastCreatedAt) {
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit || 25}`;
+  if (lastCreatedAt) {
+    kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+  }
+  if (kql) url += '&q=' + encodeURIComponent(kql);
+  const r = await apiFetch(url);
+  return r.json();
+}
+
+async function serverApi(path) {
+  const r = await apiFetch('/api/ghc' + path);
+  return r.json();
+}
+
+async function serverPost(path, body) {
+  const r = await apiFetch('/api/ghc' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: AUTH },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+async function loadPropertyCache() {
+  const data = await kqlQuery('properties', null, 25);
+  propertyCache = (data.submissions || []).map(s => ({
+    id: s.id, propertyId: v(s, 'Property ID'), code: v(s, 'Property Code'), name: v(s, 'Property Name'),
+    region: v(s, 'Region'), brand: v(s, 'Brand Name'), city: v(s, 'City'),
+    country: v(s, 'Country'), stars: v(s, 'Star Rating'), rooms: v(s, 'Total Rooms'),
+    gm: v(s, 'GM Name'), tenantName: v(s, 'Tenant Name'), status: v(s, 'Status'),
+  }));
+  const bData = await kqlQuery('brands', null, 25);
+  brandCache = (bData.submissions || []).map(s => ({ name: v(s, 'Brand Name'), tenant: v(s, 'Tenant Name'), stars: v(s, 'Star Category') }));
+}
+
+function populatePropertyFilters() {
+  const selects = ['room-prop-filter', 'res-prop-filter', 'hk-prop-filter', 'audit-prop-filter'];
+  const brandSel = document.getElementById('prop-brand-filter');
+  for (const id of selects) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const first = el.options[0].textContent;
+    el.innerHTML = '<option value="">' + first + '</option>';
+    for (const p of propertyCache) {
+      el.innerHTML += '<option value="' + p.propertyId + '">' + p.code + ' — ' + p.name + '</option>';
+    }
+  }
+  if (brandSel) {
+    const brands = [...new Set(propertyCache.map(p => p.brand))].sort();
+    brandSel.innerHTML = '<option value="">All Brands</option>';
+    for (const b of brands) brandSel.innerHTML += '<option>' + b + '</option>';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════════ */
+let currentTab = 'command';
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.topbar-nav button').forEach((b, i) => {
+    const tabs = ['command','properties','rooms','reservations','guests','operations','revenue','audit'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  // Load data for tab
+  if (tab === 'command') loadCommandCenter();
+  else if (tab === 'properties') loadProperties();
+  else if (tab === 'rooms') { /* wait for property selection */ }
+  else if (tab === 'reservations') loadReservations();
+  else if (tab === 'guests') loadGuests();
+  else if (tab === 'operations') { loadHousekeeping(); loadMaintenance(); }
+  else if (tab === 'revenue') loadRevenue();
+  else if (tab === 'audit') loadAudit();
+}
+
+/* ═══════════════════════════════════════════
+   COMMAND CENTER
+   ═══════════════════════════════════════════ */
+async function loadCommandCenter() {
+  try {
+    const data = await serverApi('/dashboard');
+    renderCommandKPIs(data);
+    renderCommandProps(data.properties || []);
+    renderCommandActivity(data.recentAudit || []);
+    renderCommandPipeline(data.resPipeline || {});
+    renderCommandOps(data.opsQueue || {});
+  } catch (e) {
+    document.getElementById('cmd-kpis').innerHTML = '<div class="kpi" style="grid-column:1/-1"><div class="kpi-label" style="color:var(--red)">Error loading dashboard: ' + e.message + '</div></div>';
+  }
+}
+
+function renderCommandKPIs(d) {
+  const kpis = [
+    { label: 'Properties', val: d.totalProperties || 0, cls: 'cyan' },
+    { label: 'Total Rooms', val: d.totalRooms || 0, cls: '' },
+    { label: 'Occupancy Rate', val: (d.occupancyRate || 0) + '%', cls: d.occupancyRate > 70 ? 'green' : 'yellow', sub: d.occupiedRooms + ' of ' + d.totalRooms + ' rooms' },
+    { label: 'Active Reservations', val: d.activeReservations || 0, cls: 'cyan' },
+    { label: "Today's Arrivals", val: d.todayArrivals || 0, cls: 'green' },
+    { label: "Today's Departures", val: d.todayDepartures || 0, cls: 'orange' },
+    { label: 'Active Revenue', val: '$' + fmt(d.activeRevenue || 0), cls: 'green' },
+    { label: 'Pending Ops', val: (d.pendingHK || 0) + (d.pendingMX || 0), cls: (d.pendingHK||0)+(d.pendingMX||0) > 10 ? 'red' : 'yellow', sub: d.pendingHK + ' HK / ' + d.pendingMX + ' MX' },
+  ];
+  document.getElementById('cmd-kpis').innerHTML = kpis.map(k => `
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-val">${k.val}</div>
+      ${k.sub ? '<div class="kpi-sub">' + k.sub + '</div>' : ''}
+    </div>`).join('');
+}
+
+function renderCommandProps(props) {
+  if (!props.length) { document.getElementById('cmd-props').innerHTML = '<div class="loading">No property data</div>'; return; }
+  let html = '<table class="dt"><thead><tr><th>Code</th><th>Property</th><th>Region</th><th>Rooms</th><th>Occ%</th><th>Stars</th></tr></thead><tbody>';
+  for (const p of props.slice(0, 10)) {
+    const occ = p.totalRooms > 0 ? Math.round(p.occupiedRooms / p.totalRooms * 100) : 0;
+    const occCls = occ > 70 ? 'green' : occ > 40 ? 'yellow' : 'red';
+    html += `<tr><td class="mono">${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.region)}</td><td class="mono">${p.totalRooms}</td><td><span class="badge badge-${occCls}">${occ}%</span></td><td>${'\u2605'.repeat(parseInt(p.stars)||0)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('cmd-props').innerHTML = html;
+}
+
+function renderCommandActivity(logs) {
+  if (!logs.length) { document.getElementById('cmd-activity').innerHTML = '<div class="loading">No recent activity</div>'; return; }
+  let html = '<table class="dt"><thead><tr><th>Time</th><th>Action</th><th>Entity</th><th>By</th><th>Property</th></tr></thead><tbody>';
+  for (const l of logs.slice(0, 10)) {
+    html += `<tr><td class="mono">${shortTime(l.timestamp)}</td><td><span class="badge ${actionBadge(l.action)}">${esc(l.action)}</span></td><td>${esc(l.entityType)}</td><td>${esc(l.changedBy)}</td><td class="mono">${esc(l.propertyCode)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('cmd-activity').innerHTML = html;
+}
+
+function renderCommandPipeline(p) {
+  const statuses = ['Created', 'Confirmed', 'Payment Authorized', 'Checked-In', 'Checked-Out', 'Cancelled', 'No Show', 'Archived'];
+  const colors = ['purple', 'cyan', 'yellow', 'green', 'dim', 'red', 'orange', 'dim'];
+  let html = '<div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px">';
+  for (let i = 0; i < statuses.length; i++) {
+    const count = p[statuses[i]] || 0;
+    html += `<div style="flex:1;min-width:100px;text-align:center;padding:10px;background:var(--surface-2);border-radius:6px;border:1px solid var(--border)"><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--${colors[i] === 'dim' ? 'text-dim' : colors[i]});">${count}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${statuses[i]}</div></div>`;
+  }
+  html += '</div>';
+  document.getElementById('cmd-pipeline').innerHTML = html;
+}
+
+function renderCommandOps(ops) {
+  let html = '<div style="padding:12px 16px">';
+  html += '<div style="display:flex;gap:10px;margin-bottom:10px">';
+  html += `<div style="flex:1;padding:10px;background:var(--surface-2);border-radius:6px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Housekeeping</div>`;
+  html += `<div style="display:flex;gap:8px"><span style="font-family:var(--mono);font-size:14px;color:var(--yellow)">${ops.hkAssigned||0} Assigned</span><span style="font-family:var(--mono);font-size:14px;color:var(--cyan)">${ops.hkInProgress||0} In Progress</span></div></div>`;
+  html += `<div style="flex:1;padding:10px;background:var(--surface-2);border-radius:6px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Maintenance</div>`;
+  html += `<div style="display:flex;gap:8px"><span style="font-family:var(--mono);font-size:14px;color:var(--red)">${ops.mxOpen||0} Open</span><span style="font-family:var(--mono);font-size:14px;color:var(--orange)">${ops.mxRepairing||0} Repairing</span></div></div>`;
+  html += '</div>';
+  if (ops.criticalMX && ops.criticalMX.length) {
+    html += '<div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Critical Maintenance</div>';
+    for (const t of ops.criticalMX) {
+      html += `<div style="padding:6px 8px;background:var(--red-dim);border:1px solid rgba(248,81,73,.3);border-radius:4px;margin-bottom:4px;font-size:11px"><span class="mono">${esc(t.ticketId)}</span> — ${esc(t.category)} @ ${esc(t.propertyCode)} Rm ${esc(t.room)}</div>`;
+    }
+  }
+  html += '</div>';
+  document.getElementById('cmd-ops').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════
+   PROPERTIES
+   ═══════════════════════════════════════════ */
+async function loadProperties() {
+  const region = document.getElementById('prop-region-filter').value;
+  const brand = document.getElementById('prop-brand-filter').value;
+  let filtered = propertyCache;
+  if (region) filtered = filtered.filter(p => p.region === region);
+  if (brand) filtered = filtered.filter(p => p.brand === brand);
+
+  let html = '<table class="dt"><thead><tr><th>Code</th><th>Property</th><th>Brand</th><th>City</th><th>Country</th><th>Region</th><th>Stars</th><th>Rooms</th><th>GM</th><th>Status</th></tr></thead><tbody>';
+  for (const p of filtered) {
+    html += `<tr class="clickable" onclick="showPropertyDetail('${p.id}')"><td class="mono">${esc(p.code)}</td><td>${esc(p.name)}</td><td>${esc(p.brand)}</td><td>${esc(p.city)}</td><td>${esc(p.country)}</td><td>${esc(p.region)}</td><td>${'\u2605'.repeat(parseInt(p.stars)||0)}</td><td class="mono">${p.rooms}</td><td>${esc(p.gm)}</td><td><span class="badge badge-green">${esc(p.status)}</span></td></tr>`;
+  }
+  html += '</tbody></table>';
+  if (!filtered.length) html = '<div class="loading">No properties match filters</div>';
+  document.getElementById('prop-list').innerHTML = html;
+}
+
+async function showPropertyDetail(propId) {
+  const prop = propertyCache.find(p => p.id === propId || p.propertyId === propId);
+  if (!prop) return;
+  let html = `<h2>${esc(prop.name)}</h2><div class="detail-sub">${esc(prop.code)} — ${esc(prop.brand)} — ${'\u2605'.repeat(parseInt(prop.stars)||0)}</div>`;
+  const fields = [
+    ['Tenant', prop.tenantName], ['Brand', prop.brand], ['Region', prop.region],
+    ['City', prop.city], ['Country', prop.country], ['Total Rooms', prop.rooms],
+    ['Star Rating', prop.stars], ['General Manager', prop.gm], ['Status', prop.status],
+  ];
+  for (const [l, val] of fields) html += `<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-value">${esc(val)}</div></div>`;
+  html += '<div class="detail-actions"><button class="btn btn-primary" onclick="switchTab(\'rooms\');document.getElementById(\'room-prop-filter\').value=\'' + prop.propertyId + '\';loadRoomBoard();closeDetail()">View Rooms</button></div>';
+  showDetail(html);
+}
+
+/* ═══════════════════════════════════════════
+   ROOM BOARD
+   ═══════════════════════════════════════════ */
+let roomBoardData = [];
+async function loadRoomBoard() {
+  const propId = document.getElementById('room-prop-filter').value;
+  if (!propId) { document.getElementById('room-board').innerHTML = '<div class="loading" style="grid-column:1/-1">Select a property to view rooms</div>'; return; }
+  document.getElementById('room-board').innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading rooms...</div>';
+  try {
+    const data = await serverApi('/rooms?propertyId=' + encodeURIComponent(propId));
+    roomBoardData = data.rooms || [];
+    filterRoomCards();
+  } catch (e) { document.getElementById('room-board').innerHTML = '<div class="loading" style="grid-column:1/-1;color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+function filterRoomCards() {
+  const statusFilter = document.getElementById('room-status-filter').value;
+  let rooms = roomBoardData;
+  if (statusFilter) rooms = rooms.filter(r => r.status === statusFilter);
+
+  if (!rooms.length) { document.getElementById('room-board').innerHTML = '<div class="loading" style="grid-column:1/-1">No rooms match filter</div>'; return; }
+
+  // Group by floor
+  const floors = {};
+  for (const r of rooms) { const fl = r.floor || '?'; if (!floors[fl]) floors[fl] = []; floors[fl].push(r); }
+  let html = '';
+  for (const fl of Object.keys(floors).sort((a, b) => a - b)) {
+    html += `<div style="grid-column:1/-1;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:8px;padding:4px 0;border-bottom:1px solid var(--border)">Floor ${fl}</div>`;
+    for (const r of floors[fl]) {
+      const cls = r.status === 'Available' ? 'available' : r.status === 'Occupied' ? 'occupied' : r.status === 'Dirty' ? 'dirty' : 'maintenance';
+      html += `<div class="room-card ${cls}" onclick="showRoomDetail('${r.id}')"><div class="rm-num">${esc(r.number)}</div><div class="rm-type">${esc(r.type)}</div><div class="rm-status">${esc(r.status)}</div></div>`;
+    }
+  }
+  document.getElementById('room-board').innerHTML = html;
+}
+
+async function showRoomDetail(roomId) {
+  const r = roomBoardData.find(x => x.id === roomId);
+  if (!r) return;
+  let html = `<h2>Room ${esc(r.number)}</h2><div class="detail-sub">${esc(r.propertyCode)} — ${esc(r.type)}</div>`;
+  const fields = [
+    ['Status', r.status], ['Condition', r.condition], ['Floor', r.floor],
+    ['Room Type', r.type], ['HK Status', r.hkStatus],
+    ['Current Guest', r.guest || '—'], ['Last Cleaned', r.lastCleaned || '—'],
+    ['Last Cleaned By', r.lastCleanedBy || '—'],
+  ];
+  for (const [l, val] of fields) html += `<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-value">${esc(val||'')}</div></div>`;
+  showDetail(html);
+}
+
+/* ═══════════════════════════════════════════
+   RESERVATIONS
+   ═══════════════════════════════════════════ */
+async function loadReservations(lastCreatedAt) {
+  const status = document.getElementById('res-status-filter').value;
+  const propId = document.getElementById('res-prop-filter').value;
+  const search = document.getElementById('res-search').value.trim();
+
+  let kql = '';
+  const parts = [];
+  if (status) parts.push(`values[Status]="${status}"`);
+  if (propId) parts.push(`values[Property ID]="${propId}"`);
+  if (search) parts.push(`values[Confirmation Number]="${search}"`);
+  kql = parts.join(' AND ');
+
+  const el = document.getElementById('res-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('reservations', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No reservations found</div>'; document.getElementById('res-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>Conf #</th><th>Guest</th><th>Property</th><th>Room Type</th><th>Check In</th><th>Check Out</th><th>Nights</th><th>Status</th><th>Amount</th><th>Channel</th><th></th></tr></thead><tbody>';
+    for (const s of subs) {
+      const st = v(s, 'Status');
+      html += `<tr class="clickable" onclick="showResDetail('${s.id}')">
+        <td class="mono">${esc(v(s,'Confirmation Number'))}</td>
+        <td>${esc(v(s,'Guest Name'))}</td>
+        <td class="mono">${esc(v(s,'Property Code'))}</td>
+        <td>${esc(v(s,'Room Type'))}</td>
+        <td class="mono">${esc(v(s,'Check In'))}</td>
+        <td class="mono">${esc(v(s,'Check Out'))}</td>
+        <td class="mono">${esc(v(s,'Nights'))}</td>
+        <td><span class="badge ${statusBadge(st)}">${esc(st)}</span></td>
+        <td class="mono">$${fmt(parseFloat(v(s,'Total Amount'))||0)}</td>
+        <td>${esc(v(s,'Channel Source'))}</td>
+        <td>${st === 'Confirmed' ? '<button class="btn btn-sm btn-green" onclick="event.stopPropagation();doCheckin(\'' + s.id + '\')">Check In</button>' : st === 'Checked-In' ? '<button class="btn btn-sm btn-red" onclick="event.stopPropagation();doCheckout(\'' + s.id + '\')">Check Out</button>' : ''}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    // Pager
+    const resHasNext = !!data.nextPageToken;
+    if (resHasNext && subs.length) pageState.resNextKey = subs[subs.length - 1].createdAt;
+    const pager = document.getElementById('res-pager');
+    pager.style.display = 'flex';
+    pager.innerHTML = `<span>Showing ${subs.length} records</span><div class="spacer"></div>${resHasNext ? '<button class="btn btn-sm" onclick="loadReservations(pageState.resNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+async function showResDetail(id) {
+  try {
+    const r = await apiFetch('/app/api/v1/submissions/' + id + '?include=values');
+    const data = await r.json();
+    const s = data.submission;
+    if (!s) return;
+    const st = v(s, 'Status');
+    let html = `<h2>${esc(v(s,'Confirmation Number'))}</h2><div class="detail-sub">${esc(v(s,'Guest Name'))} @ ${esc(v(s,'Property Name'))}</div>`;
+    const fields = [
+      ['Status', v(s,'Status')], ['Guest', v(s,'Guest Name')], ['Property', v(s,'Property Name') + ' (' + v(s,'Property Code') + ')'],
+      ['Room Type', v(s,'Room Type')], ['Room #', v(s,'Room Number') || '—'],
+      ['Check In', v(s,'Check In')], ['Check Out', v(s,'Check Out')], ['Nights', v(s,'Nights')],
+      ['Adults', v(s,'Adults')], ['Children', v(s,'Children')],
+      ['Rate Plan', v(s,'Rate Plan')], ['Rate', '$' + v(s,'Rate')], ['Total', '$' + v(s,'Total Amount')],
+      ['Payment Status', v(s,'Payment Status')], ['Channel', v(s,'Channel Source')],
+      ['Special Requests', v(s,'Special Requests') || '—'],
+      ['Checked In At', v(s,'Checked In At') || '—'], ['Checked In By', v(s,'Checked In By') || '—'],
+      ['Checked Out At', v(s,'Checked Out At') || '—'], ['Checked Out By', v(s,'Checked Out By') || '—'],
+      ['Cancellation Reason', v(s,'Cancellation Reason') || '—'],
+    ];
+    for (const [l, val] of fields) html += `<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-value">${esc(val)}</div></div>`;
+    html += '<div class="detail-actions">';
+    if (st === 'Confirmed') html += `<button class="btn btn-green" onclick="doCheckin('${s.id}');closeDetail()">Check In</button>`;
+    if (st === 'Checked-In') html += `<button class="btn btn-red" onclick="doCheckout('${s.id}');closeDetail()">Check Out</button>`;
+    html += '</div>';
+    showDetail(html);
+  } catch (e) { toast('Error loading reservation', 'error'); }
+}
+
+async function doCheckin(id) {
+  try {
+    const r = await serverPost('/reservations/' + id + '/checkin', { user: USERNAME });
+    if (r.error) { toast(r.error, 'error'); return; }
+    toast('Checked in — Room ' + (r.roomNumber || '?'), 'success');
+    loadReservations();
+  } catch (e) { toast('Check-in failed: ' + e.message, 'error'); }
+}
+
+async function doCheckout(id) {
+  try {
+    const r = await serverPost('/reservations/' + id + '/checkout', { user: USERNAME });
+    if (r.error) { toast(r.error, 'error'); return; }
+    toast('Checked out successfully', 'success');
+    loadReservations();
+  } catch (e) { toast('Check-out failed: ' + e.message, 'error'); }
+}
+
+/* ═══════════════════════════════════════════
+   GUESTS
+   ═══════════════════════════════════════════ */
+async function loadGuests(lastCreatedAt) {
+  const tier = document.getElementById('guest-tier-filter').value;
+  const vip = document.getElementById('guest-vip-filter').value;
+  const search = document.getElementById('guest-search').value.trim();
+
+  let kql = '';
+  const parts = [];
+  if (tier) parts.push(`values[Loyalty Tier]="${tier}"`);
+  if (vip) parts.push(`values[VIP Status]="${vip}"`);
+  if (search) parts.push(`values[Last Name]="${search}"`);
+  kql = parts.join(' AND ');
+
+  const el = document.getElementById('guest-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('guests', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No guests found</div>'; document.getElementById('guest-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Company</th><th>Country</th><th>Loyalty</th><th>VIP</th><th>Stays</th><th>LTV</th><th>Risk</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const risk = parseInt(v(s,'Risk Score')) || 0;
+      const riskCls = risk >= 5 ? 'red' : risk >= 3 ? 'yellow' : 'green';
+      html += `<tr class="clickable" onclick="showGuestDetail('${s.id}')">
+        <td class="mono">${esc(v(s,'Guest ID'))}</td>
+        <td>${esc(v(s,'First Name'))} ${esc(v(s,'Last Name'))}</td>
+        <td>${esc(v(s,'Email'))}</td>
+        <td>${esc(v(s,'Company'))}</td>
+        <td>${esc(v(s,'Country'))}</td>
+        <td><span class="badge ${loyaltyBadge(v(s,'Loyalty Tier'))}">${esc(v(s,'Loyalty Tier'))}</span></td>
+        <td><span class="badge ${vipBadge(v(s,'VIP Status'))}">${esc(v(s,'VIP Status'))}</span></td>
+        <td class="mono">${v(s,'Total Stays')}</td>
+        <td class="mono">$${fmt(parseFloat(v(s,'Lifetime Value'))||0)}</td>
+        <td><span class="badge badge-${riskCls}">${risk}</span></td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    const pager = document.getElementById('guest-pager');
+    pager.style.display = 'flex';
+    const guestHasNext = !!data.nextPageToken;
+    if (guestHasNext && subs.length) pageState.guestNextKey = subs[subs.length - 1].createdAt;
+    pager.innerHTML = `<span>Showing ${subs.length} guests</span><div class="spacer"></div>${guestHasNext ? '<button class="btn btn-sm" onclick="loadGuests(pageState.guestNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+async function showGuestDetail(id) {
+  try {
+    const r = await apiFetch('/app/api/v1/submissions/' + id + '?include=values');
+    const data = await r.json();
+    const s = data.submission;
+    if (!s) return;
+    let html = `<h2>${esc(v(s,'First Name'))} ${esc(v(s,'Last Name'))}</h2><div class="detail-sub">${esc(v(s,'Company'))} — ${esc(v(s,'Country'))}</div>`;
+    const fields = [
+      ['Guest ID', v(s,'Guest ID')], ['Email', v(s,'Email')], ['Phone', v(s,'Phone')],
+      ['Country', v(s,'Country')], ['ID Type', v(s,'ID Type')],
+      ['Loyalty ID', v(s,'Loyalty ID')], ['Loyalty Tier', v(s,'Loyalty Tier')],
+      ['Loyalty Points', fmt(parseFloat(v(s,'Loyalty Points'))||0)],
+      ['VIP Status', v(s,'VIP Status')], ['Total Stays', v(s,'Total Stays')],
+      ['Lifetime Value', '$' + fmt(parseFloat(v(s,'Lifetime Value'))||0)],
+      ['Risk Score', v(s,'Risk Score')], ['Company', v(s,'Company')],
+      ['Preferences', v(s,'Preferences') || '—'],
+    ];
+    for (const [l, val] of fields) html += `<div class="detail-row"><div class="detail-label">${l}</div><div class="detail-value">${esc(val)}</div></div>`;
+    showDetail(html);
+  } catch (e) { toast('Error loading guest', 'error'); }
+}
+
+/* ═══════════════════════════════════════════
+   HOUSEKEEPING
+   ═══════════════════════════════════════════ */
+async function loadHousekeeping(lastCreatedAt) {
+  const status = document.getElementById('hk-status-filter').value;
+  const propId = document.getElementById('hk-prop-filter').value;
+  const parts = [];
+  if (status) parts.push(`values[Status]="${status}"`);
+  if (propId) parts.push(`values[Property ID]="${propId}"`);
+  const kql = parts.join(' AND ');
+
+  const el = document.getElementById('hk-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('housekeeping', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No tasks found</div>'; document.getElementById('hk-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>Task ID</th><th>Property</th><th>Room</th><th>Type</th><th>Priority</th><th>Status</th><th>Assigned</th><th></th></tr></thead><tbody>';
+    for (const s of subs) {
+      const st = v(s,'Status');
+      html += `<tr>
+        <td class="mono">${esc(v(s,'Task ID'))}</td>
+        <td class="mono">${esc(v(s,'Property Code'))}</td>
+        <td class="mono">${esc(v(s,'Room Number'))}</td>
+        <td>${esc(v(s,'Task Type'))}</td>
+        <td><span class="badge ${priorityBadge(v(s,'Priority'))}">${esc(v(s,'Priority'))}</span></td>
+        <td><span class="badge ${hkStatusBadge(st)}">${esc(st)}</span></td>
+        <td>${esc(v(s,'Assigned To'))}</td>
+        <td>${hkActions(s.id, st)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    const pager = document.getElementById('hk-pager');
+    pager.style.display = 'flex';
+    const hkHasNext = !!data.nextPageToken;
+    if (hkHasNext && subs.length) pageState.hkNextKey = subs[subs.length - 1].createdAt;
+    pager.innerHTML = `<span>${subs.length} tasks</span><div class="spacer"></div>${hkHasNext ? '<button class="btn btn-sm" onclick="loadHousekeeping(pageState.hkNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+function hkActions(id, status) {
+  if (status === 'Assigned') return `<button class="btn btn-sm btn-green" onclick="hkTransition('${id}','In Progress')">Start</button>`;
+  if (status === 'In Progress') return `<button class="btn btn-sm btn-green" onclick="hkTransition('${id}','Completed')">Complete</button>`;
+  if (status === 'Completed') return `<button class="btn btn-sm btn-primary" onclick="hkTransition('${id}','Verified')">Verify</button>`;
+  return '';
+}
+
+async function hkTransition(id, newStatus) {
+  try {
+    const r = await serverPost('/housekeeping/' + id + '/transition', { status: newStatus, user: USERNAME });
+    if (r.error) { toast(r.error, 'error'); return; }
+    toast('HK task → ' + newStatus, 'success');
+    loadHousekeeping();
+  } catch (e) { toast('Transition failed', 'error'); }
+}
+
+/* ═══════════════════════════════════════════
+   MAINTENANCE
+   ═══════════════════════════════════════════ */
+async function loadMaintenance(lastCreatedAt) {
+  const status = document.getElementById('mx-status-filter').value;
+  const sev = document.getElementById('mx-sev-filter').value;
+  const parts = [];
+  if (status) parts.push(`values[Status]="${status}"`);
+  if (sev) parts.push(`values[Severity]="${sev}"`);
+  const kql = parts.join(' AND ');
+
+  const el = document.getElementById('mx-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('maintenance', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No tickets found</div>'; document.getElementById('mx-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>Ticket</th><th>Property</th><th>Room</th><th>Category</th><th>Severity</th><th>Status</th><th>Engineer</th><th>Cost Est</th></tr></thead><tbody>';
+    for (const s of subs) {
+      html += `<tr>
+        <td class="mono">${esc(v(s,'Ticket ID'))}</td>
+        <td class="mono">${esc(v(s,'Property Code'))}</td>
+        <td class="mono">${esc(v(s,'Room Number'))}</td>
+        <td>${esc(v(s,'Category'))}</td>
+        <td><span class="badge ${sevBadge(v(s,'Severity'))}">${esc(v(s,'Severity'))}</span></td>
+        <td><span class="badge ${mxStatusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+        <td>${esc(v(s,'Assigned Engineer'))}</td>
+        <td class="mono">$${fmt(parseFloat(v(s,'Cost Estimate'))||0)}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    const pager = document.getElementById('mx-pager');
+    pager.style.display = 'flex';
+    const mxHasNext = !!data.nextPageToken;
+    if (mxHasNext && subs.length) pageState.mxNextKey = subs[subs.length - 1].createdAt;
+    pager.innerHTML = `<span>${subs.length} tickets</span><div class="spacer"></div>${mxHasNext ? '<button class="btn btn-sm" onclick="loadMaintenance(pageState.mxNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+/* ═══════════════════════════════════════════
+   REVENUE
+   ═══════════════════════════════════════════ */
+async function loadRevenue() {
+  try {
+    const data = await serverApi('/revenue');
+    renderRevenueKPIs(data);
+    loadPayments();
+  } catch (e) {
+    document.getElementById('rev-kpis').innerHTML = '<div class="kpi" style="grid-column:1/-1"><div class="kpi-label" style="color:var(--red)">Error: ' + e.message + '</div></div>';
+  }
+}
+
+function renderRevenueKPIs(d) {
+  const kpis = [
+    { label: 'Total Revenue', val: '$' + fmt(d.totalRevenue || 0), cls: 'green' },
+    { label: 'Captured', val: '$' + fmt(d.captured || 0), cls: 'green' },
+    { label: 'Authorized', val: '$' + fmt(d.authorized || 0), cls: 'cyan' },
+    { label: 'Pending', val: '$' + fmt(d.pending || 0), cls: 'yellow' },
+    { label: 'Refunded', val: '$' + fmt(d.refunded || 0), cls: 'red' },
+    { label: 'Transactions', val: d.totalTransactions || 0, cls: '' },
+  ];
+  document.getElementById('rev-kpis').innerHTML = kpis.map(k => `<div class="kpi ${k.cls}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
+}
+
+async function loadPayments(lastCreatedAt) {
+  const status = document.getElementById('pay-status-filter').value;
+  const type = document.getElementById('pay-type-filter').value;
+  const parts = [];
+  if (status) parts.push(`values[Status]="${status}"`);
+  if (type) parts.push(`values[Payment Type]="${type}"`);
+  const kql = parts.join(' AND ');
+
+  const el = document.getElementById('pay-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('payments', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No payments found</div>'; document.getElementById('pay-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>Payment ID</th><th>Conf #</th><th>Property</th><th>Guest</th><th>Type</th><th>Amount</th><th>Status</th><th>Txn Ref</th><th>Processed</th></tr></thead><tbody>';
+    for (const s of subs) {
+      html += `<tr>
+        <td class="mono">${esc(v(s,'Payment ID'))}</td>
+        <td class="mono">${esc(v(s,'Confirmation Number'))}</td>
+        <td>${esc(v(s,'Property Name'))}</td>
+        <td>${esc(v(s,'Guest Name'))}</td>
+        <td>${esc(v(s,'Payment Type'))}</td>
+        <td class="mono">$${fmt(parseFloat(v(s,'Amount'))||0)}</td>
+        <td><span class="badge ${payStatusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+        <td class="mono" style="font-size:10px">${esc(v(s,'Transaction Ref'))}</td>
+        <td class="mono">${shortTime(v(s,'Processed At'))}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    const pager = document.getElementById('pay-pager');
+    pager.style.display = 'flex';
+    const payHasNext = !!data.nextPageToken;
+    if (payHasNext && subs.length) pageState.payNextKey = subs[subs.length - 1].createdAt;
+    pager.innerHTML = `<span>${subs.length} payments</span><div class="spacer"></div>${payHasNext ? '<button class="btn btn-sm" onclick="loadPayments(pageState.payNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+/* ═══════════════════════════════════════════
+   AUDIT
+   ═══════════════════════════════════════════ */
+async function loadAudit(lastCreatedAt) {
+  const entity = document.getElementById('audit-entity-filter').value;
+  const action = document.getElementById('audit-action-filter').value;
+  const propId = document.getElementById('audit-prop-filter').value;
+  const parts = [];
+  if (entity) parts.push(`values[Entity Type]="${entity}"`);
+  if (action) parts.push(`values[Action]="${action}"`);
+  if (propId) parts.push(`values[Property ID]="${propId}"`);
+  const kql = parts.join(' AND ');
+
+  const el = document.getElementById('audit-table');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    const data = await kqlQuery('audit-log', kql || null, 25, lastCreatedAt);
+    const subs = data.submissions || [];
+    if (!subs.length) { el.innerHTML = '<div class="loading">No audit records found</div>'; document.getElementById('audit-pager').style.display = 'none'; return; }
+
+    let html = '<table class="dt"><thead><tr><th>Log ID</th><th>Timestamp</th><th>Entity</th><th>Action</th><th>Field</th><th>Old</th><th>New</th><th>Changed By</th><th>Property</th></tr></thead><tbody>';
+    for (const s of subs) {
+      html += `<tr>
+        <td class="mono">${esc(v(s,'Log ID'))}</td>
+        <td class="mono">${shortTime(v(s,'Timestamp'))}</td>
+        <td>${esc(v(s,'Entity Type'))}</td>
+        <td><span class="badge ${actionBadge(v(s,'Action'))}">${esc(v(s,'Action'))}</span></td>
+        <td>${esc(v(s,'Field Changed') || '—')}</td>
+        <td class="mono">${esc(v(s,'Old Value') || '—')}</td>
+        <td class="mono">${esc(v(s,'New Value') || '—')}</td>
+        <td>${esc(v(s,'Changed By'))}</td>
+        <td class="mono">${esc(v(s,'Property Code'))}</td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+
+    const pager = document.getElementById('audit-pager');
+    pager.style.display = 'flex';
+    const auditHasNext = !!data.nextPageToken;
+    if (auditHasNext && subs.length) pageState.auditNextKey = subs[subs.length - 1].createdAt;
+    pager.innerHTML = `<span>${subs.length} records</span><div class="spacer"></div>${auditHasNext ? '<button class="btn btn-sm" onclick="loadAudit(pageState.auditNextKey)">Next &rarr;</button>' : ''}`;
+  } catch (e) { el.innerHTML = '<div class="loading" style="color:var(--red)">Error: ' + e.message + '</div>'; }
+}
+
+/* ═══════════════════════════════════════════
+   DETAIL PANEL
+   ═══════════════════════════════════════════ */
+function showDetail(html) {
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════ */
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function fmt(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+function shortTime(ts) { if (!ts) return '—'; try { const d = new Date(ts); return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ts; } }
+
+function statusBadge(s) {
+  const m = { 'Confirmed': 'badge-cyan', 'Created': 'badge-purple', 'Payment Authorized': 'badge-yellow', 'Checked-In': 'badge-green', 'Checked-Out': 'badge-dim', 'Cancelled': 'badge-red', 'No Show': 'badge-orange', 'Archived': 'badge-dim' };
+  return m[s] || 'badge-dim';
+}
+function loyaltyBadge(t) {
+  const m = { 'Obsidian': 'badge-purple', 'Platinum': 'badge-cyan', 'Gold': 'badge-yellow', 'Silver': 'badge-dim', 'Bronze': 'badge-orange', 'Member': 'badge-dim' };
+  return m[t] || 'badge-dim';
+}
+function vipBadge(v) {
+  const m = { 'VVIP': 'badge-purple', 'VIP': 'badge-cyan', 'Gold': 'badge-yellow', 'Silver': 'badge-dim', 'Bronze': 'badge-orange', 'Standard': 'badge-dim' };
+  return m[v] || 'badge-dim';
+}
+function priorityBadge(p) {
+  const m = { 'Urgent': 'badge-red', 'High': 'badge-orange', 'Normal': 'badge-dim', 'Low': 'badge-dim' };
+  return m[p] || 'badge-dim';
+}
+function hkStatusBadge(s) {
+  const m = { 'Assigned': 'badge-yellow', 'In Progress': 'badge-cyan', 'Completed': 'badge-green', 'Verified': 'badge-purple' };
+  return m[s] || 'badge-dim';
+}
+function mxStatusBadge(s) {
+  const m = { 'Open': 'badge-red', 'Assigned': 'badge-yellow', 'Repairing': 'badge-cyan', 'Awaiting Parts': 'badge-orange', 'Closed': 'badge-green' };
+  return m[s] || 'badge-dim';
+}
+function sevBadge(s) {
+  const m = { 'Critical': 'badge-red', 'High': 'badge-orange', 'Medium': 'badge-yellow', 'Low': 'badge-dim' };
+  return m[s] || 'badge-dim';
+}
+function payStatusBadge(s) {
+  const m = { 'Captured': 'badge-green', 'Authorized': 'badge-cyan', 'Pending': 'badge-yellow', 'Refunded': 'badge-red' };
+  return m[s] || 'badge-dim';
+}
+function actionBadge(a) {
+  const m = { 'Created': 'badge-green', 'Updated': 'badge-cyan', 'Status Changed': 'badge-yellow', 'Rate Modified': 'badge-orange', 'Payment Captured': 'badge-green', 'Payment Refunded': 'badge-red', 'Room Assigned': 'badge-cyan', 'Check-In': 'badge-green', 'Check-Out': 'badge-orange', 'Cancelled': 'badge-red' };
+  return m[a] || 'badge-dim';
+}
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ── Init ── */
+initSession();
+</script>
+</body>
+</html>

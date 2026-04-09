@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Management</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* ── Login ── */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; transition: background .15s; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* ── Topbar ── */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.nav-tabs { display:flex; gap:4px; margin-left:32px; }
+.nav-tabs button { background:transparent; border:none; color:rgba(255,255,255,.7); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition: all .15s; }
+.nav-tabs button:hover { color:white; background:rgba(255,255,255,.08); }
+.nav-tabs button.active { background:var(--orange); color:white; }
+.spacer { flex:1; }
+.user-info { display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.7); }
+.user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+/* ── Console ── */
+.console { display:none; padding:24px; max-width:1400px; margin:0 auto; }
+.console.active { display:block; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+
+/* ── Buttons ── */
+.btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; border:none; transition: background .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { background:#eee; }
+.btn-success { background:var(--green); color:white; }
+.btn-success:hover { background:#2E9E4B; }
+.btn-danger { background:var(--red); color:white; }
+.btn-danger:hover { background:#D03A2F; }
+.btn-sm { padding:4px 10px; border-radius:6px; font-size:12px; }
+
+/* ── Filter bar ── */
+.filter-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin-bottom:16px; }
+.filter-bar .fg { display:flex; flex-direction:column; }
+.filter-bar label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.filter-bar input, .filter-bar select { padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; font-family:inherit; background:white; }
+.filter-bar input:focus, .filter-bar select:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.filter-bar input { min-width:220px; }
+.filter-bar .clear-link { font-size:12px; color:var(--orange); cursor:pointer; padding-bottom:8px; white-space:nowrap; }
+.filter-bar .clear-link:hover { text-decoration:underline; }
+
+/* ── Header row ── */
+.header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.header-row .left { display:flex; align-items:baseline; gap:10px; }
+.header-row .count { font-size:13px; color:var(--gray); }
+
+/* ── Table ── */
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; background:var(--light); border-bottom:1px solid var(--border); position:sticky; top:0; }
+td { padding:8px 10px; font-size:13px; border-bottom:1px solid var(--border); }
+tbody tr { cursor:pointer; transition:background .1s; }
+tbody tr:hover { background:#FAFAFA; }
+tbody tr:last-child td { border-bottom:none; }
+
+/* ── Badges ── */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-open { background:#E3F2FD; color:#1565C0; }
+.badge-in-progress { background:#FFF8E1; color:#F9A825; }
+.badge-pending { background:#FFF3E0; color:#E65100; }
+.badge-resolved { background:#E8F5E9; color:#2E7D32; }
+.badge-closed { background:#F1F3F4; color:#5F6368; }
+.badge-critical { background:#FDECEA; color:#C62828; }
+.badge-high { background:#FFF3E0; color:#E65100; }
+.badge-medium { background:#FFF8E1; color:#F9A825; }
+.badge-low { background:#E8F5E9; color:#2E7D32; }
+
+/* ── Detail panel ── */
+.detail-panel { }
+.back-link { font-size:13px; color:var(--orange); cursor:pointer; margin-bottom:16px; display:inline-block; }
+.back-link:hover { text-decoration:underline; }
+.detail-header { margin-bottom:20px; }
+.detail-header h2 { font-size:20px; font-weight:700; color:var(--blue); margin-bottom:8px; }
+.detail-header .badges { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.detail-header .meta { font-size:12px; color:var(--gray); }
+.detail-desc { background:var(--light); border-radius:8px; padding:16px; font-size:13px; line-height:1.6; white-space:pre-wrap; margin-bottom:20px; color:#333; }
+.info-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:20px; }
+.info-grid .ig-item label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; display:block; margin-bottom:2px; }
+.info-grid .ig-item span { font-size:13px; font-weight:500; }
+.edit-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:16px; }
+.edit-grid .fg { display:flex; flex-direction:column; }
+.edit-grid label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.edit-grid select, .edit-grid input { padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; font-family:inherit; background:white; }
+.edit-grid select:focus, .edit-grid input:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.resolution-area { margin-bottom:16px; }
+.resolution-area label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; display:block; margin-bottom:4px; }
+.resolution-area textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; resize:vertical; min-height:70px; }
+.resolution-area textarea:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.quick-actions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.save-row { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+.save-row .msg { font-size:12px; }
+
+/* ── Notes ── */
+.notes-section h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:12px; }
+.note-form { background:var(--light); border-radius:8px; padding:16px; margin-bottom:16px; }
+.note-form textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; resize:vertical; min-height:60px; margin-bottom:8px; }
+.note-form textarea:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.note-form .nf-row { display:flex; align-items:flex-end; gap:8px; }
+.note-form .nf-row .fg { display:flex; flex-direction:column; }
+.note-form .nf-row label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.note-form .nf-row select { padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; outline:none; font-family:inherit; background:white; }
+.note-card { background:white; border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:8px; }
+.note-card .note-meta { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.note-card .note-meta .author { font-size:13px; font-weight:600; }
+.note-card .note-meta .tag { font-size:10px; background:var(--light); color:var(--gray); padding:2px 6px; border-radius:4px; }
+.note-card .note-meta .tag-public { background:#E3F2FD; color:#1565C0; }
+.note-card .note-meta .time { font-size:11px; color:var(--gray); margin-left:auto; }
+.note-card .note-body { font-size:13px; line-height:1.5; white-space:pre-wrap; }
+
+/* ── KPI Row ── */
+.kpi-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.kpi .val { font-size:26px; font-weight:700; }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.blue .val { color:var(--blue); }
+.kpi.green .val { color:var(--green); }
+.kpi.gray .val { color:var(--gray); }
+.kpi.yellow .val { color:var(--yellow); }
+.kpi.orange .val { color:var(--orange); }
+
+/* ── Charts grid ── */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+@media(max-width:900px) { .charts-row { grid-template-columns:1fr; } }
+.chart-card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.chart-card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:16px; }
+
+/* ── CSS Bar chart ── */
+.bar-chart { display:flex; align-items:flex-end; gap:6px; height:180px; padding-top:8px; }
+.bar-chart .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+.bar-chart .bar { width:100%; min-width:14px; background:#2563eb; border-radius:4px 4px 0 0; transition:height .3s; position:relative; }
+.bar-chart .bar:hover { opacity:.85; }
+.bar-chart .bar-val { font-size:10px; color:var(--gray); margin-bottom:4px; font-weight:600; }
+.bar-chart .bar-label { font-size:9px; color:var(--gray); margin-top:6px; white-space:nowrap; }
+
+/* ── CSS Donut (conic-gradient) ── */
+.donut-wrap { display:flex; align-items:center; gap:24px; }
+.donut { width:160px; height:160px; border-radius:50%; position:relative; flex-shrink:0; }
+.donut-hole { position:absolute; inset:30px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+.donut-hole .dh-val { font-size:22px; font-weight:700; color:var(--blue); }
+.donut-hole .dh-label { font-size:10px; color:var(--gray); }
+.donut-legend { flex:1; }
+.donut-legend .dl-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.donut-legend .dl-swatch { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+.donut-legend .dl-name { font-size:12px; flex:1; }
+.donut-legend .dl-count { font-size:12px; font-weight:600; }
+
+/* ── CSS Horizontal bars ── */
+.h-bars .hb-row { margin-bottom:10px; }
+.h-bars .hb-head { display:flex; justify-content:space-between; margin-bottom:4px; }
+.h-bars .hb-name { font-size:12px; font-weight:500; }
+.h-bars .hb-count { font-size:12px; font-weight:600; color:var(--gray); }
+.h-bars .hb-track { height:8px; background:var(--light); border-radius:4px; overflow:hidden; }
+.h-bars .hb-fill { height:100%; border-radius:4px; transition:width .3s; }
+
+/* ── Agent workload table ── */
+.workload-card { background:white; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
+.workload-card .wc-title { padding:16px 20px 8px; font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; }
+.workload-card table { margin:0; }
+.workload-card th { padding:8px 20px; }
+.workload-card td { padding:10px 20px; }
+.wl-bar-track { height:8px; background:var(--light); border-radius:4px; overflow:hidden; width:120px; }
+.wl-bar-fill { height:100%; background:var(--orange); border-radius:4px; }
+
+/* ── Modal ── */
+#modal { display:none; position:fixed; inset:0; z-index:200; align-items:flex-start; justify-content:center; padding:60px 20px; background:rgba(0,0,0,.5); overflow-y:auto; }
+#modal.open { display:flex; }
+.modal-box { background:white; border-radius:16px; max-width:650px; width:100%; box-shadow:var(--shadow-lg); animation:modalIn .2s ease-out; }
+@keyframes modalIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); }
+.modal-header h2 { font-size:18px; font-weight:700; color:var(--blue); }
+.modal-close { background:none; border:none; font-size:22px; color:var(--gray); padding:4px 8px; border-radius:6px; line-height:1; }
+.modal-close:hover { background:var(--light); color:var(--blue); }
+.modal-body { padding:24px; }
+.modal-body .fg { margin-bottom:16px; }
+.modal-body label { display:block; font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.modal-body input, .modal-body select, .modal-body textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.modal-body textarea { resize:vertical; min-height:80px; }
+.modal-body .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal-footer { display:flex; justify-content:flex-end; gap:8px; padding:16px 24px; border-top:1px solid var(--border); }
+
+/* ── Toast ── */
+#toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:300; pointer-events:none; }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── Loading ── */
+.loading { text-align:center; padding:40px; color:var(--gray); font-size:13px; }
+.empty { text-align:center; padding:40px; color:var(--gray); font-size:13px; }
+
+/* ── Pager ── */
+.pager { display:flex; align-items:center; justify-content:center; gap:12px; padding:12px; }
+.pager button { padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:white; font-size:12px; font-weight:600; color:var(--blue); cursor:pointer; transition:all .15s; }
+.pager button:hover:not(:disabled) { border-color:var(--orange); color:var(--orange); }
+.pager button:disabled { opacity:.4; cursor:default; }
+.pager .page-info { font-size:12px; color:var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Case Management</h1>
+    <div class="sub">Ticket tracking & case resolution</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="http://localhost:3005" placeholder="http://localhost:3005">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Case<span>Mgmt</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchConsole('cases')">Cases</button>
+      <button onclick="switchConsole('dash')">Dashboard</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- CASES TAB -->
+  <div id="console-cases" class="console active">
+    <div class="header-row">
+      <div class="left">
+        <h2 class="page-title">Cases</h2>
+        <span id="case-count" class="count"></span>
+      </div>
+      <button class="btn btn-primary" onclick="openNewCaseModal()">+ New Case</button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="fg" style="flex:1;min-width:200px">
+        <label>Search</label>
+        <input id="f-search" placeholder="Search title, description, or ID..." oninput="applyFilters()">
+      </div>
+      <div class="fg">
+        <label>Status</label>
+        <select id="f-status" onchange="applyFilters()">
+          <option value="">All statuses</option>
+          <option>Open</option><option>In Progress</option><option>Pending</option><option>Resolved</option><option>Closed</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Priority</label>
+        <select id="f-priority" onchange="applyFilters()">
+          <option value="">All priorities</option>
+          <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Category</label>
+        <select id="f-category" onchange="applyFilters()">
+          <option value="">All categories</option>
+          <option>Performance</option><option>Integration</option><option>Hardware Issue</option><option>Data Issue</option><option>Feature Request</option><option>Account Access</option><option>Network</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Assigned To</label>
+        <select id="f-assignee" onchange="applyFilters()"></select>
+      </div>
+      <span id="f-clear" class="clear-link" style="display:none" onclick="clearFilters()">Clear</span>
+    </div>
+
+    <div id="case-list"></div>
+    <div id="case-detail" style="display:none"></div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="console-dash" class="console">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="page-sub">Case management analytics & team performance</div>
+    <div id="dash-content"><div class="loading">Loading dashboard...</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title">New Case</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   STATE & API
+   ══════════════════════════════════════════════════════════════════ */
+
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'case';
+const CASES_FORM = 'cases';
+const NOTES_FORM = 'case-notes';
+const AGENTS_FORM = 'agents';
+
+let allCases = [];
+let allAgents = [];
+let currentCaseId = null;
+let casePager = { items: [], pageKeys: [null], pageIndex: 0, hasNext: false, hasPrev: false };
+
+async function collectAll(formPath, maxPages) {
+  maxPages = maxPages || 8;
+  const all = [];
+  let lastCreatedAt = null;
+  for (let i = 0; i < maxPages; i++) {
+    let kql = lastCreatedAt ? `createdAt < "${lastCreatedAt}"` : '';
+    let url = formPath + (formPath.includes('?') ? '&' : '?') + 'limit=25';
+    if (kql) url += '&q=' + encodeURIComponent(kql);
+    const data = await api(url);
+    const subs = data.submissions || [];
+    all.push(...subs);
+    if (!data.nextPageToken || subs.length < 25) break;
+    lastCreatedAt = subs[subs.length - 1].createdAt;
+  }
+  return all;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': 'Basic ' + API.auth,
+      'Content-Type': 'application/json',
+      ...opts.headers
+    }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN / LOGOUT
+   ══════════════════════════════════════════════════════════════════ */
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  if (!user || !pass) { err.textContent = 'Username and password are required.'; err.style.display = 'block'; return; }
+
+  try {
+    API = { url, auth: btoa(user + ':' + pass), user, displayName: '', spaceSlug: '' };
+    const me = await api('/me');
+    API.displayName = me.displayName || user;
+    try {
+      const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json' } });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    await init();
+  } catch (e) {
+    err.textContent = e.message.includes('Failed to fetch') ? 'Cannot reach server.' : 'Login failed: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-pass').value = '';
+  allCases = [];
+  allAgents = [];
+  currentCaseId = null;
+}
+
+async function restoreSession() {
+  const saved = sessionStorage.getItem('kinetic_session');
+  if (!saved) return;
+  try {
+    API = JSON.parse(saved);
+    const me = await api('/me');
+    API.displayName = me.displayName || API.user;
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await init();
+  } catch {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  }
+}
+
+async function init() {
+  await loadAgents();
+  await loadCases();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   AGENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+async function loadAgents() {
+  try {
+    const subs = await collectAll(`/kapps/${KAPP}/forms/${AGENTS_FORM}/submissions?include=values`);
+    allAgents = subs.map(s => ({
+      name: v(s, 'Agent Name'),
+      team: v(s, 'Team'),
+    })).filter(a => a.name);
+    populateAssigneeDropdowns();
+  } catch { allAgents = []; }
+}
+
+function populateAssigneeDropdowns() {
+  const sel = document.getElementById('f-assignee');
+  sel.innerHTML = '<option value="">All agents</option>' +
+    allAgents.map(a => `<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CASES — LIST
+   ══════════════════════════════════════════════════════════════════ */
+
+async function loadCases(direction) {
+  const p = casePager;
+  if (direction === 'reset') {
+    p.pageKeys = [null]; p.pageIndex = 0;
+  } else if (direction === 'next' && p.hasNext) {
+    p.pageIndex++;
+  } else if (direction === 'prev' && p.hasPrev) {
+    p.pageIndex--;
+  }
+
+  const parts = [];
+  const status = document.getElementById('f-status').value;
+  const priority = document.getElementById('f-priority').value;
+  const category = document.getElementById('f-category').value;
+  const assignee = document.getElementById('f-assignee').value;
+  if (status) parts.push(`values[Case Status]="${status}"`);
+  if (priority) parts.push(`values[Priority]="${priority}"`);
+  if (category) parts.push(`values[Category]="${category}"`);
+  if (assignee) parts.push(`values[Assigned To]="${assignee}"`);
+  const lastCreatedAt = p.pageKeys[p.pageIndex];
+  if (lastCreatedAt) parts.push(`createdAt < "${lastCreatedAt}"`);
+  const q = parts.length ? '&q=' + encodeURIComponent(parts.join(' AND ')) : '';
+
+  document.getElementById('case-list').innerHTML = '<div class="loading">Loading cases...</div>';
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${CASES_FORM}/submissions?include=details,values&limit=25${q}`);
+    p.items = data.submissions || [];
+    p.hasNext = !!data.nextPageToken;
+    if (p.hasNext && p.items.length) p.pageKeys[p.pageIndex + 1] = p.items[p.items.length - 1].createdAt;
+    p.hasPrev = p.pageIndex > 0;
+    allCases = p.items;
+    renderCaseList();
+  } catch (e) {
+    document.getElementById('case-list').innerHTML = '<div class="empty">Failed to load cases: ' + esc(e.message) + '</div>';
+  }
+}
+
+function applyFilters() {
+  updateClearLink();
+  loadCases('reset');
+}
+
+function clearFilters() {
+  document.getElementById('f-search').value = '';
+  document.getElementById('f-status').value = '';
+  document.getElementById('f-priority').value = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-assignee').value = '';
+  updateClearLink();
+  loadCases('reset');
+}
+
+function updateClearLink() {
+  const has = document.getElementById('f-search').value ||
+    document.getElementById('f-status').value ||
+    document.getElementById('f-priority').value ||
+    document.getElementById('f-category').value ||
+    document.getElementById('f-assignee').value;
+  document.getElementById('f-clear').style.display = has ? '' : 'none';
+}
+
+function renderCaseList() {
+  const search = document.getElementById('f-search').value.toLowerCase();
+  let filtered = allCases;
+  if (search) {
+    filtered = filtered.filter(s =>
+      (v(s, 'Case Title')).toLowerCase().includes(search) ||
+      (v(s, 'Description')).toLowerCase().includes(search) ||
+      s.id.toLowerCase().includes(search)
+    );
+  }
+
+  document.getElementById('case-count').textContent = filtered.length + ' case' + (filtered.length !== 1 ? 's' : '');
+
+  if (filtered.length === 0) {
+    document.getElementById('case-list').innerHTML = '<div class="empty">No cases found</div>';
+    return;
+  }
+
+  let html = '<div class="card" style="padding:0;overflow:hidden"><table><thead><tr>' +
+    '<th>Title</th><th>Status</th><th>Priority</th><th>Assigned To</th><th>Category</th><th>Reported By</th><th>Updated</th>' +
+    '</tr></thead><tbody>';
+
+  for (const s of filtered) {
+    html += `<tr onclick="openCase('${s.id}')">
+      <td style="font-weight:500;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s, 'Case Title') || 'Untitled')}</td>
+      <td><span class="badge ${statusBadge(v(s, 'Case Status'))}">${esc(v(s, 'Case Status'))}</span></td>
+      <td><span class="badge ${priorityBadge(v(s, 'Priority'))}">${esc(v(s, 'Priority'))}</span></td>
+      <td>${esc(v(s, 'Assigned To') || '—')}</td>
+      <td>${esc(v(s, 'Category') || '—')}</td>
+      <td>${esc(v(s, 'Reported By') || '—')}</td>
+      <td style="font-size:12px;color:var(--gray)">${fmtDate(s.updatedAt || s.createdAt)}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div>';
+
+  html += `<div class="pager">
+    <button onclick="loadCases('prev')" ${!casePager.hasPrev ? 'disabled' : ''}>&#8592; Prev</button>
+    <span class="page-info">Page ${casePager.pageIndex + 1}</span>
+    <button onclick="loadCases('next')" ${!casePager.hasNext ? 'disabled' : ''}>Next &#8594;</button>
+  </div>`;
+
+  document.getElementById('case-list').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CASES — DETAIL
+   ══════════════════════════════════════════════════════════════════ */
+
+async function openCase(id) {
+  currentCaseId = id;
+  document.getElementById('case-list').style.display = 'none';
+  document.querySelector('.filter-bar').style.display = 'none';
+  document.querySelector('.header-row').style.display = 'none';
+  const el = document.getElementById('case-detail');
+  el.style.display = '';
+  el.innerHTML = '<div class="loading">Loading case...</div>';
+
+  try {
+    const data = await api(`/submissions/${id}?include=details,values`);
+    const s = data.submission;
+    renderDetail(s);
+    loadNotes(id);
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Failed to load case: ' + esc(e.message) + '</div>';
+  }
+}
+
+function closeDetail() {
+  currentCaseId = null;
+  document.getElementById('case-detail').style.display = 'none';
+  document.getElementById('case-list').style.display = '';
+  document.querySelector('.filter-bar').style.display = '';
+  document.querySelector('.header-row').style.display = '';
+  loadCases();
+}
+
+function renderDetail(s) {
+  const agentOpts = allAgents.map(a =>
+    `<option value="${esc(a.name)}" ${v(s, 'Assigned To') === a.name ? 'selected' : ''}>${esc(a.name)} (${esc(a.team)})</option>`
+  ).join('');
+
+  const statusOpts = ['Open','In Progress','Pending','Resolved','Closed'].map(st =>
+    `<option ${v(s,'Case Status')===st?'selected':''}>${st}</option>`
+  ).join('');
+
+  const priorityOpts = ['Critical','High','Medium','Low'].map(p =>
+    `<option ${v(s,'Priority')===p?'selected':''}>${p}</option>`
+  ).join('');
+
+  const catOpts = ['Performance','Integration','Hardware Issue','Data Issue','Feature Request','Account Access','Network'].map(c =>
+    `<option ${v(s,'Category')===c?'selected':''}>${c}</option>`
+  ).join('');
+
+  const html = `
+    <div class="detail-panel">
+      <span class="back-link" onclick="closeDetail()">&larr; Back to list</span>
+      <div class="detail-header">
+        <h2>${esc(v(s, 'Case Title') || 'Untitled')}</h2>
+        <div class="badges">
+          <span class="badge ${statusBadge(v(s, 'Case Status'))}">${esc(v(s, 'Case Status'))}</span>
+          <span class="badge ${priorityBadge(v(s, 'Priority'))}">${esc(v(s, 'Priority'))}</span>
+          <span class="meta">ID: ${s.id.slice(0,8)}</span>
+          <span class="meta">Created ${fmtDateTime(s.createdAt)}</span>
+        </div>
+      </div>
+
+      <div class="detail-desc">${esc(v(s, 'Description') || 'No description')}</div>
+
+      <div class="info-grid">
+        <div class="ig-item"><label>Reported By</label><span>${esc(v(s, 'Reported By') || '—')}</span></div>
+        <div class="ig-item"><label>Source</label><span>${esc(v(s, 'Source') || '—')}</span></div>
+        <div class="ig-item"><label>Team</label><span>${esc(v(s, 'Assigned Team') || '—')}</span></div>
+        <div class="ig-item"><label>Due Date</label><span>${v(s, 'Due Date') ? fmtDate(v(s, 'Due Date')) : '—'}</span></div>
+      </div>
+
+      <div class="edit-grid">
+        <div class="fg"><label>Status</label><select id="d-status">${statusOpts}</select></div>
+        <div class="fg"><label>Priority</label><select id="d-priority">${priorityOpts}</select></div>
+        <div class="fg"><label>Assigned To</label><select id="d-assignee"><option value="">Unassigned</option>${agentOpts}</select></div>
+        <div class="fg"><label>Category</label><select id="d-category"><option value="">—</option>${catOpts}</select></div>
+      </div>
+
+      <div class="resolution-area">
+        <label>Resolution</label>
+        <textarea id="d-resolution" placeholder="Enter resolution details...">${esc(v(s, 'Resolution'))}</textarea>
+      </div>
+
+      <div class="quick-actions">
+        ${v(s,'Assigned To') !== API.displayName ? `<button class="btn btn-secondary btn-sm" onclick="quickAction('assign')">Assign to Me</button>` : ''}
+        ${v(s,'Priority') !== 'Critical' ? `<button class="btn btn-secondary btn-sm" onclick="quickAction('escalate')">Escalate</button>` : ''}
+        ${v(s,'Case Status') !== 'Resolved' && v(s,'Case Status') !== 'Closed' ? `<button class="btn btn-secondary btn-sm" onclick="quickAction('resolve')">Resolve</button>` : ''}
+        ${v(s,'Case Status') !== 'Closed' ? `<button class="btn btn-secondary btn-sm" onclick="quickAction('close')">Close</button>` : ''}
+      </div>
+
+      <div class="save-row">
+        <button class="btn btn-primary" onclick="saveCase('${s.id}')">Save Changes</button>
+        <span id="save-msg" class="msg"></span>
+      </div>
+
+      <div class="notes-section">
+        <h3>Notes & Activity</h3>
+        <div class="note-form">
+          <textarea id="note-content" placeholder="Add a note..."></textarea>
+          <div class="nf-row">
+            <div class="fg"><label>Type</label><select id="note-type"><option>Comment</option><option>Status Change</option><option>Customer Communication</option></select></div>
+            <div class="fg"><label>Visibility</label><select id="note-vis"><option>Internal</option><option>Public</option></select></div>
+            <button class="btn btn-primary btn-sm" onclick="addNote('${s.id}')">Add Note</button>
+          </div>
+        </div>
+        <div id="notes-list"><div class="loading">Loading notes...</div></div>
+      </div>
+    </div>`;
+  document.getElementById('case-detail').innerHTML = html;
+}
+
+async function saveCase(id) {
+  const values = {
+    'Case Status': document.getElementById('d-status').value,
+    'Priority': document.getElementById('d-priority').value,
+    'Assigned To': document.getElementById('d-assignee').value || null,
+    'Category': document.getElementById('d-category').value || null,
+    'Resolution': document.getElementById('d-resolution').value || null,
+  };
+
+  // Auto-set team from agent
+  const agent = allAgents.find(a => a.name === values['Assigned To']);
+  if (agent) values['Assigned Team'] = agent.team;
+
+  // Auto-set resolved/closed dates
+  if (values['Case Status'] === 'Resolved') {
+    values['Resolved Date'] = new Date().toISOString().split('T')[0];
+  }
+  if (values['Case Status'] === 'Closed') {
+    values['Closed Date'] = new Date().toISOString().split('T')[0];
+  }
+
+  const msg = document.getElementById('save-msg');
+  try {
+    await api(`/submissions/${id}/values`, { method: 'PUT', body: JSON.stringify(values) });
+    msg.textContent = 'Saved!';
+    msg.style.color = 'var(--green)';
+    showToast('Case updated');
+    // Refresh detail
+    const data = await api(`/submissions/${id}?include=details,values`);
+    renderDetail(data.submission);
+    loadNotes(id);
+  } catch (e) {
+    msg.textContent = 'Failed to save';
+    msg.style.color = 'var(--red)';
+  }
+}
+
+async function quickAction(action) {
+  if (!currentCaseId) return;
+  const values = {};
+  if (action === 'assign') {
+    values['Assigned To'] = API.displayName;
+    const agent = allAgents.find(a => a.name === API.displayName);
+    if (agent) values['Assigned Team'] = agent.team;
+  }
+  if (action === 'escalate') values['Priority'] = 'Critical';
+  if (action === 'resolve') {
+    values['Case Status'] = 'Resolved';
+    values['Resolved Date'] = new Date().toISOString().split('T')[0];
+  }
+  if (action === 'close') {
+    values['Case Status'] = 'Closed';
+    values['Closed Date'] = new Date().toISOString().split('T')[0];
+  }
+
+  try {
+    await api(`/submissions/${currentCaseId}/values`, { method: 'PUT', body: JSON.stringify(values) });
+    showToast(action === 'assign' ? 'Assigned to you' : action === 'escalate' ? 'Escalated to Critical' : action === 'resolve' ? 'Case resolved' : 'Case closed');
+    const data = await api(`/submissions/${currentCaseId}?include=details,values`);
+    renderDetail(data.submission);
+    loadNotes(currentCaseId);
+  } catch (e) {
+    showToast('Action failed: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NOTES
+   ══════════════════════════════════════════════════════════════════ */
+
+async function loadNotes(caseId) {
+  const el = document.getElementById('notes-list');
+  if (!el) return;
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${NOTES_FORM}/submissions?include=details,values&limit=25&q=${encodeURIComponent(`values[Case ID]="${caseId}"`)}`);
+    const notes = data.submissions || [];
+    if (notes.length === 0) { el.innerHTML = '<div class="empty">No notes yet</div>'; return; }
+
+    el.innerHTML = notes.map(n => `
+      <div class="note-card">
+        <div class="note-meta">
+          <span class="author">${esc(v(n, 'Author'))}</span>
+          <span class="tag">${esc(v(n, 'Note Type'))}</span>
+          ${v(n, 'Visibility') === 'Public' ? '<span class="tag tag-public">Public</span>' : ''}
+          <span class="time">${fmtDateTime(n.createdAt)}</span>
+        </div>
+        <div class="note-body">${esc(v(n, 'Content'))}</div>
+      </div>`).join('');
+  } catch { el.innerHTML = '<div class="empty">Failed to load notes</div>'; }
+}
+
+async function addNote(caseId) {
+  const content = document.getElementById('note-content').value.trim();
+  if (!content) return;
+  const noteType = document.getElementById('note-type').value;
+  const visibility = document.getElementById('note-vis').value;
+
+  // Find the case title from allCases
+  const c = allCases.find(s => s.id === caseId);
+  const caseTitle = c ? v(c, 'Case Title') : '';
+
+  try {
+    await api(`/kapps/${KAPP}/forms/${NOTES_FORM}/submissions?completed=false`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Case ID': caseId,
+          'Case Title': caseTitle,
+          'Note Type': noteType,
+          'Author': API.displayName || API.user,
+          'Content': content,
+          'Visibility': visibility,
+        }
+      })
+    });
+    document.getElementById('note-content').value = '';
+    showToast('Note added');
+    loadNotes(caseId);
+  } catch (e) {
+    showToast('Failed to add note: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NEW CASE MODAL
+   ══════════════════════════════════════════════════════════════════ */
+
+function openNewCaseModal() {
+  const agentOpts = allAgents.map(a =>
+    `<option value="${esc(a.name)}">${esc(a.name)} (${esc(a.team)})</option>`
+  ).join('');
+
+  document.getElementById('modal-title').textContent = 'New Case';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="fg">
+      <label>Case Title *</label>
+      <input id="nc-title" placeholder="Brief summary of the issue..." autofocus>
+    </div>
+    <div class="fg">
+      <label>Description</label>
+      <textarea id="nc-desc" placeholder="Detailed description of the case..." rows="4"></textarea>
+    </div>
+    <div class="two-col">
+      <div class="fg">
+        <label>Priority</label>
+        <select id="nc-priority"><option>Critical</option><option>High</option><option selected>Medium</option><option>Low</option></select>
+      </div>
+      <div class="fg">
+        <label>Category</label>
+        <select id="nc-category"><option value="">Select...</option><option>Performance</option><option>Integration</option><option>Hardware Issue</option><option>Data Issue</option><option>Feature Request</option><option>Account Access</option><option>Network</option></select>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="fg">
+        <label>Source</label>
+        <select id="nc-source"><option>Phone</option><option>Email</option><option>Portal</option><option>API</option><option>Web</option><option>Chat</option></select>
+      </div>
+      <div class="fg">
+        <label>Assigned To</label>
+        <select id="nc-assignee"><option value="">Unassigned</option>${agentOpts}</select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Reported By</label>
+      <input id="nc-reported" placeholder="Contact name...">
+    </div>`;
+
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="createCase()">Create Case</button>`;
+
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('nc-title')?.focus(), 100);
+}
+
+async function createCase() {
+  const title = document.getElementById('nc-title').value.trim();
+  if (!title) { showToast('Title is required'); return; }
+
+  const assigneeName = document.getElementById('nc-assignee').value;
+  const agent = allAgents.find(a => a.name === assigneeName);
+  const values = {
+    'Case Title': title,
+    'Description': document.getElementById('nc-desc').value,
+    'Case Status': 'Open',
+    'Priority': document.getElementById('nc-priority').value,
+    'Category': document.getElementById('nc-category').value || null,
+    'Source': document.getElementById('nc-source').value,
+    'Reported By': document.getElementById('nc-reported').value || null,
+    'Assigned To': assigneeName || null,
+    'Assigned Team': agent?.team || null,
+  };
+
+  // Strip nulls
+  const cleaned = {};
+  for (const [k, val] of Object.entries(values)) {
+    if (val != null && val !== '') cleaned[k] = val;
+  }
+
+  try {
+    await api(`/kapps/${KAPP}/forms/${CASES_FORM}/submissions?completed=false`, {
+      method: 'POST',
+      body: JSON.stringify({ values: cleaned })
+    });
+    closeModal();
+    showToast('Case created');
+    loadCases('reset');
+  } catch (e) {
+    showToast('Failed to create case: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════════════════════════ */
+
+async function loadDashboard() {
+  const el = document.getElementById('dash-content');
+  el.innerHTML = '<div class="loading">Loading dashboard...</div>';
+
+  try {
+    const all = await collectAll(`/kapps/${KAPP}/forms/${CASES_FORM}/submissions?include=details,values`);
+    renderDashboard(all);
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Failed to load dashboard: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderDashboard(all) {
+  // Compute metrics
+  const byStatus = {}, byPriority = {}, byAssignee = {}, byTeam = {};
+  let totalOpen = 0, totalResolved = 0, totalClosed = 0, unassigned = 0;
+
+  for (const s of all) {
+    const status = v(s, 'Case Status') || 'Unknown';
+    const pri = v(s, 'Priority') || 'Unknown';
+    const assignee = v(s, 'Assigned To') || 'Unassigned';
+    const team = v(s, 'Assigned Team') || 'Unassigned';
+
+    byStatus[status] = (byStatus[status] || 0) + 1;
+    byPriority[pri] = (byPriority[pri] || 0) + 1;
+    byTeam[team] = (byTeam[team] || 0) + 1;
+
+    if (status !== 'Closed' && status !== 'Resolved') {
+      byAssignee[assignee] = (byAssignee[assignee] || 0) + 1;
+    }
+    if (status === 'Open' || status === 'In Progress' || status === 'Pending') totalOpen++;
+    if (status === 'Closed') totalClosed++;
+    if (status === 'Resolved') totalResolved++;
+    if (!v(s, 'Assigned To')) unassigned++;
+  }
+
+  // Avg resolution
+  const closedWithDates = all.filter(s => v(s, 'Case Status') === 'Closed' && s.createdAt && v(s, 'Closed Date'));
+  let avgHours = null;
+  if (closedWithDates.length > 0) {
+    const total = closedWithDates.reduce((sum, s) => {
+      return sum + (new Date(v(s, 'Closed Date')).getTime() - new Date(s.createdAt).getTime()) / 3600000;
+    }, 0);
+    avgHours = Math.round(total / closedWithDates.length);
+  }
+
+  // Volume by day (14 days)
+  const volumeDays = [];
+  const now = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const count = all.filter(s => s.createdAt && s.createdAt.startsWith(key)).length;
+    volumeDays.push({ key, label, count });
+  }
+
+  let html = '';
+
+  // KPI Row
+  html += `<div class="kpi-row">
+    <div class="kpi blue"><div class="label">Open Tickets</div><div class="val">${totalOpen}</div><div class="sub">Needs attention</div></div>
+    <div class="kpi green"><div class="label">Resolved</div><div class="val">${totalResolved}</div><div class="sub">Awaiting closure</div></div>
+    <div class="kpi gray"><div class="label">Closed</div><div class="val">${totalClosed}</div></div>
+    <div class="kpi yellow"><div class="label">Avg Resolution</div><div class="val">${avgHours !== null ? avgHours + 'h' : 'N/A'}</div>${unassigned > 0 ? `<div class="sub">${unassigned} unassigned</div>` : ''}</div>
+  </div>`;
+
+  // Charts Row 1: Volume + Status donut
+  const maxVol = Math.max(...volumeDays.map(d => d.count), 1);
+  html += '<div class="charts-row">';
+
+  // Volume bar chart
+  html += '<div class="chart-card"><h3>Ticket Volume (14 Days)</h3><div class="bar-chart">';
+  for (const d of volumeDays) {
+    const pct = (d.count / maxVol) * 100;
+    html += `<div class="bar-col"><span class="bar-val">${d.count || ''}</span><div class="bar" style="height:${Math.max(pct, 2)}%"></div><span class="bar-label">${d.label}</span></div>`;
+  }
+  html += '</div></div>';
+
+  // Status donut
+  const statusColors = { 'Open': '#2563eb', 'In Progress': '#d97706', 'Pending': '#eab308', 'Resolved': '#16a34a', 'Closed': '#94a3b8' };
+  const statusEntries = Object.entries(byStatus).filter(([,c]) => c > 0);
+  const totalForDonut = statusEntries.reduce((s,[,c]) => s + c, 0);
+  let conicParts = [], angle = 0;
+  for (const [name, count] of statusEntries) {
+    const deg = (count / totalForDonut) * 360;
+    const color = statusColors[name] || '#94a3b8';
+    conicParts.push(`${color} ${angle}deg ${angle + deg}deg`);
+    angle += deg;
+  }
+  const conicGrad = `conic-gradient(${conicParts.join(', ')})`;
+
+  html += `<div class="chart-card"><h3>Status Breakdown</h3><div class="donut-wrap">
+    <div class="donut" style="background:${conicGrad}"><div class="donut-hole"><span class="dh-val">${totalForDonut}</span><span class="dh-label">Total</span></div></div>
+    <div class="donut-legend">${statusEntries.map(([name, count]) =>
+      `<div class="dl-item"><div class="dl-swatch" style="background:${statusColors[name] || '#94a3b8'}"></div><span class="dl-name">${esc(name)}</span><span class="dl-count">${count}</span></div>`
+    ).join('')}</div>
+  </div></div>`;
+  html += '</div>';
+
+  // Charts Row 2: Priority + Team
+  const priColors = { 'Critical': '#dc2626', 'High': '#ea580c', 'Medium': '#d97706', 'Low': '#16a34a' };
+  const priOrder = ['Critical', 'High', 'Medium', 'Low'];
+  const priEntries = priOrder.filter(p => byPriority[p]).map(p => [p, byPriority[p]]);
+  const maxPri = Math.max(...priEntries.map(([,c]) => c), 1);
+
+  html += '<div class="charts-row">';
+
+  // Priority distribution
+  html += '<div class="chart-card"><h3>Priority Distribution</h3><div class="h-bars">';
+  for (const [name, count] of priEntries) {
+    const pct = (count / maxPri) * 100;
+    html += `<div class="hb-row"><div class="hb-head"><span class="hb-name">${esc(name)}</span><span class="hb-count">${count}</span></div><div class="hb-track"><div class="hb-fill" style="width:${pct}%;background:${priColors[name] || '#94a3b8'}"></div></div></div>`;
+  }
+  html += '</div></div>';
+
+  // Team breakdown
+  const teamEntries = Object.entries(byTeam).sort(([,a],[,b]) => b - a);
+  const maxTeam = Math.max(...teamEntries.map(([,c]) => c), 1);
+  const teamColors = ['#2563eb', '#7c3aed', '#0891b2', '#059669', '#d97706', '#dc2626'];
+
+  html += '<div class="chart-card"><h3>Tickets by Team</h3><div class="h-bars">';
+  teamEntries.forEach(([name, count], i) => {
+    const pct = (count / maxTeam) * 100;
+    html += `<div class="hb-row"><div class="hb-head"><span class="hb-name">${esc(name)}</span><span class="hb-count">${count}</span></div><div class="hb-track"><div class="hb-fill" style="width:${pct}%;background:${teamColors[i % teamColors.length]}"></div></div></div>`;
+  });
+  html += '</div></div>';
+  html += '</div>';
+
+  // Agent workload table
+  const agentEntries = Object.entries(byAssignee).sort(([,a],[,b]) => b - a);
+  const maxAgent = Math.max(...agentEntries.map(([,c]) => c), 1);
+
+  html += '<div class="workload-card"><div class="wc-title">Agent Workload</div><table><thead><tr><th>Agent</th><th style="text-align:right">Open Tickets</th><th></th></tr></thead><tbody>';
+  for (const [name, count] of agentEntries) {
+    const pct = (count / maxAgent) * 100;
+    html += `<tr><td style="font-weight:500">${esc(name)}</td><td style="text-align:right;font-weight:600">${count}</td><td><div class="wl-bar-track"><div class="wl-bar-fill" style="width:${pct}%"></div></div></td></tr>`;
+  }
+  html += '</tbody></table></div>';
+
+  document.getElementById('dash-content').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ══════════════════════════════════════════════════════════════════ */
+
+function switchConsole(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+
+  if (tab === 'cases') {
+    document.getElementById('console-cases').classList.add('active');
+    document.querySelectorAll('.nav-tabs button')[0].classList.add('active');
+    // If detail is open, keep it; otherwise show list
+    if (!currentCaseId) loadCases();
+  } else {
+    document.getElementById('console-dash').classList.add('active');
+    document.querySelectorAll('.nav-tabs button')[1].classList.add('active');
+    loadDashboard();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════════ */
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function statusBadge(s) {
+  const map = { 'Open':'badge-open','In Progress':'badge-in-progress','Pending':'badge-pending','Resolved':'badge-resolved','Closed':'badge-closed' };
+  return map[s] || 'badge-closed';
+}
+function priorityBadge(p) {
+  const map = { 'Critical':'badge-critical','High':'badge-high','Medium':'badge-medium','Low':'badge-low' };
+  return map[p] || 'badge-medium';
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  catch { return d; }
+}
+function fmtDateTime(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+  catch { return d; }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── Init ── */
+restoreSession();
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+
+Do this in an app called sec_ops. 
+Build this in the apps folder.
+With port 3007.
+
+You are an expert Kinetic Platform architect + full-stack implementer. Build a “Security Operations (SecOps)” application on the Kinetic Platform that automates:
+	•	Security Incident Response (triage → containment → eradication → recovery → post-incident review)
+	•	Vulnerability Management (ingest vuln findings → prioritize → assign → remediate → verify → close)
+	•	Threat / Alert Handling (SIEM/EDR alerts → dedupe/correlate → enrich → create cases)
+
+1) Output expectations (deliverables)
+
+Produce:
+	1.	Data model (forms/tables, fields, relationships, enumerations)
+	2.	Kinetic app UX:
+	•	Navigation / landing dashboards
+	•	Key record views (incident, vuln, alert, asset, playbook run)
+	•	Queues (triage queues, assigned to me, overdue SLA, high risk)
+	3.	Workflows in Kinetic Task / orchestration:
+	•	Triage flow for alerts → incident creation rules
+	•	Incident lifecycle state machine + approvals + notifications
+	•	Vulnerability lifecycle + SLA timers + exception flow
+	•	Evidence collection + audit trail
+	4.	APIs:
+	•	Inbound webhook endpoints for SIEM/EDR/vuln scanners (generic JSON)
+	•	CRUD endpoints for core records
+	5.	Seed data:
+	•	Realistic sample assets, users/roles, alerts, vulnerabilities, incidents, playbooks, SLAs
+	6.	Testing & acceptance criteria
+	7.	Install/run instructions for deploying into a Kinetic instance (spaces/forms/task trees/config)
+
+Make the solution “MVP but investor-grade”: opinionated defaults, clean UX, measurable outcomes, and extensible integration points.
+
+⸻
+
+2) Domain model and terminology
+
+Use these core entities. Implement as Kinetic forms/tables with reference fields.
+
+Core tables
+
+User
+	•	id, name, email, team, role(s), on_call (boolean)
+
+Team
+	•	id, name (SOC, IT Ops, AppSec, Infra, GRC)
+
+Asset
+	•	id, hostname, fqdn, ip, environment (prod/dev), criticality (1–5), owner_team_id, app_name, location, os, tags[]
+	•	plus “business service” fields (service_name, service_tier)
+
+Security Alert
+	•	id, source (Splunk/Sentinel/CrowdStrike/etc), external_alert_id
+	•	created_at, received_at
+	•	severity (Informational/Low/Med/High/Critical)
+	•	status (New/Triaged/Suppressed/Correlated/Converted/Closed)
+	•	category (Malware/Phishing/Identity/Network/Cloud/etc)
+	•	title, description, raw_payload (json/text)
+	•	asset_id (optional), user_id (optional), indicators[] (ip/domain/hash)
+	•	correlation_key, dedupe_hash
+	•	related_incident_id (optional)
+
+Security Incident
+	•	id, incident_number (human-friendly), opened_at, closed_at
+	•	severity (S1–S4), priority, status (New/In Progress/Contained/Eradicated/Recovered/Closed)
+	•	type (Phishing/Ransomware/Account Compromise/Data Exfil/etc)
+	•	summary, impact, root_cause, lessons_learned
+	•	affected_assets[] (many-to-many or a join table)
+	•	commander_user_id, assignee_user_id, watcher_users[]
+	•	SLA fields (respond_by, contain_by, resolve_by) + breach flags
+	•	linked_alerts[] + linked_vulns[]
+	•	timeline entries (audit log)
+	•	evidence attachments metadata (store pointers)
+
+Vulnerability Finding
+	•	id, source (Tenable/Qualys/Snyk/etc), external_vuln_id
+	•	asset_id, package/component (optional), cve, cvss, epss (optional)
+	•	severity, status (New/Accepted Risk/In Remediation/Fixed/Verified/Closed)
+	•	first_seen, last_seen, due_date
+	•	remediation_owner_team_id, assignee_user_id
+	•	exception_reason, exception_expiry
+	•	verification_notes
+
+Playbook
+	•	id, name, description, trigger_type (Alert/Incident/Vuln/Manual)
+	•	steps (structured list), automation_level (Manual/Semi/Auto)
+	•	required_roles, estimated_duration
+
+Playbook Run
+	•	id, playbook_id, target_type, target_id, started_at, ended_at
+	•	status (Running/Paused/Failed/Succeeded)
+	•	step_results, artifacts_collected
+
+SLA Policy
+	•	id, name, applies_to (Incident/Vuln)
+	•	rules (e.g., by severity/criticality), target_minutes_response/contain/resolve
+
+Audit Event
+	•	id, entity_type, entity_id, actor_user_id, action, timestamp, diff_summary
+
+⸻
+
+3) MVP features (must-have)
+
+Implement these end-to-end.
+
+A) Alert ingestion + triage
+	•	Provide an inbound webhook endpoint: /api/secops/alerts/ingest
+	•	Accept JSON payloads from any tool; normalize into Security Alert records
+	•	Compute dedupe_hash and correlation_key:
+	•	Dedupe: same source + external_alert_id OR same indicators + title within 30 minutes
+	•	Correlate: by asset_id + category + indicators across a rolling 24h window
+	•	Auto-triage rules:
+	•	If severity >= High AND asset criticality >= 4 → create incident (S2 or S1)
+	•	If phishing category with user_id present → create incident (S3) and task user reset
+	•	If repeated alert count > threshold in 1h → escalate priority
+	•	UX:
+	•	“Triage Queue” view with filters (severity, source, category, environment)
+	•	Triage actions: Suppress, Close as Benign, Create Incident, Link to Incident, Run Playbook
+
+B) Incident response lifecycle
+	•	Incident states with transitions and required fields:
+	•	New → In Progress → Contained → Eradicated → Recovered → Closed
+	•	Enforce:
+	•	Can’t move to Contained without containment_notes + affected_assets
+	•	Can’t close without root_cause + lessons_learned
+	•	Notifications:
+	•	On creation: notify commander + assignee + SOC channel (placeholder integration)
+	•	On SLA breach risk (e.g., 80% of time elapsed): notify assignee + commander
+	•	Timeline:
+	•	Every change writes an Audit Event and appends to incident timeline
+
+C) Vulnerability management
+	•	Inbound endpoint: /api/secops/vulns/ingest
+	•	Normalize vuln scan results into Vulnerability Finding records
+	•	Prioritization scoring:
+	•	risk_score = severity_weight + (asset_criticality * factor) + exploitability_boost (if epss/cisa_kev flags provided)
+	•	SLA assignment:
+	•	Critical vulns due in 7 days on prod criticality>=4
+	•	High vulns due in 30 days
+	•	Flows:
+	•	Assign remediation owner automatically based on asset owner_team
+	•	Allow Accepted Risk with expiration + approval step by GRC role
+	•	Verification step: mark Verified when scanner confirms fixed OR manual verification notes
+
+D) Playbooks
+
+Create at least 5 playbooks, each with steps and optional automation hooks:
+	1.	Phishing Triage
+	2.	Suspected Malware on Endpoint
+	3.	Account Compromise / MFA Reset
+	4.	Critical Vulnerability Patch Workflow
+	5.	Data Exfiltration Investigation (lightweight)
+
+Playbook runs should capture step results + collected artifacts.
+
+⸻
+
+4) UX requirements (Kinetic forms & pages)
+
+Build a clean UI:
+
+Navigation
+	•	Dashboards
+	•	Alerts
+	•	Incidents
+	•	Vulnerabilities
+	•	Assets
+	•	Playbooks
+	•	Reports
+	•	Admin (SLA policies, suppression rules)
+
+Dashboards (widgets)
+	•	Open incidents by severity + SLA breach count
+	•	Alerts last 24h by source/category
+	•	Vulns by severity and overdue count
+	•	“Top risky assets” list (by open incidents + vuln risk_score)
+
+Record views
+
+For each record type:
+	•	Summary header (status, severity, owner, timestamps)
+	•	Tabs: Details, Related, Timeline/Audit, Attachments/Evidence
+	•	Quick actions (transition state, assign, link, run playbook)
+
+Reporting
+	•	Mean time to acknowledge (MTTA)
+	•	Mean time to contain (MTTC)
+	•	Mean time to resolve (MTTR)
+	•	Vuln remediation aging (bucketed)
+
+⸻
+
+5) Workflow/orchestration specifics
+
+Implement workflows as Kinetic Task trees. Must include:
+	•	Alert ingest pipeline (validate → normalize → dedupe/correlate → persist → triage rules)
+	•	Incident create/update automations
+	•	SLA timer evaluation (scheduled job or event-driven recalculation)
+	•	Notifications (stub integrations: email/slack/webhook)
+	•	Vuln ingest pipeline + scoring + due dates
+	•	Approval workflow for risk acceptance (GRC approval)
+
+Log everything (Task logs + Audit Events).
+
+⸻
+
+6) Security, roles, and permissions
+
+Define roles and enforce permissions in UI/API:
+	•	SOC Analyst: manage alerts, create incidents, update incidents
+	•	Incident Commander: change incident state, assign responders, close incidents
+	•	Remediation Owner: update vuln remediation status
+	•	GRC Approver: approve accepted risk exceptions
+	•	Admin: manage SLA policies, suppression rules, integrations
+
+Audit all privileged actions.
+
+⸻
+
+7) Integrations (stubs but real interfaces)
+
+Implement connectors as pluggable modules / service adapters with mocked default behavior:
+	•	Slack notifications (stub)
+	•	Email notifications (stub)
+	•	SIEM inbound (generic)
+	•	EDR inbound (generic)
+	•	Vuln scanner inbound (generic)
+
+Design so I can later swap in real calls without rewriting the whole app.
+
+⸻
+
+8) Seed data requirements
+
+Provide seed data as JSON (or CSV) that can be imported easily into Kinetic forms. Include:
+
+Users
+	•	8–12 users across SOC, AppSec, Infra, GRC; include an on-call SOC analyst
+
+Teams
+	•	SOC, AppSec, Infra, IT Ops, GRC
+
+Assets (at least 25)
+
+Mix of:
+	•	Prod web apps, DB servers, endpoints, cloud resources
+	•	Varying criticality, owners, environments
+
+Alerts (at least 40)
+	•	Multiple sources
+	•	Mix of severities
+	•	Some duplicates and correlatable alerts
+	•	Some alerts mapped to assets/users
+
+Vulnerabilities (at least 60)
+	•	Include CVEs with realistic-ish CVSS values
+	•	Spread across assets
+	•	Some overdue
+	•	Some “Accepted Risk” with expiration pending approval
+
+Incidents (at least 8)
+	•	A couple in each state
+	•	Linked to alerts and assets
+	•	At least 1 with imminent SLA breach
+	•	At least 1 post-incident review completed
+
+SLAs
+	•	Incident SLA policy by severity
+	•	Vuln SLA policy by severity + asset criticality
+
+Playbooks
+	•	The 5 required playbooks with steps
+
+Seed data should intentionally create:
+	•	One “major incident” scenario (S1) with correlated alerts across multiple assets
+	•	One phishing scenario tied to a user account
+	•	One “critical vuln on critical prod asset” scenario with overdue due_date
+
+⸻
+
+9) Acceptance criteria (definition of done)
+
+The system is done when:
+	•	I can ingest an alert JSON payload and see it appear in the Alert queue
+	•	Dedupe/correlation works (duplicates don’t create new alerts; correlation links alerts)
+	•	High severity alerts auto-create incidents based on rules
+	•	Incident lifecycle transitions enforce required fields and produce audit entries
+	•	SLA timers show breach risk and trigger notifications
+	•	Vuln ingest creates findings, computes risk_score, assigns due dates, supports risk acceptance approval
+	•	Dashboards render meaningful metrics from seed data
+	•	All seed data imports cleanly
+	•	Role-based permissions prevent unauthorized actions
+
+⸻
+
+10) Provide sample payload schemas (must include in your output)
+
+Include example inbound JSON for:
+	•	alerts/ingest
+	•	vulns/ingest
+
+Also include examples of API responses for key endpoints.
+
+⸻
+
+Implementation note
+
+If you need to choose between “perfect architecture” and “working MVP,” choose working MVP — but keep the design modular so we can extend it.
+
+⸻
+
+Optional: starter seed data snippet (if ClaudeCode wants examples)
+
+If it helps, generate seed data files like:
+	•	seed/teams.json
+	•	seed/users.json
+	•	seed/assets.json
+	•	seed/alerts.json
+	•	seed/vulns.json
+	•	seed/incidents.json
+	•	seed/playbooks.json
+	•	seed/sla_policies.json

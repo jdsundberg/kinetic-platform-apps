@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Management</title>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-card {
+  background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg);
+  width: 400px; max-width: 95vw; overflow: hidden;
+}
+.login-accent { height: 3px; width: 40px; background: var(--orange); margin: 0 auto; margin-top: 4px; }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 14px; }
+.login-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; outline: none; transition: border-color .2s;
+}
+.login-body input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-btn {
+  width: 100%; padding: 11px; margin-top: 20px; background: var(--orange); color: var(--white);
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.login-btn:hover { background: var(--orange-light); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: var(--blue); color: var(--white); display: flex; align-items: center;
+  padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 28px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--orange); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.topbar-nav button {
+  background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 14px;
+  font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all .15s;
+}
+.topbar-nav button:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.topbar-nav button.active { background: var(--orange); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+}
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== CARDS & GRIDS ===== */
+.card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; margin-bottom: 14px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 16px;
+  border: 1px solid var(--border);
+}
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi .lbl { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+.kpi.orange .val { color: var(--orange); }
+.kpi.green .val { color: var(--green); }
+.kpi.red .val { color: var(--red); }
+.kpi.yellow .val { color: var(--yellow); }
+.kpi.purple .val { color: var(--purple); }
+.kpi.teal .val { color: var(--teal); }
+.kpi.indigo .val { color: var(--indigo); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) {
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+}
+
+/* ===== BUILDING CARDS ===== */
+.building-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.building-card {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 20px;
+  border: 1px solid var(--border); border-left: 4px solid var(--orange); cursor: pointer;
+  transition: box-shadow .15s;
+}
+.building-card:hover { box-shadow: var(--shadow-lg); }
+.building-card h4 { font-size: 16px; color: var(--blue); margin-bottom: 8px; }
+.building-card .bc-row { font-size: 13px; color: var(--gray); margin-bottom: 4px; }
+.building-card .bc-row strong { color: #333; }
+
+/* ===== SUBTABS ===== */
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--light); border-radius: 8px; padding: 3px; width: fit-content; }
+.subtabs button {
+  background: none; border: none; padding: 6px 16px; font-size: 13px; color: var(--gray);
+  border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.subtabs button:hover { color: var(--blue); }
+.subtabs button.active { background: var(--white); color: var(--orange); box-shadow: var(--shadow); font-weight: 600; }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filter-bar select {
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+  background: var(--white); color: #333; outline: none; cursor: pointer;
+}
+.filter-bar select:focus { border-color: var(--orange); }
+
+/* ===== TABLES ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .3px; color: var(--gray);
+  background: var(--light); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+}
+tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: #FAFAFA; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: #EFF1F5; }
+.empty-row td { text-align: center; padding: 30px; color: var(--gray); font-style: italic; }
+
+/* Allergen highlight row */
+tbody tr.allergen-row { background: #FFF8E1; }
+tbody tr.allergen-row:hover { background: #FFF3CD; }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; justify-content: flex-end; }
+.pagination button {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--white);
+  font-size: 12px; cursor: pointer; color: var(--blue); font-weight: 600;
+}
+.pagination button:hover:not(:disabled) { border-color: var(--orange); color: var(--orange); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+.pagination .page-info { font-size: 12px; color: var(--gray); }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-active, .badge-enrolled { background: #E8F5E9; color: #2E7D32; }
+.badge-inactive, .badge-closed, .badge-cancelled { background: #F1F3F4; color: #5F6368; }
+.badge-pending, .badge-scheduled { background: #E3F2FD; color: #1565C0; }
+.badge-graduated { background: #E8EAF6; color: #283593; }
+.badge-transferred { background: #F3E5F5; color: #7B1FA2; }
+.badge-suspended { background: #FDECEA; color: #C62828; }
+.badge-on-leave, .badge-sabbatical { background: #FFF8E1; color: #F9A825; }
+.badge-withdrawn { background: #FFF3E0; color: #E65100; }
+.badge-completed, .badge-confirmed { background: #E8F5E9; color: #2E7D32; }
+.badge-in-progress { background: #F3E5F5; color: #7B1FA2; }
+.badge-open { background: #E3F2FD; color: #1565C0; }
+.badge-responded { background: #E0F2F1; color: #00695C; }
+/* Allergy severity */
+.badge-life-threatening { background: #FDECEA; color: #C62828; }
+.badge-severe { background: #FFF3E0; color: #E65100; }
+.badge-moderate { background: #FFF8E1; color: #F9A825; }
+.badge-mild { background: #E8F5E9; color: #2E7D32; }
+
+/* ===== MODAL ===== */
+#modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.5); z-index: 200; justify-content: center; align-items: flex-start;
+  padding-top: 5vh; overflow-y: auto;
+}
+#modal.show { display: flex; }
+.modal-content {
+  background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg);
+  max-width: 650px; width: 95%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative;
+}
+.modal-content h2 { font-size: 18px; color: var(--blue); margin-bottom: 16px; }
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  font-size: 22px; color: var(--gray); cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: var(--red); }
+.modal-section { margin-top: 18px; }
+.modal-section h4 { font-size: 13px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-field label { font-size: 11px; color: var(--gray); display: block; margin-bottom: 2px; }
+.modal-field .val { font-size: 14px; color: #333; word-break: break-word; }
+
+/* ===== TOAST ===== */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: var(--white); padding: 12px 24px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 300;
+  display: none; white-space: nowrap;
+}
+#toast.show { display: block; }
+
+/* ===== LOADING ===== */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-body">
+      <h1>School Management</h1>
+      <div class="login-accent"></div>
+      <p class="subtitle">Students, teachers, classes, grades &amp; campus operations</p>
+      <label>Server URL</label>
+      <input id="login-url" type="text" value="http://localhost:3015">
+      <label>Username</label>
+      <input id="login-user" type="text">
+      <label>Password</label>
+      <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">School<span class="accent">Mgmt</span></div>
+    <div class="topbar-nav" id="topbar-nav">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="students">Students</button>
+      <button data-tab="teachers">Teachers</button>
+      <button data-tab="classes">Classes</button>
+      <button data-tab="grades">Grades &amp; Tests</button>
+      <button data-tab="buildings">Buildings &amp; Rooms</button>
+      <button data-tab="transport">Transportation</button>
+      <button data-tab="parent-teacher">Parent-Teacher</button>
+      <button data-tab="lunch">Lunch &amp; Allergies</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <span id="space-slug-display"></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+
+    <!-- ===== TAB: DASHBOARD ===== -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">School management overview</div>
+      <div id="dash-content">
+        <div class="kpi-row" id="dash-kpis">
+          <div class="kpi orange"><div class="val">&mdash;</div><div class="lbl">Students</div><div class="sub">Total enrolled</div></div>
+          <div class="kpi indigo"><div class="val">&mdash;</div><div class="lbl">Teachers</div><div class="sub">Active faculty</div></div>
+          <div class="kpi teal"><div class="val">&mdash;</div><div class="lbl">Classes</div><div class="sub">This semester</div></div>
+          <div class="kpi purple"><div class="val">&mdash;</div><div class="lbl">Enrollments</div><div class="sub">Course registrations</div></div>
+          <div class="kpi"><div class="val">&mdash;</div><div class="lbl">Buildings</div><div class="sub">Campus facilities</div></div>
+          <div class="kpi green"><div class="val">&mdash;</div><div class="lbl">Bus Routes</div><div class="sub">Active routes</div></div>
+          <div class="kpi red"><div class="val">&mdash;</div><div class="lbl">Allergy Alerts</div><div class="sub">Student allergies</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <h3>Recent Students</h3>
+            <div class="table-wrap"><table id="dash-students-table"><thead><tr>
+              <th>Student ID</th><th>Name</th><th>Grade</th><th>Status</th>
+            </tr></thead><tbody><tr><td colspan="4" style="text-align:center;color:var(--gray);padding:20px">Loading...</td></tr></tbody></table></div>
+          </div>
+          <div class="card">
+            <h3>Allergy Alerts</h3>
+            <div class="table-wrap"><table id="dash-allergies-table"><thead><tr>
+              <th>Student</th><th>Allergy</th><th>Severity</th><th>Medication</th>
+            </tr></thead><tbody><tr><td colspan="4" style="text-align:center;color:var(--gray);padding:20px">Loading...</td></tr></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: STUDENTS ===== -->
+    <div id="tab-students" class="tab-panel">
+      <div class="page-title">Students</div>
+      <div class="page-sub">Student enrollment and records</div>
+      <div class="filter-bar">
+        <select id="students-grade-filter" onchange="loadStudents()">
+          <option value="">All Grades</option>
+          <option>Pre-K</option><option>K</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>6</option><option>7</option><option>8</option>
+          <option>9</option><option>10</option><option>11</option><option>12</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table id="students-table"><thead><tr>
+          <th>Student ID</th><th>Name</th><th>Grade</th><th>Parent/Guardian</th><th>Status</th>
+        </tr></thead><tbody></tbody></table></div>
+        <div class="pagination" id="students-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: TEACHERS ===== -->
+    <div id="tab-teachers" class="tab-panel">
+      <div class="page-title">Teachers</div>
+      <div class="page-sub">Faculty directory and assignments</div>
+      <div class="filter-bar">
+        <select id="teachers-subject-filter" onchange="loadTeachers()">
+          <option value="">All Subjects</option>
+          <option>Math</option><option>English</option><option>Science</option><option>History</option>
+          <option>Art</option><option>Music</option><option>PE</option><option>Computer Science</option>
+          <option>Spanish</option><option>French</option><option>Special Education</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table id="teachers-table"><thead><tr>
+          <th>Teacher ID</th><th>Name</th><th>Subject</th><th>Building</th><th>Status</th>
+        </tr></thead><tbody></tbody></table></div>
+        <div class="pagination" id="teachers-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: CLASSES ===== -->
+    <div id="tab-classes" class="tab-panel">
+      <div class="page-title">Classes</div>
+      <div class="page-sub">Course catalog and scheduling</div>
+      <div class="filter-bar">
+        <select id="classes-semester-filter" onchange="loadClasses()">
+          <option value="">All Semesters</option>
+          <option>Fall 2025</option><option>Spring 2026</option><option>Summer 2026</option>
+          <option>Fall 2024</option><option>Spring 2025</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table id="classes-table"><thead><tr>
+          <th>Class ID</th><th>Class Name</th><th>Subject</th><th>Teacher</th><th>Period</th><th>Room</th>
+        </tr></thead><tbody></tbody></table></div>
+        <div class="pagination" id="classes-pagination"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: GRADES & TESTS ===== -->
+    <div id="tab-grades" class="tab-panel">
+      <div class="page-title">Grades &amp; Tests</div>
+      <div class="page-sub">Academic performance tracking</div>
+      <div class="subtabs" id="grades-subtabs">
+        <button class="active" data-sub="grades-sub">Grades</button>
+        <button data-sub="tests-sub">Test Scores</button>
+      </div>
+
+      <div id="grades-sub-grades-sub" class="subtab-panel active">
+        <div class="card">
+          <div class="table-wrap"><table id="grades-table"><thead><tr>
+            <th>Student</th><th>Class</th><th>Letter Grade</th><th>Numeric</th><th>Semester</th><th>Teacher</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="grades-pagination"></div>
+        </div>
+      </div>
+
+      <div id="grades-sub-tests-sub" class="subtab-panel">
+        <div class="card">
+          <div class="table-wrap"><table id="tests-table"><thead><tr>
+            <th>Student</th><th>Test Name</th><th>Subject</th><th>Score</th><th>Percentage</th><th>Date</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="tests-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: BUILDINGS & ROOMS ===== -->
+    <div id="tab-buildings" class="tab-panel">
+      <div class="page-title">Buildings &amp; Rooms</div>
+      <div class="page-sub">Campus facilities and room inventory</div>
+      <div class="subtabs" id="buildings-subtabs">
+        <button class="active" data-sub="buildings-sub">Buildings</button>
+        <button data-sub="rooms-sub">Rooms</button>
+      </div>
+
+      <div id="buildings-sub-buildings-sub" class="subtab-panel active">
+        <div id="buildings-loading" class="loading">Loading buildings...</div>
+        <div id="buildings-grid" class="building-grid"></div>
+      </div>
+
+      <div id="buildings-sub-rooms-sub" class="subtab-panel">
+        <div class="card">
+          <div class="table-wrap"><table id="rooms-table"><thead><tr>
+            <th>Room Number</th><th>Building</th><th>Type</th><th>Capacity</th><th>Floor</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="rooms-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: TRANSPORTATION ===== -->
+    <div id="tab-transport" class="tab-panel">
+      <div class="page-title">Transportation</div>
+      <div class="page-sub">Bus routes and student assignments</div>
+      <div class="subtabs" id="transport-subtabs">
+        <button class="active" data-sub="routes-sub">Bus Routes</button>
+        <button data-sub="assignments-sub">Assignments</button>
+      </div>
+
+      <div id="transport-sub-routes-sub" class="subtab-panel active">
+        <div class="card">
+          <div class="table-wrap"><table id="routes-table"><thead><tr>
+            <th>Route Number</th><th>Driver</th><th>Bus Number</th><th>Start Time</th><th>End Time</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="routes-pagination"></div>
+        </div>
+      </div>
+
+      <div id="transport-sub-assignments-sub" class="subtab-panel">
+        <div class="card">
+          <div class="table-wrap"><table id="bus-assign-table"><thead><tr>
+            <th>Student Name</th><th>Route</th><th>Stop</th><th>Pickup</th><th>Dropoff</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="bus-assign-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: PARENT-TEACHER ===== -->
+    <div id="tab-parent-teacher" class="tab-panel">
+      <div class="page-title">Parent-Teacher Communication</div>
+      <div class="page-sub">Forms and conferences</div>
+      <div class="subtabs" id="pt-subtabs">
+        <button class="active" data-sub="ptforms-sub">Forms</button>
+        <button data-sub="conferences-sub">Conferences</button>
+      </div>
+
+      <div id="pt-sub-ptforms-sub" class="subtab-panel active">
+        <div class="card">
+          <div class="table-wrap"><table id="ptforms-table"><thead><tr>
+            <th>Type</th><th>Parent</th><th>Teacher</th><th>Student</th><th>Date</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="ptforms-pagination"></div>
+        </div>
+      </div>
+
+      <div id="pt-sub-conferences-sub" class="subtab-panel">
+        <div class="card">
+          <div class="table-wrap"><table id="conferences-table"><thead><tr>
+            <th>Parent</th><th>Teacher</th><th>Student</th><th>Date</th><th>Time</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="conferences-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: LUNCH & ALLERGIES ===== -->
+    <div id="tab-lunch" class="tab-panel">
+      <div class="page-title">Lunch &amp; Allergies</div>
+      <div class="page-sub">Menu planning and student allergy management</div>
+      <div class="subtabs" id="lunch-subtabs">
+        <button class="active" data-sub="menus-sub">Lunch Menus</button>
+        <button data-sub="allergies-sub">Allergies</button>
+      </div>
+
+      <div id="lunch-sub-menus-sub" class="subtab-panel active">
+        <div class="card">
+          <div class="table-wrap"><table id="menus-table"><thead><tr>
+            <th>Date</th><th>Meal Type</th><th>Main Item</th><th>Sides</th><th>Allergens</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="menus-pagination"></div>
+        </div>
+      </div>
+
+      <div id="lunch-sub-allergies-sub" class="subtab-panel">
+        <div class="card">
+          <div class="table-wrap"><table id="allergies-table"><thead><tr>
+            <th>Student</th><th>Allergy Type</th><th>Severity</th><th>Emergency Med</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+          <div class="pagination" id="allergies-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .console -->
+</div><!-- #app -->
+
+<!-- ===== MODAL ===== -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+/* ===== GLOBALS ===== */
+const API = { url: '', auth: '', user: '', spaceSlug: '' };
+const KAPP = 'school-mgmt';
+
+/* Keyset pagination state (createdAt-based cursor, never passes tokens to API) */
+const pageState = {};
+
+function initPageState(key) {
+  if (!pageState[key]) pageState[key] = { pageKeys: [null], page: 0, hasNext: false };
+}
+
+/* ===== API LAYER ===== */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+async function fetchPage(formSlug, lastCreatedAt, kql) {
+  let fullKql = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    fullKql = fullKql ? `(${fullKql}) AND ${dateClause}` : dateClause;
+  }
+  let path = `/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=25`;
+  if (fullKql) path += `&q=${encodeURIComponent(fullKql)}`;
+  const data = await api(path);
+  return { submissions: data.submissions || [], nextPageToken: data.nextPageToken || null };
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+/* ===== AUTH ===== */
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = API.user;
+  if (API.spaceSlug) document.getElementById('space-slug-display').textContent = ' \u00B7 ' + API.spaceSlug;
+  loadDashboard();
+}
+
+async function doLogin() {
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  if (!user || !pass) { errEl.textContent = 'Username and password required'; errEl.style.display = 'block'; return; }
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  try {
+    const me = await api('/me');
+    API.user = me.displayName || me.username || user;
+    try { const sp = await api('/space'); API.spaceSlug = sp.space?.slug || ''; } catch(e) {}
+    enterApp();
+  } catch(e) {
+    errEl.textContent = 'Login failed - check credentials and server URL';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  API.url = ''; API.auth = ''; API.user = ''; API.spaceSlug = '';
+  sessionStorage.removeItem('kinetic_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+/* Dashboard load-once flag (must be before session restore calls loadDashboard) */
+var dashLoaded = false;
+
+/* Session restore */
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.displayName || s.user || '';
+      API.spaceSlug = s.spaceSlug || '';
+      enterApp();
+    } catch(e) {}
+  }
+})();
+
+/* ===== TAB NAVIGATION ===== */
+document.getElementById('topbar-nav').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  // Load data on tab switch
+  const loaders = {
+    dashboard: loadDashboard,
+    students: loadStudents,
+    teachers: loadTeachers,
+    classes: loadClasses,
+    grades: () => { loadGrades(); loadTests(); },
+    buildings: () => { loadBuildings(); loadRooms(); },
+    transport: () => { loadRoutes(); loadBusAssignments(); },
+    'parent-teacher': () => { loadPTForms(); loadConferences(); },
+    lunch: () => { loadMenus(); loadAllergies(); }
+  };
+  if (loaders[tab]) loaders[tab]();
+});
+
+/* ===== SUBTAB NAVIGATION ===== */
+document.querySelectorAll('.subtabs').forEach(container => {
+  container.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-sub]');
+    if (!btn) return;
+    const sub = btn.dataset.sub;
+    const parentId = container.id;
+    container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const prefix = parentId.replace('-subtabs', '');
+    document.querySelectorAll(`[id^="${prefix}-sub-"]`).forEach(p => p.classList.remove('active'));
+    document.getElementById(prefix + '-sub-' + sub).classList.add('active');
+  });
+});
+
+/* ===== TOAST ===== */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ===== MODAL ===== */
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+/* ===== BADGE HELPER ===== */
+function badge(text) {
+  if (!text) return '';
+  const cls = text.toLowerCase().replace(/[\s\/]+/g, '-');
+  return `<span class="badge badge-${cls}">${text}</span>`;
+}
+
+function severityBadge(severity) {
+  if (!severity) return '';
+  const s = severity.toLowerCase();
+  let cls = 'mild';
+  if (s.includes('life') || s.includes('threat')) cls = 'life-threatening';
+  else if (s === 'severe') cls = 'severe';
+  else if (s === 'moderate') cls = 'moderate';
+  else if (s === 'mild') cls = 'mild';
+  return `<span class="badge badge-${cls}">${severity}</span>`;
+}
+
+/* ===== PAGINATION HELPER ===== */
+function renderPagination(containerId, stateKey, loadFn) {
+  const st = pageState[stateKey];
+  const el = document.getElementById(containerId);
+  el.innerHTML = `
+    <button ${st.page === 0 ? 'disabled' : ''} onclick="pagePrev('${stateKey}', ${loadFn})">Prev</button>
+    <span class="page-info">Page ${st.page + 1}</span>
+    <button ${!st.hasNext ? 'disabled' : ''} onclick="pageNext('${stateKey}', ${loadFn})">Next</button>
+  `;
+}
+
+function pagePrev(key, loadFn) {
+  const st = pageState[key];
+  if (st.page > 0) { st.page--; loadFn(); }
+}
+function pageNext(key, loadFn) {
+  const st = pageState[key];
+  if (st.hasNext) {
+    st.page++;
+    loadFn();
+  }
+}
+
+/* Generic pagination renderer that uses string function names */
+function renderPag(containerId, stateKey, fnName) {
+  const st = pageState[stateKey];
+  const el = document.getElementById(containerId);
+  el.innerHTML = `
+    <button ${st.page === 0 ? 'disabled' : ''} onclick="pageState['${stateKey}'].page--; ${fnName}()">Prev</button>
+    <span class="page-info">Page ${st.page + 1}</span>
+    <button ${!st.hasNext ? 'disabled' : ''} onclick="if(pageState['${stateKey}'].hasNext){pageState['${stateKey}'].page++;} ${fnName}()">Next</button>
+  `;
+}
+
+/* ===== EMPTY ROW HELPER ===== */
+function emptyRow(cols, msg) {
+  return `<tr class="empty-row"><td colspan="${cols}">${msg || 'No records found'}</td></tr>`;
+}
+
+/* ===== MODAL FIELD HELPER ===== */
+function mf(label, value) {
+  return `<div class="modal-field"><label>${label}</label><div class="val">${value || '-'}</div></div>`;
+}
+
+/* ===========================================================================
+   DASHBOARD
+   =========================================================================== */
+async function loadDashboard() {
+  if (dashLoaded) return;
+
+  try {
+    const resp = await fetch(`${API.url}/api/school-mgmt/dashboard`, {
+      headers: { 'Authorization': 'Basic ' + API.auth }
+    });
+    if (!resp.ok) throw new Error(`${resp.status}`);
+    const d = await resp.json();
+
+    // Update KPI values (cards already visible with "—" placeholders)
+    const ct = (r) => r.items.length + (r.more ? '+' : '');
+    const vals = [ct(d.students), ct(d.teachers), ct(d.classes), ct(d.enrollments), ct(d.buildings), ct(d.busRoutes), ct(d.allergies)];
+    document.querySelectorAll('#dash-kpis .kpi .val').forEach((el, i) => { if (vals[i] !== undefined) el.textContent = vals[i]; });
+
+    // Recent students
+    const stBody = document.querySelector('#dash-students-table tbody');
+    if (d.students.items.length === 0) {
+      stBody.innerHTML = emptyRow(4, 'No students yet');
+    } else {
+      stBody.innerHTML = d.students.items.slice(0, 8).map(s => `<tr>
+        <td>${v(s,'Student ID')}</td>
+        <td>${v(s,'First Name')} ${v(s,'Last Name')}</td>
+        <td>${v(s,'Grade Level')}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+
+    // Allergy alerts
+    const alBody = document.querySelector('#dash-allergies-table tbody');
+    if (d.allergies.items.length === 0) {
+      alBody.innerHTML = emptyRow(4, 'No allergy records');
+    } else {
+      alBody.innerHTML = d.allergies.items.slice(0, 8).map(s => `<tr>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Allergy Type')}</td>
+        <td>${severityBadge(v(s,'Severity'))}</td>
+        <td>${v(s,'Emergency Medication') || '-'}</td>
+      </tr>`).join('');
+    }
+
+    dashLoaded = true;
+  } catch(e) {
+    console.error('Dashboard load failed:', e);
+  }
+}
+
+
+/* ===========================================================================
+   STUDENTS
+   =========================================================================== */
+async function loadStudents() {
+  const key = 'students';
+  const gradeFilter = document.getElementById('students-grade-filter').value;
+  // Reset pagination when filter changes
+  const filterKey = 'students-' + gradeFilter;
+  if (pageState[key]?._filterKey !== filterKey) {
+    pageState[key] = { pageKeys: [null], page: 0, hasNext: false, _filterKey: filterKey };
+  }
+  initPageState(key);
+  const st = pageState[key];
+  const kql = gradeFilter ? `values[Grade Level]="${gradeFilter}"` : null;
+
+  try {
+    const res = await fetchPage('students', st.pageKeys[st.page], kql);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#students-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(5);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showStudentDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Student ID')}</td>
+        <td>${v(s,'First Name')} ${v(s,'Last Name')}</td>
+        <td>${v(s,'Grade Level')}</td>
+        <td>${v(s,'Parent Guardian')}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('students-pagination', key, 'loadStudents');
+  } catch(e) {
+    document.querySelector('#students-table tbody').innerHTML = emptyRow(5, 'Error loading students');
+  }
+}
+
+function showStudentDetail(vals) {
+  openModal(`
+    <h2>${vals['First Name'] || ''} ${vals['Last Name'] || ''}</h2>
+    <div class="modal-section">
+      <h4>Student Information</h4>
+      <div class="modal-grid">
+        ${mf('Student ID', vals['Student ID'])}
+        ${mf('Grade Level', vals['Grade Level'])}
+        ${mf('Date of Birth', vals['Date of Birth'])}
+        ${mf('Gender', vals['Gender'])}
+        ${mf('Enrollment Date', vals['Enrollment Date'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    <div class="modal-section">
+      <h4>Contact Information</h4>
+      <div class="modal-grid">
+        ${mf('Parent/Guardian', vals['Parent Guardian'])}
+        ${mf('Parent Email', vals['Parent Email'])}
+        ${mf('Parent Phone', vals['Parent Phone'])}
+        ${mf('Emergency Contact', vals['Emergency Contact'])}
+        ${mf('Emergency Phone', vals['Emergency Phone'])}
+      </div>
+    </div>
+    <div class="modal-section">
+      <h4>Address</h4>
+      <div class="modal-field"><div class="val">${vals['Address'] || '-'}</div></div>
+    </div>
+  `);
+}
+
+/* ===========================================================================
+   TEACHERS
+   =========================================================================== */
+async function loadTeachers() {
+  const key = 'teachers';
+  const subjectFilter = document.getElementById('teachers-subject-filter').value;
+  const filterKey = 'teachers-' + subjectFilter;
+  if (pageState[key]?._filterKey !== filterKey) {
+    pageState[key] = { pageKeys: [null], page: 0, hasNext: false, _filterKey: filterKey };
+  }
+  initPageState(key);
+  const st = pageState[key];
+  const kql = subjectFilter ? `values[Subject]="${subjectFilter}"` : null;
+
+  try {
+    const res = await fetchPage('teachers', st.pageKeys[st.page], kql);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#teachers-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(5);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showTeacherDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Teacher ID')}</td>
+        <td>${v(s,'First Name')} ${v(s,'Last Name')}</td>
+        <td>${v(s,'Subject')}</td>
+        <td>${v(s,'Building') || '-'}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('teachers-pagination', key, 'loadTeachers');
+  } catch(e) {
+    document.querySelector('#teachers-table tbody').innerHTML = emptyRow(5, 'Error loading teachers');
+  }
+}
+
+function showTeacherDetail(vals) {
+  openModal(`
+    <h2>${vals['First Name'] || ''} ${vals['Last Name'] || ''}</h2>
+    <div class="modal-section">
+      <h4>Teacher Information</h4>
+      <div class="modal-grid">
+        ${mf('Teacher ID', vals['Teacher ID'])}
+        ${mf('Subject', vals['Subject'])}
+        ${mf('Certification', vals['Certification'])}
+        ${mf('Hire Date', vals['Hire Date'])}
+        ${mf('Building', vals['Building'])}
+        ${mf('Room', vals['Room'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    <div class="modal-section">
+      <h4>Contact</h4>
+      <div class="modal-grid">
+        ${mf('Email', vals['Email'])}
+        ${mf('Phone', vals['Phone'])}
+      </div>
+    </div>
+  `);
+}
+
+/* ===========================================================================
+   CLASSES
+   =========================================================================== */
+async function loadClasses() {
+  const key = 'classes';
+  const semFilter = document.getElementById('classes-semester-filter').value;
+  const filterKey = 'classes-' + semFilter;
+  if (pageState[key]?._filterKey !== filterKey) {
+    pageState[key] = { pageKeys: [null], page: 0, hasNext: false, _filterKey: filterKey };
+  }
+  initPageState(key);
+  const st = pageState[key];
+  const kql = semFilter ? `values[Semester]="${semFilter}"` : null;
+
+  try {
+    const res = await fetchPage('classes', st.pageKeys[st.page], kql);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#classes-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showClassDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Class ID')}</td>
+        <td>${v(s,'Class Name')}</td>
+        <td>${v(s,'Subject')}</td>
+        <td>${v(s,'Teacher')}</td>
+        <td>${v(s,'Period') || '-'}</td>
+        <td>${v(s,'Room') || '-'}</td>
+      </tr>`).join('');
+    }
+    renderPag('classes-pagination', key, 'loadClasses');
+  } catch(e) {
+    document.querySelector('#classes-table tbody').innerHTML = emptyRow(6, 'Error loading classes');
+  }
+}
+
+function showClassDetail(vals) {
+  openModal(`
+    <h2>${vals['Class Name'] || 'Class Details'}</h2>
+    <div class="modal-section">
+      <h4>Class Information</h4>
+      <div class="modal-grid">
+        ${mf('Class ID', vals['Class ID'])}
+        ${mf('Subject', vals['Subject'])}
+        ${mf('Teacher', vals['Teacher'])}
+        ${mf('Grade Level', vals['Grade Level'])}
+        ${mf('Period', vals['Period'])}
+        ${mf('Room', vals['Room'])}
+        ${mf('Building', vals['Building'])}
+        ${mf('Semester', vals['Semester'])}
+        ${mf('Capacity', vals['Capacity'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+  `);
+}
+
+/* ===========================================================================
+   GRADES
+   =========================================================================== */
+async function loadGrades() {
+  const key = 'grades';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('grades', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#grades-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showGradeDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Class Name')}</td>
+        <td><strong>${v(s,'Letter Grade')}</strong></td>
+        <td>${v(s,'Numeric Grade') || '-'}</td>
+        <td>${v(s,'Semester')}</td>
+        <td>${v(s,'Teacher') || '-'}</td>
+      </tr>`).join('');
+    }
+    renderPag('grades-pagination', key, 'loadGrades');
+  } catch(e) {
+    document.querySelector('#grades-table tbody').innerHTML = emptyRow(6, 'Error loading grades');
+  }
+}
+
+function showGradeDetail(vals) {
+  openModal(`
+    <h2>Grade Record</h2>
+    <div class="modal-section">
+      <h4>Details</h4>
+      <div class="modal-grid">
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Student ID', vals['Student ID'])}
+        ${mf('Class', vals['Class Name'])}
+        ${mf('Class ID', vals['Class ID'])}
+        ${mf('Semester', vals['Semester'])}
+        ${mf('Letter Grade', vals['Letter Grade'])}
+        ${mf('Numeric Grade', vals['Numeric Grade'])}
+        ${mf('Teacher', vals['Teacher'])}
+      </div>
+    </div>
+    ${vals['Comments'] ? `<div class="modal-section"><h4>Comments</h4><div class="modal-field"><div class="val">${vals['Comments']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   TEST SCORES
+   =========================================================================== */
+async function loadTests() {
+  const key = 'tests';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('test-scores', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#tests-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => {
+        const pct = v(s,'Percentage');
+        return `<tr class="clickable" onclick='showTestDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+          <td>${v(s,'Student Name')}</td>
+          <td>${v(s,'Test Name')}</td>
+          <td>${v(s,'Subject') || '-'}</td>
+          <td>${v(s,'Score')}/${v(s,'Max Score')}</td>
+          <td>${pct ? pct + '%' : '-'}</td>
+          <td>${v(s,'Date') || '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+    renderPag('tests-pagination', key, 'loadTests');
+  } catch(e) {
+    document.querySelector('#tests-table tbody').innerHTML = emptyRow(6, 'Error loading test scores');
+  }
+}
+
+function showTestDetail(vals) {
+  openModal(`
+    <h2>Test Score Details</h2>
+    <div class="modal-section">
+      <h4>Test Information</h4>
+      <div class="modal-grid">
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Student ID', vals['Student ID'])}
+        ${mf('Test Name', vals['Test Name'])}
+        ${mf('Subject', vals['Subject'])}
+        ${mf('Score', vals['Score'] + ' / ' + vals['Max Score'])}
+        ${mf('Percentage', vals['Percentage'] ? vals['Percentage'] + '%' : '-')}
+        ${mf('Letter Grade', vals['Letter Grade'])}
+        ${mf('Date', vals['Date'])}
+        ${mf('Grade Level', vals['Grade Level'])}
+        ${mf('Semester', vals['Semester'])}
+      </div>
+    </div>
+  `);
+}
+
+/* ===========================================================================
+   BUILDINGS
+   =========================================================================== */
+async function loadBuildings() {
+  const loading = document.getElementById('buildings-loading');
+  const grid = document.getElementById('buildings-grid');
+  loading.style.display = 'block';
+  grid.innerHTML = '';
+
+  try {
+    const res = await fetchPage('buildings', null, null);
+    loading.style.display = 'none';
+
+    if (res.submissions.length === 0) {
+      grid.innerHTML = '<div class="loading">No buildings found</div>';
+      return;
+    }
+
+    grid.innerHTML = res.submissions.map(s => {
+      const vals = s.values || {};
+      return `<div class="building-card" onclick='showBuildingDetail(${JSON.stringify(vals).replace(/'/g,"&#39;")})'>
+        <h4>${vals['Building Name'] || 'Unnamed'}</h4>
+        <div class="bc-row"><strong>Type:</strong> ${vals['Type'] || '-'}</div>
+        <div class="bc-row"><strong>Capacity:</strong> ${vals['Capacity'] || '-'}</div>
+        <div class="bc-row"><strong>Principal:</strong> ${vals['Principal'] || '-'}</div>
+        <div class="bc-row"><strong>Status:</strong> ${badge(vals['Status'])}</div>
+        <div class="bc-row"><strong>Floors:</strong> ${vals['Floors'] || '-'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    loading.textContent = 'Error loading buildings: ' + e.message;
+  }
+}
+
+function showBuildingDetail(vals) {
+  openModal(`
+    <h2>${vals['Building Name'] || 'Building Details'}</h2>
+    <div class="modal-section">
+      <h4>Building Information</h4>
+      <div class="modal-grid">
+        ${mf('Type', vals['Type'])}
+        ${mf('Floors', vals['Floors'])}
+        ${mf('Capacity', vals['Capacity'])}
+        ${mf('Year Built', vals['Year Built'])}
+        ${mf('Principal', vals['Principal'])}
+        ${mf('Phone', vals['Phone'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    ${vals['Address'] ? `<div class="modal-section"><h4>Address</h4><div class="modal-field"><div class="val">${vals['Address']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   ROOMS
+   =========================================================================== */
+async function loadRooms() {
+  const key = 'rooms';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('rooms', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#rooms-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(5);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showRoomDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Room Number')}</td>
+        <td>${v(s,'Building')}</td>
+        <td>${v(s,'Type')}</td>
+        <td>${v(s,'Capacity') || '-'}</td>
+        <td>${v(s,'Floor') || '-'}</td>
+      </tr>`).join('');
+    }
+    renderPag('rooms-pagination', key, 'loadRooms');
+  } catch(e) {
+    document.querySelector('#rooms-table tbody').innerHTML = emptyRow(5, 'Error loading rooms');
+  }
+}
+
+function showRoomDetail(vals) {
+  openModal(`
+    <h2>Room ${vals['Room Number'] || ''}</h2>
+    <div class="modal-section">
+      <h4>Room Information</h4>
+      <div class="modal-grid">
+        ${mf('Room Number', vals['Room Number'])}
+        ${mf('Building', vals['Building'])}
+        ${mf('Type', vals['Type'])}
+        ${mf('Capacity', vals['Capacity'])}
+        ${mf('Floor', vals['Floor'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    ${vals['Equipment'] ? `<div class="modal-section"><h4>Equipment</h4><div class="modal-field"><div class="val">${vals['Equipment']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   BUS ROUTES
+   =========================================================================== */
+async function loadRoutes() {
+  const key = 'routes';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('bus-routes', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#routes-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showRouteDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Route Number')}</td>
+        <td>${v(s,'Driver')}</td>
+        <td>${v(s,'Bus Number') || '-'}</td>
+        <td>${v(s,'Start Time') || '-'}</td>
+        <td>${v(s,'End Time') || '-'}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('routes-pagination', key, 'loadRoutes');
+  } catch(e) {
+    document.querySelector('#routes-table tbody').innerHTML = emptyRow(6, 'Error loading routes');
+  }
+}
+
+function showRouteDetail(vals) {
+  openModal(`
+    <h2>Route ${vals['Route Number'] || ''}</h2>
+    <div class="modal-section">
+      <h4>Route Information</h4>
+      <div class="modal-grid">
+        ${mf('Route Number', vals['Route Number'])}
+        ${mf('Driver', vals['Driver'])}
+        ${mf('Bus Number', vals['Bus Number'])}
+        ${mf('Start Time', vals['Start Time'])}
+        ${mf('End Time', vals['End Time'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    ${vals['Stops'] ? `<div class="modal-section"><h4>Stops</h4><div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Stops']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   BUS ASSIGNMENTS
+   =========================================================================== */
+async function loadBusAssignments() {
+  const key = 'bus-assign';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('bus-assignments', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#bus-assign-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showBusAssignDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Route Number')}</td>
+        <td>${v(s,'Stop') || '-'}</td>
+        <td>${v(s,'Pickup Time') || '-'}</td>
+        <td>${v(s,'Dropoff Time') || '-'}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('bus-assign-pagination', key, 'loadBusAssignments');
+  } catch(e) {
+    document.querySelector('#bus-assign-table tbody').innerHTML = emptyRow(6, 'Error loading assignments');
+  }
+}
+
+function showBusAssignDetail(vals) {
+  openModal(`
+    <h2>Bus Assignment</h2>
+    <div class="modal-section">
+      <h4>Assignment Details</h4>
+      <div class="modal-grid">
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Student ID', vals['Student ID'])}
+        ${mf('Route Number', vals['Route Number'])}
+        ${mf('Stop', vals['Stop'])}
+        ${mf('Pickup Time', vals['Pickup Time'])}
+        ${mf('Dropoff Time', vals['Dropoff Time'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+  `);
+}
+
+/* ===========================================================================
+   PARENT-TEACHER FORMS
+   =========================================================================== */
+async function loadPTForms() {
+  const key = 'ptforms';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('parent-teacher-forms', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#ptforms-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showPTFormDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Form Type')}</td>
+        <td>${v(s,'Parent Name')}</td>
+        <td>${v(s,'Teacher Name')}</td>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Date') || '-'}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('ptforms-pagination', key, 'loadPTForms');
+  } catch(e) {
+    document.querySelector('#ptforms-table tbody').innerHTML = emptyRow(6, 'Error loading forms');
+  }
+}
+
+function showPTFormDetail(vals) {
+  openModal(`
+    <h2>${vals['Form Type'] || 'Parent-Teacher Form'}</h2>
+    <div class="modal-section">
+      <h4>Form Details</h4>
+      <div class="modal-grid">
+        ${mf('Form Type', vals['Form Type'])}
+        ${mf('Parent', vals['Parent Name'])}
+        ${mf('Parent Email', vals['Parent Email'])}
+        ${mf('Teacher', vals['Teacher Name'])}
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Subject', vals['Subject'])}
+        ${mf('Date', vals['Date'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    <div class="modal-section">
+      <h4>Message</h4>
+      <div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Message'] || '-'}</div></div>
+    </div>
+    ${vals['Response'] ? `<div class="modal-section"><h4>Response</h4><div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Response']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   CONFERENCES
+   =========================================================================== */
+async function loadConferences() {
+  const key = 'conferences';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('conferences', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#conferences-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(6);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showConferenceDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Parent Name')}</td>
+        <td>${v(s,'Teacher Name')}</td>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Date')}</td>
+        <td>${v(s,'Time')}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('conferences-pagination', key, 'loadConferences');
+  } catch(e) {
+    document.querySelector('#conferences-table tbody').innerHTML = emptyRow(6, 'Error loading conferences');
+  }
+}
+
+function showConferenceDetail(vals) {
+  openModal(`
+    <h2>Conference Details</h2>
+    <div class="modal-section">
+      <h4>Conference Information</h4>
+      <div class="modal-grid">
+        ${mf('Parent', vals['Parent Name'])}
+        ${mf('Parent Email', vals['Parent Email'])}
+        ${mf('Teacher', vals['Teacher Name'])}
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Date', vals['Date'])}
+        ${mf('Time', vals['Time'])}
+        ${mf('Duration', vals['Duration'])}
+        ${mf('Location', vals['Location'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    ${vals['Notes'] ? `<div class="modal-section"><h4>Notes</h4><div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Notes']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   LUNCH MENUS
+   =========================================================================== */
+async function loadMenus() {
+  const key = 'menus';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('lunch-menus', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#menus-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(5);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => {
+        const hasAllergens = (v(s,'Contains Allergens') || '').toLowerCase() === 'yes';
+        const sides = [v(s,'Side Item 1'), v(s,'Side Item 2')].filter(Boolean).join(', ') || '-';
+        const allergenInfo = v(s,'Allergen List') || (hasAllergens ? 'Yes' : 'No');
+        return `<tr class="${hasAllergens ? 'allergen-row clickable' : 'clickable'}" onclick='showMenuDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+          <td>${v(s,'Date')}</td>
+          <td>${v(s,'Meal Type')}</td>
+          <td>${v(s,'Main Item')}</td>
+          <td>${sides}</td>
+          <td>${hasAllergens ? '<span class="badge badge-severe">' + allergenInfo + '</span>' : '<span class="badge badge-mild">None</span>'}</td>
+        </tr>`;
+      }).join('');
+    }
+    renderPag('menus-pagination', key, 'loadMenus');
+  } catch(e) {
+    document.querySelector('#menus-table tbody').innerHTML = emptyRow(5, 'Error loading menus');
+  }
+}
+
+function showMenuDetail(vals) {
+  openModal(`
+    <h2>${vals['Main Item'] || 'Menu Item'}</h2>
+    <div class="modal-section">
+      <h4>Menu Details</h4>
+      <div class="modal-grid">
+        ${mf('Date', vals['Date'])}
+        ${mf('Meal Type', vals['Meal Type'])}
+        ${mf('Main Item', vals['Main Item'])}
+        ${mf('Side Item 1', vals['Side Item 1'])}
+        ${mf('Side Item 2', vals['Side Item 2'])}
+        ${mf('Drink', vals['Drink'])}
+        ${mf('Calories', vals['Calories'])}
+        ${mf('Contains Allergens', vals['Contains Allergens'])}
+        ${mf('Allergen List', vals['Allergen List'])}
+      </div>
+    </div>
+    ${vals['Description'] ? `<div class="modal-section"><h4>Description</h4><div class="modal-field"><div class="val">${vals['Description']}</div></div></div>` : ''}
+  `);
+}
+
+/* ===========================================================================
+   STUDENT ALLERGIES
+   =========================================================================== */
+async function loadAllergies() {
+  const key = 'allergies';
+  initPageState(key);
+  const st = pageState[key];
+
+  try {
+    const res = await fetchPage('student-allergies', st.pageKeys[st.page], null);
+    st.hasNext = !!res.nextPageToken;
+    if (st.hasNext && res.submissions.length) st.pageKeys[st.page + 1] = res.submissions[res.submissions.length - 1].createdAt;
+    const tbody = document.querySelector('#allergies-table tbody');
+    if (res.submissions.length === 0) {
+      tbody.innerHTML = emptyRow(5);
+    } else {
+      tbody.innerHTML = res.submissions.map(s => `<tr class="clickable" onclick='showAllergyDetail(${JSON.stringify(s.values).replace(/'/g,"&#39;")})'>
+        <td>${v(s,'Student Name')}</td>
+        <td>${v(s,'Allergy Type')}</td>
+        <td>${severityBadge(v(s,'Severity'))}</td>
+        <td>${v(s,'Emergency Medication') || '-'}</td>
+        <td>${badge(v(s,'Status'))}</td>
+      </tr>`).join('');
+    }
+    renderPag('allergies-pagination', key, 'loadAllergies');
+  } catch(e) {
+    document.querySelector('#allergies-table tbody').innerHTML = emptyRow(5, 'Error loading allergies');
+  }
+}
+
+function showAllergyDetail(vals) {
+  openModal(`
+    <h2>Allergy Record</h2>
+    <div class="modal-section">
+      <h4>Student &amp; Allergy</h4>
+      <div class="modal-grid">
+        ${mf('Student', vals['Student Name'])}
+        ${mf('Student ID', vals['Student ID'])}
+        ${mf('Allergy Type', vals['Allergy Type'])}
+        ${mf('Severity', vals['Severity'])}
+        ${mf('Emergency Medication', vals['Emergency Medication'])}
+        ${mf('Status', vals['Status'])}
+      </div>
+    </div>
+    ${vals['Symptoms'] ? `<div class="modal-section"><h4>Symptoms</h4><div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Symptoms']}</div></div></div>` : ''}
+    ${vals['Action Plan'] ? `<div class="modal-section"><h4>Action Plan</h4><div class="modal-field"><div class="val" style="white-space:pre-wrap">${vals['Action Plan']}</div></div></div>` : ''}
+    <div class="modal-section">
+      <h4>Medical Contact</h4>
+      <div class="modal-grid">
+        ${mf('Doctor Name', vals['Doctor Name'])}
+        ${mf('Doctor Phone', vals['Doctor Phone'])}
+      </div>
+    </div>
+  `);
+}
+</script>
+</body>
+</html>

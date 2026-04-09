@@ -1,0 +1,199 @@
+{
+  "name": "Inbound Transactions",
+  "slug": "inbound-transactions",
+  "description": "Inbound transaction processing with queues, routing rules, exceptions, and audit trail.",
+  "forms": [
+    {
+      "slug": "events",
+      "name": "Events",
+      "fields": [
+        {
+          "name": "External ID"
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Event Type",
+          "required": true
+        },
+        {
+          "name": "Payload",
+          "rows": 5
+        },
+        {
+          "name": "Received At"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Processed At"
+        },
+        {
+          "name": "Error Message",
+          "rows": 2
+        },
+        {
+          "name": "Retry Count"
+        },
+        {
+          "name": "Correlation ID"
+        },
+        {
+          "name": "Normalized Payload",
+          "rows": 5
+        },
+        {
+          "name": "Route Target"
+        }
+      ],
+      "description": "Inbound event receipts — the central event log",
+      "submissionLabelExpression": "${values('Event Type')} from ${values('Source')} [${values('Status')}]"
+    },
+    {
+      "slug": "event-types",
+      "name": "Event Types",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Handler Tree"
+        },
+        {
+          "name": "Active"
+        },
+        {
+          "name": "Schema",
+          "rows": 5
+        },
+        {
+          "name": "Transform",
+          "rows": 3
+        }
+      ],
+      "description": "Registered event type definitions",
+      "submissionLabelExpression": "${values('Name')} (${values('Source')})"
+    },
+    {
+      "slug": "event-sources",
+      "name": "Event Sources",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Auth Type"
+        },
+        {
+          "name": "Auth Key"
+        },
+        {
+          "name": "Active"
+        },
+        {
+          "name": "Webhook Secret"
+        },
+        {
+          "name": "Events Received"
+        },
+        {
+          "name": "Last Event At"
+        }
+      ],
+      "description": "Registered external event sources",
+      "submissionLabelExpression": "${values('Name')} (${values('Auth Type')})"
+    },
+    {
+      "slug": "error-queue",
+      "name": "Error Queue",
+      "fields": [
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Type"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Error Message",
+          "rows": 2
+        },
+        {
+          "name": "Retry Count"
+        },
+        {
+          "name": "Max Retries"
+        },
+        {
+          "name": "Last Retry At"
+        },
+        {
+          "name": "Next Retry At"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Original Payload",
+          "rows": 5
+        },
+        {
+          "name": "Resolution"
+        }
+      ],
+      "description": "Failed events awaiting retry or resolution",
+      "submissionLabelExpression": "${values('Event Type')} — ${values('Status')} (retry ${values('Retry Count')})"
+    },
+    {
+      "slug": "processing-rules",
+      "name": "Processing Rules",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Event Type Pattern"
+        },
+        {
+          "name": "Source Pattern"
+        },
+        {
+          "name": "Target Tree"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Active"
+        },
+        {
+          "name": "Transform",
+          "rows": 3
+        },
+        {
+          "name": "Description"
+        }
+      ],
+      "description": "Event routing rules — match events to handler trees",
+      "submissionLabelExpression": "${values('Name')}: ${values('Event Type Pattern')} → ${values('Target Tree')}"
+    }
+  ],
+  "category": "Operations"
+}

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Management</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* Login */
+#login-screen { display:none; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* Topbar */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar-nav { display:flex; gap:4px; margin-left:32px; }
+.topbar-nav button { background:none; border:none; color:rgba(255,255,255,.7); padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; font-family:inherit; }
+.topbar-nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar-nav button.active { color:var(--orange); background:rgba(243,108,36,.12); }
+.spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.25); color:white; padding:4px 12px; border-radius:6px; font-size:12px; font-family:inherit; }
+.logout-btn:hover { border-color:var(--orange); background:rgba(255,255,255,.08); }
+
+/* Main */
+.main { padding:24px; max-width:1400px; margin:0 auto; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* Cards & KPIs */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.kpi-card { background:var(--white); border-radius:12px; padding:20px; box-shadow:var(--shadow); border-left:4px solid var(--blue); }
+.kpi-card .kpi-label { font-size:12px; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.kpi-card .kpi-value { font-size:28px; font-weight:700; color:var(--blue); }
+.kpi-card .kpi-sub { font-size:12px; color:var(--gray); margin-top:4px; }
+.kpi-card.green { border-left-color:var(--green); }
+.kpi-card.red { border-left-color:var(--red); }
+.kpi-card.orange { border-left-color:var(--orange); }
+.kpi-card.yellow { border-left-color:var(--yellow); }
+.kpi-card.blue { border-left-color:var(--blue); }
+.kpi-card.teal { border-left-color:var(--teal); }
+
+/* Section */
+.section { background:var(--white); border-radius:12px; box-shadow:var(--shadow); margin-bottom:24px; overflow:hidden; }
+.section-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+.section-header h3 { font-size:15px; font-weight:700; color:var(--blue); flex:1; }
+.section-body { padding:16px 20px; }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); padding:10px 12px; text-align:left; background:var(--light); border-bottom:1px solid var(--border); white-space:nowrap; }
+.data-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13px; }
+.data-table tr:hover { background:rgba(243,108,36,.04); }
+.data-table tr.clickable { cursor:pointer; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-green { background:#E8F5E9; color:#2E7D32; }
+.badge-red { background:#FFEBEE; color:#C62828; }
+.badge-orange { background:#FFF3E0; color:#E65100; }
+.badge-yellow { background:#FFF8E1; color:#F57F17; }
+.badge-blue { background:#E3F2FD; color:#1565C0; }
+.badge-gray { background:#ECEFF1; color:#546E7A; }
+.badge-purple { background:#F3E5F5; color:#7B1FA2; }
+.badge-teal { background:#E0F2F1; color:#00695C; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; border:none; transition:all .15s; font-family:inherit; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-success { background:var(--green); color:white; }
+.btn-success:hover { background:#2E7D32; }
+.btn-danger { background:var(--red); color:white; }
+.btn-danger:hover { background:#C62828; }
+.btn-outline { background:none; border:1px solid var(--border); color:var(--gray); }
+.btn-outline:hover { border-color:var(--orange); color:var(--orange); }
+.btn-sm { padding:4px 10px; font-size:12px; }
+
+/* Subtabs */
+.subtab-bar { display:flex; gap:4px; margin-bottom:16px; }
+.subtab-bar button { background:none; border:1px solid var(--border); color:var(--gray); padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; }
+.subtab-bar button:hover { border-color:var(--orange); color:var(--orange); }
+.subtab-bar button.active { background:var(--orange); color:white; border-color:var(--orange); }
+
+/* Room Grid */
+.room-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; }
+.room-card { padding:14px; border-radius:10px; text-align:center; cursor:pointer; border:2px solid transparent; transition:all .15s; }
+.room-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+.room-card .room-num { font-size:16px; font-weight:700; margin-bottom:4px; }
+.room-card .room-type { font-size:10px; text-transform:uppercase; letter-spacing:.5px; opacity:.8; }
+.room-card .room-rate { font-size:12px; margin-top:4px; opacity:.7; }
+.room-card.status-available { background:#E8F5E9; color:#1B5E20; border-color:#A5D6A7; }
+.room-card.status-occupied { background:#E3F2FD; color:#0D47A1; border-color:#90CAF9; }
+.room-card.status-maintenance { background:#FFF8E1; color:#E65100; border-color:#FFE082; }
+.room-card.status-out-of-order { background:#FFEBEE; color:#B71C1C; border-color:#EF9A9A; }
+.room-card.status-dirty { background:#FFF3E0; color:#BF360C; border-color:#FFCC80; }
+
+/* Filters */
+.filter-bar { display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+.filter-bar select, .filter-bar input { padding:6px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.filter-bar select:focus, .filter-bar input:focus { border-color:var(--orange); }
+
+/* Front desk split */
+.desk-split { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+@media(max-width:900px) { .desk-split { grid-template-columns:1fr; } }
+
+/* Pagination */
+.pagination { display:flex; gap:8px; align-items:center; justify-content:center; padding:16px; }
+.pagination button:disabled { opacity:.4; cursor:default; }
+.page-info { font-size:12px; color:var(--gray); }
+
+/* Detail Panel */
+.detail-panel { position:fixed; right:0; top:56px; bottom:0; width:480px; background:var(--white); box-shadow:-4px 0 24px rgba(0,0,0,.15); z-index:200; overflow-y:auto; transform:translateX(100%); transition:transform .25s; }
+.detail-panel.open { transform:translateX(0); }
+.detail-header { padding:20px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.detail-header h3 { flex:1; font-size:17px; color:var(--blue); }
+.detail-close { background:none; border:none; font-size:20px; color:var(--gray); padding:4px 8px; }
+.detail-body { padding:20px; }
+.detail-field { margin-bottom:12px; }
+.detail-field .df-label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); margin-bottom:2px; }
+.detail-field .df-value { font-size:14px; color:#202124; }
+.detail-actions { padding:20px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Occupancy chart */
+.bar-chart { display:flex; align-items:flex-end; gap:8px; height:120px; padding:8px 0; }
+.bar-col { display:flex; flex-direction:column; align-items:center; flex:1; }
+.bar-fill { width:100%; border-radius:4px 4px 0 0; transition:height .3s; min-height:2px; }
+.bar-label { font-size:10px; color:var(--gray); margin-top:4px; }
+.bar-value { font-size:10px; font-weight:700; margin-bottom:2px; }
+
+/* Modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:300; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--white); border-radius:16px; width:560px; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-header { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.modal-header h3 { flex:1; font-size:17px; color:var(--blue); }
+.modal-close { background:none; border:none; font-size:20px; color:var(--gray); }
+.modal-body { padding:20px 24px; }
+.modal-body label { display:block; font-size:12px; font-weight:600; color:var(--gray); margin-bottom:4px; margin-top:12px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-body input, .modal-body select, .modal-body textarea { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus { border-color:var(--orange); }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:400; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Hotel Management</h1>
+    <div class="sub">Front desk, reservations & housekeeping</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://myspace.kinops.io">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Hotel <span>Management</span></div>
+    <div class="topbar-nav" id="topbar-nav">
+      <button class="active" data-tab="dashboard">Dashboard</button>
+      <button data-tab="reservations">Reservations</button>
+      <button data-tab="frontdesk">Front Desk</button>
+      <button data-tab="rooms">Rooms</button>
+      <button data-tab="guests">Guests</button>
+      <button data-tab="housekeeping">Housekeeping</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="section">
+          <div class="section-header"><h3>Occupancy by Floor</h3></div>
+          <div class="section-body"><div id="dash-floor-chart" class="bar-chart"></div></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><h3>Room Condition Summary</h3></div>
+          <div class="section-body" id="dash-condition"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h3>Upcoming Arrivals</h3></div>
+        <div class="section-body" id="dash-arrivals"></div>
+      </div>
+    </div>
+
+    <!-- RESERVATIONS -->
+    <div class="tab-panel" id="tab-reservations">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="subtab-bar" id="res-subtabs">
+          <button class="active" data-sub="today">Today</button>
+          <button data-sub="upcoming">Upcoming</button>
+          <button data-sub="all">All</button>
+          <button data-sub="cancelled">Cancelled</button>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="openNewReservation()">+ New Reservation</button>
+      </div>
+      <div class="section">
+        <div class="section-body" id="res-table-wrap"></div>
+        <div class="pagination" id="res-pagination"></div>
+      </div>
+    </div>
+
+    <!-- FRONT DESK -->
+    <div class="tab-panel" id="tab-frontdesk">
+      <div class="desk-split">
+        <div class="section">
+          <div class="section-header"><h3>Today's Arrivals</h3></div>
+          <div class="section-body" id="desk-arrivals"></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><h3>Today's Departures</h3></div>
+          <div class="section-body" id="desk-departures"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOMS -->
+    <div class="tab-panel" id="tab-rooms">
+      <div class="filter-bar" id="room-filters">
+        <select id="room-filter-floor"><option value="">All Floors</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>PH</option></select>
+        <select id="room-filter-type"><option value="">All Types</option><option>Standard</option><option>Deluxe</option><option>Junior Suite</option><option>Suite</option><option>Penthouse</option></select>
+        <select id="room-filter-status"><option value="">All Statuses</option><option>Available</option><option>Occupied</option><option>Maintenance</option><option>Out of Order</option></select>
+      </div>
+      <div id="room-grid" class="room-grid"></div>
+    </div>
+
+    <!-- GUESTS -->
+    <div class="tab-panel" id="tab-guests">
+      <div class="filter-bar">
+        <input type="text" id="guest-search" placeholder="Search by name..." style="width:250px;">
+        <select id="guest-vip-filter"><option value="">All Guests</option><option>Diamond</option><option>Platinum</option><option>Gold</option><option>Silver</option><option>Standard</option></select>
+      </div>
+      <div class="section">
+        <div class="section-body" id="guest-table-wrap"></div>
+        <div class="pagination" id="guest-pagination"></div>
+      </div>
+    </div>
+
+    <!-- HOUSEKEEPING -->
+    <div class="tab-panel" id="tab-housekeeping">
+      <div class="subtab-bar" id="hk-subtabs">
+        <button class="active" data-sub="queue">Queue</button>
+        <button data-sub="inprogress">In Progress</button>
+        <button data-sub="completed">Completed</button>
+        <button data-sub="all">All</button>
+      </div>
+      <div class="section">
+        <div class="section-body" id="hk-table-wrap"></div>
+        <div class="pagination" id="hk-pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <h3 id="detail-title"></h3>
+    <button class="detail-close" onclick="closeDetail()">&times;</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+  <div class="detail-actions" id="detail-actions"></div>
+</div>
+
+<!-- New Reservation Modal -->
+<div class="modal-overlay" id="modal-new-res" onclick="if(event.target===this)closeModal('modal-new-res')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>New Reservation</h3>
+      <button class="modal-close" onclick="closeModal('modal-new-res')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div><label>Guest Name</label><input id="nr-guest"></div>
+        <div><label>Room Type</label>
+          <select id="nr-roomtype"><option>Standard</option><option>Deluxe</option><option>Junior Suite</option><option>Suite</option><option>Penthouse</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div><label>Check In</label><input type="date" id="nr-checkin"></div>
+        <div><label>Check Out</label><input type="date" id="nr-checkout"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Adults</label><input type="number" id="nr-adults" value="1" min="1" max="6"></div>
+        <div><label>Children</label><input type="number" id="nr-children" value="0" min="0" max="4"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Source</label>
+          <select id="nr-source"><option>Direct</option><option>Booking.com</option><option>Expedia</option><option>Corporate</option><option>Walk-in</option><option>Travel Agent</option></select>
+        </div>
+        <div><label>Payment Method</label>
+          <select id="nr-payment"><option>Credit Card</option><option>Debit Card</option><option>Corporate Account</option><option>Cash</option></select>
+        </div>
+      </div>
+      <label>Special Requests</label>
+      <textarea id="nr-requests" rows="3"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-new-res')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewReservation()">Create Reservation</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   STATE & API
+   ══════════════════════════════════════════════ */
+let API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+const KAPP = 'hotel-mgmt';
+
+async function api(path, opts) {
+  const url = `${API.url}/app/api/v1${path}`;
+  const headers = { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  const res = await fetch(url, { ...opts, headers: { ...headers, ...(opts?.headers || {}) } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function submissionUrl(form, params) {
+  let url = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`;
+  if (params) url += '&' + params;
+  return url;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function statusBadge(status) {
+  const map = {
+    'Available': 'badge-green', 'Occupied': 'badge-blue', 'Maintenance': 'badge-yellow', 'Out of Order': 'badge-red',
+    'Confirmed': 'badge-blue', 'Checked In': 'badge-green', 'Checked Out': 'badge-gray', 'Cancelled': 'badge-red', 'No Show': 'badge-orange',
+    'Pending': 'badge-yellow', 'In Progress': 'badge-blue', 'Complete': 'badge-green', 'Verified': 'badge-teal',
+    'Clean': 'badge-green', 'Dirty': 'badge-orange', 'Inspected': 'badge-teal',
+    'Diamond': 'badge-purple', 'Platinum': 'badge-blue', 'Gold': 'badge-orange', 'Silver': 'badge-gray', 'Standard': 'badge-gray',
+    'Urgent': 'badge-red', 'High': 'badge-orange', 'Normal': 'badge-blue', 'Low': 'badge-gray',
+  };
+  return `<span class="badge ${map[status] || 'badge-gray'}">${status || '—'}</span>`;
+}
+
+function vf(s, f) { return s?.values?.[f] || ''; }
+function fmt(d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'; }
+function fmtFull(d) { return d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'; }
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ══════════════════════════════════════════════
+   AUTH
+   ══════════════════════════════════════════════ */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!url || !user || !pass) { errEl.textContent = 'All fields are required'; errEl.style.display = 'block'; return; }
+  API.url = url; API.auth = btoa(`${user}:${pass}`); API.user = user;
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+    try { const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': `Basic ${API.auth}` } }); if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; } } catch {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch (e) { errEl.textContent = 'Login failed: ' + e.message; errEl.style.display = 'block'; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+(async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) { document.getElementById('login-screen').style.display = 'flex'; return; }
+  try {
+    API = JSON.parse(s);
+    await api('/me');
+    if (!API.spaceSlug) {
+      try { const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': `Basic ${API.auth}` } }); if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); } } catch {}
+    }
+    document.getElementById('user-display').textContent = (API.displayName || API.user) + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+})();
+
+/* ══════════════════════════════════════════════
+   TAB NAVIGATION
+   ══════════════════════════════════════════════ */
+document.getElementById('topbar-nav').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  closeDetail();
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'reservations') loadReservations();
+  else if (tab === 'frontdesk') loadFrontDesk();
+  else if (tab === 'rooms') loadRooms();
+  else if (tab === 'guests') loadGuests();
+  else if (tab === 'housekeeping') loadHousekeeping();
+});
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const res = await fetch(`/api/hotel/dashboard`, { headers: { 'Authorization': `Basic ${API.auth}`, 'X-Kinetic-Server': API.url || undefined } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card blue"><div class="kpi-label">Occupancy Rate</div><div class="kpi-value">${d.occupancyRate}%</div><div class="kpi-sub">${d.occupiedRooms} of ${d.totalRooms} rooms</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Available Rooms</div><div class="kpi-value">${d.availableRooms}</div><div class="kpi-sub">Ready for check-in</div></div>
+      <div class="kpi-card orange"><div class="kpi-label">Today's Arrivals</div><div class="kpi-value">${d.todayArrivals}</div><div class="kpi-sub">Confirmed check-ins</div></div>
+      <div class="kpi-card red"><div class="kpi-label">Today's Departures</div><div class="kpi-value">${d.todayDepartures}</div><div class="kpi-sub">Scheduled check-outs</div></div>
+      <div class="kpi-card teal"><div class="kpi-label">Revenue (Active)</div><div class="kpi-value">$${Number(d.activeRevenue || 0).toLocaleString()}</div><div class="kpi-sub">Checked-in reservations</div></div>
+      <div class="kpi-card yellow"><div class="kpi-label">Housekeeping Pending</div><div class="kpi-value">${d.hkPending}</div><div class="kpi-sub">${d.hkInProgress} in progress</div></div>
+    `;
+
+    // Floor chart
+    const floors = d.floorOccupancy || {};
+    const maxOcc = Math.max(...Object.values(floors).map(f => f.total), 1);
+    document.getElementById('dash-floor-chart').innerHTML = Object.entries(floors).map(([fl, info]) => {
+      const pct = Math.round(info.occupied / info.total * 100);
+      const h = Math.round(info.total / maxOcc * 100);
+      return `<div class="bar-col"><div class="bar-value">${pct}%</div><div class="bar-fill" style="height:${h}%;background:linear-gradient(to top,var(--blue) ${pct}%,var(--border) ${pct}%);"></div><div class="bar-label">F${fl}</div></div>`;
+    }).join('');
+
+    // Condition summary
+    const conds = d.conditionSummary || {};
+    document.getElementById('dash-condition').innerHTML = `<div style="display:flex;gap:16px;flex-wrap:wrap;">${
+      Object.entries(conds).map(([c, n]) => `<div style="text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--blue);">${n}</div><div style="font-size:12px;color:var(--gray);">${c}</div></div>`).join('')
+    }</div>`;
+
+    // Upcoming arrivals
+    const arrivals = d.upcomingArrivals || [];
+    if (arrivals.length === 0) {
+      document.getElementById('dash-arrivals').innerHTML = '<div class="loading">No upcoming arrivals</div>';
+    } else {
+      document.getElementById('dash-arrivals').innerHTML = `<table class="data-table"><thead><tr><th>Confirmation</th><th>Guest</th><th>Room Type</th><th>Check In</th><th>Nights</th><th>Status</th></tr></thead><tbody>${
+        arrivals.map(a => `<tr><td>${esc(a.confirmation)}</td><td>${esc(a.guest)}</td><td>${esc(a.roomType)}</td><td>${fmt(a.checkIn)}</td><td>${a.nights}</td><td>${statusBadge(a.status)}</td></tr>`).join('')
+      }</tbody></table>`;
+    }
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Failed to load dashboard: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   RESERVATIONS
+   ══════════════════════════════════════════════ */
+let resPageKeys = [null]; // createdAt keyset keys per page
+let resCurrentPage = 0;
+let resHasNext = false;
+let resSubtab = 'today';
+
+document.getElementById('res-subtabs').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#res-subtabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  resSubtab = btn.dataset.sub;
+  resPageKeys = [null]; resCurrentPage = 0; resHasNext = false;
+  loadReservations();
+});
+
+async function loadReservations() {
+  const wrap = document.getElementById('res-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    let params = '';
+    const today = todayISO();
+    if (resSubtab === 'today') {
+      params = `q=${encodeURIComponent(`values[Check In]="${today}" AND values[Status]="Confirmed"`)}`;
+    } else if (resSubtab === 'upcoming') {
+      params = `q=${encodeURIComponent(`values[Status]="Confirmed"`)}`;
+    } else if (resSubtab === 'cancelled') {
+      params = `q=${encodeURIComponent(`values[Status]="Cancelled"`)}`;
+    }
+    // "all" = no filter
+
+    const resLastCreated = resPageKeys[resCurrentPage];
+    if (resLastCreated) {
+      // Inject createdAt keyset into existing KQL params
+      if (params) {
+        const existingKql = decodeURIComponent(params.replace(/^q=/, ''));
+        params = `q=${encodeURIComponent('(' + existingKql + ') AND createdAt < "' + resLastCreated + '"')}`;
+      } else {
+        params = `q=${encodeURIComponent('createdAt < "' + resLastCreated + '"')}`;
+      }
+    }
+    let url = submissionUrl('reservations', params);
+
+    const data = await api(url);
+    const subs = data.submissions || [];
+    resHasNext = !!data.nextPageToken;
+    if (resHasNext && subs.length) resPageKeys[resCurrentPage + 1] = subs[subs.length - 1].createdAt;
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No reservations found</div>';
+    } else {
+      wrap.innerHTML = `<table class="data-table"><thead><tr><th>Confirmation</th><th>Guest</th><th>Room</th><th>Check In</th><th>Check Out</th><th>Nights</th><th>Status</th><th>Source</th></tr></thead><tbody>${
+        subs.map(s => `<tr class="clickable" onclick="showReservationDetail('${s.id}')"><td>${esc(vf(s,'Confirmation Number'))}</td><td>${esc(vf(s,'Guest Name'))}</td><td>${esc(vf(s,'Room Number')) || '—'}</td><td>${fmt(vf(s,'Check In'))}</td><td>${fmt(vf(s,'Check Out'))}</td><td>${vf(s,'Nights')}</td><td>${statusBadge(vf(s,'Status'))}</td><td>${esc(vf(s,'Source'))}</td></tr>`).join('')
+      }</tbody></table>`;
+    }
+
+    document.getElementById('res-pagination').innerHTML = `
+      <button class="btn btn-outline btn-sm" onclick="resCurrentPage=Math.max(0,resCurrentPage-1);loadReservations()" ${resCurrentPage === 0 ? 'disabled' : ''}>Prev</button>
+      <span class="page-info">Page ${resCurrentPage + 1}</span>
+      <button class="btn btn-outline btn-sm" onclick="resCurrentPage++;loadReservations()" ${!resHasNext ? 'disabled' : ''}>Next</button>
+    `;
+  } catch (e) { wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showReservationDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    const v = s.values || {};
+    document.getElementById('detail-title').textContent = `Reservation ${v['Confirmation Number'] || ''}`;
+    document.getElementById('detail-body').innerHTML = [
+      'Confirmation Number', 'Guest Name', 'Room Number', 'Room Type Requested',
+      'Check In', 'Check Out', 'Nights', 'Status', 'Adults', 'Children',
+      'Rate', 'Total Amount', 'Payment Method', 'Payment Status', 'Source',
+      'Special Requests', 'Checked In At', 'Checked In By', 'Checked Out At', 'Checked Out By', 'Notes'
+    ].map(f => `<div class="detail-field"><div class="df-label">${f}</div><div class="df-value">${f === 'Status' ? statusBadge(v[f]) : esc(v[f]) || '—'}</div></div>`).join('');
+
+    let actions = '';
+    if (v.Status === 'Confirmed') {
+      actions = `<button class="btn btn-success" onclick="doCheckIn('${id}')">Check In</button>`;
+    } else if (v.Status === 'Checked In') {
+      actions = `<button class="btn btn-danger" onclick="doCheckOut('${id}')">Check Out</button>`;
+    }
+    document.getElementById('detail-actions').innerHTML = actions;
+    document.getElementById('detail-panel').classList.add('open');
+  } catch (e) { toast('Failed to load reservation: ' + e.message); }
+}
+
+function openNewReservation() {
+  document.getElementById('nr-checkin').value = todayISO();
+  const co = new Date(); co.setDate(co.getDate() + 2);
+  document.getElementById('nr-checkout').value = co.toISOString().split('T')[0];
+  document.getElementById('modal-new-res').classList.add('open');
+}
+
+async function submitNewReservation() {
+  const guest = document.getElementById('nr-guest').value;
+  const roomType = document.getElementById('nr-roomtype').value;
+  const checkIn = document.getElementById('nr-checkin').value;
+  const checkOut = document.getElementById('nr-checkout').value;
+  if (!guest || !checkIn || !checkOut) { toast('Please fill required fields'); return; }
+  const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000);
+  if (nights < 1) { toast('Check out must be after check in'); return; }
+  const rates = { 'Standard': 169, 'Deluxe': 239, 'Junior Suite': 319, 'Suite': 449, 'Penthouse': 899 };
+  const rate = rates[roomType] || 199;
+  const confirm = 'HTL-' + (2000 + Math.floor(Math.random() * 8000));
+  try {
+    await api(`/kapps/${KAPP}/forms/reservations/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({ values: {
+        'Confirmation Number': confirm, 'Guest Name': guest, 'Room Type Requested': roomType,
+        'Check In': checkIn, 'Check Out': checkOut, 'Nights': String(nights),
+        'Status': 'Confirmed', 'Adults': document.getElementById('nr-adults').value,
+        'Children': document.getElementById('nr-children').value, 'Rate': String(rate),
+        'Total Amount': String(rate * nights), 'Payment Method': document.getElementById('nr-payment').value,
+        'Payment Status': 'Pending', 'Source': document.getElementById('nr-source').value,
+        'Special Requests': document.getElementById('nr-requests').value,
+      }})
+    });
+    closeModal('modal-new-res');
+    toast(`Reservation ${confirm} created`);
+    loadReservations();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   FRONT DESK
+   ══════════════════════════════════════════════ */
+async function loadFrontDesk() {
+  const arrivalsEl = document.getElementById('desk-arrivals');
+  const departuresEl = document.getElementById('desk-departures');
+  arrivalsEl.innerHTML = '<div class="loading">Loading...</div>';
+  departuresEl.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const today = todayISO();
+
+    // Today's confirmed arrivals
+    const arrData = await api(submissionUrl('reservations', `q=${encodeURIComponent(`values[Status]="Confirmed" AND values[Check In]="${today}"`)}`));
+    const arrivals = arrData.submissions || [];
+    if (arrivals.length === 0) {
+      arrivalsEl.innerHTML = '<div class="loading">No arrivals today</div>';
+    } else {
+      arrivalsEl.innerHTML = `<table class="data-table"><thead><tr><th>Guest</th><th>Room Type</th><th>Nights</th><th></th></tr></thead><tbody>${
+        arrivals.map(s => `<tr><td>${esc(vf(s,'Guest Name'))}</td><td>${esc(vf(s,'Room Type Requested'))}</td><td>${vf(s,'Nights')}</td><td><button class="btn btn-success btn-sm" onclick="doCheckIn('${s.id}')">Check In</button></td></tr>`).join('')
+      }</tbody></table>`;
+    }
+
+    // Today's departures (checked-in guests with checkout = today)
+    const depData = await api(submissionUrl('reservations', `q=${encodeURIComponent(`values[Status]="Checked In" AND values[Check Out]="${today}"`)}`));
+    const departures = depData.submissions || [];
+    if (departures.length === 0) {
+      departuresEl.innerHTML = '<div class="loading">No departures today</div>';
+    } else {
+      departuresEl.innerHTML = `<table class="data-table"><thead><tr><th>Guest</th><th>Room</th><th>Nights</th><th></th></tr></thead><tbody>${
+        departures.map(s => `<tr><td>${esc(vf(s,'Guest Name'))}</td><td>${esc(vf(s,'Room Number')) || '—'}</td><td>${vf(s,'Nights')}</td><td><button class="btn btn-danger btn-sm" onclick="doCheckOut('${s.id}')">Check Out</button></td></tr>`).join('')
+      }</tbody></table>`;
+    }
+  } catch (e) {
+    arrivalsEl.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`;
+    departuresEl.innerHTML = '';
+  }
+}
+
+/* ══════════════════════════════════════════════
+   CHECK IN / CHECK OUT
+   ══════════════════════════════════════════════ */
+async function doCheckIn(resId) {
+  try {
+    const res = await fetch(`/api/hotel/reservations/${resId}/checkin`, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', 'X-Kinetic-Server': API.url || undefined },
+      body: JSON.stringify({ user: API.displayName || API.user }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Check-in failed');
+    toast(`Checked in to Room ${data.roomNumber || '—'}`);
+    closeDetail();
+    refreshCurrentTab();
+  } catch (e) { toast('Check-in failed: ' + e.message); }
+}
+
+async function doCheckOut(resId) {
+  try {
+    const res = await fetch(`/api/hotel/reservations/${resId}/checkout`, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', 'X-Kinetic-Server': API.url || undefined },
+      body: JSON.stringify({ user: API.displayName || API.user }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Check-out failed');
+    toast(`Checked out — housekeeping task created`);
+    closeDetail();
+    refreshCurrentTab();
+  } catch (e) { toast('Check-out failed: ' + e.message); }
+}
+
+function refreshCurrentTab() {
+  const active = document.querySelector('.topbar-nav button.active');
+  if (!active) return;
+  const tab = active.dataset.tab;
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'reservations') loadReservations();
+  else if (tab === 'frontdesk') loadFrontDesk();
+  else if (tab === 'rooms') loadRooms();
+  else if (tab === 'housekeeping') loadHousekeeping();
+}
+
+/* ══════════════════════════════════════════════
+   ROOMS
+   ══════════════════════════════════════════════ */
+let allRooms = [];
+
+async function loadRooms() {
+  const grid = document.getElementById('room-grid');
+  grid.innerHTML = '<div class="loading">Loading rooms...</div>';
+  try {
+    const res = await fetch(`/api/hotel/rooms/grid`, { headers: { 'Authorization': `Basic ${API.auth}`, 'X-Kinetic-Server': API.url || undefined } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    allRooms = data.rooms || [];
+    renderRoomGrid();
+  } catch (e) { grid.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`; }
+}
+
+function renderRoomGrid() {
+  const floor = document.getElementById('room-filter-floor').value;
+  const type = document.getElementById('room-filter-type').value;
+  const status = document.getElementById('room-filter-status').value;
+  let filtered = allRooms;
+  if (floor) filtered = filtered.filter(r => r.floor === floor);
+  if (type) filtered = filtered.filter(r => r.type === type);
+  if (status) filtered = filtered.filter(r => r.status === status);
+
+  const grid = document.getElementById('room-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="loading">No rooms match filters</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(r => {
+    const cls = 'status-' + (r.status || '').toLowerCase().replace(/ /g, '-');
+    return `<div class="room-card ${cls}" onclick="showRoomDetail('${r.id}')">
+      <div class="room-num">${esc(r.number)}</div>
+      <div class="room-type">${esc(r.type)}</div>
+      <div class="room-rate">$${r.rate}/night</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('room-filter-floor').addEventListener('change', renderRoomGrid);
+document.getElementById('room-filter-type').addEventListener('change', renderRoomGrid);
+document.getElementById('room-filter-status').addEventListener('change', renderRoomGrid);
+
+async function showRoomDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    const v = s.values || {};
+    document.getElementById('detail-title').textContent = `Room ${v['Room Number'] || ''}`;
+    document.getElementById('detail-body').innerHTML = [
+      'Room Number', 'Floor', 'Room Type', 'Bed Config', 'Max Occupancy', 'Base Rate',
+      'Status', 'Condition', 'Amenities', 'View', 'Current Guest', 'Last Cleaned', 'Last Cleaned By', 'Notes'
+    ].map(f => `<div class="detail-field"><div class="df-label">${f}</div><div class="df-value">${(f === 'Status' || f === 'Condition') ? statusBadge(v[f]) : (f === 'Base Rate' ? '$' + esc(v[f]) : esc(v[f])) || '—'}</div></div>`).join('');
+    document.getElementById('detail-actions').innerHTML = '';
+    document.getElementById('detail-panel').classList.add('open');
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   GUESTS
+   ══════════════════════════════════════════════ */
+let guestPageKeys = [null];
+let guestCurrentPage = 0;
+let guestHasNext = false;
+
+async function loadGuests() {
+  const wrap = document.getElementById('guest-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const vipFilter = document.getElementById('guest-vip-filter').value;
+    const nameFilter = document.getElementById('guest-search').value.trim();
+
+    let params = '';
+    if (vipFilter) {
+      params = `q=${encodeURIComponent(`values[VIP Status]="${vipFilter}"`)}`;
+    }
+
+    const guestLastCreated = guestPageKeys[guestCurrentPage];
+    if (guestLastCreated) {
+      if (params) {
+        const existingKql = decodeURIComponent(params.replace(/^q=/, ''));
+        params = `q=${encodeURIComponent('(' + existingKql + ') AND createdAt < "' + guestLastCreated + '"')}`;
+      } else {
+        params = `q=${encodeURIComponent('createdAt < "' + guestLastCreated + '"')}`;
+      }
+    }
+    let url = submissionUrl('guests', params);
+
+    const data = await api(url);
+    let subs = data.submissions || [];
+
+    // Client-side name filter (search is across first+last name)
+    if (nameFilter) {
+      const q = nameFilter.toLowerCase();
+      subs = subs.filter(s => {
+        const full = `${vf(s,'First Name')} ${vf(s,'Last Name')}`.toLowerCase();
+        return full.includes(q);
+      });
+    }
+
+    guestHasNext = !!data.nextPageToken;
+    if (guestHasNext && subs.length) guestPageKeys[guestCurrentPage + 1] = subs[subs.length - 1].createdAt;
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No guests found</div>';
+    } else {
+      wrap.innerHTML = `<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>VIP</th><th>Loyalty</th><th>Stays</th></tr></thead><tbody>${
+        subs.map(s => `<tr class="clickable" onclick="showGuestDetail('${s.id}')"><td><strong>${esc(vf(s,'First Name'))} ${esc(vf(s,'Last Name'))}</strong></td><td>${esc(vf(s,'Email'))}</td><td>${esc(vf(s,'Phone'))}</td><td>${esc(vf(s,'Country'))}</td><td>${statusBadge(vf(s,'VIP Status'))}</td><td>${statusBadge(vf(s,'Loyalty Tier'))}</td><td>${vf(s,'Total Stays')}</td></tr>`).join('')
+      }</tbody></table>`;
+    }
+
+    document.getElementById('guest-pagination').innerHTML = `
+      <button class="btn btn-outline btn-sm" onclick="guestCurrentPage=Math.max(0,guestCurrentPage-1);loadGuests()" ${guestCurrentPage === 0 ? 'disabled' : ''}>Prev</button>
+      <span class="page-info">Page ${guestCurrentPage + 1}</span>
+      <button class="btn btn-outline btn-sm" onclick="guestCurrentPage++;loadGuests()" ${!guestHasNext ? 'disabled' : ''}>Next</button>
+    `;
+  } catch (e) { wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`; }
+}
+
+document.getElementById('guest-vip-filter').addEventListener('change', () => { guestPageKeys = [null]; guestCurrentPage = 0; guestHasNext = false; loadGuests(); });
+document.getElementById('guest-search').addEventListener('input', () => { guestPageKeys = [null]; guestCurrentPage = 0; guestHasNext = false; loadGuests(); });
+
+async function showGuestDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    const v = s.values || {};
+    document.getElementById('detail-title').textContent = `${v['First Name'] || ''} ${v['Last Name'] || ''}`;
+    document.getElementById('detail-body').innerHTML = [
+      'First Name', 'Last Name', 'Email', 'Phone', 'Address', 'Country',
+      'ID Type', 'ID Number', 'VIP Status', 'Loyalty Tier', 'Loyalty Points',
+      'Total Stays', 'Preferences', 'Special Needs', 'Company', 'Notes'
+    ].map(f => `<div class="detail-field"><div class="df-label">${f}</div><div class="df-value">${(f === 'VIP Status' || f === 'Loyalty Tier') ? statusBadge(v[f]) : esc(v[f]) || '—'}</div></div>`).join('');
+    document.getElementById('detail-actions').innerHTML = '';
+    document.getElementById('detail-panel').classList.add('open');
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   HOUSEKEEPING
+   ══════════════════════════════════════════════ */
+let hkPageKeys = [null];
+let hkCurrentPage = 0;
+let hkHasNext = false;
+let hkSubtab = 'queue';
+
+document.getElementById('hk-subtabs').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#hk-subtabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  hkSubtab = btn.dataset.sub;
+  hkPageKeys = [null]; hkCurrentPage = 0; hkHasNext = false;
+  loadHousekeeping();
+});
+
+async function loadHousekeeping() {
+  const wrap = document.getElementById('hk-table-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    let params = '';
+    if (hkSubtab === 'queue') params = `q=${encodeURIComponent(`values[Status]="Pending"`)}`;
+    else if (hkSubtab === 'inprogress') params = `q=${encodeURIComponent(`values[Status]="In Progress"`)}`;
+    else if (hkSubtab === 'completed') params = `q=${encodeURIComponent(`values[Status]="Complete"`)}`;
+
+    const hkLastCreated = hkPageKeys[hkCurrentPage];
+    if (hkLastCreated) {
+      if (params) {
+        const existingKql = decodeURIComponent(params.replace(/^q=/, ''));
+        params = `q=${encodeURIComponent('(' + existingKql + ') AND createdAt < "' + hkLastCreated + '"')}`;
+      } else {
+        params = `q=${encodeURIComponent('createdAt < "' + hkLastCreated + '"')}`;
+      }
+    }
+    let url = submissionUrl('housekeeping', params);
+
+    const data = await api(url);
+    const subs = data.submissions || [];
+    hkHasNext = !!data.nextPageToken;
+    if (hkHasNext && subs.length) hkPageKeys[hkCurrentPage + 1] = subs[subs.length - 1].createdAt;
+
+    if (subs.length === 0) {
+      wrap.innerHTML = '<div class="loading">No tasks found</div>';
+    } else {
+      wrap.innerHTML = `<table class="data-table"><thead><tr><th>Task ID</th><th>Room</th><th>Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          let actions = '';
+          if (st === 'Pending') actions = `<button class="btn btn-primary btn-sm" onclick="hkTransition('${s.id}','start')">Start</button>`;
+          else if (st === 'In Progress') actions = `<button class="btn btn-success btn-sm" onclick="hkTransition('${s.id}','complete')">Complete</button>`;
+          else if (st === 'Complete') actions = `<button class="btn btn-outline btn-sm" onclick="hkTransition('${s.id}','verify')">Verify</button>`;
+          return `<tr><td>${esc(vf(s,'Task ID'))}</td><td>${esc(vf(s,'Room Number'))}</td><td>${esc(vf(s,'Task Type'))}</td><td>${statusBadge(vf(s,'Priority'))}</td><td>${statusBadge(st)}</td><td>${esc(vf(s,'Assigned To'))}</td><td>${actions}</td></tr>`;
+        }).join('')
+      }</tbody></table>`;
+    }
+
+    document.getElementById('hk-pagination').innerHTML = `
+      <button class="btn btn-outline btn-sm" onclick="hkCurrentPage=Math.max(0,hkCurrentPage-1);loadHousekeeping()" ${hkCurrentPage === 0 ? 'disabled' : ''}>Prev</button>
+      <span class="page-info">Page ${hkCurrentPage + 1}</span>
+      <button class="btn btn-outline btn-sm" onclick="hkCurrentPage++;loadHousekeeping()" ${!hkHasNext ? 'disabled' : ''}>Next</button>
+    `;
+  } catch (e) { wrap.innerHTML = `<div class="loading">Error: ${esc(e.message)}</div>`; }
+}
+
+async function hkTransition(id, action) {
+  try {
+    const res = await fetch(`/api/hotel/housekeeping/${id}/transition`, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', 'X-Kinetic-Server': API.url || undefined },
+      body: JSON.stringify({ action, user: API.displayName || API.user }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Transition failed');
+    toast(`Task ${action === 'start' ? 'started' : action === 'complete' ? 'completed' : 'verified'}`);
+    loadHousekeeping();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   DETAIL PANEL & MODAL HELPERS
+   ══════════════════════════════════════════════ */
+function closeDetail() { document.getElementById('detail-panel').classList.remove('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
+</body>
+</html>

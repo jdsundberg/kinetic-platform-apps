@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Credentialing</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #00979E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--teal); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtab { background: var(--light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--gray); }
+.subtab.active { background: var(--teal); color: var(--white); }
+.subtab:hover:not(.active) { background: var(--border); }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); cursor: default; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-verified, .badge-compliant, .badge-clear, .badge-complete, .badge-current, .badge-resolved, .badge-closed, .badge-checked-out { background: #E8F5E9; color: #2E7D32; }
+.badge-suspended, .badge-expiring, .badge-expiring-soon, .badge-finding, .badge-high, .badge-escalated { background: #FFF3E0; color: #E65100; }
+.badge-expired, .badge-denied, .badge-revoked, .badge-failed, .badge-non-compliant, .badge-critical, .badge-rejected { background: #FFEBEE; color: #C62828; }
+.badge-pending, .badge-new, .badge-pending-review, .badge-under-review, .badge-draft { background: #E3F2FD; color: #1565C0; }
+.badge-under-investigation { background: #F3E5F5; color: #6A1B9A; }
+.badge-dismissed, .badge-inactive, .badge-low, .badge-medium { background: #F5F5F5; color: #616161; }
+.badge-checked-in { background: #E0F7FA; color: #00838F; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 900px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--teal); color: var(--white); }
+.modal-panel { display: none; }
+.modal-panel.active { display: block; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-bottom: 20px; }
+.detail-field label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; }
+.detail-field .val { font-size: 14px; color: var(--blue); margin-top: 2px; }
+
+/* ===== ACTION BUTTONS ===== */
+.btn { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.btn-teal { background: var(--teal); color: var(--white); }
+.btn-teal:hover { background: #00979E; }
+.btn-red { background: var(--red); color: var(--white); }
+.btn-red:hover { background: #C62828; }
+.btn-green { background: var(--green); color: var(--white); }
+.btn-green:hover { background: #2E7D32; }
+.btn-orange { background: var(--orange); color: var(--white); }
+.btn-orange:hover { background: #E65100; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ===== CHART ===== */
+.bar-chart { display: flex; gap: 8px; align-items: flex-end; height: 120px; padding: 0 8px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { background: var(--teal); border-radius: 4px 4px 0 0; width: 100%; min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-align: center; word-break: break-word; }
+
+/* ===== TIMELINE ===== */
+.timeline { max-height: 300px; overflow-y: auto; }
+.timeline-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); margin-top: 6px; flex-shrink: 0; }
+.timeline-text { font-size: 13px; color: #444; }
+.timeline-time { font-size: 11px; color: var(--gray); }
+
+/* ===== LOADING ===== */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.progress-green { background: var(--green); }
+.progress-orange { background: var(--orange); }
+.progress-red { background: var(--red); }
+
+/* ===== REPORT CARDS ===== */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 13px; color: var(--gray); }
+
+/* ===== TOAST ===== */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--blue); color: var(--white); padding: 12px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 300; box-shadow: var(--shadow-lg); }
+.toast.show { display: block; }
+.toast.toast-error { background: var(--red); }
+.toast.toast-success { background: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Vendor Credentialing</h1>
+      <div class="subtitle">Facility Access & Compliance Management</div>
+      <label>Server URL</label>
+      <input type="text" id="login-url" value="">
+      <label>Username</label>
+      <input type="text" id="login-user" value="">
+      <label>Password</label>
+      <input type="password" id="login-pass" value="">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Vendor<span class="accent">Cred</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="vendors">Vendors</button>
+      <button class="tab-btn" data-tab="reps">Representatives</button>
+      <button class="tab-btn" data-tab="access">Access</button>
+      <button class="tab-btn" data-tab="visits">Visits</button>
+      <button class="tab-btn" data-tab="compliance">Compliance</button>
+      <button class="tab-btn" data-tab="reports">Reports</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- Dashboard -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="page-title">Facility Dashboard</div>
+      <div class="page-sub">Vendor access & compliance overview</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div>
+          <div class="card"><h3>Expiring Credentials</h3><div id="dash-expiring"></div></div>
+          <div class="card"><h3>Recent Incidents</h3><div id="dash-incidents"></div></div>
+        </div>
+        <div>
+          <div class="card"><h3>Today's Visits by Department</h3><div id="dash-chart" class="bar-chart"></div></div>
+          <div class="card"><h3>Recent Activity</h3><div id="dash-activity" class="timeline"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendors -->
+    <div id="tab-vendors" class="tab-panel">
+      <div class="page-title">Vendors</div>
+      <div class="page-sub">Vendor company registry</div>
+      <div class="filter-bar">
+        <select id="vendor-status-filter" onchange="loadVendors()"><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Suspended</option><option>Under Review</option></select>
+        <select id="vendor-type-filter" onchange="loadVendors()"><option value="">All Types</option><option>Medical Device</option><option>Pharmaceutical</option><option>Service</option><option>IT</option><option>Laboratory</option><option>Supply</option><option>Consulting</option></select>
+        <input type="text" id="vendor-search" placeholder="Search vendors..." oninput="loadVendors()">
+      </div>
+      <div class="card"><div id="vendors-table"></div><div id="vendors-pag" class="pagination"></div></div>
+    </div>
+
+    <!-- Representatives -->
+    <div id="tab-reps" class="tab-panel">
+      <div class="page-title">Representatives</div>
+      <div class="page-sub">Vendor reps, techs & specialists</div>
+      <div class="filter-bar">
+        <select id="rep-status-filter" onchange="loadReps()"><option value="">All Statuses</option><option>Active</option><option>Suspended</option><option>Pending</option><option>Expired</option><option>Denied</option><option>Under Review</option></select>
+        <select id="rep-comp-filter" onchange="loadReps()"><option value="">All Compliance</option><option>Compliant</option><option>Non-Compliant</option><option>Expiring</option><option>Pending Review</option></select>
+        <select id="rep-title-filter" onchange="loadReps()"><option value="">All Titles</option><option>Sales Representative</option><option>Service Technician</option><option>Clinical Specialist</option><option>Field Engineer</option><option>Account Manager</option></select>
+        <input type="text" id="rep-search" placeholder="Search reps..." oninput="loadReps()">
+      </div>
+      <div class="card"><div id="reps-table"></div><div id="reps-pag" class="pagination"></div></div>
+    </div>
+
+    <!-- Access -->
+    <div id="tab-access" class="tab-panel">
+      <div class="page-title">Access Authorizations</div>
+      <div class="page-sub">Department & OR access permissions</div>
+      <div class="subtabs" id="access-subtabs">
+        <button class="subtab active" onclick="switchAccessSub('active')">Active Access</button>
+        <button class="subtab" onclick="switchAccessSub('pending')">Pending Requests</button>
+        <button class="subtab" onclick="switchAccessSub('all')">All</button>
+      </div>
+      <div class="filter-bar">
+        <select id="access-dept-filter" onchange="loadAccess()"><option value="">All Departments</option><option>Operating Room</option><option>Cath Lab</option><option>ICU</option><option>Radiology</option><option>Emergency</option><option>Pharmacy</option><option>Laboratory</option><option>Central Supply</option><option>Sterile Processing</option><option>General Floor</option></select>
+        <select id="access-level-filter" onchange="loadAccess()"><option value="">All Levels</option><option>Escort Required</option><option>Supervised</option><option>Unsupervised</option><option>Restricted</option></select>
+      </div>
+      <div class="card"><div id="access-table"></div><div id="access-pag" class="pagination"></div></div>
+    </div>
+
+    <!-- Visits -->
+    <div id="tab-visits" class="tab-panel">
+      <div class="page-title">Visit Log</div>
+      <div class="page-sub">Facility check-in/check-out tracking</div>
+      <div class="subtabs" id="visit-subtabs">
+        <button class="subtab active" onclick="switchVisitSub('today')">Today's Visitors</button>
+        <button class="subtab" onclick="switchVisitSub('history')">Visit History</button>
+      </div>
+      <div class="filter-bar">
+        <select id="visit-status-filter" onchange="loadVisits()"><option value="">All Statuses</option><option>Checked In</option><option>Checked Out</option><option>No-Show</option><option>Cancelled</option></select>
+        <select id="visit-dept-filter" onchange="loadVisits()"><option value="">All Departments</option><option>Operating Room</option><option>Cath Lab</option><option>ICU</option><option>Radiology</option><option>Emergency</option><option>Pharmacy</option><option>Laboratory</option></select>
+        <input type="text" id="visit-search" placeholder="Search visits..." oninput="loadVisits()">
+      </div>
+      <div class="card"><div id="visits-table"></div><div id="visits-pag" class="pagination"></div></div>
+    </div>
+
+    <!-- Compliance -->
+    <div id="tab-compliance" class="tab-panel">
+      <div class="page-title">Compliance Center</div>
+      <div class="page-sub">Credential compliance & monitoring</div>
+      <div class="subtabs" id="comp-subtabs">
+        <button class="subtab active" onclick="switchCompSub('overview')">Compliance Overview</button>
+        <button class="subtab" onclick="switchCompSub('expiring')">Expiring Credentials</button>
+        <button class="subtab" onclick="switchCompSub('incidents')">Incidents</button>
+        <button class="subtab" onclick="switchCompSub('checks')">Compliance Checks</button>
+      </div>
+      <div id="comp-overview" class="comp-panel"></div>
+      <div id="comp-expiring" class="comp-panel" style="display:none"></div>
+      <div id="comp-incidents" class="comp-panel" style="display:none">
+        <div class="card"><div id="incidents-table"></div><div id="incidents-pag" class="pagination"></div></div>
+      </div>
+      <div id="comp-checks" class="comp-panel" style="display:none">
+        <div class="card"><div id="checks-table"></div><div id="checks-pag" class="pagination"></div></div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div id="tab-reports" class="tab-panel">
+      <div class="page-title">Reports</div>
+      <div class="page-sub">Generate and export compliance reports</div>
+      <div class="report-grid">
+        <div class="report-card" onclick="generateReport('vendor-roster')"><h4>Vendor Roster</h4><p>Complete vendor listing with rep counts and contract status</p></div>
+        <div class="report-card" onclick="generateReport('expiring')"><h4>Expiring Credentials</h4><p>Credentials expiring within 90 days across all vendors</p></div>
+        <div class="report-card" onclick="generateReport('compliance')"><h4>Compliance Status</h4><p>Per-rep compliance status with credential counts</p></div>
+        <div class="report-card" onclick="generateReport('access')"><h4>Access Authorizations</h4><p>Department access permissions across all representatives</p></div>
+        <div class="report-card" onclick="generateReport('visit-log')"><h4>Visit Log</h4><p>Complete facility visit history with durations</p></div>
+        <div class="report-card" onclick="generateReport('incidents')"><h4>Incident Report</h4><p>Policy violations, investigation status & corrective actions</p></div>
+      </div>
+      <div id="report-output" style="margin-top:20px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = '', AUTH = '', USERNAME = '', SPACE = '';
+const KAPP = 'vendor-cred';
+const PAGE_SIZE = 25;
+let currentAccessSub = 'active';
+let currentVisitSub = 'today';
+let currentCompSub = 'overview';
+
+/* ── Auth ── */
+function doLogin() {
+  const url = document.getElementById('login-url').value.trim();
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!user || !pass) { document.getElementById('login-error').textContent = 'Enter username and password'; return; }
+
+  if (url) {
+    fetch('/api/base/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }).catch(() => {});
+  }
+
+  const auth = 'Basic ' + btoa(user + ':' + pass);
+  fetch(API + '/app/api/v1/me', { headers: { Authorization: auth } })
+    .then(r => { if (!r.ok) throw new Error('Invalid credentials'); return r.json(); })
+    .then(me => {
+      AUTH = auth;
+      USERNAME = me.displayName || me.username || user;
+      return fetch(API + '/app/api/v1/space', { headers: { Authorization: auth } });
+    })
+    .then(r => r.json())
+    .then(sp => {
+      SPACE = sp.space?.slug || sp.slug || '';
+      sessionStorage.setItem('kinetic_session', JSON.stringify({ url: API, auth: btoa(user + ':' + pass), user, displayName: USERNAME, spaceSlug: SPACE }));
+      enterApp();
+    })
+    .catch(e => { document.getElementById('login-error').textContent = e.message; });
+}
+
+function restoreSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (!sess) return false;
+  try {
+    const s = JSON.parse(sess);
+    API = s.url || '';
+    AUTH = 'Basic ' + s.auth;
+    USERNAME = s.displayName || s.user || '';
+    SPACE = s.spaceSlug || '';
+    return true;
+  } catch { return false; }
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = USERNAME + (SPACE ? ' \u00b7 ' + SPACE : '');
+  loadDashboard();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* ── Tab Navigation ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'vendors') loadVendors();
+    else if (tab === 'reps') loadReps();
+    else if (tab === 'access') loadAccess();
+    else if (tab === 'visits') loadVisits();
+    else if (tab === 'compliance') loadCompTab();
+    else if (tab === 'reports') { /* static cards */ }
+  });
+});
+
+/* ── Helpers ── */
+function apiFetch(path) {
+  return fetch(API + path, { headers: { Authorization: AUTH } }).then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); });
+}
+
+function apiPost(path, body) {
+  return fetch(API + path, { method: 'POST', headers: { Authorization: AUTH, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.error || r.status); }); return r.json(); });
+}
+
+function kqlFetch(form, kql, lastCreatedAt) {
+  if (lastCreatedAt) {
+    kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+  }
+  let url = API + `/app/api/v1/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=${PAGE_SIZE}`;
+  if (kql) url += `&q=${encodeURIComponent(kql)}`;
+  return fetch(url, { headers: { Authorization: AUTH } }).then(r => r.json());
+}
+
+function badge(status) {
+  if (!status) return '';
+  const cls = 'badge-' + status.toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge ${cls}">${esc(status)}</span>`;
+}
+
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' toast-' + type : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function renderPag(containerId, page, hasNext, loadFn, tokenStack) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `<span>Page ${page}</span><div>` +
+    `<button ${page <= 1 ? 'disabled' : ''} onclick="${loadFn}(${page - 1})">Prev</button> ` +
+    `<button ${!hasNext ? 'disabled' : ''} onclick="${loadFn}(${page + 1})">Next</button></div>`;
+}
+
+/* ── Dashboard ── */
+async function loadDashboard() {
+  document.getElementById('dash-kpis').innerHTML = '<div class="loading">Loading dashboard...</div>';
+  try {
+    const d = await apiFetch('/api/vcred/dashboard');
+    document.getElementById('dash-kpis').innerHTML = [
+      kpi(d.activeReps, 'Active Reps', 'teal'),
+      kpi(d.complianceRate + '%', 'Compliance Rate', parseFloat(d.complianceRate) >= 80 ? 'green' : 'orange'),
+      kpi(d.expiring30, 'Expiring 30 Days', d.expiring30 > 0 ? 'orange' : 'green'),
+      kpi(d.todayVisitors, "Today's Visitors", 'blue'),
+      kpi(d.openIncidents, 'Open Incidents', d.openIncidents > 0 ? 'red' : 'green'),
+      kpi(d.pendingAccess, 'Pending Access', d.pendingAccess > 0 ? 'yellow' : 'green'),
+    ].join('');
+
+    // Expiring table
+    let ehtml = '<table class="data-table"><thead><tr><th>Rep</th><th>Type</th><th>Expiration</th><th>Status</th></tr></thead><tbody>';
+    for (const c of d.expiringList) {
+      ehtml += `<tr><td>${esc(c.repName)}</td><td>${esc(c.type)}</td><td>${esc(c.expDate)}</td><td>${badge(c.status)}</td></tr>`;
+    }
+    ehtml += '</tbody></table>';
+    if (!d.expiringList.length) ehtml = '<div style="color:var(--gray);font-size:13px;padding:8px">No expiring credentials</div>';
+    document.getElementById('dash-expiring').innerHTML = ehtml;
+
+    // Incidents
+    let ihtml = '';
+    for (const i of d.recentIncidents) {
+      ihtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">` +
+        `<div><strong>${esc(i.repName)}</strong> — ${esc(i.type)} ${badge(i.severity)}</div><div>${badge(i.status)}</div></div>`;
+    }
+    if (!d.recentIncidents.length) ihtml = '<div style="color:var(--gray);font-size:13px;padding:8px">No incidents</div>';
+    document.getElementById('dash-incidents').innerHTML = ihtml;
+
+    // Department chart
+    const entries = Object.entries(d.deptVisits);
+    const maxVal = Math.max(1, ...entries.map(e => e[1]));
+    const chartEl = document.getElementById('dash-chart');
+    if (entries.length) {
+      chartEl.innerHTML = entries.map(([dept, count]) =>
+        `<div class="bar-col"><div class="bar" style="height:${(count / maxVal * 100)}%"></div><div class="bar-label">${esc(dept)}</div><div style="font-size:12px;font-weight:600;color:var(--blue)">${count}</div></div>`
+      ).join('');
+    } else {
+      chartEl.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:20px;text-align:center;width:100%">No visits today</div>';
+    }
+
+    // Activity
+    let ahtml = '';
+    for (const a of d.recentActivity) {
+      const time = a.timestamp ? new Date(a.timestamp).toLocaleString() : '';
+      ahtml += `<div class="timeline-item"><div class="timeline-dot"></div><div><div class="timeline-text"><strong>${esc(a.action)}</strong> — ${esc(a.repName)} <span style="color:var(--gray)">(${esc(a.entityType)})</span></div><div class="timeline-time">${esc(a.performer)} &middot; ${time}</div></div></div>`;
+    }
+    document.getElementById('dash-activity').innerHTML = ahtml || '<div style="color:var(--gray);font-size:13px;padding:8px">No recent activity</div>';
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function kpi(value, label, color) {
+  return `<div class="kpi-card kpi-${color}"><div class="kpi-value">${value}</div><div class="kpi-label">${label}</div></div>`;
+}
+
+/* ── Vendors ── */
+let vendorPageKeys = [null], vendorHasNext = false;
+async function loadVendors(page = 1) {
+  const status = document.getElementById('vendor-status-filter').value;
+  const type = document.getElementById('vendor-type-filter').value;
+  const search = document.getElementById('vendor-search').value.toLowerCase().trim();
+  let kql = '';
+  if (status) kql = `values[Status] = "${status}"`;
+  if (status && type) kql += ` AND values[Vendor Type] = "${type}"`;
+  else if (type) kql = `values[Vendor Type] = "${type}"`;
+
+  const lastCreatedAt = page > 1 ? vendorPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('vendors', kql || null, lastCreatedAt);
+    let subs = r.submissions || [];
+    if (search) subs = subs.filter(s => (s.values?.['Vendor Name'] || '').toLowerCase().includes(search) || (s.values?.['Vendor ID'] || '').toLowerCase().includes(search));
+    vendorHasNext = !!r.nextPageToken;
+    if (vendorHasNext && subs.length) vendorPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>Vendor ID</th><th>Name</th><th>Type</th><th>Contact</th><th>Contract</th><th>Risk</th><th>Status</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      html += `<tr onclick="openVendor('${esc(v['Vendor ID'])}')"><td>${esc(v['Vendor ID'])}</td><td><strong>${esc(v['Vendor Name'])}</strong></td><td>${esc(v['Vendor Type'])}</td><td>${esc(v['Primary Contact'])}</td><td>${badge(v['Contract Status'])}</td><td>${badge(v['Risk Level'])}</td><td>${badge(v['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No vendors found</div>';
+    document.getElementById('vendors-table').innerHTML = html;
+    renderPag('vendors-pag', page, vendorHasNext, 'loadVendors');
+  } catch (e) {
+    document.getElementById('vendors-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function openVendor(vid) {
+  document.getElementById('modal-title').textContent = 'Vendor Details';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const [vendorR, repsR, prodsR, agreeR] = await Promise.all([
+      kqlFetch('vendors', `values[Vendor ID] = "${vid}"`),
+      kqlFetch('representatives', `values[Vendor ID] = "${vid}"`),
+      kqlFetch('products', `values[Vendor ID] = "${vid}"`),
+      kqlFetch('agreements', `values[Vendor ID] = "${vid}"`),
+    ]);
+    const v = (vendorR.submissions || [])[0]?.values || {};
+    const reps = repsR.submissions || [];
+    const prods = prodsR.submissions || [];
+    const agrees = agreeR.submissions || [];
+
+    let html = `<div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchModalTab(this,'vd-overview')">Overview</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'vd-reps')">Representatives (${reps.length})</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'vd-products')">Products (${prods.length})</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'vd-agreements')">Agreements (${agrees.length})</button>
+    </div>`;
+
+    html += `<div id="vd-overview" class="modal-panel active"><div class="detail-grid">`;
+    for (const [label, key] of [['Vendor ID','Vendor ID'],['Name','Vendor Name'],['Type','Vendor Type'],['Status','Status'],['Contract','Contract Status'],['Risk','Risk Level'],['Contact','Primary Contact'],['Email','Email'],['Phone','Phone'],['Website','Website'],['Address','Address'],['City','City'],['State','State'],['Zip','Zip']]) {
+      html += `<div class="detail-field"><label>${label}</label><div class="val">${key === 'Status' || key === 'Contract Status' || key === 'Risk Level' ? badge(v[key]) : esc(v[key])}</div></div>`;
+    }
+    html += `</div></div>`;
+
+    html += `<div id="vd-reps" class="modal-panel"><table class="data-table"><thead><tr><th>Rep ID</th><th>Name</th><th>Title</th><th>Department</th><th>Status</th><th>Compliance</th></tr></thead><tbody>`;
+    for (const r of reps) {
+      const rv = r.values || {};
+      html += `<tr onclick="closeModal();openRepDetail('${esc(rv['Rep ID'])}')"><td>${esc(rv['Rep ID'])}</td><td>${esc(rv['First Name'])} ${esc(rv['Last Name'])}</td><td>${esc(rv['Title'])}</td><td>${esc(rv['Primary Department'])}</td><td>${badge(rv['Status'])}</td><td>${badge(rv['Compliance Status'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    html += `<div id="vd-products" class="modal-panel"><table class="data-table"><thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Department</th><th>OR Access</th><th>Sterile</th></tr></thead><tbody>`;
+    for (const p of prods) {
+      const pv = p.values || {};
+      html += `<tr><td>${esc(pv['Product ID'])}</td><td>${esc(pv['Product Name'])}</td><td>${esc(pv['Category'])}</td><td>${esc(pv['Department'])}</td><td>${esc(pv['Requires OR Access'])}</td><td>${esc(pv['Requires Sterile Environment'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    html += `<div id="vd-agreements" class="modal-panel"><table class="data-table"><thead><tr><th>Agreement ID</th><th>Type</th><th>Effective</th><th>Expiration</th><th>Value</th><th>Status</th></tr></thead><tbody>`;
+    for (const a of agrees) {
+      const av = a.values || {};
+      html += `<tr><td>${esc(av['Agreement ID'])}</td><td>${esc(av['Agreement Type'])}</td><td>${esc(av['Effective Date'])}</td><td>${esc(av['Expiration Date'])}</td><td>${esc(av['Value'])}</td><td>${badge(av['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    document.getElementById('modal-body').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ── Representatives ── */
+let repPageKeys = [null], repHasNext = false;
+async function loadReps(page = 1) {
+  const status = document.getElementById('rep-status-filter').value;
+  const comp = document.getElementById('rep-comp-filter').value;
+  const title = document.getElementById('rep-title-filter').value;
+  const search = document.getElementById('rep-search').value.toLowerCase().trim();
+
+  let kql = '';
+  if (status && comp) kql = `values[Status] = "${status}" AND values[Compliance Status] = "${comp}"`;
+  else if (status) kql = `values[Status] = "${status}"`;
+  else if (comp) kql = `values[Compliance Status] = "${comp}"`;
+
+  const lastCreatedAt = page > 1 ? repPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('representatives', kql || null, lastCreatedAt);
+    let subs = r.submissions || [];
+    if (title) subs = subs.filter(s => s.values?.['Title'] === title);
+    if (search) subs = subs.filter(s => {
+      const v = s.values || {};
+      return `${v['First Name']} ${v['Last Name']}`.toLowerCase().includes(search) || (v['Rep ID'] || '').toLowerCase().includes(search) || (v['Vendor Name'] || '').toLowerCase().includes(search);
+    });
+    repHasNext = !!r.nextPageToken;
+    if (repHasNext && subs.length) repPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>Rep ID</th><th>Name</th><th>Vendor</th><th>Title</th><th>Department</th><th>Status</th><th>Compliance</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      html += `<tr onclick="openRepDetail('${esc(v['Rep ID'])}')"><td>${esc(v['Rep ID'])}</td><td><strong>${esc(v['First Name'])} ${esc(v['Last Name'])}</strong></td><td>${esc(v['Vendor Name'])}</td><td>${esc(v['Title'])}</td><td>${esc(v['Primary Department'])}</td><td>${badge(v['Status'])}</td><td>${badge(v['Compliance Status'])}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No representatives found</div>';
+    document.getElementById('reps-table').innerHTML = html;
+    renderPag('reps-pag', page, repHasNext, 'loadReps');
+  } catch (e) {
+    document.getElementById('reps-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function openRepDetail(repId) {
+  document.getElementById('modal-title').textContent = 'Representative Details';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await apiFetch(`/api/vcred/rep/${encodeURIComponent(repId)}/summary`);
+    const r = d.rep;
+    let html = `<div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchModalTab(this,'rd-overview')">Overview</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'rd-creds')">Credentials (${d.credentials.length})</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'rd-access')">Access (${d.access.length})</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'rd-visits')">Visits (${d.visits.length})</button>
+    </div>`;
+
+    html += `<div id="rd-overview" class="modal-panel active"><div class="detail-grid">`;
+    for (const [label, key] of [['Rep ID','Rep ID'],['Name',null],['Vendor','Vendor Name'],['Title','Title'],['Email','Email'],['Phone','Phone'],['Department','Primary Department'],['Specialization','Specialization'],['Status','Status'],['Compliance','Compliance Status'],['Badge Issued','Badge Issued'],['Badge Expiration','Badge Expiration'],['Last Visit','Last Visit Date']]) {
+      const val = key === null ? `${r['First Name']} ${r['Last Name']}` : r[key];
+      html += `<div class="detail-field"><label>${label}</label><div class="val">${(key === 'Status' || key === 'Compliance Status') ? badge(val) : esc(val)}</div></div>`;
+    }
+    html += `</div>`;
+    // Transition buttons
+    const transitions = { Active: ['Suspended', 'Under Review'], Suspended: ['Active', 'Under Review', 'Denied'], Pending: ['Active', 'Denied'], 'Under Review': ['Active', 'Suspended', 'Denied'], Expired: ['Active', 'Pending'], Denied: ['Pending'] };
+    const allowed = transitions[r['Status']] || [];
+    if (allowed.length) {
+      html += `<div style="margin-top:16px;display:flex;gap:8px">`;
+      for (const s of allowed) {
+        const cls = s === 'Active' ? 'btn-green' : (s === 'Denied' || s === 'Suspended') ? 'btn-red' : 'btn-orange';
+        html += `<button class="btn ${cls}" onclick="transitionRep('${esc(r['Rep ID'])}','${s}')">${s}</button>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+
+    // Credentials
+    html += `<div id="rd-creds" class="modal-panel"><table class="data-table"><thead><tr><th>Type</th><th>Category</th><th>Issuer</th><th>Issue Date</th><th>Expiration</th><th>Result</th><th>Status</th></tr></thead><tbody>`;
+    for (const c of d.credentials) {
+      html += `<tr><td>${esc(c['Credential Type'])}</td><td>${esc(c['Credential Category'])}</td><td>${esc(c['Issuing Authority'])}</td><td>${esc(c['Issue Date'])}</td><td>${esc(c['Expiration Date'])}</td><td>${esc(c['Result'])}</td><td>${badge(c['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    // Access
+    html += `<div id="rd-access" class="modal-panel"><table class="data-table"><thead><tr><th>Department</th><th>Level</th><th>Purpose</th><th>Sponsor</th><th>Expiration</th><th>Status</th></tr></thead><tbody>`;
+    for (const a of d.access) {
+      html += `<tr><td>${esc(a['Department'])}</td><td>${esc(a['Access Level'])}</td><td>${esc(a['Purpose'])}</td><td>${esc(a['Sponsoring Physician'])}</td><td>${esc(a['Expiration Date'])}</td><td>${badge(a['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    // Visits
+    html += `<div id="rd-visits" class="modal-panel"><table class="data-table"><thead><tr><th>Date</th><th>Department</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Purpose</th><th>Status</th></tr></thead><tbody>`;
+    for (const v of d.visits) {
+      html += `<tr><td>${esc(v['Check-In Date'])}</td><td>${esc(v['Department'])}</td><td>${esc(v['Check-In Time'])}</td><td>${esc(v['Check-Out Time'])}</td><td>${v['Duration Minutes'] ? v['Duration Minutes'] + ' min' : ''}</td><td>${esc(v['Purpose'])}</td><td>${badge(v['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+
+    document.getElementById('modal-body').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function transitionRep(repId, newStatus) {
+  try {
+    await apiPost(`/api/vcred/reps/${encodeURIComponent(repId)}/transition`, { status: newStatus, performer: USERNAME });
+    toast(`Rep ${repId} → ${newStatus}`, 'success');
+    closeModal();
+    loadReps();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Access ── */
+let accessPageKeys = [null], accessHasNext = false;
+function switchAccessSub(sub) {
+  currentAccessSub = sub;
+  document.querySelectorAll('#access-subtabs .subtab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  accessPageKeys = [null]; accessHasNext = false;
+  loadAccess();
+}
+
+async function loadAccess(page = 1) {
+  const dept = document.getElementById('access-dept-filter').value;
+  const level = document.getElementById('access-level-filter').value;
+
+  let kql = '';
+  if (currentAccessSub === 'active') kql = 'values[Status] = "Active"';
+  else if (currentAccessSub === 'pending') kql = 'values[Status] = "Pending"';
+
+  if (dept) {
+    if (currentAccessSub === 'active' || currentAccessSub === 'pending') kql += ` AND values[Department] = "${dept}"`;
+    else kql = `values[Department] = "${dept}"`;
+  }
+
+  const lastCreatedAt = page > 1 ? accessPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('access-authorizations', kql || null, lastCreatedAt);
+    let subs = r.submissions || [];
+    if (level) subs = subs.filter(s => s.values?.['Access Level'] === level);
+    accessHasNext = !!r.nextPageToken;
+    if (accessHasNext && subs.length) accessPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>Auth ID</th><th>Rep</th><th>Vendor</th><th>Department</th><th>Level</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      const st = v['Status'];
+      let actions = '';
+      if (st === 'Pending') actions = `<button class="btn btn-green btn-sm" onclick="event.stopPropagation();transitionAccess('${esc(v['Auth ID'])}','Active')">Approve</button> <button class="btn btn-red btn-sm" onclick="event.stopPropagation();transitionAccess('${esc(v['Auth ID'])}','Denied')">Deny</button>`;
+      else if (st === 'Active') actions = `<button class="btn btn-orange btn-sm" onclick="event.stopPropagation();transitionAccess('${esc(v['Auth ID'])}','Suspended')">Suspend</button> <button class="btn btn-red btn-sm" onclick="event.stopPropagation();transitionAccess('${esc(v['Auth ID'])}','Revoked')">Revoke</button>`;
+      else if (st === 'Suspended') actions = `<button class="btn btn-green btn-sm" onclick="event.stopPropagation();transitionAccess('${esc(v['Auth ID'])}','Active')">Restore</button>`;
+      html += `<tr><td>${esc(v['Auth ID'])}</td><td>${esc(v['Rep Name'])}</td><td>${esc(v['Vendor Name'])}</td><td>${esc(v['Department'])}</td><td>${esc(v['Access Level'])}</td><td>${esc(v['Purpose'])}</td><td>${badge(st)}</td><td>${actions}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No access authorizations found</div>';
+    document.getElementById('access-table').innerHTML = html;
+    renderPag('access-pag', page, accessHasNext, 'loadAccess');
+  } catch (e) {
+    document.getElementById('access-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function transitionAccess(authId, newStatus) {
+  try {
+    await apiPost(`/api/vcred/access/${encodeURIComponent(authId)}/transition`, { status: newStatus, performer: USERNAME });
+    toast(`Access ${authId} → ${newStatus}`, 'success');
+    loadAccess();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Visits ── */
+let visitPageKeys = [null], visitHasNext = false;
+function switchVisitSub(sub) {
+  currentVisitSub = sub;
+  document.querySelectorAll('#visit-subtabs .subtab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  visitPageKeys = [null]; visitHasNext = false;
+  loadVisits();
+}
+
+async function loadVisits(page = 1) {
+  const status = document.getElementById('visit-status-filter').value;
+  const dept = document.getElementById('visit-dept-filter').value;
+  const search = document.getElementById('visit-search').value.toLowerCase().trim();
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  let kql = '';
+  if (currentVisitSub === 'today') {
+    kql = `values[Check-In Date] = "${todayStr}"`;
+    if (status) kql += ` AND values[Status] = "${status}"`;
+  } else {
+    if (status) kql = `values[Status] = "${status}"`;
+  }
+  if (dept) {
+    if (currentVisitSub === 'today') kql += ` AND values[Department] = "${dept}"`;
+    else kql = kql ? kql + ` AND values[Department] = "${dept}"` : `values[Department] = "${dept}"`;
+  }
+
+  const lastCreatedAt = page > 1 ? visitPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('visits', kql || null, lastCreatedAt);
+    let subs = r.submissions || [];
+    if (search) subs = subs.filter(s => (s.values?.['Rep Name'] || '').toLowerCase().includes(search) || (s.values?.['Vendor Name'] || '').toLowerCase().includes(search));
+    visitHasNext = !!r.nextPageToken;
+    if (visitHasNext && subs.length) visitPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>Visit ID</th><th>Rep</th><th>Vendor</th><th>Department</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      const actions = v['Status'] === 'Checked In' ? `<button class="btn btn-teal btn-sm" onclick="event.stopPropagation();checkoutVisit('${esc(v['Visit ID'])}')">Check Out</button>` : '';
+      html += `<tr><td>${esc(v['Visit ID'])}</td><td>${esc(v['Rep Name'])}</td><td>${esc(v['Vendor Name'])}</td><td>${esc(v['Department'])}</td><td>${esc(v['Check-In Date'])}</td><td>${esc(v['Check-In Time'])}</td><td>${esc(v['Check-Out Time'])}</td><td>${v['Duration Minutes'] ? v['Duration Minutes'] + ' min' : ''}</td><td>${esc(v['Purpose'])}</td><td>${badge(v['Status'])}</td><td>${actions}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No visits found</div>';
+    document.getElementById('visits-table').innerHTML = html;
+    renderPag('visits-pag', page, visitHasNext, 'loadVisits');
+  } catch (e) {
+    document.getElementById('visits-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function checkoutVisit(visitId) {
+  try {
+    const r = await apiPost(`/api/vcred/visits/${encodeURIComponent(visitId)}/checkout`, {});
+    toast(`Checked out. Duration: ${r.duration} min`, 'success');
+    loadVisits();
+    loadDashboard();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+/* ── Compliance Tab ── */
+function switchCompSub(sub) {
+  currentCompSub = sub;
+  document.querySelectorAll('#comp-subtabs .subtab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.comp-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('comp-' + sub).style.display = 'block';
+  loadCompTab();
+}
+
+function loadCompTab() {
+  if (currentCompSub === 'overview') loadCompOverview();
+  else if (currentCompSub === 'expiring') loadCompExpiring();
+  else if (currentCompSub === 'incidents') loadIncidents();
+  else if (currentCompSub === 'checks') loadChecks();
+}
+
+async function loadCompOverview() {
+  const el = document.getElementById('comp-overview');
+  el.innerHTML = '<div class="loading">Loading compliance stats...</div>';
+  try {
+    const d = await apiFetch('/api/vcred/stats/compliance');
+    let html = '<div class="card"><h3>Compliance by Category</h3>';
+    for (const [cat, s] of Object.entries(d.categories)) {
+      const pct = s.total > 0 ? (s.active / s.total * 100).toFixed(0) : 0;
+      const color = pct >= 80 ? 'green' : pct >= 50 ? 'orange' : 'red';
+      html += `<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:13px"><strong>${esc(cat)}</strong><span>${pct}% compliant (${s.active}/${s.total})</span></div>` +
+        `<div class="progress-bar"><div class="progress-fill progress-${color}" style="width:${pct}%"></div></div>` +
+        `<div style="font-size:11px;color:var(--gray);margin-top:2px">Active: ${s.active} | Expiring: ${s.expiring} | Expired: ${s.expired} | Pending: ${s.pending}</div></div>`;
+    }
+    html += '</div>';
+
+    html += '<div class="card"><h3>By Credential Type</h3><table class="data-table"><thead><tr><th>Type</th><th>Total</th><th>Verified</th><th>Pending</th><th>Expired</th></tr></thead><tbody>';
+    for (const [t, s] of Object.entries(d.byType)) {
+      html += `<tr><td>${esc(t)}</td><td>${s.total}</td><td>${s.verified}</td><td>${s.pending}</td><td>${s.expired}</td></tr>`;
+    }
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function loadCompExpiring() {
+  const el = document.getElementById('comp-expiring');
+  el.innerHTML = '<div class="loading">Loading expiring credentials...</div>';
+  try {
+    const d = await apiFetch('/api/vcred/report/expiring');
+    let html = '<div class="card"><h3>Credentials Expiring Within 90 Days</h3><table class="data-table"><thead><tr><th>Credential ID</th><th>Rep</th><th>Vendor</th><th>Type</th><th>Category</th><th>Expiration</th><th>Status</th></tr></thead><tbody>';
+    for (const c of d.items) {
+      html += `<tr><td>${esc(c.credId)}</td><td>${esc(c.repName)}</td><td>${esc(c.vendor)}</td><td>${esc(c.type)}</td><td>${esc(c.category)}</td><td>${esc(c.expDate)}</td><td>${badge(c.status)}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!d.items.length) html = '<div class="card"><div style="color:var(--gray);font-size:13px;padding:8px">No credentials expiring within 90 days</div></div>';
+    html += '</div>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+let incPageKeys = [null], incHasNext = false;
+async function loadIncidents(page = 1) {
+  const lastCreatedAt = page > 1 ? incPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('incidents', null, lastCreatedAt);
+    const subs = r.submissions || [];
+    incHasNext = !!r.nextPageToken;
+    if (incHasNext && subs.length) incPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>ID</th><th>Rep</th><th>Type</th><th>Severity</th><th>Department</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      const st = v['Status'];
+      let actions = '';
+      const trans = { New: ['Under Investigation', 'Dismissed'], 'Under Investigation': ['Confirmed', 'Dismissed', 'Escalated'], Escalated: ['Confirmed', 'Resolved'], Confirmed: ['Resolved'] };
+      const allowed = trans[st] || [];
+      for (const ns of allowed) {
+        const cls = ns === 'Resolved' ? 'btn-green' : ns === 'Dismissed' ? 'btn-red' : 'btn-orange';
+        actions += `<button class="btn ${cls} btn-sm" onclick="event.stopPropagation();transitionIncident('${esc(v['Incident ID'])}','${ns}')">${ns}</button> `;
+      }
+      html += `<tr><td>${esc(v['Incident ID'])}</td><td>${esc(v['Rep Name'])}</td><td>${esc(v['Incident Type'])}</td><td>${badge(v['Severity'])}</td><td>${esc(v['Department'])}</td><td>${esc(v['Incident Date'])}</td><td>${badge(st)}</td><td>${actions}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No incidents</div>';
+    document.getElementById('incidents-table').innerHTML = html;
+    renderPag('incidents-pag', page, incHasNext, 'loadIncidents');
+  } catch (e) {
+    document.getElementById('incidents-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function transitionIncident(incId, newStatus) {
+  try {
+    await apiPost(`/api/vcred/incidents/${encodeURIComponent(incId)}/transition`, { status: newStatus, performer: USERNAME });
+    toast(`Incident ${incId} → ${newStatus}`, 'success');
+    loadIncidents();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+let checkPageKeys = [null], checkHasNext = false;
+async function loadChecks(page = 1) {
+  const lastCreatedAt = page > 1 ? checkPageKeys[page - 1] : null;
+  try {
+    const r = await kqlFetch('compliance-checks', null, lastCreatedAt);
+    const subs = r.submissions || [];
+    checkHasNext = !!r.nextPageToken;
+    if (checkHasNext && subs.length) checkPageKeys[page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table class="data-table"><thead><tr><th>Check ID</th><th>Rep</th><th>Vendor</th><th>Type</th><th>Date</th><th>Result</th><th>Next Due</th><th>Status</th></tr></thead><tbody>';
+    for (const s of subs) {
+      const v = s.values || {};
+      html += `<tr><td>${esc(v['Check ID'])}</td><td>${esc(v['Rep Name'])}</td><td>${esc(v['Vendor Name'])}</td><td>${esc(v['Check Type'])}</td><td>${esc(v['Check Date'])}</td><td>${badge(v['Result'])}</td><td>${esc(v['Next Check Due'])}</td><td>${badge(v['Status'])}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    if (!subs.length) html = '<div class="loading">No compliance checks</div>';
+    document.getElementById('checks-table').innerHTML = html;
+    renderPag('checks-pag', page, checkHasNext, 'loadChecks');
+  } catch (e) {
+    document.getElementById('checks-table').innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ── Reports ── */
+async function generateReport(type) {
+  const el = document.getElementById('report-output');
+  el.innerHTML = '<div class="loading">Generating report...</div>';
+  try {
+    const d = await apiFetch(`/api/vcred/report/${type}`);
+    let html = `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0">${esc(d.report)}</h3><button class="btn btn-teal" onclick="exportCSV()">Export CSV</button></div>`;
+
+    const items = d.vendors || d.items || [];
+    if (!items.length) {
+      html += '<div style="color:var(--gray);font-size:13px">No data</div>';
+    } else {
+      const keys = Object.keys(items[0]);
+      html += '<table class="data-table" id="report-table"><thead><tr>';
+      for (const k of keys) html += `<th>${esc(k)}</th>`;
+      html += '</tr></thead><tbody>';
+      for (const item of items) {
+        html += '<tr>';
+        for (const k of keys) {
+          const val = item[k];
+          html += `<td>${typeof val === 'number' ? val : esc(String(val || ''))}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div class="loading" style="color:var(--red)">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function exportCSV() {
+  const table = document.getElementById('report-table');
+  if (!table) return;
+  const rows = [];
+  for (const tr of table.querySelectorAll('tr')) {
+    const cells = [];
+    for (const td of tr.querySelectorAll('th, td')) {
+      cells.push('"' + td.textContent.replace(/"/g, '""') + '"');
+    }
+    rows.push(cells.join(','));
+  }
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vendor-cred-report.csv';
+  a.click();
+}
+
+/* ── Modal Helpers ── */
+function switchModalTab(btn, panelId) {
+  btn.parentElement.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const body = document.getElementById('modal-body');
+  body.querySelectorAll('.modal-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+/* ── Init ── */
+if (restoreSession()) enterApp();
+</script>
+</body>
+</html>

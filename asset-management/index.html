@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Management</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; font-size: 14px; }
+
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--blue-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+#app { display:none; }
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; margin-right:32px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:4px; flex:1; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.6); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition: all .2s; }
+.topbar nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar nav button.active { color:white; background:var(--orange); }
+.topbar .user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.topbar .user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+.console { display:none; padding:24px; max-width:1400px; margin:0 auto; }
+.console.active { display:block; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+.subtabs { display:flex; gap:4px; margin-bottom:20px; }
+.subtabs button { padding:8px 16px; border:none; background:var(--white); color:var(--gray); border-radius:8px; font-weight:600; font-size:13px; box-shadow:var(--shadow); }
+.subtabs button.active { background:var(--orange); color:white; }
+.subtabs button:hover:not(.active) { background:var(--light); }
+.subtab-panel { display:none; }
+.subtab-panel.active { display:block; }
+
+.kpi-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.kpi { background:var(--white); padding:16px 20px; border-radius:12px; box-shadow:var(--shadow); flex:1; min-width:140px; }
+.kpi .label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; margin-bottom:4px; }
+.kpi .val { font-size:28px; font-weight:800; color:var(--blue); }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.green .val { color:var(--green); } .kpi.red .val { color:var(--red); }
+.kpi.orange .val { color:var(--orange); } .kpi.yellow .val { color:var(--yellow); }
+.kpi.purple .val { color:var(--purple); } .kpi.teal .val { color:var(--teal); }
+
+.card { background:var(--white); border-radius:12px; box-shadow:var(--shadow); padding:20px; margin-bottom:16px; }
+.card h3 { font-size:15px; color:var(--blue); margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+.toolbar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.toolbar input, .toolbar select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; outline:none; }
+.toolbar input:focus, .toolbar select:focus { border-color:var(--orange); }
+.toolbar input[type="text"] { min-width:200px; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:10px 12px; background:var(--light); color:var(--gray); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid var(--border); position:sticky; top:0; }
+td { padding:10px 12px; border-bottom:1px solid var(--border); }
+tr:hover { background:var(--light); }
+
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-active { background:#E8F5E9; color:#2E7D32; }
+.badge-instorage { background:#E3F2FD; color:#1565C0; }
+.badge-maintenance { background:#FFF8E1; color:#F57F17; }
+.badge-retired { background:#EFEBE9; color:#6D4C41; }
+.badge-disposed { background:#FCE4EC; color:#C62828; }
+.badge-lost { background:#F3E5F5; color:#7B1FA2; }
+.badge-hardware { background:#E8F5E9; color:#2E7D32; }
+.badge-software { background:#E3F2FD; color:#1565C0; }
+.badge-furniture { background:#FFF8E1; color:#F57F17; }
+.badge-vehicle { background:#F3E5F5; color:#7B1FA2; }
+.badge-equipment { background:#EFEBE9; color:#6D4C41; }
+.badge-excellent { background:#E8F5E9; color:#2E7D32; }
+.badge-good { background:#E3F2FD; color:#1565C0; }
+.badge-fair { background:#FFF8E1; color:#F57F17; }
+.badge-poor { background:#FCE4EC; color:#C62828; }
+.badge-unknown { background:#ECEFF1; color:#546E7A; }
+.badge-standard { background:#E3F2FD; color:#1565C0; }
+.badge-extended { background:#E8F5E9; color:#2E7D32; }
+.badge-none { background:#ECEFF1; color:#546E7A; }
+.badge-expired { background:#FCE4EC; color:#C62828; }
+.badge-expiring { background:#FFF8E1; color:#F57F17; }
+
+.hbar { margin-bottom:8px; }
+.hbar-label { display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:3px; }
+.hbar-track { height:20px; background:var(--light); border-radius:4px; overflow:hidden; }
+.hbar-fill { height:100%; border-radius:4px; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; font-size:10px; font-weight:700; color:white; min-width:20px; transition:width .4s; }
+
+.pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:16px; }
+.pagination button { padding:6px 14px; border:1px solid var(--border); background:var(--white); border-radius:6px; font-size:12px; font-weight:600; }
+.pagination button:disabled { opacity:.4; cursor:default; }
+.pagination button:hover:not(:disabled) { border-color:var(--orange); color:var(--orange); }
+.pagination span { font-size:12px; color:var(--gray); }
+
+.btn { padding:8px 16px; border:none; border-radius:8px; font-weight:600; font-size:13px; }
+.btn-primary { background:var(--orange); color:white; } .btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--gray); border:1px solid var(--border); } .btn-secondary:hover { background:var(--border); }
+.btn-sm { padding:4px 10px; font-size:11px; }
+
+.form-row { margin-bottom:12px; }
+.form-row label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; }
+.form-row input, .form-row select, .form-row textarea { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; outline:none; }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color:var(--orange); }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+.form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+#modal.show { display:flex; }
+#modal-content { background:var(--white); border-radius:16px; padding:28px; max-width:900px; width:95%; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+#modal-content h2 { font-size:18px; color:var(--blue); margin-bottom:16px; }
+
+#toast { position:fixed; bottom:20px; right:20px; background:var(--blue); color:white; padding:12px 24px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transform:translateY(100px); opacity:0; transition:all .3s; z-index:300; }
+#toast.show { transform:translateY(0); opacity:1; }
+
+.dep-bar { display:flex; height:12px; border-radius:4px; overflow:hidden; margin-top:4px; }
+.dep-bar div { transition: width .4s; }
+
+.owner-card { background:var(--white); border-radius:10px; padding:14px; box-shadow:var(--shadow); margin-bottom:10px; }
+.owner-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.owner-header strong { font-size:14px; color:var(--blue); }
+.owner-assets { font-size:12px; color:var(--gray); }
+.owner-list { font-size:12px; }
+.owner-list div { padding:3px 0; border-bottom:1px solid var(--light); display:flex; justify-content:space-between; }
+
+@media (max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } .form-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Asset Management</h1>
+    <p class="sub">Financial visibility, warranties, ownership & lifecycle</p>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="Leave blank for local proxy">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Asset<span>Manager</span></div>
+    <nav>
+      <button class="active" onclick="switchConsole('catalog')">Asset Catalog</button>
+      <button onclick="switchConsole('financial')">Financial</button>
+      <button onclick="switchConsole('assign')">Assignments</button>
+      <button onclick="switchConsole('warranty')">Warranty Center</button>
+    </nav>
+    <div class="user-info"><strong id="user-display"></strong> <button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- ═══════ ASSET CATALOG ═══════ -->
+  <div id="console-catalog" class="console active">
+    <div class="page-title">Asset Catalog</div>
+    <div class="page-sub">Browse, search, and manage all organizational assets</div>
+    <div id="catalog-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="cat-search" placeholder="Search assets… (Enter to search)" onkeydown="if(event.key==='Enter')catalogFilterChanged()">
+      <select id="cat-category" onchange="catalogFilterChanged()"><option value="">All Categories</option><option>Hardware</option><option>Software</option><option>Furniture</option><option>Vehicle</option><option>Equipment</option></select>
+      <select id="cat-status" onchange="catalogFilterChanged()"><option value="">All Statuses</option><option>Active</option><option>In Storage</option><option>Maintenance</option><option>Retired</option><option>Disposed</option><option>Lost</option></select>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto;max-height:600px;overflow-y:auto;">
+      <table>
+        <thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Status</th><th>Assigned To</th><th>Department</th><th>Location</th><th>Current Value</th></tr></thead>
+        <tbody id="cat-table"></tbody>
+      </table>
+      </div>
+      <div class="pagination" id="cat-pagination"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ FINANCIAL ═══════ -->
+  <div id="console-financial" class="console">
+    <div class="page-title">Financial Overview</div>
+    <div class="page-sub">Asset values, depreciation, and cost analysis</div>
+    <div class="subtabs">
+      <button class="active" onclick="switchFinTab('dashboard')">Dashboard</button>
+      <button onclick="switchFinTab('depreciation')">Depreciation</button>
+      <button onclick="switchFinTab('purchases')">Purchases</button>
+    </div>
+    <div id="fin-dashboard" class="subtab-panel active">
+      <div id="fin-kpis" class="kpi-row"></div>
+      <div class="grid-2">
+        <div class="card"><h3>Value by Category</h3><div id="fin-by-cat"></div></div>
+        <div class="card"><h3>Value by Department</h3><div id="fin-by-dept"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Cost by Status</h3><div id="fin-by-status"></div></div>
+        <div class="card"><h3>Top 10 Most Valuable Assets</h3><div id="fin-top10"></div></div>
+      </div>
+    </div>
+    <div id="fin-depreciation" class="subtab-panel">
+      <div id="dep-kpis" class="kpi-row"></div>
+      <div class="card"><h3>Depreciation by Category</h3><div id="dep-by-cat"></div></div>
+      <div class="card"><h3>Fully Depreciated Assets</h3>
+        <div style="max-height:400px;overflow-y:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Purchase Cost</th><th>Age</th><th>Useful Life</th></tr></thead>
+        <tbody id="dep-table"></tbody></table></div>
+      </div>
+    </div>
+    <div id="fin-purchases" class="subtab-panel">
+      <div class="card"><h3>Monthly Spend (Last 24 Months)</h3><div id="pur-chart"></div></div>
+      <div class="card"><h3>Recent Purchases</h3>
+        <div style="max-height:400px;overflow-y:auto;">
+        <table><thead><tr><th>Date</th><th>Asset ID</th><th>Name</th><th>Category</th><th>Cost</th><th>Department</th></tr></thead>
+        <tbody id="pur-table"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ ASSIGNMENTS ═══════ -->
+  <div id="console-assign" class="console">
+    <div class="page-title">Assignments &amp; Ownership</div>
+    <div class="page-sub">Who owns what and where assets are located</div>
+    <div class="subtabs">
+      <button class="active" onclick="switchAssignTab('people')">By Person</button>
+      <button onclick="switchAssignTab('department')">By Department</button>
+      <button onclick="switchAssignTab('location')">By Location</button>
+      <button onclick="switchAssignTab('unassigned')">Unassigned</button>
+    </div>
+    <div id="assign-people" class="subtab-panel active">
+      <div id="people-kpis" class="kpi-row"></div>
+      <div class="toolbar"><input type="text" id="people-search" placeholder="Search by person..." oninput="renderPeople()"></div>
+      <div id="people-cards"></div>
+    </div>
+    <div id="assign-department" class="subtab-panel">
+      <div id="dept-kpis" class="kpi-row"></div>
+      <div id="dept-cards" class="grid-2"></div>
+    </div>
+    <div id="assign-location" class="subtab-panel">
+      <div id="loc-kpis" class="kpi-row"></div>
+      <div id="loc-cards" class="grid-3"></div>
+    </div>
+    <div id="assign-unassigned" class="subtab-panel">
+      <div class="card"><h3>Unassigned Active Assets</h3>
+        <div style="max-height:500px;overflow-y:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Status</th><th>Department</th><th>Location</th><th>Value</th></tr></thead>
+        <tbody id="unassigned-table"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ WARRANTY CENTER ═══════ -->
+  <div id="console-warranty" class="console">
+    <div class="page-title">Warranty Center</div>
+    <div class="page-sub">Warranty tracking, expirations, and coverage analysis</div>
+    <div id="warranty-kpis" class="kpi-row"></div>
+    <div class="subtabs">
+      <button class="active" onclick="switchWarrantyTab('overview')">Overview</button>
+      <button onclick="switchWarrantyTab('expiring')">Expiring Soon</button>
+      <button onclick="switchWarrantyTab('expired')">Expired</button>
+      <button onclick="switchWarrantyTab('all')">All Warranties</button>
+    </div>
+    <div id="warranty-overview" class="subtab-panel active">
+      <div class="grid-2">
+        <div class="card"><h3>Warranty Coverage by Category</h3><div id="war-by-cat"></div></div>
+        <div class="card"><h3>Expirations by Month</h3><div id="war-timeline"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Warranty Type Distribution</h3><div id="war-by-type"></div></div>
+        <div class="card"><h3>Top Warranty Providers</h3><div id="war-providers"></div></div>
+      </div>
+    </div>
+    <div id="warranty-expiring" class="subtab-panel">
+      <div class="card"><h3>Expiring Within 90 Days</h3>
+        <div style="max-height:500px;overflow-y:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Warranty Expires</th><th>Days Left</th><th>Provider</th><th>Type</th><th>Value</th></tr></thead>
+        <tbody id="expiring-table"></tbody></table></div>
+      </div>
+    </div>
+    <div id="warranty-expired" class="subtab-panel">
+      <div class="card"><h3>Expired Warranties (Active Assets)</h3>
+        <div style="max-height:500px;overflow-y:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Expired On</th><th>Days Ago</th><th>Provider</th><th>Value</th></tr></thead>
+        <tbody id="expired-table"></tbody></table></div>
+      </div>
+    </div>
+    <div id="warranty-all" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="wall-search" placeholder="Search warranties..." oninput="renderAllWarranties()">
+        <select id="wall-status" onchange="renderAllWarranties()"><option value="">All</option><option>Active</option><option>Expiring</option><option>Expired</option><option>None</option></select>
+        <select id="wall-provider" onchange="renderAllWarranties()"><option value="">All Providers</option></select>
+      </div>
+      <div class="card">
+        <div style="max-height:500px;overflow-y:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Warranty Status</th><th>Expires</th><th>Provider</th><th>Type</th></tr></thead>
+        <tbody id="wall-table"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal"><div id="modal-content"></div></div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  API LAYER
+// ═══════════════════════════════════════
+let API = { url:'', auth:'', user:'' };
+
+async function api(path, opts={}) {
+  const res = await fetch(API.url + '/app/api/v1' + path, {
+    ...opts, headers: { 'Authorization':'Basic '+API.auth, 'Content-Type':'application/json', 'Accept':'application/json', ...(opts.headers||{}) }
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`HTTP ${res.status}: ${body.substring(0, 200)}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function fetchAllAssets() {
+  let all = [], lastCreatedAt = null;
+  for (let i = 0; i < 40; i++) {
+    let kql = lastCreatedAt ? `createdAt < "${lastCreatedAt}"` : '';
+    const qs = new URLSearchParams({ include:'values,details', limit:'25', ...(kql?{q:kql}:{}) });
+    const data = await api(`/kapps/asset-management/forms/assets/submissions?${qs}`);
+    const subs = data.submissions || [];
+    all = all.concat(subs);
+    if (!data.nextPageToken || subs.length < 25) break;
+    lastCreatedAt = subs[subs.length - 1].createdAt;
+  }
+  return all;
+}
+
+function v(sub, f) { return sub.values?.[f] || ''; }
+function parseMoney(s) { return parseFloat(String(s||'0').replace(/[$,]/g,''))||0; }
+function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function pct(n,d) { return d ? Math.round(n/d*100)+'%' : '0%'; }
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+let activeConsole = 'catalog';
+function switchConsole(c) {
+  activeConsole = c;
+  document.querySelectorAll('.console').forEach(el => el.classList.remove('active'));
+  document.getElementById('console-'+c).classList.add('active');
+  const btns = document.querySelectorAll('.topbar nav button');
+  const consoles = ['catalog','financial','assign','warranty'];
+  btns.forEach((b,i) => b.classList.toggle('active', consoles[i]===c));
+
+  if (c === 'catalog') { renderCatalog(); return; }
+
+  // Financial, Assignments, Warranty all need the full dataset
+  if (!fullDataLoaded) {
+    const renderTab = () => {
+      if (c==='financial') renderFinDashboard();
+      if (c==='assign') renderPeople();
+      if (c==='warranty') renderWarrantyOverview();
+    };
+    loadFullDataset().then(renderTab);
+    return;
+  }
+  if (c==='financial') renderFinDashboard();
+  if (c==='assign') renderPeople();
+  if (c==='warranty') renderWarrantyOverview();
+}
+function switchFinTab(t) {
+  document.querySelectorAll('#console-financial .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('fin-'+t).classList.add('active');
+  document.querySelectorAll('#console-financial .subtabs button').forEach((b,i) => b.classList.toggle('active', ['dashboard','depreciation','purchases'][i]===t));
+  if (t==='dashboard') renderFinDashboard();
+  if (t==='depreciation') renderDepreciation();
+  if (t==='purchases') renderPurchases();
+}
+function switchAssignTab(t) {
+  document.querySelectorAll('#console-assign .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('assign-'+t).classList.add('active');
+  document.querySelectorAll('#console-assign .subtabs button').forEach((b,i) => b.classList.toggle('active', ['people','department','location','unassigned'][i]===t));
+  if (t==='people') renderPeople();
+  if (t==='department') renderDepartments();
+  if (t==='location') renderLocations();
+  if (t==='unassigned') renderUnassigned();
+}
+function switchWarrantyTab(t) {
+  document.querySelectorAll('#console-warranty .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('warranty-'+t).classList.add('active');
+  document.querySelectorAll('#console-warranty .subtabs button').forEach((b,i) => b.classList.toggle('active', ['overview','expiring','expired','all'][i]===t));
+  if (t==='overview') renderWarrantyOverview();
+  if (t==='expiring') renderExpiring();
+  if (t==='expired') renderExpired();
+  if (t==='all') renderAllWarranties();
+}
+
+// ═══════════════════════════════════════
+//  LOGIN / LOGOUT
+// ═══════════════════════════════════════
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    API = { url, auth: btoa(`${user}:${pass}`), user, spaceSlug: '' };
+    const res = await fetch(url + '/app/api/v1/me', { headers: { 'Authorization':'Basic '+API.auth, 'Accept':'application/json' } });
+    if (!res.ok) throw new Error('Invalid credentials');
+    try {
+      const sr = await fetch(url + '/app/api/v1/space', { headers: { 'Authorization':'Basic '+API.auth, 'Accept':'application/json' } });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('login-screen').remove();
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = user + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    await loadData();
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url:'', auth:'', user:'', spaceSlug:'' };
+  D = []; fullDataLoaded = false;
+  catalogPage = []; catalogPageKeys = [null]; currentPageIndex = 0; catalogHasNext = false;
+  location.reload();
+}
+async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    API = JSON.parse(s);
+    const res = await fetch(API.url + '/app/api/v1/me', { headers: { 'Authorization':'Basic '+API.auth, 'Accept':'application/json' } });
+    if (!res.ok) throw new Error('expired');
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(API.url + '/app/api/v1/space', { headers: { 'Authorization':'Basic '+API.auth, 'Accept':'application/json' } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById('login-screen').remove();
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.user + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    await loadData();
+  } catch(e) {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url:'', auth:'', user:'', spaceSlug:'' };
+  }
+}
+restoreSession();
+
+// ═══════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════
+let D = []; // all asset submissions (populated lazily)
+let fullDataLoaded = false;
+const TODAY = new Date();
+const TODAY_ISO = TODAY.toISOString().substring(0,10);
+
+// Keyset catalog pagination state
+const CATALOG_PAGE_SIZE = 25;
+let catalogPage = [];          // current page of submissions
+let catalogPageKeys = [null];  // pageKeys[0]=null (page 1), pageKeys[N]=createdAt for page N+1
+let currentPageIndex = 0;      // which page we're on
+let catalogHasNext = false;    // whether more pages exist
+
+function depreciate(a) {
+  const cost = parseMoney(v(a,'Purchase Cost'));
+  const salvage = parseMoney(v(a,'Salvage Value'));
+  const life = parseFloat(v(a,'Useful Life')) || 5;
+  const pd = v(a,'Purchase Date');
+  if (!pd || !cost) return { cost, current: cost, depreciation: 0, age: 0, life, pctUsed: 0, fullyDep: false };
+  const purchaseDate = new Date(pd);
+  const ageYears = Math.max(0, (TODAY - purchaseDate) / (365.25 * 86400000));
+  const annualDep = (cost - salvage) / life;
+  const totalDep = Math.min(cost - salvage, annualDep * ageYears);
+  const current = Math.max(salvage, cost - totalDep);
+  return { cost, current, depreciation: totalDep, age: ageYears, life, pctUsed: Math.min(100, ageYears/life*100), fullyDep: ageYears >= life };
+}
+
+function warrantyStatus(a) {
+  const exp = v(a,'Warranty Expiration');
+  const wtype = v(a,'Warranty Type');
+  if (!exp || wtype === 'None') return { status:'None', daysLeft:null, badge:'none' };
+  const expDate = new Date(exp);
+  const daysLeft = Math.ceil((expDate - TODAY) / 86400000);
+  if (daysLeft < 0) return { status:'Expired', daysLeft, badge:'expired' };
+  if (daysLeft <= 90) return { status:'Expiring', daysLeft, badge:'expiring' };
+  return { status:'Active', daysLeft, badge:'standard' };
+}
+
+async function fetchCatalogPage(lastCreatedAt) {
+  const kql = buildCatalogKql(lastCreatedAt);
+  const params = { include: 'values', limit: String(CATALOG_PAGE_SIZE) };
+  if (kql) params.q = kql;
+  const qs = new URLSearchParams(params);
+  return api(`/kapps/asset-management/forms/assets/submissions?${qs}`);
+}
+
+function buildCatalogKql(lastCreatedAt) {
+  const parts = [];
+  const status = document.getElementById('cat-status').value;
+  const category = document.getElementById('cat-category').value;
+
+  if (status) parts.push(`values[Status] = "${status}"`);
+  if (category) parts.push(`values[Category] = "${category}"`);
+  if (lastCreatedAt) parts.push(`createdAt < "${lastCreatedAt}"`);
+
+  return parts.length ? parts.join(' AND ') : null;
+}
+
+function getCatalogSearchTerm() {
+  return (document.getElementById('cat-search').value || '').trim().toLowerCase();
+}
+
+async function catalogFilterChanged() {
+  catalogPageKeys = [null];
+  currentPageIndex = 0;
+  catalogHasNext = false;
+  await loadCatalogPage();
+}
+
+async function loadCatalogPage() {
+  try {
+    const data = await fetchCatalogPage(catalogPageKeys[currentPageIndex]);
+    let subs = data.submissions || [];
+    // Client-side search filter (avoids orderBy requirement for =* operator)
+    const search = getCatalogSearchTerm();
+    if (search) subs = subs.filter(s => (v(s, 'Asset Name') || '').toLowerCase().includes(search));
+    catalogPage = subs;
+    catalogHasNext = !!data.nextPageToken;
+    if (catalogHasNext && (data.submissions || []).length) catalogPageKeys[currentPageIndex + 1] = data.submissions[data.submissions.length - 1].createdAt;
+    renderCatalog();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function catalogNext() {
+  if (!catalogHasNext) return;
+  currentPageIndex++;
+  await loadCatalogPage();
+}
+
+async function catalogPrev() {
+  if (currentPageIndex <= 0) return;
+  currentPageIndex--;
+  await loadCatalogPage();
+}
+
+async function catalogFirst() {
+  currentPageIndex = 0;
+  catalogPageKeys = [null];
+  catalogHasNext = false;
+  await loadCatalogPage();
+}
+
+async function loadData() {
+  try {
+    await loadCatalogPage();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function loadFullDataset() {
+  if (fullDataLoaded) return;
+  try {
+    showToast('Loading all assets...');
+    D = await fetchAllAssets();
+    fullDataLoaded = true;
+    showToast(`Loaded ${D.length} assets`);
+    populateFilters();
+    // Show catalog KPIs now that we have full data
+    renderCatalogKpis();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+function populateFilters() {
+  const providers = [...new Set(D.map(a=>v(a,'Warranty Provider')).filter(Boolean))].sort();
+  document.getElementById('wall-provider').innerHTML = '<option value="">All Providers</option>' + providers.map(p=>`<option>${p}</option>`).join('');
+}
+
+function renderCatalogKpis() {
+  if (!fullDataLoaded) {
+    document.getElementById('catalog-kpis').innerHTML = '';
+    return;
+  }
+  const items = D;
+  const active = items.filter(a=>v(a,'Status')==='Active').length;
+  const storage = items.filter(a=>v(a,'Status')==='In Storage').length;
+  const maint = items.filter(a=>v(a,'Status')==='Maintenance').length;
+  const retired = items.filter(a=>v(a,'Status')==='Retired').length;
+  const totalVal = items.reduce((s,a)=>s+depreciate(a).current, 0);
+  document.getElementById('catalog-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total Assets</div><div class="val">${items.length}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+    <div class="kpi teal"><div class="label">In Storage</div><div class="val">${storage}</div></div>
+    <div class="kpi yellow"><div class="label">Maintenance</div><div class="val">${maint}</div></div>
+    <div class="kpi orange"><div class="label">Retired</div><div class="val">${retired}</div></div>
+    <div class="kpi purple"><div class="label">Current Value</div><div class="val" style="font-size:20px;">${money(totalVal)}</div></div>
+  `;
+}
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+function openModal(h) { document.getElementById('modal-content').innerHTML=h; document.getElementById('modal').classList.add('show'); }
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+function statusBadge(s) {
+  const cls = {'Active':'active','In Storage':'instorage','Maintenance':'maintenance','Retired':'retired','Disposed':'disposed','Lost':'lost'}[s]||'active';
+  return `<span class="badge badge-${cls}">${s||'Unknown'}</span>`;
+}
+function catBadge(c) {
+  const cls = (c||'').toLowerCase().replace(/\s+/g,'');
+  return `<span class="badge badge-${cls}">${c||'Unknown'}</span>`;
+}
+function condBadge(c) {
+  const cls = (c||'').toLowerCase();
+  return `<span class="badge badge-${cls}">${c||'Unknown'}</span>`;
+}
+function warBadge(w) {
+  return `<span class="badge badge-${w.badge}">${w.status}${w.daysLeft!==null&&w.daysLeft>=0?' ('+w.daysLeft+'d)':''}</span>`;
+}
+
+const CAT_COLORS = { Hardware:'#2E7D32', Software:'#1565C0', Furniture:'#F57F17', Vehicle:'#7B1FA2', Equipment:'#6D4C41' };
+const STATUS_COLORS = { Active:'#2E7D32', 'In Storage':'#1565C0', Maintenance:'#F57F17', Retired:'#6D4C41', Disposed:'#C62828', Lost:'#7B1FA2' };
+
+// ═══════════════════════════════════════
+//  ASSET CATALOG
+// ═══════════════════════════════════════
+function renderCatalogRow(a) {
+  const dep = depreciate(a);
+  return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+    <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+    <td>${v(a,'Asset Name')}</td>
+    <td>${catBadge(v(a,'Category'))}<br><span style="font-size:11px;color:var(--gray);">${v(a,'Subcategory')}</span></td>
+    <td>${statusBadge(v(a,'Status'))}</td>
+    <td>${v(a,'Assigned To')||'<span style="color:var(--gray);">—</span>'}</td>
+    <td>${v(a,'Department')}</td>
+    <td style="font-size:12px;">${v(a,'Location')}</td>
+    <td style="font-weight:600;">${money(dep.current)}</td>
+  </tr>`;
+}
+
+function renderCatalog() {
+  renderCatalogKpis();
+
+  const page = catalogPage;
+  document.getElementById('cat-table').innerHTML = page.length ? page.map(renderCatalogRow).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:30px;">No assets found</td></tr>';
+
+  const pageNum = currentPageIndex + 1;
+  const hasPrev = currentPageIndex > 0;
+  const hasNext = catalogHasNext;
+  document.getElementById('cat-pagination').innerHTML = `
+    <button ${!hasPrev?'disabled':''} onclick="catalogFirst()">First</button>
+    <button ${!hasPrev?'disabled':''} onclick="catalogPrev()">Prev</button>
+    <span>Page ${pageNum}</span>
+    <button ${!hasNext?'disabled':''} onclick="catalogNext()">Next</button>
+  `;
+}
+
+// ═══════════════════════════════════════
+//  ASSET DETAIL
+// ═══════════════════════════════════════
+async function viewAsset(id) {
+  let a = catalogPage.find(x => x.id === id) || D.find(x => x.id === id);
+  if (!a) {
+    try {
+      const data = await api(`/submissions/${id}?include=values`);
+      a = data.submission;
+    } catch(e) { showToast('Could not load asset'); return; }
+  }
+  if (!a) return;
+  const dep = depreciate(a);
+  const ws = warrantyStatus(a);
+  const depPct = dep.pctUsed;
+  const depColor = depPct>=100?'var(--red)':depPct>=75?'var(--orange)':depPct>=50?'var(--yellow)':'var(--green)';
+
+  // Find related assets
+  const relIds = (v(a,'Related Assets')||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const relAssets = relIds.map(rid => D.find(x=>v(x,'Asset ID')===rid)).filter(Boolean);
+
+  openModal(`
+    <h2>${v(a,'Asset Name')}</h2>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">${catBadge(v(a,'Category'))} ${statusBadge(v(a,'Status'))} ${condBadge(v(a,'Condition'))} ${warBadge(ws)}</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 16px;margin-bottom:20px;">
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Asset ID</div><div style="font-size:13px;font-weight:700;color:var(--orange);">${v(a,'Asset ID')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Subcategory</div><div style="font-size:13px;">${v(a,'Subcategory')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Serial Number</div><div style="font-size:13px;font-family:monospace;">${v(a,'Serial Number')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Manufacturer</div><div style="font-size:13px;">${v(a,'Manufacturer')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Model</div><div style="font-size:13px;">${v(a,'Model')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Condition</div><div style="font-size:13px;">${v(a,'Condition')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Assigned To</div><div style="font-size:13px;font-weight:600;">${v(a,'Assigned To')||'Unassigned'}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Department</div><div style="font-size:13px;">${v(a,'Department')}</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Location</div><div style="font-size:13px;">${v(a,'Location')}</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <div class="card" style="margin:0;">
+        <h3>Financial</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Purchase Date</div><div style="font-size:14px;">${v(a,'Purchase Date')}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Purchase Cost</div><div style="font-size:14px;font-weight:700;">${v(a,'Purchase Cost')}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Current Value</div><div style="font-size:14px;font-weight:700;color:var(--green);">${money(dep.current)}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Total Depreciation</div><div style="font-size:14px;color:var(--red);">${money(dep.depreciation)}</div></div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:4px;">Lifecycle: ${dep.age.toFixed(1)}y of ${dep.life}y (${Math.round(depPct)}%)</div>
+          <div style="height:10px;background:var(--light);border-radius:5px;overflow:hidden;">
+            <div style="height:100%;width:${Math.min(100,depPct)}%;background:${depColor};border-radius:5px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin:0;">
+        <h3>Warranty</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Type</div><div style="font-size:14px;">${v(a,'Warranty Type')}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Provider</div><div style="font-size:14px;">${v(a,'Warranty Provider')||'—'}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Start</div><div style="font-size:14px;">${v(a,'Warranty Start')||'—'}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Expires</div><div style="font-size:14px;font-weight:600;">${v(a,'Warranty Expiration')||'—'}</div></div>
+        </div>
+        <div style="margin-top:10px;">${warBadge(ws)}</div>
+      </div>
+    </div>
+
+    ${relAssets.length ? `<div class="card" style="margin:0 0 16px;">
+      <h3>Related Assets</h3>
+      ${relAssets.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--light);cursor:pointer;" onclick="closeModal();setTimeout(()=>viewAsset('${r.id}'),100)">
+        <div><strong style="color:var(--orange);font-size:12px;">${v(r,'Asset ID')}</strong> ${v(r,'Asset Name')}</div>
+        <div>${catBadge(v(r,'Category'))} ${statusBadge(v(r,'Status'))}</div>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${v(a,'Notes') ? `<div style="margin-bottom:16px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-bottom:4px;">Notes</div><div style="background:var(--light);padding:10px;border-radius:8px;font-size:13px;">${v(a,'Notes')}</div></div>` : ''}
+    <div style="font-size:11px;color:var(--gray);">Last Audit: ${v(a,'Last Audit Date')||'Never'}</div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+// ═══════════════════════════════════════
+//  FINANCIAL
+// ═══════════════════════════════════════
+function renderFinDashboard() {
+  const items = D;
+  let totalCost=0, totalCurrent=0, totalDep=0;
+  items.forEach(a => { const d=depreciate(a); totalCost+=d.cost; totalCurrent+=d.current; totalDep+=d.depreciation; });
+  const avgAge = items.length ? items.reduce((s,a)=>s+depreciate(a).age, 0)/items.length : 0;
+
+  document.getElementById('fin-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Original Cost</div><div class="val" style="font-size:22px;">${money(totalCost)}</div></div>
+    <div class="kpi green"><div class="label">Current Value</div><div class="val" style="font-size:22px;">${money(totalCurrent)}</div></div>
+    <div class="kpi red"><div class="label">Total Depreciation</div><div class="val" style="font-size:22px;">${money(totalDep)}</div></div>
+    <div class="kpi orange"><div class="label">Depreciation %</div><div class="val">${totalCost?Math.round(totalDep/totalCost*100)+'%':'0%'}</div></div>
+    <div class="kpi purple"><div class="label">Avg Asset Age</div><div class="val">${avgAge.toFixed(1)}y</div></div>
+    <div class="kpi teal"><div class="label">Total Assets</div><div class="val">${items.length}</div></div>
+  `;
+
+  // By category
+  const byCat = {};
+  items.forEach(a => { const c=v(a,'Category'); const d=depreciate(a); byCat[c]=(byCat[c]||0)+d.current; });
+  const maxCat = Math.max(...Object.values(byCat),1);
+  document.getElementById('fin-by-cat').innerHTML = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,val]) =>
+    `<div class="hbar"><div class="hbar-label"><span>${c}</span><span>${money(val)}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${val/maxCat*100}%;background:${CAT_COLORS[c]||'var(--gray)'}">${money(val)}</div></div></div>`
+  ).join('');
+
+  // By dept
+  const byDept = {};
+  items.forEach(a => { const d=v(a,'Department'); const dep=depreciate(a); byDept[d]=(byDept[d]||0)+dep.current; });
+  const maxDept = Math.max(...Object.values(byDept),1);
+  const deptColors = ['#1565C0','#2E7D32','#E65100','#7B1FA2','#C62828','#00695C','#F57F17','#283593','#6D4C41','#AD1457'];
+  document.getElementById('fin-by-dept').innerHTML = Object.entries(byDept).sort((a,b)=>b[1]-a[1]).map(([d,val],i) =>
+    `<div class="hbar"><div class="hbar-label"><span>${d}</span><span>${money(val)}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${val/maxDept*100}%;background:${deptColors[i%deptColors.length]}">${money(val)}</div></div></div>`
+  ).join('');
+
+  // By status
+  const byStatus = {};
+  items.forEach(a => { const s=v(a,'Status'); const dep=depreciate(a); byStatus[s]=(byStatus[s]||0)+dep.current; });
+  const maxStat = Math.max(...Object.values(byStatus),1);
+  document.getElementById('fin-by-status').innerHTML = Object.entries(byStatus).sort((a,b)=>b[1]-a[1]).map(([s,val]) =>
+    `<div class="hbar"><div class="hbar-label"><span>${s}</span><span>${money(val)}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${val/maxStat*100}%;background:${STATUS_COLORS[s]||'var(--gray)'}">${money(val)}</div></div></div>`
+  ).join('');
+
+  // Top 10
+  const top10 = items.slice().sort((a,b)=>depreciate(b).current-depreciate(a).current).slice(0,10);
+  document.getElementById('fin-top10').innerHTML = top10.map((a,i) => {
+    const dep = depreciate(a);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--light);cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <div><span style="font-weight:700;color:var(--gray);margin-right:8px;">#${i+1}</span><strong>${v(a,'Asset Name')}</strong> <span style="font-size:11px;color:var(--gray);">${v(a,'Asset ID')}</span></div>
+      <div style="font-weight:700;color:var(--green);">${money(dep.current)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDepreciation() {
+  const items = D;
+  let totalCost=0, totalCurrent=0, totalDep=0, fullyDep=0;
+  items.forEach(a => { const d=depreciate(a); totalCost+=d.cost; totalCurrent+=d.current; totalDep+=d.depreciation; if(d.fullyDep) fullyDep++; });
+
+  document.getElementById('dep-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Original Cost</div><div class="val" style="font-size:20px;">${money(totalCost)}</div></div>
+    <div class="kpi green"><div class="label">Remaining Value</div><div class="val" style="font-size:20px;">${money(totalCurrent)}</div></div>
+    <div class="kpi red"><div class="label">Accumulated Depr.</div><div class="val" style="font-size:20px;">${money(totalDep)}</div></div>
+    <div class="kpi orange"><div class="label">Fully Depreciated</div><div class="val">${fullyDep}</div><div class="sub">${pct(fullyDep,items.length)} of assets</div></div>
+  `;
+
+  // By category with depreciation bars
+  const byCat = {};
+  items.forEach(a => { const c=v(a,'Category'); const d=depreciate(a); if(!byCat[c]) byCat[c]={cost:0,current:0,dep:0,count:0}; byCat[c].cost+=d.cost; byCat[c].current+=d.current; byCat[c].dep+=d.depreciation; byCat[c].count++; });
+  document.getElementById('dep-by-cat').innerHTML = Object.entries(byCat).sort((a,b)=>b[1].cost-a[1].cost).map(([c,d]) =>
+    `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>${c}</strong><span style="font-size:12px;color:var(--gray);">${d.count} assets &middot; ${money(d.cost)} original</span></div>
+      <div class="dep-bar">
+        <div style="width:${d.current/d.cost*100}%;background:var(--green);" title="Current: ${money(d.current)}"></div>
+        <div style="width:${d.dep/d.cost*100}%;background:var(--red);" title="Depreciated: ${money(d.dep)}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-top:2px;">
+        <span>Current: ${money(d.current)} (${Math.round(d.current/d.cost*100)}%)</span><span>Depreciated: ${money(d.dep)} (${Math.round(d.dep/d.cost*100)}%)</span>
+      </div>
+    </div>`
+  ).join('');
+
+  // Fully depreciated table
+  const fd = items.filter(a=>depreciate(a).fullyDep).sort((a,b)=>depreciate(b).cost-depreciate(a).cost);
+  document.getElementById('dep-table').innerHTML = fd.length ? fd.map(a => {
+    const d = depreciate(a);
+    return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+      <td>${v(a,'Asset Name')}</td><td>${catBadge(v(a,'Category'))}</td>
+      <td>${money(d.cost)}</td><td>${d.age.toFixed(1)}y</td><td>${d.life}y</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px;">No fully depreciated assets</td></tr>';
+}
+
+function renderPurchases() {
+  // Monthly spend chart
+  const months = {};
+  for (let i=23; i>=0; i--) {
+    const d = new Date(TODAY);
+    d.setMonth(d.getMonth()-i);
+    months[d.toISOString().substring(0,7)] = 0;
+  }
+  D.forEach(a => {
+    const pd = v(a,'Purchase Date');
+    if (pd) { const m = pd.substring(0,7); if (months[m]!==undefined) months[m] += parseMoney(v(a,'Purchase Cost')); }
+  });
+  const maxM = Math.max(...Object.values(months), 1);
+  document.getElementById('pur-chart').innerHTML = `<div style="display:flex;gap:3px;align-items:flex-end;height:160px;">` +
+    Object.entries(months).map(([m,val]) => {
+      const h = Math.max(val/maxM*100, 2);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:8px;font-weight:700;margin-bottom:2px;">${val>0?money(val):''}</div>
+        <div style="width:100%;height:${h}%;background:${val>0?'var(--blue)':'var(--border)'};border-radius:3px;min-height:3px;" title="${m}: ${money(val)}"></div>
+        <div style="font-size:7px;color:var(--gray);margin-top:4px;writing-mode:vertical-lr;transform:rotate(180deg);height:30px;overflow:hidden;">${m.substring(2)}</div>
+      </div>`;
+    }).join('') + '</div>';
+
+  // Recent purchases table
+  const recent = D.slice().sort((a,b)=>(v(b,'Purchase Date')||'').localeCompare(v(a,'Purchase Date')||'')).slice(0,50);
+  document.getElementById('pur-table').innerHTML = recent.map(a => `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+    <td>${v(a,'Purchase Date')}</td>
+    <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+    <td>${v(a,'Asset Name')}</td>
+    <td>${catBadge(v(a,'Category'))}</td>
+    <td style="font-weight:600;">${v(a,'Purchase Cost')}</td>
+    <td>${v(a,'Department')}</td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  ASSIGNMENTS
+// ═══════════════════════════════════════
+function renderPeople() {
+  const search = (document.getElementById('people-search').value||'').toLowerCase();
+  const active = D.filter(a=>v(a,'Status')==='Active');
+  const assigned = active.filter(a=>v(a,'Assigned To'));
+  const byPerson = {};
+  assigned.forEach(a => {
+    const p = v(a,'Assigned To');
+    if (!byPerson[p]) byPerson[p] = { assets:[], totalValue:0 };
+    byPerson[p].assets.push(a);
+    byPerson[p].totalValue += depreciate(a).current;
+  });
+
+  const uniquePeople = Object.keys(byPerson).length;
+  document.getElementById('people-kpis').innerHTML = `
+    <div class="kpi"><div class="label">People with Assets</div><div class="val">${uniquePeople}</div></div>
+    <div class="kpi green"><div class="label">Assigned Assets</div><div class="val">${assigned.length}</div></div>
+    <div class="kpi orange"><div class="label">Unassigned Active</div><div class="val">${active.length - assigned.length}</div></div>
+    <div class="kpi purple"><div class="label">Avg per Person</div><div class="val">${uniquePeople?Math.round(assigned.length/uniquePeople):0}</div></div>
+  `;
+
+  let people = Object.entries(byPerson).sort((a,b)=>b[1].assets.length-a[1].assets.length);
+  if (search) people = people.filter(([p])=>p.toLowerCase().includes(search));
+
+  document.getElementById('people-cards').innerHTML = people.slice(0,50).map(([person, data]) => `
+    <div class="owner-card">
+      <div class="owner-header"><strong>${person}</strong><span class="owner-assets">${data.assets.length} assets &middot; ${money(data.totalValue)}</span></div>
+      <div class="owner-list">${data.assets.sort((a,b)=>depreciate(b).current-depreciate(a).current).slice(0,8).map(a =>
+        `<div style="cursor:pointer;" onclick="viewAsset('${a.id}')"><span>${v(a,'Asset ID')} ${v(a,'Asset Name')}</span><span>${catBadge(v(a,'Category'))} ${money(depreciate(a).current)}</span></div>`
+      ).join('')}${data.assets.length>8?`<div style="color:var(--orange);font-weight:600;text-align:center;padding:4px;">+${data.assets.length-8} more</div>`:''}</div>
+    </div>
+  `).join('') || '<p style="color:var(--gray);text-align:center;padding:20px;">No matching people</p>';
+}
+
+function renderDepartments() {
+  const byDept = {};
+  D.forEach(a => {
+    const d = v(a,'Department');
+    if (!byDept[d]) byDept[d] = { total:0, active:0, value:0, byCat:{} };
+    byDept[d].total++;
+    if (v(a,'Status')==='Active') byDept[d].active++;
+    byDept[d].value += depreciate(a).current;
+    const c = v(a,'Category');
+    byDept[d].byCat[c] = (byDept[d].byCat[c]||0) + 1;
+  });
+
+  document.getElementById('dept-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Departments</div><div class="val">${Object.keys(byDept).length}</div></div>
+    <div class="kpi green"><div class="label">Total Value</div><div class="val" style="font-size:20px;">${money(Object.values(byDept).reduce((s,d)=>s+d.value,0))}</div></div>
+  `;
+
+  document.getElementById('dept-cards').innerHTML = Object.entries(byDept).sort((a,b)=>b[1].value-a[1].value).map(([dept, data]) => {
+    const maxC = Math.max(...Object.values(data.byCat), 1);
+    return `<div class="card">
+      <h3>${dept}</h3>
+      <div style="display:flex;gap:16px;margin-bottom:12px;">
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Assets</div><div style="font-size:20px;font-weight:700;">${data.total}</div></div>
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Active</div><div style="font-size:20px;font-weight:700;color:var(--green);">${data.active}</div></div>
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Value</div><div style="font-size:20px;font-weight:700;color:var(--teal);">${money(data.value)}</div></div>
+      </div>
+      ${Object.entries(data.byCat).sort((a,b)=>b[1]-a[1]).map(([c,n]) =>
+        `<div class="hbar"><div class="hbar-label"><span>${c}</span><span>${n}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${n/maxC*100}%;background:${CAT_COLORS[c]||'var(--gray)'}">${n}</div></div></div>`
+      ).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderLocations() {
+  const byLoc = {};
+  D.forEach(a => {
+    const l = v(a,'Location') || 'Unknown';
+    if (!byLoc[l]) byLoc[l] = { total:0, active:0, value:0 };
+    byLoc[l].total++;
+    if (v(a,'Status')==='Active') byLoc[l].active++;
+    byLoc[l].value += depreciate(a).current;
+  });
+
+  document.getElementById('loc-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Locations</div><div class="val">${Object.keys(byLoc).length}</div></div>
+    <div class="kpi green"><div class="label">Total Value</div><div class="val" style="font-size:20px;">${money(Object.values(byLoc).reduce((s,l)=>s+l.value,0))}</div></div>
+  `;
+
+  document.getElementById('loc-cards').innerHTML = Object.entries(byLoc).sort((a,b)=>b[1].total-a[1].total).map(([loc, data]) =>
+    `<div class="card">
+      <h3>${loc}</h3>
+      <div style="display:flex;gap:16px;">
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Assets</div><div style="font-size:22px;font-weight:700;">${data.total}</div></div>
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Active</div><div style="font-size:22px;font-weight:700;color:var(--green);">${data.active}</div></div>
+        <div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;">Value</div><div style="font-size:16px;font-weight:700;color:var(--teal);">${money(data.value)}</div></div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function renderUnassigned() {
+  const items = D.filter(a=>v(a,'Status')==='Active' && !v(a,'Assigned To'));
+  document.getElementById('unassigned-table').innerHTML = items.length ? items.sort((a,b)=>depreciate(b).current-depreciate(a).current).map(a => {
+    const dep = depreciate(a);
+    return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+      <td>${v(a,'Asset Name')}</td><td>${catBadge(v(a,'Category'))}</td>
+      <td>${statusBadge(v(a,'Status'))}</td><td>${v(a,'Department')}</td>
+      <td>${v(a,'Location')}</td><td style="font-weight:600;">${money(dep.current)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px;">All active assets are assigned</td></tr>';
+}
+
+// ═══════════════════════════════════════
+//  WARRANTY CENTER
+// ═══════════════════════════════════════
+function renderWarrantyOverview() {
+  const items = D;
+  let activeW=0, expiring30=0, expiring90=0, expired=0, noWarranty=0, totalCoveredValue=0;
+  items.forEach(a => {
+    const ws = warrantyStatus(a);
+    if (ws.status==='Active') { activeW++; totalCoveredValue+=depreciate(a).current; }
+    if (ws.status==='Expiring') { expiring90++; if(ws.daysLeft<=30) expiring30++; totalCoveredValue+=depreciate(a).current; }
+    if (ws.status==='Expired') expired++;
+    if (ws.status==='None') noWarranty++;
+  });
+
+  document.getElementById('warranty-kpis').innerHTML = `
+    <div class="kpi green"><div class="label">Active Warranties</div><div class="val">${activeW}</div></div>
+    <div class="kpi yellow"><div class="label">Expiring 30d</div><div class="val">${expiring30}</div></div>
+    <div class="kpi orange"><div class="label">Expiring 90d</div><div class="val">${expiring90}</div></div>
+    <div class="kpi red"><div class="label">Expired</div><div class="val">${expired}</div></div>
+    <div class="kpi"><div class="label">No Warranty</div><div class="val">${noWarranty}</div></div>
+    <div class="kpi teal"><div class="label">Covered Value</div><div class="val" style="font-size:18px;">${money(totalCoveredValue)}</div></div>
+  `;
+
+  // By category
+  const byCat = {};
+  items.forEach(a => {
+    const c = v(a,'Category');
+    const ws = warrantyStatus(a);
+    if (!byCat[c]) byCat[c] = { active:0, expiring:0, expired:0, none:0, total:0 };
+    byCat[c].total++;
+    byCat[c][ws.status==='Expiring'?'expiring':ws.status.toLowerCase()]++;
+  });
+  document.getElementById('war-by-cat').innerHTML = Object.entries(byCat).sort((a,b)=>b[1].total-a[1].total).map(([c,d]) =>
+    `<div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong>${c}</strong><span style="font-size:12px;color:var(--gray);">${d.total} assets</span></div>
+      <div class="dep-bar">
+        ${d.active?`<div style="width:${d.active/d.total*100}%;background:var(--green);" title="${d.active} active"></div>`:''}
+        ${d.expiring?`<div style="width:${d.expiring/d.total*100}%;background:var(--yellow);" title="${d.expiring} expiring"></div>`:''}
+        ${d.expired?`<div style="width:${d.expired/d.total*100}%;background:var(--red);" title="${d.expired} expired"></div>`:''}
+        ${d.none?`<div style="width:${d.none/d.total*100}%;background:var(--border);" title="${d.none} no warranty"></div>`:''}
+      </div>
+      <div style="font-size:10px;color:var(--gray);display:flex;gap:12px;margin-top:2px;">
+        <span style="color:var(--green);">${d.active} active</span>
+        <span style="color:var(--yellow);">${d.expiring} expiring</span>
+        <span style="color:var(--red);">${d.expired} expired</span>
+        <span>${d.none} none</span>
+      </div>
+    </div>`
+  ).join('');
+
+  // Timeline: expirations by month (next 12 months)
+  const months = {};
+  for (let i=0; i<12; i++) {
+    const d = new Date(TODAY);
+    d.setMonth(d.getMonth()+i);
+    months[d.toISOString().substring(0,7)] = 0;
+  }
+  items.forEach(a => {
+    const exp = v(a,'Warranty Expiration');
+    if (exp) { const m = exp.substring(0,7); if (months[m]!==undefined) months[m]++; }
+  });
+  const maxM = Math.max(...Object.values(months), 1);
+  document.getElementById('war-timeline').innerHTML = `<div style="display:flex;gap:4px;align-items:flex-end;height:120px;">` +
+    Object.entries(months).map(([m,n]) => {
+      const h = Math.max(n/maxM*100, 4);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:9px;font-weight:700;margin-bottom:2px;">${n||''}</div>
+        <div style="width:100%;height:${h}%;background:${n>5?'var(--red)':n>2?'var(--orange)':n>0?'var(--yellow)':'var(--border)'};border-radius:3px;min-height:3px;" title="${m}: ${n} expirations"></div>
+        <div style="font-size:8px;color:var(--gray);margin-top:4px;">${m.substring(5)}</div>
+      </div>`;
+    }).join('') + '</div>';
+
+  // By type
+  const byType = {};
+  items.forEach(a => { const t=v(a,'Warranty Type')||'None'; byType[t]=(byType[t]||0)+1; });
+  const maxT = Math.max(...Object.values(byType),1);
+  const typeColors = { Standard:'#1565C0', Extended:'#2E7D32', None:'#9E9E9E' };
+  document.getElementById('war-by-type').innerHTML = Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([t,n]) =>
+    `<div class="hbar"><div class="hbar-label"><span>${t}</span><span>${n}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${n/maxT*100}%;background:${typeColors[t]||'var(--gray)'}">${n}</div></div></div>`
+  ).join('');
+
+  // Providers
+  const byProv = {};
+  items.forEach(a => { const p=v(a,'Warranty Provider'); if(p) byProv[p]=(byProv[p]||0)+1; });
+  const maxP = Math.max(...Object.values(byProv),1);
+  document.getElementById('war-providers').innerHTML = Object.entries(byProv).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([p,n]) =>
+    `<div class="hbar"><div class="hbar-label"><span>${p}</span><span>${n}</span></div><div class="hbar-track"><div class="hbar-fill" style="width:${n/maxP*100}%;background:var(--blue)">${n}</div></div></div>`
+  ).join('');
+}
+
+function renderExpiring() {
+  const items = D.filter(a => { const ws=warrantyStatus(a); return ws.status==='Expiring'; })
+    .sort((a,b) => warrantyStatus(a).daysLeft - warrantyStatus(b).daysLeft);
+  document.getElementById('expiring-table').innerHTML = items.length ? items.map(a => {
+    const ws = warrantyStatus(a);
+    const dep = depreciate(a);
+    const urgency = ws.daysLeft<=30?'color:var(--red);font-weight:700;':ws.daysLeft<=60?'color:var(--orange);font-weight:600;':'';
+    return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+      <td>${v(a,'Asset Name')}</td><td>${catBadge(v(a,'Category'))}</td>
+      <td>${v(a,'Warranty Expiration')}</td>
+      <td style="${urgency}">${ws.daysLeft} days</td>
+      <td>${v(a,'Warranty Provider')}</td><td><span class="badge badge-${v(a,'Warranty Type').toLowerCase()}">${v(a,'Warranty Type')}</span></td>
+      <td style="font-weight:600;">${money(dep.current)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--green);padding:20px;">No warranties expiring within 90 days</td></tr>';
+}
+
+function renderExpired() {
+  const items = D.filter(a => v(a,'Status')==='Active' && warrantyStatus(a).status==='Expired')
+    .sort((a,b) => warrantyStatus(a).daysLeft - warrantyStatus(b).daysLeft);
+  document.getElementById('expired-table').innerHTML = items.length ? items.map(a => {
+    const ws = warrantyStatus(a);
+    const dep = depreciate(a);
+    return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+      <td>${v(a,'Asset Name')}</td><td>${catBadge(v(a,'Category'))}</td>
+      <td>${v(a,'Warranty Expiration')}</td>
+      <td style="color:var(--red);font-weight:600;">${Math.abs(ws.daysLeft)} days ago</td>
+      <td>${v(a,'Warranty Provider')}</td>
+      <td style="font-weight:600;">${money(dep.current)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--green);padding:20px;">No expired warranties on active assets</td></tr>';
+}
+
+function renderAllWarranties() {
+  const search = (document.getElementById('wall-search').value||'').toLowerCase();
+  const statusF = document.getElementById('wall-status').value;
+  const provF = document.getElementById('wall-provider').value;
+
+  let items = D.slice();
+  if (statusF) items = items.filter(a => warrantyStatus(a).status === statusF);
+  if (provF) items = items.filter(a => v(a,'Warranty Provider') === provF);
+  if (search) items = items.filter(a => `${v(a,'Asset ID')} ${v(a,'Asset Name')} ${v(a,'Warranty Provider')}`.toLowerCase().includes(search));
+
+  items.sort((a,b) => (v(a,'Warranty Expiration')||'9999').localeCompare(v(b,'Warranty Expiration')||'9999'));
+
+  document.getElementById('wall-table').innerHTML = items.length ? items.slice(0,200).map(a => {
+    const ws = warrantyStatus(a);
+    return `<tr style="cursor:pointer;" onclick="viewAsset('${a.id}')">
+      <td><strong style="color:var(--orange);font-size:12px;">${v(a,'Asset ID')}</strong></td>
+      <td>${v(a,'Asset Name')}</td><td>${catBadge(v(a,'Category'))}</td>
+      <td>${warBadge(ws)}</td>
+      <td>${v(a,'Warranty Expiration')||'—'}</td>
+      <td>${v(a,'Warranty Provider')||'—'}</td>
+      <td><span class="badge badge-${(v(a,'Warranty Type')||'none').toLowerCase()}">${v(a,'Warranty Type')||'None'}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px;">No warranties match filters</td></tr>';
+}
+
+// Keyboard
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>

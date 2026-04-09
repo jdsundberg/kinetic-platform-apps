@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandwich & Soup Shop</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E;
+  --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04;
+  --gray: #5F6368; --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --warm: #D84315; --warm-light: #FFF3E0; --warm-bg: #FBE9E7;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #D84315 0%, #F36C24 50%, #FF8A4C 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--warm); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .orange-bar { height: 3px; background: var(--orange); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.15); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--orange-light); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: #FFEBEE; color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--blue); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--orange); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.7); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.1); color: white; }
+.nav-tabs button.active { background: var(--orange); color: white; }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--orange); border-color: var(--orange); color: white; }
+
+/* ── Console Panels ── */
+.console { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.kpi .val { font-size: 26px; font-weight: 700; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); position: sticky; top: 56px; background: var(--white); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--light); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-sandwich { background: #FFF3E0; color: #E65100; }
+.badge-soup { background: #E3F2FD; color: #1565C0; }
+.badge-side { background: #E8F5E9; color: #2E7D32; }
+.badge-drink { background: #F3E5F5; color: #7B1FA2; }
+.badge-active { background: #E8F5E9; color: #2E7D32; }
+.badge-inactive { background: #FFEBEE; color: #C62828; }
+.badge-yes { background: #E8F5E9; color: #2E7D32; }
+.badge-no { background: #FFEBEE; color: #C62828; }
+
+/* ── Stars ── */
+.stars { color: var(--yellow); font-size: 14px; letter-spacing: 1px; }
+.stars-dim { color: #ddd; }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.btn-primary { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+/* ── Filter ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 60px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+
+/* ── Dashboard specifics ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .dash-grid { grid-template-columns: 1fr; } }
+.rating-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.rating-bar .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.rating-bar .bar-fill { height: 100%; border-radius: 4px; }
+.rating-bar .bar-label { font-size: 12px; color: var(--gray); width: 24px; }
+.rating-bar .bar-count { font-size: 12px; color: var(--gray); width: 20px; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Sandwich & Soup Shop</h1>
+    <div class="sub">Family recipes, team & feedback</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="http://localhost:3020" placeholder="http://localhost:3020">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Soup<span>Spot</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('recipes')">Recipes</button>
+      <button onclick="switchTab('team')">Team</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('dash')">Dashboard</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Recipes ── -->
+  <div id="console-recipes" class="console active">
+    <h2 class="page-title">Recipes</h2>
+    <div class="page-sub">Menu items — sandwiches, soups, sides & drinks</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openRecipeModal()">+ New Recipe</button>
+      <div class="filter-bar">
+        <select id="filter-category" onchange="loadRecipes()">
+          <option value="">All Categories</option>
+          <option>Sandwich</option><option>Soup</option><option>Side</option><option>Drink</option>
+        </select>
+        <select id="filter-active" onchange="loadRecipes()">
+          <option value="">Active & Inactive</option>
+          <option value="Yes">Active Only</option><option value="No">Inactive Only</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Rating</th><th>Active</th><th></th></tr></thead>
+      <tbody id="recipes-body"></tbody>
+    </table></div>
+    <div class="pagination" id="recipes-pagination"></div>
+  </div>
+
+  <!-- ── Team ── -->
+  <div id="console-team" class="console">
+    <h2 class="page-title">Team</h2>
+    <div class="page-sub">Employees & staff directory</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEmployeeModal()">+ New Employee</button>
+      <div class="filter-bar">
+        <select id="filter-role" onchange="loadEmployees()">
+          <option value="">All Roles</option>
+          <option>Manager</option><option>Cook</option><option>Cashier</option><option>Server</option>
+        </select>
+        <select id="filter-status" onchange="loadEmployees()">
+          <option value="">All</option>
+          <option value="Active">Active</option><option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Hired</th><th>Status</th><th></th></tr></thead>
+      <tbody id="team-body"></tbody>
+    </table></div>
+    <div class="pagination" id="team-pagination"></div>
+  </div>
+
+  <!-- ── Feedback ── -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Customer Feedback</h2>
+    <div class="page-sub">Reviews and comments from customers</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openFeedbackModal()">+ New Feedback</button>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Customer</th><th>Date</th><th>Rating</th><th>Meal</th><th>Comments</th><th></th></tr></thead>
+      <tbody id="feedback-body"></tbody>
+    </table></div>
+    <div class="pagination" id="feedback-pagination"></div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div id="console-dash" class="console">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="page-sub">Shop overview at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Rating Distribution</h3><div id="rating-dist"></div></div>
+      <div class="card"><h3>Menu by Category</h3><div id="menu-dist"></div></div>
+      <div class="card"><h3>Recent Feedback</h3><div id="recent-feedback"></div></div>
+      <div class="card"><h3>Team Roster</h3><div id="team-summary"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'sandwich-shop';
+
+const PAGE_STATE = {
+  recipes: { pageToken: null, page: 1, history: [] },
+  employees: { pageToken: null, page: 1, history: [] },
+  feedback: { pageToken: null, page: 1, history: [] },
+};
+
+/* ── Helpers ── */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+function stars(n) {
+  const num = parseInt(n) || 0;
+  let out = '';
+  for (let i = 1; i <= 5; i++) out += i <= num ? '<span class="stars">\u2605</span>' : '<span class="stars-dim">\u2605</span>';
+  return out;
+}
+
+function categoryBadge(cat) {
+  const c = (cat || '').toLowerCase();
+  return `<span class="badge badge-${esc(c)}">${esc(cat)}</span>`;
+}
+
+function statusBadge(val) {
+  const c = (val || '').toLowerCase();
+  return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`;
+}
+
+/* ── Auth ── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ── Session Restore ── */
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ── API ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Tab Switching ── */
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  const tabs = ['recipes', 'team', 'feedback', 'dash'];
+  document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'recipes') loadRecipes();
+  else if (tab === 'team') loadEmployees();
+  else if (tab === 'feedback') loadFeedback();
+  else if (tab === 'dash') loadDashboard();
+}
+
+function enterApp() { loadRecipes(); }
+
+/* ══════════════════════════════════════════════
+   RECIPES
+   ══════════════════════════════════════════════ */
+async function loadRecipes(direction) {
+  const ps = PAGE_STATE.recipes;
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+
+  const cat = document.getElementById('filter-category').value;
+  const active = document.getElementById('filter-active').value;
+
+  let path = `/kapps/${KAPP}/forms/recipes/submissions?include=values&limit=25`;
+  const qParts = [];
+  if (cat) qParts.push(`values[Category]="${cat}"`);
+  if (active) qParts.push(`values[Active]="${active}"`);
+  if (qParts.length) path += '&q=' + encodeURIComponent(qParts.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    const tbody = document.getElementById('recipes-body');
+    tbody.innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${categoryBadge(v(s,'Category'))}</td>
+      <td>$${esc(v(s,'Price'))}</td>
+      <td>${stars(v(s,'Rating'))}</td>
+      <td>${statusBadge(v(s,'Active'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="viewRecipe('${s.id}')">View</button></td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray)">No recipes found</td></tr>';
+
+    const pag = document.getElementById('recipes-pagination');
+    pag.innerHTML = `
+      <button class="btn-secondary btn-sm" onclick="loadRecipes('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+      <span>Page ${ps.page}</span>
+      <button class="btn-secondary btn-sm" onclick="loadRecipes('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+  } catch (e) { toast('Error loading recipes: ' + e.message); }
+}
+
+async function viewRecipe(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission || data;
+    document.getElementById('modal-title').textContent = v(s, 'Name');
+    document.getElementById('modal-body').innerHTML = `
+      <div style="margin-bottom:12px">${categoryBadge(v(s,'Category'))} ${statusBadge(v(s,'Active'))} <span style="font-weight:600;color:var(--warm);margin-left:8px">$${esc(v(s,'Price'))}</span> <span style="margin-left:8px">${stars(v(s,'Rating'))}</span></div>
+      <label>Ingredients</label>
+      <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:6px;margin-bottom:8px">${esc(v(s,'Ingredients'))}</div>
+      <label>Instructions</label>
+      <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:6px">${esc(v(s,'Instructions'))}</div>`;
+    document.getElementById('modal-footer').innerHTML = `
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick="editRecipe('${s.id}')">Edit</button>
+      <button class="btn-danger btn-sm" onclick="deleteSubmission('recipes','${s.id}','loadRecipes')">Delete</button>`;
+    document.getElementById('modal').classList.add('open');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function openRecipeModal(existing) {
+  const s = existing || {};
+  const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Recipe' : 'New Recipe';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Name</label><input id="f-name" value="${esc(vals.Name || '')}">
+    <label>Category</label>
+    <select id="f-category"><option value="">Select...</option>
+      <option ${vals.Category==='Sandwich'?'selected':''}>Sandwich</option>
+      <option ${vals.Category==='Soup'?'selected':''}>Soup</option>
+      <option ${vals.Category==='Side'?'selected':''}>Side</option>
+      <option ${vals.Category==='Drink'?'selected':''}>Drink</option>
+    </select>
+    <label>Price</label><input id="f-price" value="${esc(vals.Price || '')}" placeholder="9.99">
+    <label>Rating</label>
+    <select id="f-rating"><option value="">—</option>
+      <option ${vals.Rating==='5'?'selected':''}>5</option><option ${vals.Rating==='4'?'selected':''}>4</option>
+      <option ${vals.Rating==='3'?'selected':''}>3</option><option ${vals.Rating==='2'?'selected':''}>2</option>
+      <option ${vals.Rating==='1'?'selected':''}>1</option>
+    </select>
+    <label>Active</label>
+    <select id="f-active"><option ${vals.Active==='Yes'||!existing?'selected':''}>Yes</option><option ${vals.Active==='No'?'selected':''}>No</option></select>
+    <label>Ingredients</label><textarea id="f-ingredients">${esc(vals.Ingredients || '')}</textarea>
+    <label>Instructions</label><textarea id="f-instructions">${esc(vals.Instructions || '')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveRecipe('${s.id || ''}')">${existing ? 'Update' : 'Create'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editRecipe(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openRecipeModal(data.submission || data);
+}
+
+async function saveRecipe(id) {
+  const values = {
+    Name: document.getElementById('f-name').value,
+    Category: document.getElementById('f-category').value,
+    Price: document.getElementById('f-price').value,
+    Rating: document.getElementById('f-rating').value,
+    Active: document.getElementById('f-active').value,
+    Ingredients: document.getElementById('f-ingredients').value,
+    Instructions: document.getElementById('f-instructions').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/recipes/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Recipe updated' : 'Recipe created'); loadRecipes();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   EMPLOYEES
+   ══════════════════════════════════════════════ */
+async function loadEmployees(direction) {
+  const ps = PAGE_STATE.employees;
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+
+  const role = document.getElementById('filter-role').value;
+  const status = document.getElementById('filter-status').value;
+
+  let path = `/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`;
+  const qParts = [];
+  if (role) qParts.push(`values[Role]="${role}"`);
+  if (status) qParts.push(`values[Status]="${status}"`);
+  if (qParts.length) path += '&q=' + encodeURIComponent(qParts.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('team-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Role'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Hire Date'))}</td>
+      <td>${statusBadge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editEmployee('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No employees found</td></tr>';
+
+    document.getElementById('team-pagination').innerHTML = `
+      <button class="btn-secondary btn-sm" onclick="loadEmployees('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+      <span>Page ${ps.page}</span>
+      <button class="btn-secondary btn-sm" onclick="loadEmployees('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+  } catch (e) { toast('Error loading employees: ' + e.message); }
+}
+
+function openEmployeeModal(existing) {
+  const s = existing || {};
+  const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Employee' : 'New Employee';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Name</label><input id="f-emp-name" value="${esc(vals.Name || '')}">
+    <label>Role</label>
+    <select id="f-emp-role"><option value="">Select...</option>
+      <option ${vals.Role==='Manager'?'selected':''}>Manager</option>
+      <option ${vals.Role==='Cook'?'selected':''}>Cook</option>
+      <option ${vals.Role==='Cashier'?'selected':''}>Cashier</option>
+      <option ${vals.Role==='Server'?'selected':''}>Server</option>
+    </select>
+    <label>Phone</label><input id="f-emp-phone" value="${esc(vals.Phone || '')}" placeholder="(612) 555-0100">
+    <label>Email</label><input id="f-emp-email" value="${esc(vals.Email || '')}">
+    <label>Hire Date</label><input id="f-emp-hire" type="date" value="${esc(vals['Hire Date'] || '')}">
+    <label>Status</label>
+    <select id="f-emp-status"><option ${vals.Status==='Active'||!existing?'selected':''}>Active</option><option ${vals.Status==='Inactive'?'selected':''}>Inactive</option></select>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveEmployee('${s.id || ''}')">${existing ? 'Update' : 'Create'}</button>
+    ${existing ? `<button class="btn-danger btn-sm" onclick="deleteSubmission('employees','${s.id}','loadEmployees')">Delete</button>` : ''}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editEmployee(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openEmployeeModal(data.submission || data);
+}
+
+async function saveEmployee(id) {
+  const values = {
+    Name: document.getElementById('f-emp-name').value,
+    Role: document.getElementById('f-emp-role').value,
+    Phone: document.getElementById('f-emp-phone').value,
+    Email: document.getElementById('f-emp-email').value,
+    'Hire Date': document.getElementById('f-emp-hire').value,
+    Status: document.getElementById('f-emp-status').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/employees/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Employee updated' : 'Employee added'); loadEmployees();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   FEEDBACK
+   ══════════════════════════════════════════════ */
+async function loadFeedback(direction) {
+  const ps = PAGE_STATE.feedback;
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+
+  let path = `/kapps/${KAPP}/forms/customer-feedback/submissions?include=values&limit=25`;
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('feedback-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Customer Name'))}</strong></td>
+      <td>${esc(v(s,'Date'))}</td>
+      <td>${stars(v(s,'Rating'))}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Meal Ordered'))}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Comments'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="viewFeedback('${s.id}')">View</button></td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray)">No feedback yet</td></tr>';
+
+    document.getElementById('feedback-pagination').innerHTML = `
+      <button class="btn-secondary btn-sm" onclick="loadFeedback('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+      <span>Page ${ps.page}</span>
+      <button class="btn-secondary btn-sm" onclick="loadFeedback('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+  } catch (e) { toast('Error loading feedback: ' + e.message); }
+}
+
+async function viewFeedback(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  const s = data.submission || data;
+  document.getElementById('modal-title').textContent = 'Feedback from ' + v(s, 'Customer Name');
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:12px">${stars(v(s,'Rating'))} <span style="font-size:13px;color:var(--gray);margin-left:8px">${esc(v(s,'Date'))}</span></div>
+    <label>Meal Ordered</label>
+    <div style="font-size:13px;background:var(--light);padding:10px;border-radius:6px;margin-bottom:8px">${esc(v(s,'Meal Ordered'))}</div>
+    <label>Comments</label>
+    <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:6px">${esc(v(s,'Comments'))}</div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Close</button>
+    <button class="btn-danger btn-sm" onclick="deleteSubmission('customer-feedback','${s.id}','loadFeedback')">Delete</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openFeedbackModal() {
+  document.getElementById('modal-title').textContent = 'New Feedback';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Customer Name</label><input id="f-fb-name">
+    <label>Date</label><input id="f-fb-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+    <label>Rating</label>
+    <select id="f-fb-rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+    <label>Meal Ordered</label><input id="f-fb-meal" placeholder="e.g. Tomato Basil Soup + Grilled Cheese">
+    <label>Comments</label><textarea id="f-fb-comments"></textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveFeedback()">Submit</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveFeedback() {
+  const values = {
+    'Customer Name': document.getElementById('f-fb-name').value,
+    Date: document.getElementById('f-fb-date').value,
+    Rating: document.getElementById('f-fb-rating').value,
+    'Meal Ordered': document.getElementById('f-fb-meal').value,
+    Comments: document.getElementById('f-fb-comments').value,
+  };
+  try {
+    await api(`/kapps/${KAPP}/forms/customer-feedback/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Feedback submitted'); loadFeedback();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [recipesData, employeesData, feedbackData] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/recipes/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/customer-feedback/submissions?include=values&limit=25`),
+    ]);
+
+    const recipes = recipesData.submissions || [];
+    const employees = employeesData.submissions || [];
+    const feedback = feedbackData.submissions || [];
+
+    const activeRecipes = recipes.filter(s => v(s, 'Active') === 'Yes').length;
+    const activeEmployees = employees.filter(s => v(s, 'Status') === 'Active').length;
+    const avgRating = feedback.length ? (feedback.reduce((sum, s) => sum + (parseInt(v(s, 'Rating')) || 0), 0) / feedback.length).toFixed(1) : '-';
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val" style="color:var(--orange)">${recipes.length}</div><div class="label">Total Recipes</div></div>
+      <div class="kpi"><div class="val" style="color:var(--green)">${activeRecipes}</div><div class="label">Active Menu Items</div></div>
+      <div class="kpi"><div class="val" style="color:var(--blue)">${activeEmployees}</div><div class="label">Active Staff</div></div>
+      <div class="kpi"><div class="val" style="color:var(--yellow)">${stars(Math.round(avgRating))} ${avgRating}</div><div class="label">Avg Rating (last 25)</div></div>`;
+
+    // Rating distribution
+    const ratingCounts = [0, 0, 0, 0, 0];
+    feedback.forEach(s => { const r = parseInt(v(s, 'Rating')); if (r >= 1 && r <= 5) ratingCounts[r - 1]++; });
+    const maxCount = Math.max(...ratingCounts, 1);
+    const colors = ['var(--red)', '#E65100', 'var(--yellow)', '#8BC34A', 'var(--green)'];
+    document.getElementById('rating-dist').innerHTML = [5, 4, 3, 2, 1].map(r => `
+      <div class="rating-bar">
+        <div class="bar-label">${r}\u2605</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(ratingCounts[r-1]/maxCount)*100}%;background:${colors[r-1]}"></div></div>
+        <div class="bar-count">${ratingCounts[r-1]}</div>
+      </div>`).join('');
+
+    // Menu by category
+    const cats = {};
+    recipes.forEach(s => { const c = v(s, 'Category') || 'Other'; cats[c] = (cats[c] || 0) + 1; });
+    document.getElementById('menu-dist').innerHTML = Object.entries(cats).map(([cat, count]) =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${categoryBadge(cat)} <strong>${count}</strong></div>`
+    ).join('');
+
+    // Recent feedback
+    document.getElementById('recent-feedback').innerHTML = feedback.slice(0, 5).map(s =>
+      `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div style="display:flex;justify-content:space-between"><strong>${esc(v(s,'Customer Name'))}</strong>${stars(v(s,'Rating'))}</div>
+        <div style="color:var(--gray);font-size:12px;margin-top:2px">${esc(v(s,'Comments')).slice(0, 80)}${v(s,'Comments').length > 80 ? '...' : ''}</div>
+      </div>`).join('') || '<div style="color:var(--gray);font-size:13px">No feedback yet</div>';
+
+    // Team summary
+    const roles = {};
+    employees.filter(s => v(s, 'Status') === 'Active').forEach(s => { const r = v(s, 'Role') || 'Other'; roles[r] = (roles[r] || 0) + 1; });
+    document.getElementById('team-summary').innerHTML = Object.entries(roles).map(([role, count]) =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${esc(role)} <strong>${count}</strong></div>`
+    ).join('') || '<div style="color:var(--gray);font-size:13px">No active employees</div>';
+
+  } catch (e) { toast('Dashboard error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   SHARED
+   ══════════════════════════════════════════════ */
+async function deleteSubmission(form, id, reloadFn) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    closeModal(); toast('Deleted'); window[reloadFn]();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

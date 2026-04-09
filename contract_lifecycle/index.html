@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Lifecycle Management</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+  --indigo: #283593;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--indigo); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--indigo); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--indigo); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #1A237E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: #7986CB; }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--indigo); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); cursor: default; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.kpi-card.kpi-indigo { border-left-color: var(--indigo); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-draft, .badge-scheduled, .badge-upcoming, .badge-pending { background: #E3F2FD; color: #1565C0; }
+.badge-active, .badge-completed, .badge-executed, .badge-approved, .badge-current, .badge-resolved { background: #E8F5E9; color: #2E7D32; }
+.badge-under-review, .badge-in-progress, .badge-proposed, .badge-in-negotiation, .badge-acknowledged { background: #F3E5F5; color: #6A1B9A; }
+.badge-expiring, .badge-follow-up-required, .badge-under-negotiation { background: #FFF3E0; color: #E65100; }
+.badge-expired, .badge-terminated, .badge-rejected, .badge-declined, .badge-lapsed, .badge-dismissed { background: #FFEBEE; color: #C62828; }
+.badge-inactive, .badge-superseded, .badge-archived, .badge-waived, .badge-modified { background: #ECEFF1; color: #546E7A; }
+
+/* Risk badges */
+.risk-high { color: var(--red); font-weight: 700; }
+.risk-medium { color: var(--orange); font-weight: 600; }
+.risk-low { color: var(--green); font-weight: 600; }
+
+/* Priority badges */
+.priority-high { color: var(--red); font-weight: 700; }
+.priority-medium { color: var(--orange); font-weight: 600; }
+.priority-low { color: var(--green); }
+
+/* Score badges */
+.score-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: var(--white); }
+.score-high { background: var(--green); }
+.score-medium { background: var(--yellow); color: #333; }
+.score-low { background: var(--red); }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--indigo); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 960px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--indigo); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--indigo); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-indigo { background: var(--indigo); color: var(--white); }
+.act-btn-indigo:hover { background: #1A237E; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Days remaining */
+.days-green { color: var(--green); font-weight: 600; }
+.days-yellow { color: #F9A825; font-weight: 600; }
+.days-red { color: var(--red); font-weight: 700; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Contract Lifecycle</h1>
+      <p class="subtitle">Healthcare Payer Contract Management</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Contract <span class="accent">Lifecycle</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="contracts">Contracts</button>
+      <button class="tab-btn" data-tab="payers">Payers</button>
+      <button class="tab-btn" data-tab="fee-schedules">Fee Schedules</button>
+      <button class="tab-btn" data-tab="amendments">Amendments</button>
+      <button class="tab-btn" data-tab="compliance">Compliance</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Contract Dashboard</div>
+      <div class="page-sub">Payer contract portfolio overview and key metrics</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Recent Contracts</h3><div id="dash-recent"></div></div>
+        <div class="card"><h3>Amendment Pipeline</h3><div id="dash-amendments"></div></div>
+      </div>
+    </div>
+
+    <!-- CONTRACTS -->
+    <div class="tab-panel" id="panel-contracts">
+      <div class="page-title">Contracts</div>
+      <div class="page-sub">Payer contract portfolio management</div>
+      <div class="filter-bar" id="con-filters">
+        <select id="con-f-status"><option value="">All Statuses</option><option>Draft</option><option>Under Review</option><option>Active</option><option>Expiring</option><option>Expired</option><option>Terminated</option></select>
+        <select id="con-f-type"><option value="">All Types</option><option>Fee-for-Service</option><option>Value-Based</option><option>Capitation</option><option>Bundled Payment</option><option>Pay-for-Performance</option><option>Shared Savings</option></select>
+        <select id="con-f-risk"><option value="">All Risk</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <input id="con-f-search" type="text" placeholder="Search contracts...">
+      </div>
+      <div id="con-table"></div>
+      <div id="con-pag" class="pagination"></div>
+    </div>
+
+    <!-- PAYERS -->
+    <div class="tab-panel" id="panel-payers">
+      <div class="page-title">Payer Directory</div>
+      <div class="page-sub">Insurance payer organizations and contract counts</div>
+      <div class="filter-bar" id="pay-filters">
+        <select id="pay-f-status"><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Pending</option></select>
+        <select id="pay-f-type"><option value="">All Types</option><option>Commercial</option><option>Medicare</option><option>Medicaid</option><option>Medicare Advantage</option><option>Managed Medicaid</option><option>Workers Comp</option><option>Tricare</option></select>
+        <input id="pay-f-search" type="text" placeholder="Search payers...">
+      </div>
+      <div id="pay-table"></div>
+      <div id="pay-pag" class="pagination"></div>
+    </div>
+
+    <!-- FEE SCHEDULES -->
+    <div class="tab-panel" id="panel-fee-schedules">
+      <div class="page-title">Fee Schedules</div>
+      <div class="page-sub">Contracted reimbursement rates by service</div>
+      <div class="filter-bar" id="fee-filters">
+        <select id="fee-f-status"><option value="">All Statuses</option><option>Active</option><option>Pending</option><option>Expired</option></select>
+        <select id="fee-f-cat"><option value="">All Categories</option><option>Inpatient</option><option>Outpatient</option><option>Professional</option><option>Lab</option><option>Imaging</option><option>Emergency</option><option>Pharmacy</option></select>
+        <input id="fee-f-search" type="text" placeholder="Search fee schedules...">
+      </div>
+      <div id="fee-table"></div>
+      <div id="fee-pag" class="pagination"></div>
+    </div>
+
+    <!-- AMENDMENTS -->
+    <div class="tab-panel" id="panel-amendments">
+      <div class="page-title">Amendments</div>
+      <div class="page-sub">Contract amendment requests and negotiations</div>
+      <div class="filter-bar" id="amd-filters">
+        <select id="amd-f-status"><option value="">All Statuses</option><option>Draft</option><option>Proposed</option><option>Under Negotiation</option><option>Approved</option><option>Rejected</option><option>Executed</option></select>
+        <select id="amd-f-priority"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="amd-f-type"><option value="">All Types</option><option>Rate Change</option><option>Term Extension</option><option>Scope Change</option><option>Termination Clause</option><option>Quality Metric</option><option>Payment Term</option></select>
+        <input id="amd-f-search" type="text" placeholder="Search amendments...">
+      </div>
+      <div id="amd-table"></div>
+      <div id="amd-pag" class="pagination"></div>
+    </div>
+
+    <!-- COMPLIANCE -->
+    <div class="tab-panel" id="panel-compliance">
+      <div class="page-title">Compliance Checks</div>
+      <div class="page-sub">Contract compliance audits and score tracking</div>
+      <div class="filter-bar" id="chk-filters">
+        <select id="chk-f-status"><option value="">All Statuses</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Follow Up Required</option></select>
+        <select id="chk-f-type"><option value="">All Types</option><option>Payment Accuracy</option><option>Timely Filing</option><option>Authorization Compliance</option><option>Credentialing</option><option>Quality Metrics</option><option>Documentation</option></select>
+        <input id="chk-f-search" type="text" placeholder="Search checks...">
+      </div>
+      <div id="chk-table"></div>
+      <div id="chk-pag" class="pagination"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export contract data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT DETAIL MODAL -->
+<div class="modal-overlay" id="contract-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="con-modal-title">Contract Detail</h2>
+      <button class="modal-close" onclick="closeModal('contract-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="con-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="terms">Terms</button>
+        <button class="modal-tab" data-sec="fees">Fee Schedules</button>
+        <button class="modal-tab" data-sec="amendments">Amendments</button>
+        <button class="modal-tab" data-sec="compliance">Compliance</button>
+      </div>
+      <div id="con-modal-overview" class="modal-section active"></div>
+      <div id="con-modal-terms" class="modal-section"></div>
+      <div id="con-modal-fees" class="modal-section"></div>
+      <div id="con-modal-amendments" class="modal-section"></div>
+      <div id="con-modal-compliance" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD DETAIL MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =============== STATE & AUTH =============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'contract-lifecycle';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* =============== API HELPERS =============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* =============== BADGES =============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+
+function riskSpan(r) {
+  const cls = (r || '').toLowerCase();
+  return `<span class="risk-${cls}">${r || ''}</span>`;
+}
+
+function prioritySpan(p) {
+  const cls = (p || '').toLowerCase();
+  return `<span class="priority-${cls}">${p || ''}</span>`;
+}
+
+function scoreBadge(score) {
+  const n = parseInt(score);
+  if (isNaN(n)) return score || '';
+  const cls = n >= 90 ? 'score-high' : n >= 75 ? 'score-medium' : 'score-low';
+  return `<span class="score-badge ${cls}">${score}</span>`;
+}
+
+function fmtCurrency(val) {
+  const n = parseInt(val);
+  if (isNaN(n)) return val || '';
+  return '$' + n.toLocaleString();
+}
+
+function daysRemaining(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="days-red">${Math.abs(days)}d overdue</span>`;
+  if (days <= 30) return `<span class="days-red">${days}d</span>`;
+  if (days <= 90) return `<span class="days-yellow">${days}d</span>`;
+  return `<span class="days-green">${days}d</span>`;
+}
+
+/* =============== PAGINATION =============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* =============== TAB NAVIGATION =============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'contracts') loadContracts();
+    else if (tab === 'payers') loadPayers();
+    else if (tab === 'fee-schedules') loadFeeSchedules();
+    else if (tab === 'amendments') loadAmendments();
+    else if (tab === 'compliance') loadCompliance();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* =============== MODAL =============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('con-modal-tabs', ['con-modal-overview', 'con-modal-terms', 'con-modal-fees', 'con-modal-amendments', 'con-modal-compliance']);
+
+/* =============== DASHBOARD =============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/clm/dashboard');
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-indigo"><div class="kpi-value">${d.activeContracts}</div><div class="kpi-label">Active Contracts</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${fmtCurrency(d.totalAnnualValue)}</div><div class="kpi-label">Total Annual Value</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.expiring90d}</div><div class="kpi-label">Expiring (90d)</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.openAmendments}</div><div class="kpi-label">Open Amendments</div></div>
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.avgComplianceScore}</div><div class="kpi-label">Avg Compliance Score</div></div>
+      <div class="kpi-card kpi-blue"><div class="kpi-value">${d.pendingRenewals}</div><div class="kpi-label">Pending Renewals</div></div>`;
+
+    document.getElementById('dash-recent').innerHTML = d.recentContracts.length === 0
+      ? '<div class="loading">No contracts</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Payer</th><th>Risk</th><th>Status</th><th>Expires</th></tr></thead><tbody>${
+        d.recentContracts.map(c => `<tr onclick="openContractDetail('${c.contractId}')"><td>${c.contractId}</td><td>${c.name}</td><td>${c.payer}</td><td>${riskSpan(c.risk)}</td><td>${badge(c.status)}</td><td>${daysRemaining(c.expiration)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    document.getElementById('dash-amendments').innerHTML = d.amendmentList.length === 0
+      ? '<div class="loading">No open amendments</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Type</th><th>Priority</th><th>Status</th><th>Impact</th></tr></thead><tbody>${
+        d.amendmentList.map(a => `<tr><td>${a.amendmentId}</td><td>${a.contract}</td><td>${a.type}</td><td>${prioritySpan(a.priority)}</td><td>${badge(a.status)}</td><td>${a.impact}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== CONTRACTS TAB =============== */
+let conPage = 1, conPageKeys = [null], conHasNext = false;
+
+['con-f-status', 'con-f-type', 'con-f-risk'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { conPage = 1; conPageKeys = [null]; conHasNext = false; loadContracts(); });
+});
+document.getElementById('con-f-search').addEventListener('input', debounce(() => { conPage = 1; conPageKeys = [null]; conHasNext = false; loadContracts(); }, 300));
+
+async function loadContracts() {
+  const status = document.getElementById('con-f-status').value;
+  const ctype = document.getElementById('con-f-type').value;
+  const risk = document.getElementById('con-f-risk').value;
+  const search = document.getElementById('con-f-search').value.trim().toLowerCase();
+
+  const parts = [];
+  if (status) parts.push(`values[Status] = "${status}"`);
+  if (ctype) parts.push(`values[Contract Type] = "${ctype}"`);
+  if (risk) parts.push(`values[Risk Level] = "${risk}"`);
+  const kql = parts.length <= 1 ? parts.join('') : null;
+
+  try {
+    const data = await kqlFetch('contracts', kql, 25, conPageKeys[conPage - 1]);
+    let subs = data.submissions || [];
+
+    if (parts.length > 1) {
+      subs = subs.filter(s => {
+        if (status && vf(s, 'Status') !== status) return false;
+        if (ctype && vf(s, 'Contract Type') !== ctype) return false;
+        if (risk && vf(s, 'Risk Level') !== risk) return false;
+        return true;
+      });
+    }
+    if (search) {
+      subs = subs.filter(s =>
+        (vf(s, 'Contract ID') + ' ' + vf(s, 'Contract Name') + ' ' + vf(s, 'Payer Name')).toLowerCase().includes(search)
+      );
+    }
+
+    document.getElementById('con-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No contracts found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Payer</th><th>Type</th><th>Value</th><th>Risk</th><th>Status</th><th>Expires</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openContractDetail('${vf(s, 'Contract ID')}')">
+          <td>${vf(s, 'Contract ID')}</td>
+          <td>${vf(s, 'Contract Name')}</td>
+          <td>${vf(s, 'Payer Name')}</td>
+          <td>${vf(s, 'Contract Type')}</td>
+          <td>${fmtCurrency(vf(s, 'Annual Value'))}</td>
+          <td>${riskSpan(vf(s, 'Risk Level'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${daysRemaining(vf(s, 'Expiration Date'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    conHasNext = !!data.nextPageToken;
+    if (conHasNext && subs.length) conPageKeys[conPage] = subs[subs.length - 1].createdAt;
+    renderPag('con-pag', conPage, conHasNext, 'conPrev()', 'conNext()');
+  } catch (e) {
+    document.getElementById('con-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function conNext() { if (!conHasNext) return; conPage++; loadContracts(); }
+function conPrev() { if (conPage <= 1) return; conPage--; loadContracts(); }
+
+/* =============== CONTRACT DETAIL MODAL =============== */
+async function openContractDetail(contractId) {
+  openModal('contract-modal');
+  document.getElementById('con-modal-title').textContent = 'Loading...';
+  document.getElementById('con-modal-overview').innerHTML = '<div class="loading">Loading contract details...</div>';
+  ['con-modal-terms', 'con-modal-fees', 'con-modal-amendments', 'con-modal-compliance'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  // Reset to overview tab
+  document.querySelectorAll('#con-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#con-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#contract-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('con-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/clm/contract/${encodeURIComponent(contractId)}/summary`);
+    const c = d.contract;
+    document.getElementById('con-modal-title').textContent = `${c['Contract ID']} - ${c['Contract Name']}`;
+
+    // Transition buttons
+    const transitions = { 'Draft': ['Under Review'], 'Under Review': ['Active', 'Draft'], 'Active': ['Expiring', 'Terminated'], 'Expiring': ['Active', 'Expired', 'Terminated'], 'Expired': ['Draft'] };
+    const allowed = transitions[c.Status] || [];
+    const btns = allowed.map(s => `<button class="act-btn act-btn-indigo" onclick="transitionContract('${contractId}','${s}')">${s}</button>`).join(' ');
+
+    // Payer info
+    const payerHtml = d.payer ? `
+      <div class="card" style="margin-top:16px"><h3>Payer Information</h3>
+        <div class="detail-grid">
+          <div class="detail-row"><span class="detail-label">Payer Name</span><span class="detail-value">${d.payer['Payer Name'] || ''}</span></div>
+          <div class="detail-row"><span class="detail-label">Payer Type</span><span class="detail-value">${d.payer['Payer Type'] || ''}</span></div>
+          <div class="detail-row"><span class="detail-label">Lives Covered</span><span class="detail-value">${parseInt(d.payer['Lives Covered'] || 0).toLocaleString()}</span></div>
+          <div class="detail-row"><span class="detail-label">Contact</span><span class="detail-value">${d.payer['Primary Contact'] || ''}</span></div>
+          <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${d.payer['Phone'] || ''}</span></div>
+          <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${d.payer['Email'] || ''}</span></div>
+        </div>
+      </div>` : '';
+
+    document.getElementById('con-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${badge(c.Status)} ${riskSpan(c['Risk Level'])} ${btns}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Contract Type</span><span class="detail-value">${c['Contract Type']}</span></div>
+        <div class="detail-row"><span class="detail-label">Annual Value</span><span class="detail-value">${fmtCurrency(c['Annual Value'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${c['Effective Date']}</span></div>
+        <div class="detail-row"><span class="detail-label">Expiration Date</span><span class="detail-value">${c['Expiration Date']} ${daysRemaining(c['Expiration Date'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Auto Renew</span><span class="detail-value">${c['Auto Renew']}</span></div>
+        <div class="detail-row"><span class="detail-label">Payment Terms</span><span class="detail-value">${c['Payment Terms']}</span></div>
+        <div class="detail-row"><span class="detail-label">Negotiated By</span><span class="detail-value">${c['Negotiated By']}</span></div>
+        <div class="detail-row"><span class="detail-label">Managed By</span><span class="detail-value">${c['Managed By']}</span></div>
+      </div>
+      ${payerHtml}`;
+
+    // Terms
+    document.getElementById('con-modal-terms').innerHTML = d.terms.length === 0
+      ? '<div class="loading">No terms linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Deadline</th><th>Status</th></tr></thead><tbody>${
+        d.terms.map(t => `<tr><td>${t['Term ID']}</td><td>${t['Term Type']}</td><td>${(t.Description || '').slice(0, 60)}</td><td>${daysRemaining(t['Compliance Deadline'])}</td><td>${badge(t.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Fee Schedules
+    document.getElementById('con-modal-fees').innerHTML = d.feeSchedules.length === 0
+      ? '<div class="loading">No fee schedules linked</div>'
+      : `<table class="data-table"><thead><tr><th>Code</th><th>Description</th><th>Rate Type</th><th>Rate</th><th>Medicare</th><th>Category</th><th>Status</th></tr></thead><tbody>${
+        d.feeSchedules.map(f => `<tr><td>${f['Service Code']}</td><td>${f['Service Description']}</td><td>${f['Rate Type']}</td><td>${f['Rate Amount']}</td><td>${fmtCurrency(f['Medicare Rate'])}</td><td>${f.Category}</td><td>${badge(f.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Amendments
+    document.getElementById('con-modal-amendments').innerHTML = d.amendments.length === 0
+      ? '<div class="loading">No amendments linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Impact</th><th>Priority</th><th>Status</th></tr></thead><tbody>${
+        d.amendments.map(a => `<tr><td>${a['Amendment ID']}</td><td>${a['Amendment Type']}</td><td>${(a.Description || '').slice(0, 50)}</td><td>${a['Financial Impact']}</td><td>${prioritySpan(a.Priority)}</td><td>${badge(a.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Compliance Checks
+    document.getElementById('con-modal-compliance').innerHTML = d.complianceChecks.length === 0
+      ? '<div class="loading">No compliance checks linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Auditor</th><th>Score</th><th>Issues</th><th>Status</th></tr></thead><tbody>${
+        d.complianceChecks.map(c => `<tr><td>${c['Check ID']}</td><td>${c['Check Type']}</td><td>${c.Auditor}</td><td>${scoreBadge(c['Compliance Score'])}</td><td>${c['Issues Found'] || '-'}</td><td>${badge(c.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('con-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+async function transitionContract(contractId, newStatus) {
+  try {
+    await apiPost(`/api/clm/contracts/${encodeURIComponent(contractId)}/transition`, { status: newStatus, performer: USERNAME });
+    openContractDetail(contractId);
+    loadContracts();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== RECORD DETAIL (generic) =============== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* =============== PAYERS TAB =============== */
+let payPage = 1, payPageKeys = [null], payHasNext = false;
+
+['pay-f-status', 'pay-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { payPage = 1; payPageKeys = [null]; payHasNext = false; loadPayers(); });
+});
+document.getElementById('pay-f-search').addEventListener('input', debounce(() => { payPage = 1; payPageKeys = [null]; payHasNext = false; loadPayers(); }, 300));
+
+async function loadPayers() {
+  const status = document.getElementById('pay-f-status').value;
+  const ptype = document.getElementById('pay-f-type').value;
+  const search = document.getElementById('pay-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('payers', kql, 25, payPageKeys[payPage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (ptype) subs = subs.filter(s => vf(s, 'Payer Type') === ptype);
+    if (search) subs = subs.filter(s => (vf(s, 'Payer ID') + ' ' + vf(s, 'Payer Name') + ' ' + vf(s, 'Primary Contact')).toLowerCase().includes(search));
+
+    document.getElementById('pay-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No payers found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Lives</th><th>Market Share</th><th>Contact</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="showRecord('payers','Payer ID','${vf(s, 'Payer ID')}','Payer Details')">
+          <td>${vf(s, 'Payer ID')}</td>
+          <td>${vf(s, 'Payer Name')}</td>
+          <td>${vf(s, 'Payer Type')}</td>
+          <td>${parseInt(vf(s, 'Lives Covered') || 0).toLocaleString()}</td>
+          <td>${vf(s, 'Market Share')}%</td>
+          <td>${vf(s, 'Primary Contact')}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    payHasNext = !!data.nextPageToken;
+    if (payHasNext && subs.length) payPageKeys[payPage] = subs[subs.length - 1].createdAt;
+    renderPag('pay-pag', payPage, payHasNext, 'payPrev()', 'payNext()');
+  } catch (e) {
+    document.getElementById('pay-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function payNext() { if (!payHasNext) return; payPage++; loadPayers(); }
+function payPrev() { if (payPage <= 1) return; payPage--; loadPayers(); }
+
+/* =============== FEE SCHEDULES TAB =============== */
+let feePage = 1, feePageKeys = [null], feeHasNext = false;
+
+['fee-f-status', 'fee-f-cat'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { feePage = 1; feePageKeys = [null]; feeHasNext = false; loadFeeSchedules(); });
+});
+document.getElementById('fee-f-search').addEventListener('input', debounce(() => { feePage = 1; feePageKeys = [null]; feeHasNext = false; loadFeeSchedules(); }, 300));
+
+async function loadFeeSchedules() {
+  const status = document.getElementById('fee-f-status').value;
+  const cat = document.getElementById('fee-f-cat').value;
+  const search = document.getElementById('fee-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('fee-schedules', kql, 25, feePageKeys[feePage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (cat) subs = subs.filter(s => vf(s, 'Category') === cat);
+    if (search) subs = subs.filter(s => (vf(s, 'Service Code') + ' ' + vf(s, 'Service Description') + ' ' + vf(s, 'Contract Name')).toLowerCase().includes(search));
+
+    document.getElementById('fee-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No fee schedules found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Code</th><th>Description</th><th>Contract</th><th>Rate Type</th><th>Rate</th><th>Medicare</th><th>Category</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="showRecord('fee-schedules','Schedule ID','${vf(s, 'Schedule ID')}','Fee Schedule Details')">
+          <td>${vf(s, 'Schedule ID')}</td>
+          <td>${vf(s, 'Service Code')}</td>
+          <td>${vf(s, 'Service Description')}</td>
+          <td>${vf(s, 'Contract Name')}</td>
+          <td>${vf(s, 'Rate Type')}</td>
+          <td>${vf(s, 'Rate Amount')}</td>
+          <td>${fmtCurrency(vf(s, 'Medicare Rate'))}</td>
+          <td>${vf(s, 'Category')}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    feeHasNext = !!data.nextPageToken;
+    if (feeHasNext && subs.length) feePageKeys[feePage] = subs[subs.length - 1].createdAt;
+    renderPag('fee-pag', feePage, feeHasNext, 'feePrev()', 'feeNext()');
+  } catch (e) {
+    document.getElementById('fee-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function feeNext() { if (!feeHasNext) return; feePage++; loadFeeSchedules(); }
+function feePrev() { if (feePage <= 1) return; feePage--; loadFeeSchedules(); }
+
+/* =============== AMENDMENTS TAB =============== */
+let amdPage = 1, amdPageKeys = [null], amdHasNext = false;
+
+['amd-f-status', 'amd-f-priority', 'amd-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { amdPage = 1; amdPageKeys = [null]; amdHasNext = false; loadAmendments(); });
+});
+document.getElementById('amd-f-search').addEventListener('input', debounce(() => { amdPage = 1; amdPageKeys = [null]; amdHasNext = false; loadAmendments(); }, 300));
+
+async function loadAmendments() {
+  const status = document.getElementById('amd-f-status').value;
+  const priority = document.getElementById('amd-f-priority').value;
+  const atype = document.getElementById('amd-f-type').value;
+  const search = document.getElementById('amd-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('amendments', kql, 25, amdPageKeys[amdPage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (atype) subs = subs.filter(s => vf(s, 'Amendment Type') === atype);
+    if (search) subs = subs.filter(s => (vf(s, 'Amendment ID') + ' ' + vf(s, 'Contract Name') + ' ' + vf(s, 'Description')).toLowerCase().includes(search));
+
+    document.getElementById('amd-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No amendments found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Type</th><th>Description</th><th>Impact</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const aid = vf(s, 'Amendment ID');
+          let actions = '';
+          if (st === 'Draft') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionAmendment('${aid}','Proposed')">Propose</button>`;
+          else if (st === 'Proposed') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionAmendment('${aid}','Under Negotiation')">Negotiate</button>`;
+          else if (st === 'Under Negotiation') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionAmendment('${aid}','Approved')">Approve</button> <button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionAmendment('${aid}','Rejected')">Reject</button>`;
+          else if (st === 'Approved') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionAmendment('${aid}','Executed')">Execute</button>`;
+          else if (st === 'Rejected') actions = `<button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionAmendment('${aid}','Draft')">Reopen</button>`;
+          return `<tr onclick="showRecord('amendments','Amendment ID','${aid}','Amendment Details')">
+            <td>${aid}</td>
+            <td>${vf(s, 'Contract Name')}</td>
+            <td>${vf(s, 'Amendment Type')}</td>
+            <td>${(vf(s, 'Description') || '').slice(0, 45)}</td>
+            <td>${vf(s, 'Financial Impact')}</td>
+            <td>${prioritySpan(vf(s, 'Priority'))}</td>
+            <td>${badge(st)}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    amdHasNext = !!data.nextPageToken;
+    if (amdHasNext && subs.length) amdPageKeys[amdPage] = subs[subs.length - 1].createdAt;
+    renderPag('amd-pag', amdPage, amdHasNext, 'amdPrev()', 'amdNext()');
+  } catch (e) {
+    document.getElementById('amd-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function amdNext() { if (!amdHasNext) return; amdPage++; loadAmendments(); }
+function amdPrev() { if (amdPage <= 1) return; amdPage--; loadAmendments(); }
+
+async function transitionAmendment(amendmentId, newStatus) {
+  try {
+    await apiPost(`/api/clm/amendments/${encodeURIComponent(amendmentId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadAmendments();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== COMPLIANCE TAB =============== */
+let chkPage = 1, chkPageKeys = [null], chkHasNext = false;
+
+['chk-f-status', 'chk-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { chkPage = 1; chkPageKeys = [null]; chkHasNext = false; loadCompliance(); });
+});
+document.getElementById('chk-f-search').addEventListener('input', debounce(() => { chkPage = 1; chkPageKeys = [null]; chkHasNext = false; loadCompliance(); }, 300));
+
+async function loadCompliance() {
+  const status = document.getElementById('chk-f-status').value;
+  const ctype = document.getElementById('chk-f-type').value;
+  const search = document.getElementById('chk-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('compliance-checks', kql, 25, chkPageKeys[chkPage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (ctype) subs = subs.filter(s => vf(s, 'Check Type') === ctype);
+    if (search) subs = subs.filter(s => (vf(s, 'Check ID') + ' ' + vf(s, 'Contract Name') + ' ' + vf(s, 'Check Type') + ' ' + vf(s, 'Auditor')).toLowerCase().includes(search));
+
+    document.getElementById('chk-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No compliance checks found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Type</th><th>Auditor</th><th>Date</th><th>Score</th><th>Issues</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="showRecord('compliance-checks','Check ID','${vf(s, 'Check ID')}','Compliance Check Details')">
+          <td>${vf(s, 'Check ID')}</td>
+          <td>${vf(s, 'Contract Name')}</td>
+          <td>${vf(s, 'Check Type')}</td>
+          <td>${vf(s, 'Auditor')}</td>
+          <td>${vf(s, 'Audit Date')}</td>
+          <td>${scoreBadge(vf(s, 'Compliance Score'))}</td>
+          <td>${vf(s, 'Issues Found') || '-'}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    chkHasNext = !!data.nextPageToken;
+    if (chkHasNext && subs.length) chkPageKeys[chkPage] = subs[subs.length - 1].createdAt;
+    renderPag('chk-pag', chkPage, chkHasNext, 'chkPrev()', 'chkNext()');
+  } catch (e) {
+    document.getElementById('chk-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function chkNext() { if (!chkHasNext) return; chkPage++; loadCompliance(); }
+function chkPrev() { if (chkPage <= 1) return; chkPage--; loadCompliance(); }
+
+/* =============== ANALYTICS TAB =============== */
+const REPORT_TYPES = [
+  { id: 'contract-summary', name: 'Contract Summary', desc: 'Complete listing of all payer contracts with status, type, value, and expiration details' },
+  { id: 'financial', name: 'Financial Report', desc: 'Contract value breakdown by type and payer with total portfolio analysis' },
+  { id: 'compliance', name: 'Compliance Report', desc: 'Audit results, compliance scores, and issue tracking across all contracts' },
+  { id: 'expiration', name: 'Expiration Report', desc: 'Upcoming contract expirations sorted by date with auto-renewal status' },
+  { id: 'amendment', name: 'Amendment Report', desc: 'Amendment pipeline with financial impact, priority, and negotiation status' },
+  { id: 'renewal', name: 'Renewal Report', desc: 'Contract renewal tracking with proposed changes and negotiation status' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/clm/report/${type}`);
+
+    if (type === 'contract-summary') {
+      const csvRows = [['Contract ID', 'Name', 'Payer', 'Type', 'Status', 'Risk', 'Value', 'Effective', 'Expiration', 'Auto Renew', 'Managed By']];
+      d.items.forEach(i => csvRows.push([i.contractId, i.name, i.payer, i.type, i.status, i.risk, i.value, i.effective, i.expiration, i.autoRenew, i.managedBy]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} contracts)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'contract-summary.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Payer</th><th>Type</th><th>Value</th><th>Risk</th><th>Status</th><th>Expires</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.contractId}</td><td>${i.name}</td><td>${i.payer}</td><td>${i.type}</td><td>${fmtCurrency(i.value)}</td><td>${riskSpan(i.risk)}</td><td>${badge(i.status)}</td><td>${i.expiration}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'financial') {
+      const types = Object.entries(d.byType).sort((a, b) => b[1].total - a[1].total);
+      const maxVal = Math.max(...types.map(([, v]) => v.total), 1);
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-indigo"><div class="kpi-value">${d.totalActive}</div><div class="kpi-label">Active Contracts</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${fmtCurrency(d.totalValue)}</div><div class="kpi-label">Total Portfolio</div></div>
+        </div>
+        <h3 style="font-size:13px; color:var(--gray); margin-bottom:12px; text-transform:uppercase">VALUE BY CONTRACT TYPE</h3>
+        ${types.map(([t, v]) => `<div style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px"><span style="font-weight:600; font-size:13px">${t}</span><span style="font-size:12px; color:var(--gray)">${v.count} contracts - ${fmtCurrency(v.total)}</span></div>
+          <div style="background:var(--border); border-radius:4px; height:20px; overflow:hidden">
+            <div style="width:${v.total / maxVal * 100}%; background:var(--indigo); height:100%"></div>
+          </div>
+        </div>`).join('')}</div>`;
+    } else if (type === 'compliance') {
+      const csvRows = [['Check ID', 'Contract', 'Type', 'Auditor', 'Date', 'Score', 'Issues', 'Status', 'Findings']];
+      d.items.forEach(i => csvRows.push([i.checkId, i.contract, i.type, i.auditor, i.date, i.score, i.issues, i.status, i.findings]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} checks)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'compliance-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Type</th><th>Auditor</th><th>Date</th><th>Score</th><th>Issues</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.checkId}</td><td>${i.contract}</td><td>${i.type}</td><td>${i.auditor}</td><td>${i.date}</td><td>${scoreBadge(i.score)}</td><td>${i.issues || '-'}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'expiration') {
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} contracts)</h3>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Payer</th><th>Value</th><th>Risk</th><th>Auto Renew</th><th>Status</th><th>Expires</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.contractId}</td><td>${i.name}</td><td>${i.payer}</td><td>${fmtCurrency(i.value)}</td><td>${riskSpan(i.risk)}</td><td>${i.autoRenew}</td><td>${badge(i.status)}</td><td>${daysRemaining(i.expiration)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'amendment') {
+      const csvRows = [['Amendment ID', 'Contract', 'Type', 'Description', 'Status', 'Priority', 'Impact', 'Requested', 'Effective']];
+      d.items.forEach(i => csvRows.push([i.amendmentId, i.contract, i.type, i.description, i.status, i.priority, i.impact, i.requestedDate, i.effectiveDate]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} amendments)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'amendment-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Type</th><th>Impact</th><th>Priority</th><th>Status</th><th>Requested</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.amendmentId}</td><td>${i.contract}</td><td>${i.type}</td><td>${i.impact}</td><td>${prioritySpan(i.priority)}</td><td>${badge(i.status)}</td><td>${i.requestedDate}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'renewal') {
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} renewals)</h3>
+        <table class="data-table"><thead><tr><th>ID</th><th>Contract</th><th>Payer</th><th>Current Exp</th><th>Proposed End</th><th>Lead</th><th>Impact</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.renewalId}</td><td>${i.contract}</td><td>${i.payer}</td><td>${i.currentExpiration}</td><td>${i.proposedEnd}</td><td>${i.lead}</td><td>${i.impact}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* =============== UTILITY =============== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

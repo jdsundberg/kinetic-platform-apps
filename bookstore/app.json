@@ -1,0 +1,201 @@
+{
+  "name": "Bookstore",
+  "slug": "bookstore",
+  "description": "Bookstore management with inventory, employees, borrowers, and loan tracking.",
+  "forms": [
+    {
+      "slug": "books",
+      "name": "Books",
+      "fields": [
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Author",
+          "required": true
+        },
+        {
+          "name": "Genre"
+        },
+        {
+          "name": "ISBN"
+        },
+        {
+          "name": "Publisher"
+        },
+        {
+          "name": "Price"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Condition"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values[\"Title\"]} - ${values[\"Author\"]}",
+      "indexes": {
+        "single": [
+          "values[Genre]",
+          "values[Status]",
+          "values[Author]",
+          "values[ISBN]"
+        ],
+        "compound": [
+          [
+            "values[Genre]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Hire Date"
+        },
+        {
+          "name": "Schedule"
+        },
+        {
+          "name": "Hourly Rate"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values[\"Name\"]} - ${values[\"Role\"]}",
+      "indexes": {
+        "single": [
+          "values[Role]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Role]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "borrowers",
+      "name": "Borrowers",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Membership"
+        },
+        {
+          "name": "Address",
+          "rows": 2
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values[\"Name\"]} (${values[\"Membership\"]})",
+      "indexes": {
+        "single": [
+          "values[Membership]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "loans",
+      "name": "Loans",
+      "fields": [
+        {
+          "name": "Book Title",
+          "required": true
+        },
+        {
+          "name": "Book ID"
+        },
+        {
+          "name": "ISBN"
+        },
+        {
+          "name": "Borrower Name",
+          "required": true
+        },
+        {
+          "name": "Borrower Email"
+        },
+        {
+          "name": "Checkout Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Return Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values[\"Book Title\"]} - ${values[\"Borrower Name\"]} (${values[\"Status\"]})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Borrower Name]",
+          "values[Book Title]",
+          "values[Due Date]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Due Date]"
+          ]
+        ]
+      }
+    }
+  ],
+  "category": "Retail"
+}

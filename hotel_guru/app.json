@@ -1,0 +1,798 @@
+{
+  "name": "Hotel Guru",
+  "slug": "hotel-guru",
+  "description": "Full-service hotel management with properties, rooms, guests, reservations, and housekeeping.",
+  "forms": [
+    {
+      "slug": "tenants",
+      "name": "Tenants",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Tenant Name",
+          "required": true
+        },
+        {
+          "name": "SLA Tier"
+        },
+        {
+          "name": "Global Admins"
+        },
+        {
+          "name": "Brands"
+        },
+        {
+          "name": "Contact Email"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Multi-tenant organization hierarchy — top-level enterprise entities",
+      "submissionLabelExpression": "${values('Tenant Name')} (${values('Tenant ID')})"
+    },
+    {
+      "slug": "brands",
+      "name": "Brands",
+      "fields": [
+        {
+          "name": "Brand ID",
+          "required": true
+        },
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Tenant Name"
+        },
+        {
+          "name": "Brand Name",
+          "required": true
+        },
+        {
+          "name": "Brand Standards",
+          "rows": 3
+        },
+        {
+          "name": "Operating Model"
+        },
+        {
+          "name": "Star Category"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Hotel brand definitions within tenant organizations",
+      "submissionLabelExpression": "${values('Brand Name')} (${values('Brand ID')})"
+    },
+    {
+      "slug": "properties",
+      "name": "Properties",
+      "fields": [
+        {
+          "name": "Property ID",
+          "required": true
+        },
+        {
+          "name": "Property Code",
+          "required": true
+        },
+        {
+          "name": "Tenant ID"
+        },
+        {
+          "name": "Tenant Name"
+        },
+        {
+          "name": "Brand ID"
+        },
+        {
+          "name": "Brand Name"
+        },
+        {
+          "name": "Property Name",
+          "required": true
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "Timezone"
+        },
+        {
+          "name": "Total Rooms"
+        },
+        {
+          "name": "Star Rating"
+        },
+        {
+          "name": "GM Name"
+        },
+        {
+          "name": "GM Email"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Physical hotel properties — the core operational unit",
+      "submissionLabelExpression": "${values('Property Name')} — ${values('City')}, ${values('Country')} (${values('Property Code')})"
+    },
+    {
+      "slug": "room-types",
+      "name": "Room Types",
+      "fields": [
+        {
+          "name": "Type ID",
+          "required": true
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Type Name",
+          "required": true
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Bed Config"
+        },
+        {
+          "name": "Base Rate"
+        },
+        {
+          "name": "Dynamic Pricing"
+        },
+        {
+          "name": "Amenities"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Room type catalog with base pricing and capacity",
+      "submissionLabelExpression": "${values('Type Name')} @ ${values('Property Name')} ($${values('Base Rate')})"
+    },
+    {
+      "slug": "rooms",
+      "name": "Rooms",
+      "fields": [
+        {
+          "name": "Room ID",
+          "required": true
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Room Number",
+          "required": true
+        },
+        {
+          "name": "Floor"
+        },
+        {
+          "name": "Room Type"
+        },
+        {
+          "name": "Room Type ID"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Condition"
+        },
+        {
+          "name": "HK Status"
+        },
+        {
+          "name": "Current Guest"
+        },
+        {
+          "name": "Current Reservation"
+        },
+        {
+          "name": "Last Cleaned"
+        },
+        {
+          "name": "Last Cleaned By"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Physical room inventory with real-time status tracking",
+      "submissionLabelExpression": "${values('Property Code')} / ${values('Room Number')} — ${values('Room Type')} (${values('Status')})"
+    },
+    {
+      "slug": "guests",
+      "name": "Guests",
+      "fields": [
+        {
+          "name": "Guest ID",
+          "required": true
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "ID Type"
+        },
+        {
+          "name": "ID Number"
+        },
+        {
+          "name": "Loyalty ID"
+        },
+        {
+          "name": "Loyalty Tier"
+        },
+        {
+          "name": "Loyalty Points"
+        },
+        {
+          "name": "Total Stays"
+        },
+        {
+          "name": "Lifetime Value"
+        },
+        {
+          "name": "Risk Score"
+        },
+        {
+          "name": "VIP Status"
+        },
+        {
+          "name": "Company"
+        },
+        {
+          "name": "Preferences",
+          "rows": 2
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Guest profiles with loyalty, risk scoring, and preference tracking",
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} — ${values('Loyalty Tier')} (${values('Guest ID')})",
+      "indexes": {
+        "single": [
+          "values[Last Name]",
+          "values[Loyalty Tier]",
+          "values[VIP Status]"
+        ],
+        "compound": [
+          [
+            "values[Loyalty Tier]",
+            "values[VIP Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "reservations",
+      "name": "Reservations",
+      "fields": [
+        {
+          "name": "Reservation ID",
+          "required": true
+        },
+        {
+          "name": "Confirmation Number",
+          "required": true
+        },
+        {
+          "name": "Guest ID"
+        },
+        {
+          "name": "Guest Name"
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Room Type"
+        },
+        {
+          "name": "Room Type ID"
+        },
+        {
+          "name": "Room Number"
+        },
+        {
+          "name": "Room ID"
+        },
+        {
+          "name": "Check In",
+          "required": true
+        },
+        {
+          "name": "Check Out",
+          "required": true
+        },
+        {
+          "name": "Nights"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Adults"
+        },
+        {
+          "name": "Children"
+        },
+        {
+          "name": "Rate Plan"
+        },
+        {
+          "name": "Rate"
+        },
+        {
+          "name": "Total Amount"
+        },
+        {
+          "name": "Payment Status"
+        },
+        {
+          "name": "Channel Source"
+        },
+        {
+          "name": "Special Requests",
+          "rows": 2
+        },
+        {
+          "name": "Checked In At"
+        },
+        {
+          "name": "Checked In By"
+        },
+        {
+          "name": "Checked Out At"
+        },
+        {
+          "name": "Checked Out By"
+        },
+        {
+          "name": "Cancellation Reason"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Reservation lifecycle — from booking to archival with full audit trail",
+      "submissionLabelExpression": "${values('Confirmation Number')} — ${values('Guest Name')} @ ${values('Property Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Confirmation Number]",
+          "values[Property ID]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Property ID]"
+          ],
+          [
+            "values[Status]",
+            "values[Confirmation Number]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "payments",
+      "name": "Payments",
+      "fields": [
+        {
+          "name": "Payment ID",
+          "required": true
+        },
+        {
+          "name": "Reservation ID"
+        },
+        {
+          "name": "Confirmation Number"
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Guest Name"
+        },
+        {
+          "name": "Payment Type"
+        },
+        {
+          "name": "Amount"
+        },
+        {
+          "name": "Currency"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Transaction Ref"
+        },
+        {
+          "name": "Refund Link"
+        },
+        {
+          "name": "Processed At"
+        },
+        {
+          "name": "Processed By"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Financial transactions linked to reservations",
+      "submissionLabelExpression": "${values('Payment ID')} — ${values('Payment Type')} $${values('Amount')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Payment Type]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Payment Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "housekeeping",
+      "name": "Housekeeping",
+      "fields": [
+        {
+          "name": "Task ID",
+          "required": true
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Room Number"
+        },
+        {
+          "name": "Room ID"
+        },
+        {
+          "name": "Task Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "SLA Deadline"
+        },
+        {
+          "name": "Requested At"
+        },
+        {
+          "name": "Started At"
+        },
+        {
+          "name": "Completed At"
+        },
+        {
+          "name": "Verified By"
+        },
+        {
+          "name": "Verified At"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Housekeeping task management with SLA tracking",
+      "submissionLabelExpression": "${values('Task ID')} — ${values('Property Code')} Rm ${values('Room Number')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Property ID]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Property ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "maintenance",
+      "name": "Maintenance",
+      "fields": [
+        {
+          "name": "Ticket ID",
+          "required": true
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "Room Number"
+        },
+        {
+          "name": "Room ID"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Assigned Engineer"
+        },
+        {
+          "name": "Cost Estimate"
+        },
+        {
+          "name": "Actual Cost"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Resolution Notes",
+          "rows": 3
+        },
+        {
+          "name": "Reported At"
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Resolved At"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Maintenance ticket lifecycle with cost tracking",
+      "submissionLabelExpression": "${values('Ticket ID')} — ${values('Category')} @ ${values('Property Code')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Severity]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Severity]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "staff",
+      "name": "Staff",
+      "fields": [
+        {
+          "name": "Staff ID",
+          "required": true
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Property Name"
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Permission Scope"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Last Login"
+        },
+        {
+          "name": "Hire Date"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Staff directory with role-based access and property scope",
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} — ${values('Role')} @ ${values('Property Name')} (${values('Staff ID')})"
+    },
+    {
+      "slug": "audit-log",
+      "name": "Audit Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Timestamp",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Field Changed"
+        },
+        {
+          "name": "Old Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Changed By"
+        },
+        {
+          "name": "Property ID"
+        },
+        {
+          "name": "Property Code"
+        },
+        {
+          "name": "Tenant ID"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail for all critical transactions",
+      "submissionLabelExpression": "${values('Action')} on ${values('Entity Type')} by ${values('Changed By')} (${values('Timestamp')})",
+      "indexes": {
+        "single": [
+          "values[Action]",
+          "values[Entity Type]",
+          "values[Property ID]"
+        ],
+        "compound": [
+          [
+            "values[Entity Type]",
+            "values[Action]"
+          ],
+          [
+            "values[Entity Type]",
+            "values[Property ID]"
+          ]
+        ]
+      }
+    }
+  ],
+  "category": "Hospitality"
+}

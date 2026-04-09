@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMS - Learning Management System</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:#202124; font-size:14px; }
+
+/* Login */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%); }
+.login-box { background:var(--white); padding:40px; border-radius:16px; width:400px; box-shadow:var(--shadow-lg); }
+.login-box h1 { font-size:24px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.login-box .subtitle { font-size:13px; color:var(--gray); margin-bottom:16px; }
+.login-box .accent-bar { width:40px; height:3px; background:var(--orange); margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; margin-top:12px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; }
+.login-box input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* App */
+#app { display:none; }
+
+/* Topbar */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.logo { font-size:18px; font-weight:700; white-space:nowrap; }
+.logo span { color:var(--orange); }
+.nav-tabs { display:flex; gap:2px; margin-left:32px; }
+.nav-tabs button { background:transparent; color:rgba(255,255,255,.7); border:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+.nav-tabs button:hover { color:white; background:rgba(255,255,255,.1); }
+.nav-tabs button.active { background:var(--orange); color:white; }
+.spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn { background:transparent; color:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.3); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; }
+.logout-btn:hover { background:var(--orange); color:white; border-color:var(--orange); }
+
+/* Console */
+.console { max-width:1400px; margin:0 auto; padding:24px; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+
+/* KPI */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:var(--white); border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal .val { color:var(--teal); }
+
+/* Cards */
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { background:var(--light); font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; text-align:left; position:sticky; top:0; }
+.data-table td { padding:8px 10px; font-size:13px; border-bottom:1px solid var(--border); }
+.data-table tbody tr { cursor:pointer; }
+.data-table tbody tr:hover { background:#FAFAFA; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-active, .badge-graded { background:#E8F5E9; color:#2E7D32; }
+.badge-completed, .badge-closed, .badge-excused { background:#F1F3F4; color:#5F6368; }
+.badge-cancelled, .badge-missing, .badge-f { background:#FDECEA; color:#C62828; }
+.badge-draft, .badge-submitted { background:#E3F2FD; color:#1565C0; }
+.badge-late { background:#FFF3E0; color:#E65100; }
+.badge-archived { background:#F1F3F4; color:#5F6368; }
+
+/* Grade colors */
+.grade-a { color:#2E7D32; font-weight:700; }
+.grade-b { color:#1565C0; font-weight:700; }
+.grade-c { color:#F9A825; font-weight:700; }
+.grade-d { color:#E65100; font-weight:700; }
+.grade-f { color:#C62828; font-weight:700; }
+
+/* Toolbar */
+.toolbar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.toolbar select, .toolbar input { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:white; }
+.toolbar select:focus, .toolbar input:focus { outline:none; border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+
+/* Pagination */
+.pagination { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:16px; font-size:13px; }
+.pagination button { padding:6px 14px; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; font-size:13px; }
+.pagination button:disabled { opacity:.4; cursor:not-allowed; }
+.pagination button:not(:disabled):hover { background:var(--light); }
+
+/* Modal */
+#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+#modal.open { display:flex; }
+.modal-content { background:white; border-radius:16px; padding:28px; max-width:650px; width:95%; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-content h2 { font-size:18px; font-weight:700; color:var(--blue); margin-bottom:16px; }
+.modal-content .detail-row { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+.modal-content .detail-label { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; min-width:140px; }
+.modal-content .detail-value { font-size:13px; flex:1; }
+.modal-close { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--gray); }
+.modal-close:hover { color:var(--red); }
+
+/* Toast */
+#toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; z-index:300; transition:transform .3s; }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Learning Management System</h1>
+    <p class="subtitle">Course management, assignments, and gradebook</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" type="text" value="https://fifth.tutorial.kineticdata.com">
+    <label>Username</label>
+    <input id="login-user" type="text" value="john">
+    <label>Password</label>
+    <input id="login-pass" type="password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Learning <span>Management</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('courses')">Courses</button>
+      <button onclick="switchTab('assignments')">Assignments</button>
+      <button onclick="switchTab('gradebook')">Gradebook</button>
+      <button onclick="switchTab('materials')">Materials</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- Dashboard -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">LMS overview and key metrics</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Recent Assignments</h3>
+          <table class="data-table">
+            <thead><tr><th>Title</th><th>Course</th><th>Type</th><th>Due</th><th>Status</th></tr></thead>
+            <tbody id="dash-assignments"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Course Summary</h3>
+          <table class="data-table">
+            <thead><tr><th>Course</th><th>Subject</th><th>Enrolled</th><th>Status</th></tr></thead>
+            <tbody id="dash-courses"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Courses -->
+    <div id="tab-courses" class="tab-panel">
+      <div class="page-title">Courses</div>
+      <div class="page-sub">Manage course catalog and enrollment</div>
+      <div class="toolbar">
+        <select id="courses-subject" onchange="loadCourses()"><option value="">All Subjects</option></select>
+        <select id="courses-status" onchange="loadCourses()"><option value="">All Statuses</option><option>Active</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="courses-semester" onchange="loadCourses()"><option value="">All Semesters</option><option>Fall 2025</option><option>Spring 2026</option><option>Fall 2026</option></select>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Name</th><th>Subject</th><th>Teacher</th><th>Grade</th><th>Enrolled</th><th>Semester</th><th>Status</th></tr></thead>
+          <tbody id="courses-body"></tbody>
+        </table>
+        <div class="pagination" id="courses-pag"></div>
+      </div>
+    </div>
+
+    <!-- Assignments -->
+    <div id="tab-assignments" class="tab-panel">
+      <div class="page-title">Assignments</div>
+      <div class="page-sub">Track assignments across all courses</div>
+      <div class="toolbar">
+        <select id="assign-type" onchange="loadAssignments()"><option value="">All Types</option><option>Homework</option><option>Quiz</option><option>Test</option><option>Project</option><option>Essay</option><option>Lab</option><option>Participation</option></select>
+        <select id="assign-status" onchange="loadAssignments()"><option value="">All Statuses</option><option>Active</option><option>Closed</option><option>Draft</option></select>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Title</th><th>Course</th><th>Type</th><th>Due Date</th><th>Points</th><th>Status</th></tr></thead>
+          <tbody id="assign-body"></tbody>
+        </table>
+        <div class="pagination" id="assign-pag"></div>
+      </div>
+    </div>
+
+    <!-- Gradebook -->
+    <div id="tab-gradebook" class="tab-panel">
+      <div class="page-title">Gradebook</div>
+      <div class="page-sub">Student grades and academic performance</div>
+      <div class="toolbar">
+        <select id="grade-semester" onchange="loadGradebook()"><option value="">All Semesters</option><option>Fall 2025</option><option>Spring 2026</option></select>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Student</th><th>Course</th><th>Semester</th><th>Score</th><th>Possible</th><th>Pct</th><th>Grade</th><th>Attendance</th></tr></thead>
+          <tbody id="grade-body"></tbody>
+        </table>
+        <div class="pagination" id="grade-pag"></div>
+      </div>
+    </div>
+
+    <!-- Materials -->
+    <div id="tab-materials" class="tab-panel">
+      <div class="page-title">Course Materials</div>
+      <div class="page-sub">Textbooks, handouts, videos, and resources</div>
+      <div class="toolbar">
+        <select id="mat-type" onchange="loadMaterials()"><option value="">All Types</option><option>Textbook</option><option>Handout</option><option>Video</option><option>Presentation</option><option>Worksheet</option><option>Reference</option><option>Link</option></select>
+        <select id="mat-status" onchange="loadMaterials()"><option value="">All Statuses</option><option>Active</option><option>Archived</option></select>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Title</th><th>Course</th><th>Type</th><th>URL</th><th>Status</th></tr></thead>
+          <tbody id="mat-body"></tbody>
+        </table>
+        <div class="pagination" id="mat-pag"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   GLOBALS
+   ═══════════════════════════════════════════════════════ */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'lms';
+const LIMIT = 25;
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════ */
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+function badge(status) {
+  const cls = (status || '').toLowerCase().replace(/[^a-z]/g, '');
+  return `<span class="badge badge-${esc(cls)}">${esc(status)}</span>`;
+}
+
+function gradeClass(grade) {
+  if (!grade) return '';
+  const first = grade.charAt(0).toUpperCase();
+  if (first === 'A') return 'grade-a';
+  if (first === 'B') return 'grade-b';
+  if (first === 'C') return 'grade-c';
+  if (first === 'D') return 'grade-d';
+  if (first === 'F') return 'grade-f';
+  return '';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function showModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+/* ═══════════════════════════════════════════════════════
+   API LAYER
+   ═══════════════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchSubs(form, kql, lastCreatedAt) {
+  let fullKql = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    fullKql = fullKql ? `(${fullKql}) AND ${dateClause}` : dateClause;
+  }
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=${LIMIT}`;
+  if (fullKql) path += `&q=${encodeURIComponent(fullKql)}`;
+  return api(path);
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH
+   ═══════════════════════════════════════════════════════ */
+async function doLogin() {
+  const urlInput = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  API.url = urlInput;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+
+  try {
+    const data = await api('/me');
+    API.displayName = data.displayName || data.username || user;
+    enterApp();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.removeItem('kinetic_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = API.displayName;
+  initSubjectFilter();
+  switchTab('dashboard');
+}
+
+/* Session restore */
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || '';
+      API.displayName = s.displayName || s.user || '';
+      enterApp();
+    } catch (e) { /* ignore */ }
+  }
+})();
+
+/* ═══════════════════════════════════════════════════════
+   TAB NAVIGATION
+   ═══════════════════════════════════════════════════════ */
+let currentTab = 'dashboard';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => {
+    if (b.textContent.toLowerCase() === tab) b.classList.add('active');
+  });
+
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'courses') loadCourses();
+  else if (tab === 'assignments') loadAssignments();
+  else if (tab === 'gradebook') loadGradebook();
+  else if (tab === 'materials') loadMaterials();
+}
+
+/* ═══════════════════════════════════════════════════════
+   SUBJECT FILTER
+   ═══════════════════════════════════════════════════════ */
+function initSubjectFilter() {
+  const sel = document.getElementById('courses-subject');
+  const subjects = ['Mathematics','English','Science','History','World Languages','Arts','Technology','Physical Education'];
+  subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD
+   ═══════════════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [courseData, assignData, gradeData, subData] = await Promise.all([
+      fetchSubs('courses', 'values[Status]="Active"'),
+      fetchSubs('assignments', 'values[Status]="Active"'),
+      fetchSubs('gradebook', null),
+      fetchSubs('submissions', null),
+    ]);
+
+    const courseCount = (courseData.submissions || []).length;
+    const assignCount = (assignData.submissions || []).length;
+    const grades = (gradeData.submissions || []);
+    const subs = (subData.submissions || []);
+
+    // Compute avg grade
+    let totalPct = 0, gradeCount = 0;
+    grades.forEach(g => {
+      const pct = parseFloat(v(g, 'Current Percentage'));
+      if (!isNaN(pct)) { totalPct += pct; gradeCount++; }
+    });
+    const avgGrade = gradeCount > 0 ? Math.round(totalPct / gradeCount) : 0;
+
+    // Submission rate
+    const gradedOrSubmitted = subs.filter(s => v(s, 'Status') === 'Graded' || v(s, 'Status') === 'Submitted').length;
+    const totalSubs = subs.length;
+    const subRate = totalSubs > 0 ? Math.round((gradedOrSubmitted / totalSubs) * 100) : 0;
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi orange"><div class="label">Total Courses</div><div class="val">${courseCount}</div><div class="sub">Active courses</div></div>
+      <div class="kpi green"><div class="label">Active Assignments</div><div class="val">${assignCount}</div><div class="sub">Currently open</div></div>
+      <div class="kpi purple"><div class="label">Average Grade</div><div class="val">${avgGrade}%</div><div class="sub">${gradeCount} students tracked</div></div>
+      <div class="kpi teal"><div class="label">Submission Rate</div><div class="val">${subRate}%</div><div class="sub">${gradedOrSubmitted} of ${totalSubs} submitted</div></div>
+    `;
+
+    // Recent assignments table
+    const assigns = (assignData.submissions || []).slice(0, 8);
+    document.getElementById('dash-assignments').innerHTML = assigns.length === 0
+      ? '<tr><td colspan="5" class="loading">No assignments found</td></tr>'
+      : assigns.map(a => `<tr onclick="showAssignmentDetail('${esc(a.id)}',this)">
+        <td>${esc(v(a,'Title'))}</td>
+        <td>${esc(v(a,'Course ID'))}</td>
+        <td>${esc(v(a,'Type'))}</td>
+        <td>${esc(v(a,'Due Date'))}</td>
+        <td>${badge(v(a,'Status'))}</td>
+      </tr>`).join('');
+
+    // Course summary
+    const courses = (courseData.submissions || []).slice(0, 8);
+    document.getElementById('dash-courses').innerHTML = courses.length === 0
+      ? '<tr><td colspan="4" class="loading">No courses found</td></tr>'
+      : courses.map(c => `<tr onclick="showCourseDetail('${esc(c.id)}',this)">
+        <td>${esc(v(c,'Name'))}</td>
+        <td>${esc(v(c,'Subject'))}</td>
+        <td>${esc(v(c,'Enrolled'))} / ${esc(v(c,'Capacity'))}</td>
+        <td>${badge(v(c,'Status'))}</td>
+      </tr>`).join('');
+
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error loading dashboard: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   COURSES
+   ═══════════════════════════════════════════════════════ */
+let coursesPageKeys = [null], coursesPage = 1, coursesHasNext = false;
+
+async function loadCourses(page) {
+  if (page === undefined) { coursesPageKeys = [null]; coursesPage = 1; }
+  else coursesPage = page;
+  const subject = document.getElementById('courses-subject').value;
+  const status = document.getElementById('courses-status').value;
+  const semester = document.getElementById('courses-semester').value;
+
+  let kql = '';
+  if (subject) kql = `values[Subject]="${subject}"`;
+  if (status) kql = kql ? `${kql} AND values[Status]="${status}"` : `values[Status]="${status}"`;
+
+  const body = document.getElementById('courses-body');
+  body.innerHTML = '<tr><td colspan="8" class="loading">Loading...</td></tr>';
+
+  try {
+    const data = await fetchSubs('courses', kql || null, coursesPageKeys[coursesPage - 1]);
+    let subs = data.submissions || [];
+    // Client-side filter for semester (no compound index for all 3)
+    if (semester) subs = subs.filter(s => v(s, 'Semester') === semester);
+    coursesHasNext = !!data.nextPageToken;
+    if (coursesHasNext && subs.length) coursesPageKeys[coursesPage] = subs[subs.length - 1].createdAt;
+
+    body.innerHTML = subs.length === 0
+      ? '<tr><td colspan="8" class="loading">No courses found</td></tr>'
+      : subs.map(c => `<tr onclick="showCourseDetail('${esc(c.id)}')">
+        <td>${esc(v(c,'Course ID'))}</td>
+        <td>${esc(v(c,'Name'))}</td>
+        <td>${esc(v(c,'Subject'))}</td>
+        <td>${esc(v(c,'Teacher'))}</td>
+        <td>${esc(v(c,'Grade Level'))}</td>
+        <td>${esc(v(c,'Enrolled'))} / ${esc(v(c,'Capacity'))}</td>
+        <td>${esc(v(c,'Semester'))}</td>
+        <td>${badge(v(c,'Status'))}</td>
+      </tr>`).join('');
+
+    renderPagination('courses-pag', coursesPage, coursesHasNext, (pg) => {
+      loadCourses(pg);
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="8" class="loading">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function showCourseDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    showModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s,'Name'))}</h2>
+      ${detailRow('Course ID', v(s,'Course ID'))}
+      ${detailRow('Subject', v(s,'Subject'))}
+      ${detailRow('Grade Level', v(s,'Grade Level'))}
+      ${detailRow('Teacher', v(s,'Teacher'))}
+      ${detailRow('Room', v(s,'Room'))}
+      ${detailRow('Capacity', v(s,'Capacity'))}
+      ${detailRow('Enrolled', v(s,'Enrolled'))}
+      ${detailRow('Semester', v(s,'Semester'))}
+      ${detailRow('Status', v(s,'Status'))}
+      ${detailRow('Description', v(s,'Description'))}
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ASSIGNMENTS
+   ═══════════════════════════════════════════════════════ */
+let assignPageKeys = [null], assignPage = 1, assignHasNext = false;
+
+async function loadAssignments(page) {
+  if (page === undefined) { assignPageKeys = [null]; assignPage = 1; }
+  else assignPage = page;
+  const type = document.getElementById('assign-type').value;
+  const status = document.getElementById('assign-status').value;
+
+  let kql = '';
+  if (type) kql = `values[Type]="${type}"`;
+  if (status) kql = kql ? `${kql} AND values[Status]="${status}"` : `values[Status]="${status}"`;
+
+  const body = document.getElementById('assign-body');
+  body.innerHTML = '<tr><td colspan="7" class="loading">Loading...</td></tr>';
+
+  try {
+    const data = await fetchSubs('assignments', kql || null, assignPageKeys[assignPage - 1]);
+    const subs = data.submissions || [];
+    assignHasNext = !!data.nextPageToken;
+    if (assignHasNext && subs.length) assignPageKeys[assignPage] = subs[subs.length - 1].createdAt;
+
+    body.innerHTML = subs.length === 0
+      ? '<tr><td colspan="7" class="loading">No assignments found</td></tr>'
+      : subs.map(a => `<tr onclick="showAssignmentDetail('${esc(a.id)}')">
+        <td>${esc(v(a,'Assignment ID'))}</td>
+        <td>${esc(v(a,'Title'))}</td>
+        <td>${esc(v(a,'Course ID'))}</td>
+        <td>${esc(v(a,'Type'))}</td>
+        <td>${esc(v(a,'Due Date'))}</td>
+        <td>${esc(v(a,'Points Possible'))}</td>
+        <td>${badge(v(a,'Status'))}</td>
+      </tr>`).join('');
+
+    renderPagination('assign-pag', assignPage, assignHasNext, (pg) => {
+      loadAssignments(pg);
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="7" class="loading">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function showAssignmentDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    showModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s,'Title'))}</h2>
+      ${detailRow('Assignment ID', v(s,'Assignment ID'))}
+      ${detailRow('Course ID', v(s,'Course ID'))}
+      ${detailRow('Type', v(s,'Type'))}
+      ${detailRow('Due Date', v(s,'Due Date'))}
+      ${detailRow('Points Possible', v(s,'Points Possible'))}
+      ${detailRow('Status', v(s,'Status'))}
+      ${detailRow('Instructions', v(s,'Instructions'))}
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   GRADEBOOK
+   ═══════════════════════════════════════════════════════ */
+let gradePageKeys = [null], gradePage = 1, gradeHasNext = false;
+
+async function loadGradebook(page) {
+  if (page === undefined) { gradePageKeys = [null]; gradePage = 1; }
+  else gradePage = page;
+  const semester = document.getElementById('grade-semester').value;
+
+  let kql = semester ? `values[Semester]="${semester}"` : null;
+
+  const body = document.getElementById('grade-body');
+  body.innerHTML = '<tr><td colspan="8" class="loading">Loading...</td></tr>';
+
+  try {
+    const data = await fetchSubs('gradebook', kql, gradePageKeys[gradePage - 1]);
+    const subs = data.submissions || [];
+    gradeHasNext = !!data.nextPageToken;
+    if (gradeHasNext && subs.length) gradePageKeys[gradePage] = subs[subs.length - 1].createdAt;
+
+    body.innerHTML = subs.length === 0
+      ? '<tr><td colspan="8" class="loading">No gradebook entries found</td></tr>'
+      : subs.map(g => {
+        const grade = v(g, 'Current Grade');
+        const gc = gradeClass(grade);
+        return `<tr onclick="showGradebookDetail('${esc(g.id)}')">
+          <td>${esc(v(g,'Student ID'))}</td>
+          <td>${esc(v(g,'Course ID'))}</td>
+          <td>${esc(v(g,'Semester'))}</td>
+          <td>${esc(v(g,'Assignment Score Total'))}</td>
+          <td>${esc(v(g,'Assignment Points Total'))}</td>
+          <td>${esc(v(g,'Current Percentage'))}%</td>
+          <td class="${gc}">${esc(grade)}</td>
+          <td>${esc(v(g,'Attendance Pct'))}%</td>
+        </tr>`;
+      }).join('');
+
+    renderPagination('grade-pag', gradePage, gradeHasNext, (pg) => {
+      loadGradebook(pg);
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="8" class="loading">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function showGradebookDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    showModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>Gradebook Entry</h2>
+      ${detailRow('Student ID', v(s,'Student ID'))}
+      ${detailRow('Course ID', v(s,'Course ID'))}
+      ${detailRow('Semester', v(s,'Semester'))}
+      ${detailRow('Score Total', v(s,'Assignment Score Total'))}
+      ${detailRow('Points Total', v(s,'Assignment Points Total'))}
+      ${detailRow('Current Percentage', v(s,'Current Percentage') + '%')}
+      ${detailRow('Current Grade', v(s,'Current Grade'))}
+      ${detailRow('Attendance', v(s,'Attendance Pct') + '%')}
+      ${detailRow('Last Updated', v(s,'Last Updated'))}
+      ${detailRow('Notes', v(s,'Notes'))}
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MATERIALS
+   ═══════════════════════════════════════════════════════ */
+let matPageKeys = [null], matPage = 1, matHasNext = false;
+
+async function loadMaterials(page) {
+  if (page === undefined) { matPageKeys = [null]; matPage = 1; }
+  else matPage = page;
+  const type = document.getElementById('mat-type').value;
+  const status = document.getElementById('mat-status').value;
+
+  let kql = '';
+  if (status) kql = `values[Status]="${status}"`;
+  // type filter client-side (no compound index needed)
+
+  const body = document.getElementById('mat-body');
+  body.innerHTML = '<tr><td colspan="6" class="loading">Loading...</td></tr>';
+
+  try {
+    const data = await fetchSubs('materials', kql || null, matPageKeys[matPage - 1]);
+    let subs = data.submissions || [];
+    if (type) subs = subs.filter(s => v(s, 'Type') === type);
+    matHasNext = !!data.nextPageToken;
+    if (matHasNext && subs.length) matPageKeys[matPage] = subs[subs.length - 1].createdAt;
+
+    body.innerHTML = subs.length === 0
+      ? '<tr><td colspan="6" class="loading">No materials found</td></tr>'
+      : subs.map(m => {
+        const url = v(m, 'URL');
+        const urlHtml = url ? `<a href="${esc(url)}" target="_blank" style="color:var(--orange)">${esc(url.length > 30 ? url.slice(0,30) + '...' : url)}</a>` : '-';
+        return `<tr onclick="showMaterialDetail('${esc(m.id)}')">
+          <td>${esc(v(m,'Material ID'))}</td>
+          <td>${esc(v(m,'Title'))}</td>
+          <td>${esc(v(m,'Course ID'))}</td>
+          <td>${esc(v(m,'Type'))}</td>
+          <td>${urlHtml}</td>
+          <td>${badge(v(m,'Status'))}</td>
+        </tr>`;
+      }).join('');
+
+    renderPagination('mat-pag', matPage, matHasNext, (pg) => {
+      loadMaterials(pg);
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="6" class="loading">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function showMaterialDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    const url = v(s, 'URL');
+    showModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s,'Title'))}</h2>
+      ${detailRow('Material ID', v(s,'Material ID'))}
+      ${detailRow('Course ID', v(s,'Course ID'))}
+      ${detailRow('Type', v(s,'Type'))}
+      ${detailRow('URL', url ? `<a href="${esc(url)}" target="_blank" style="color:var(--orange)">${esc(url)}</a>` : '-')}
+      ${detailRow('Description', v(s,'Description'))}
+      ${detailRow('Status', v(s,'Status'))}
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAGINATION HELPER
+   ═══════════════════════════════════════════════════════ */
+function renderPagination(elId, page, hasNext, callback) {
+  const el = document.getElementById(elId);
+  const hasPrev = page > 1;
+
+  el.innerHTML = `
+    <button ${hasPrev ? '' : 'disabled'} id="${elId}-prev">Prev</button>
+    <span>Page ${page}</span>
+    <button ${hasNext ? '' : 'disabled'} id="${elId}-next">Next</button>
+  `;
+
+  document.getElementById(`${elId}-prev`).onclick = () => callback(page - 1);
+  document.getElementById(`${elId}-next`).onclick = () => callback(page + 1);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DETAIL ROW HELPER
+   ═══════════════════════════════════════════════════════ */
+function detailRow(label, value) {
+  // Allow raw HTML for URL links
+  const isHtml = typeof value === 'string' && value.startsWith('<a ');
+  return `<div class="detail-row"><div class="detail-label">${esc(label)}</div><div class="detail-value">${isHtml ? value : esc(value)}</div></div>`;
+}
+
+</script>
+</body>
+</html>

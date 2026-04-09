@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scheduling & Course Planning</title>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-card {
+  background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg);
+  width: 400px; max-width: 95vw; overflow: hidden;
+}
+.login-accent { height: 3px; width: 40px; background: var(--orange); margin: 0 auto; margin-top: 4px; }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 14px; }
+.login-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; outline: none; transition: border-color .2s;
+}
+.login-body input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-btn {
+  width: 100%; padding: 11px; margin-top: 20px; background: var(--orange); color: var(--white);
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.login-btn:hover { background: var(--orange-light); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: var(--blue); color: var(--white); display: flex; align-items: center;
+  padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 18px; font-weight: 700; margin-right: 28px; white-space: nowrap; }
+.logo .accent { color: var(--orange); }
+.topbar-nav { display: flex; gap: 2px; }
+.topbar-nav button {
+  background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 14px;
+  font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all .15s;
+}
+.topbar-nav button:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.topbar-nav button.active { background: var(--orange); color: var(--white); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+}
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== KPI ===== */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 16px;
+  border: 1px solid var(--border);
+}
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi .lbl { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+.kpi.orange .val { color: var(--orange); }
+.kpi.green .val { color: var(--green); }
+.kpi.red .val { color: var(--red); }
+.kpi.yellow .val { color: var(--yellow); }
+.kpi.purple .val { color: var(--purple); }
+.kpi.teal .val { color: var(--teal); }
+.kpi.indigo .val { color: var(--indigo); }
+
+/* ===== CARDS ===== */
+.card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; margin-bottom: 14px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col, .three-col { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); } }
+
+/* ===== TOOLBAR ===== */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.toolbar select, .toolbar input {
+  padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+  background: var(--white); outline: none;
+}
+.toolbar select:focus, .toolbar input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.toolbar .spacer { flex: 1; }
+.btn-primary {
+  background: var(--orange); color: var(--white); border: none; padding: 8px 16px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary {
+  background: var(--light); color: var(--blue); border: 1px solid var(--border);
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-danger {
+  background: var(--red); color: var(--white); border: none; padding: 8px 16px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  background: var(--light); font-size: 10px; font-weight: 600; color: var(--gray);
+  text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left;
+  position: sticky; top: 0; z-index: 10;
+}
+.data-table td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .1s; }
+.data-table tbody tr:hover { background: #FAFAFA; }
+
+/* ===== BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-open, .badge-available { background: #E8F5E9; color: #2E7D32; }
+.badge-inactive, .badge-closed, .badge-cancelled, .badge-maintenance { background: #F1F3F4; color: #5F6368; }
+.badge-full, .badge-in-use { background: #FFF3E0; color: #E65100; }
+.badge-proposed, .badge-reserved { background: #E3F2FD; color: #1565C0; }
+.badge-leave { background: #FFF8E1; color: #F9A825; }
+.badge-part-time { background: #F3E5F5; color: #7B1FA2; }
+
+/* ===== FILL BAR ===== */
+.fill-bar { width: 80px; height: 8px; background: var(--border); border-radius: 4px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.fill-bar-inner { height: 100%; border-radius: 4px; transition: width .3s; }
+.fill-low { background: var(--green); }
+.fill-mid { background: var(--yellow); }
+.fill-high { background: var(--orange); }
+.fill-full { background: var(--red); }
+
+/* ===== ROOM GRID ===== */
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
+.room-cell {
+  background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 8px;
+  text-align: center; font-size: 12px; cursor: pointer; transition: all .15s;
+}
+.room-cell:hover { box-shadow: var(--shadow); }
+.room-cell .room-num { font-weight: 700; font-size: 14px; color: var(--blue); }
+.room-cell .room-type { font-size: 10px; color: var(--gray); text-transform: uppercase; margin-top: 2px; }
+.room-cell.available { border-left: 3px solid var(--green); }
+.room-cell.in-use { border-left: 3px solid var(--orange); }
+.room-cell.maintenance { border-left: 3px solid var(--red); }
+.room-cell.reserved { border-left: 3px solid var(--indigo); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; font-size: 13px; color: var(--gray); }
+.pagination button { padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); cursor: pointer; font-size: 12px; }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+#modal {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+#modal.open { display: flex; }
+.modal-content {
+  background: var(--white); border-radius: 16px; padding: 28px; width: 650px; max-width: 95vw;
+  max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); position: relative;
+}
+.modal-content h2 { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 20px; }
+.modal-content label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 14px; }
+.modal-content input, .modal-content select, .modal-content textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; outline: none; font-family: inherit;
+}
+.modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus {
+  border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1);
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 24px; justify-content: flex-end; }
+.modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray); }
+
+/* ===== TOAST ===== */
+#toast {
+  display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: var(--white); padding: 12px 24px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; z-index: 300; box-shadow: var(--shadow-lg);
+}
+#toast.show { display: block; animation: slideUp .3s ease; }
+@keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+
+/* ===== SECTION LOAD BAR ===== */
+.load-bar-container { display: flex; align-items: center; gap: 8px; }
+.load-bar { width: 120px; height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.load-bar-fill { height: 100%; border-radius: 6px; }
+.load-bar-text { font-size: 12px; color: var(--gray); font-weight: 600; min-width: 40px; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-body">
+      <h1>Scheduling</h1>
+      <div class="login-accent"></div>
+      <p class="subtitle">Course Planning & Room Management</p>
+      <label>Server URL</label>
+      <input id="login-url" type="text" value="https://fifth.tutorial.kineticdata.com">
+      <label>Username</label>
+      <input id="login-user" type="text" value="">
+      <label>Password</label>
+      <input id="login-pass" type="password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Course <span class="accent">Scheduling</span></div>
+    <div class="topbar-nav" id="nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('courses')">Courses</button>
+      <button onclick="switchTab('sections')">Sections</button>
+      <button onclick="switchTab('rooms')">Rooms</button>
+      <button onclick="switchTab('teachers')">Teachers</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- ===== DASHBOARD TAB ===== -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Overview of scheduling and course planning</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="two-col">
+        <div class="card">
+          <h3>Section Fill Rates</h3>
+          <div id="dash-fill-rates"></div>
+        </div>
+        <div class="card">
+          <h3>Room Utilization by Building</h3>
+          <div id="dash-room-util"></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h3>Courses by Department</h3>
+          <div id="dash-dept-chart"></div>
+        </div>
+        <div class="card">
+          <h3>Teachers by Department</h3>
+          <div id="dash-teacher-dept"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COURSES TAB ===== -->
+    <div class="tab-panel" id="tab-courses">
+      <div class="page-title">Course Catalog</div>
+      <div class="page-sub">Manage courses across departments</div>
+      <div class="toolbar">
+        <select id="course-dept-filter" onchange="loadCourses()">
+          <option value="">All Departments</option>
+          <option>Mathematics</option><option>English</option><option>Science</option>
+          <option>Social Studies</option><option>World Languages</option><option>Fine Arts</option>
+          <option>Technology</option><option>Physical Education</option><option>Business</option>
+          <option>Special Education</option>
+        </select>
+        <select id="course-grade-filter" onchange="loadCourses()">
+          <option value="">All Grade Levels</option>
+          <option>K-2</option><option>3-5</option><option>6-8</option><option>9-12</option>
+        </select>
+        <select id="course-status-filter" onchange="loadCourses()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Inactive</option><option>Proposed</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn-primary" onclick="openCourseModal()">+ Add Course</button>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Course ID</th><th>Name</th><th>Department</th><th>Grade</th><th>Credits</th><th>Max Enr.</th><th>Status</th>
+          </tr></thead>
+          <tbody id="courses-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="courses-pagination"></div>
+    </div>
+
+    <!-- ===== SECTIONS TAB ===== -->
+    <div class="tab-panel" id="tab-sections">
+      <div class="page-title">Sections</div>
+      <div class="page-sub">Course sections with enrollment tracking</div>
+      <div class="toolbar">
+        <select id="sec-semester-filter" onchange="loadSections()">
+          <option value="">All Semesters</option>
+          <option>Fall 2025</option><option>Spring 2026</option><option>Full Year</option>
+        </select>
+        <select id="sec-period-filter" onchange="loadSections()">
+          <option value="">All Periods</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+          <option>5</option><option>6</option><option>7</option><option>8</option>
+        </select>
+        <select id="sec-status-filter" onchange="loadSections()">
+          <option value="">All Statuses</option>
+          <option>Open</option><option>Full</option><option>Closed</option><option>Cancelled</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn-primary" onclick="openSectionModal()">+ Add Section</button>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Section</th><th>Course</th><th>Teacher</th><th>Room</th><th>Period</th><th>Days</th><th>Semester</th><th>Fill Rate</th><th>Status</th>
+          </tr></thead>
+          <tbody id="sections-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="sections-pagination"></div>
+    </div>
+
+    <!-- ===== ROOMS TAB ===== -->
+    <div class="tab-panel" id="tab-rooms">
+      <div class="page-title">Rooms</div>
+      <div class="page-sub">Room inventory and availability</div>
+      <div class="toolbar">
+        <select id="room-building-filter" onchange="loadRooms()">
+          <option value="">All Buildings</option>
+          <option>Main</option><option>Science Wing</option><option>Arts Building</option>
+          <option>Gym</option><option>Portable</option>
+        </select>
+        <select id="room-type-filter" onchange="loadRooms()">
+          <option value="">All Types</option>
+          <option>Classroom</option><option>Lab</option><option>Computer Lab</option>
+          <option>Gym</option><option>Auditorium</option><option>Library</option>
+          <option>Conference</option><option>Office</option>
+        </select>
+        <select id="room-status-filter" onchange="loadRooms()">
+          <option value="">All Statuses</option>
+          <option>Available</option><option>In Use</option><option>Maintenance</option><option>Reserved</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn-primary" onclick="openRoomModal()">+ Add Room</button>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Room #</th><th>Building</th><th>Type</th><th>Capacity</th><th>Equipment</th><th>ADA</th><th>Status</th>
+          </tr></thead>
+          <tbody id="rooms-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="rooms-pagination"></div>
+      <div class="card" style="margin-top:16px;">
+        <h3>Room Grid</h3>
+        <div class="room-grid" id="room-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== TEACHERS TAB ===== -->
+    <div class="tab-panel" id="tab-teachers">
+      <div class="page-title">Teacher Assignments</div>
+      <div class="page-sub">Faculty workload and assignments</div>
+      <div class="toolbar">
+        <select id="teacher-dept-filter" onchange="loadTeachers()">
+          <option value="">All Departments</option>
+          <option>Mathematics</option><option>English</option><option>Science</option>
+          <option>Social Studies</option><option>World Languages</option><option>Fine Arts</option>
+          <option>Technology</option><option>Physical Education</option><option>Business</option>
+          <option>Special Education</option>
+        </select>
+        <select id="teacher-status-filter" onchange="loadTeachers()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Leave</option><option>Part-Time</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn-primary" onclick="openTeacherModal()">+ Add Teacher</button>
+      </div>
+      <div class="card" style="padding:0; overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Name</th><th>Employee ID</th><th>Department</th><th>Section Load</th><th>Prep Periods</th><th>Homeroom</th><th>Certifications</th><th>Status</th>
+          </tr></thead>
+          <tbody id="teachers-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="teachers-pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+/* ===== STATE ===== */
+const KAPP = 'scheduling';
+let API = { url: '', auth: '', user: '', displayName: '' };
+let currentTab = 'dashboard';
+
+// Pagination state per tab
+const PAGE = {
+  courses: { pageKeys: [null], page: 1, hasNext: false },
+  sections: { pageKeys: [null], page: 1, hasNext: false },
+  rooms: { pageKeys: [null], page: 1, hasNext: false },
+  teachers: { pageKeys: [null], page: 1, hasNext: false },
+};
+
+/* ===== UTILITIES ===== */
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+function badge(status) {
+  const cls = 'badge-' + String(status).toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge ${cls}">${esc(status)}</span>`;
+}
+
+function fillBar(enrolled, capacity) {
+  const enr = parseInt(enrolled) || 0;
+  const cap = parseInt(capacity) || 1;
+  const pct = Math.min(Math.round((enr / cap) * 100), 100);
+  let cls = 'fill-low';
+  if (pct >= 90) cls = 'fill-full';
+  else if (pct >= 75) cls = 'fill-high';
+  else if (pct >= 50) cls = 'fill-mid';
+  return `<div class="fill-bar"><div class="fill-bar-inner ${cls}" style="width:${pct}%"></div></div> ${esc(enrolled)}/${esc(capacity)} (${pct}%)`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show';
+  setTimeout(() => t.className = '', 3000);
+}
+
+/* ===== API ===== */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Basic ${API.auth}`,
+      'Content-Type': 'application/json',
+      ...opts.headers,
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${res.status}: ${text.slice(0, 200)}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function fetchSubmissions(form, kql, lastCreatedAt) {
+  let fullKql = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    fullKql = fullKql ? `(${fullKql}) AND ${dateClause}` : dateClause;
+  }
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values,details&limit=25`;
+  if (fullKql) path += `&q=${encodeURIComponent(fullKql)}`;
+  return api(path);
+}
+
+/* ===== LOGIN / SESSION ===== */
+function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const auth = btoa(user + ':' + pass);
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  fetch(`${url}/app/api/v1/me`, { headers: { 'Authorization': 'Basic ' + auth } })
+    .then(r => { if (!r.ok) throw new Error('Invalid credentials'); return r.json(); })
+    .then(data => {
+      API = { url, auth, user: data.username, displayName: data.displayName || data.username };
+      enterApp();
+    })
+    .catch(e => { errEl.textContent = e.message; errEl.style.display = 'block'; });
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = API.displayName;
+  switchTab('dashboard');
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.removeItem('kinetic_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = { url: s.url || '', auth: s.auth, user: s.user, displayName: s.displayName || s.user };
+      enterApp();
+    } catch {}
+  }
+})();
+
+/* ===== TAB SWITCHING ===== */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.topbar-nav button').forEach((b, i) => {
+    b.classList.toggle('active', ['dashboard','courses','sections','rooms','teachers'][i] === tab);
+  });
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'courses') { resetPage('courses'); loadCourses(); }
+  else if (tab === 'sections') { resetPage('sections'); loadSections(); }
+  else if (tab === 'rooms') { resetPage('rooms'); loadRooms(); }
+  else if (tab === 'teachers') { resetPage('teachers'); loadTeachers(); }
+}
+
+function resetPage(key) {
+  PAGE[key] = { pageKeys: [null], page: 1, hasNext: false };
+}
+
+/* ===== DASHBOARD ===== */
+async function loadDashboard() {
+  try {
+    const [coursesRes, sectionsRes, roomsRes, teachersRes] = await Promise.all([
+      fetchSubmissions('course-catalog', 'values[Status]="Active"'),
+      fetchSubmissions('sections', null),
+      fetchSubmissions('rooms', null),
+      fetchSubmissions('teacher-assignments', 'values[Status]="Active"'),
+    ]);
+
+    const courses = coursesRes.submissions || [];
+    const sections = sectionsRes.submissions || [];
+    const rooms = roomsRes.submissions || [];
+    const teachers = teachersRes.submissions || [];
+
+    const openSections = sections.filter(s => v(s, 'Status') === 'Open').length;
+    const availableRooms = rooms.filter(r => v(r, 'Status') === 'Available').length;
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi orange"><div class="val">${courses.length}</div><div class="lbl">Active Courses</div></div>
+      <div class="kpi indigo"><div class="val">${sections.length}</div><div class="lbl">Total Sections</div></div>
+      <div class="kpi green"><div class="val">${openSections}</div><div class="lbl">Open Sections</div></div>
+      <div class="kpi teal"><div class="val">${availableRooms}</div><div class="lbl">Rooms Available</div></div>
+      <div class="kpi purple"><div class="val">${teachers.length}</div><div class="lbl">Active Teachers</div></div>
+    `;
+
+    // Section fill rates
+    const fillData = sections.slice(0, 15).map(s => {
+      const enr = parseInt(v(s, 'Enrolled')) || 0;
+      const cap = parseInt(v(s, 'Capacity')) || 1;
+      const pct = Math.round((enr / cap) * 100);
+      return { name: v(s, 'Course Name'), pct, enr, cap };
+    });
+    let fillHtml = '<table class="data-table"><thead><tr><th>Course</th><th>Fill Rate</th></tr></thead><tbody>';
+    for (const f of fillData) {
+      let cls = 'fill-low';
+      if (f.pct >= 90) cls = 'fill-full';
+      else if (f.pct >= 75) cls = 'fill-high';
+      else if (f.pct >= 50) cls = 'fill-mid';
+      fillHtml += `<tr><td>${esc(f.name)}</td><td>
+        <div class="load-bar-container">
+          <div class="load-bar"><div class="load-bar-fill ${cls}" style="width:${f.pct}%"></div></div>
+          <span class="load-bar-text">${f.pct}%</span>
+        </div>
+      </td></tr>`;
+    }
+    fillHtml += '</tbody></table>';
+    document.getElementById('dash-fill-rates').innerHTML = fillHtml;
+
+    // Room utilization by building
+    const buildingMap = {};
+    for (const r of rooms) {
+      const b = v(r, 'Building') || 'Unknown';
+      if (!buildingMap[b]) buildingMap[b] = { total: 0, available: 0 };
+      buildingMap[b].total++;
+      if (v(r, 'Status') === 'Available') buildingMap[b].available++;
+    }
+    let roomHtml = '<table class="data-table"><thead><tr><th>Building</th><th>Total</th><th>Available</th><th>Utilization</th></tr></thead><tbody>';
+    for (const [bld, data] of Object.entries(buildingMap)) {
+      const used = data.total - data.available;
+      const pct = data.total > 0 ? Math.round((used / data.total) * 100) : 0;
+      let cls = 'fill-low';
+      if (pct >= 90) cls = 'fill-full';
+      else if (pct >= 75) cls = 'fill-high';
+      else if (pct >= 50) cls = 'fill-mid';
+      roomHtml += `<tr><td>${esc(bld)}</td><td>${data.total}</td><td>${data.available}</td><td>
+        <div class="load-bar-container">
+          <div class="load-bar"><div class="load-bar-fill ${cls}" style="width:${pct}%"></div></div>
+          <span class="load-bar-text">${pct}%</span>
+        </div>
+      </td></tr>`;
+    }
+    roomHtml += '</tbody></table>';
+    document.getElementById('dash-room-util').innerHTML = roomHtml;
+
+    // Courses by department
+    const deptMap = {};
+    for (const c of courses) {
+      const d = v(c, 'Department') || 'Unknown';
+      deptMap[d] = (deptMap[d] || 0) + 1;
+    }
+    let deptHtml = '<table class="data-table"><thead><tr><th>Department</th><th>Courses</th></tr></thead><tbody>';
+    for (const [dept, count] of Object.entries(deptMap).sort((a, b) => b[1] - a[1])) {
+      deptHtml += `<tr><td>${esc(dept)}</td><td>${count}</td></tr>`;
+    }
+    deptHtml += '</tbody></table>';
+    document.getElementById('dash-dept-chart').innerHTML = deptHtml;
+
+    // Teachers by department
+    const tDeptMap = {};
+    for (const t of teachers) {
+      const d = v(t, 'Department') || 'Unknown';
+      tDeptMap[d] = (tDeptMap[d] || 0) + 1;
+    }
+    let tDeptHtml = '<table class="data-table"><thead><tr><th>Department</th><th>Teachers</th></tr></thead><tbody>';
+    for (const [dept, count] of Object.entries(tDeptMap).sort((a, b) => b[1] - a[1])) {
+      tDeptHtml += `<tr><td>${esc(dept)}</td><td>${count}</td></tr>`;
+    }
+    tDeptHtml += '</tbody></table>';
+    document.getElementById('dash-teacher-dept').innerHTML = tDeptHtml;
+
+  } catch (e) {
+    console.error('Dashboard load error:', e);
+    toast('Failed to load dashboard');
+  }
+}
+
+/* ===== COURSES ===== */
+async function loadCourses() {
+  const dept = document.getElementById('course-dept-filter').value;
+  const grade = document.getElementById('course-grade-filter').value;
+  const status = document.getElementById('course-status-filter').value;
+  const pg = PAGE.courses;
+
+  // Build KQL
+  const parts = [];
+  if (dept) parts.push(`values[Department]="${dept}"`);
+  if (grade) parts.push(`values[Grade Level]="${grade}"`);
+  if (status) parts.push(`values[Status]="${status}"`);
+  const kql = parts.join(' AND ') || null;
+
+  try {
+    const res = await fetchSubmissions('course-catalog', kql, pg.pageKeys[pg.page - 1]);
+    const subs = res.submissions || [];
+    pg.hasNext = !!res.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+    const tbody = document.getElementById('courses-tbody');
+    tbody.innerHTML = subs.map(s =>
+      `<tr onclick="showCourseDetail('${s.id}')">
+        <td>${esc(v(s, 'Course ID'))}</td>
+        <td><strong>${esc(v(s, 'Name'))}</strong></td>
+        <td>${esc(v(s, 'Department'))}</td>
+        <td>${esc(v(s, 'Grade Level'))}</td>
+        <td>${esc(v(s, 'Credits'))}</td>
+        <td>${esc(v(s, 'Max Enrollment'))}</td>
+        <td>${badge(v(s, 'Status'))}</td>
+      </tr>`
+    ).join('');
+    if (!subs.length) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:24px;">No courses found</td></tr>';
+
+    renderPagination('courses');
+  } catch (e) {
+    console.error('Courses load error:', e);
+    toast('Failed to load courses');
+  }
+}
+
+/* ===== SECTIONS ===== */
+async function loadSections() {
+  const semester = document.getElementById('sec-semester-filter').value;
+  const period = document.getElementById('sec-period-filter').value;
+  const status = document.getElementById('sec-status-filter').value;
+  const pg = PAGE.sections;
+
+  const parts = [];
+  if (semester) parts.push(`values[Semester]="${semester}"`);
+  if (period) parts.push(`values[Period]="${period}"`);
+  if (status) parts.push(`values[Status]="${status}"`);
+  const kql = parts.join(' AND ') || null;
+
+  try {
+    const res = await fetchSubmissions('sections', kql, pg.pageKeys[pg.page - 1]);
+    const subs = res.submissions || [];
+    pg.hasNext = !!res.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+    const tbody = document.getElementById('sections-tbody');
+    tbody.innerHTML = subs.map(s => {
+      const enr = v(s, 'Enrolled');
+      const cap = v(s, 'Capacity');
+      return `<tr onclick="showSectionDetail('${s.id}')">
+        <td>${esc(v(s, 'Section ID'))}</td>
+        <td><strong>${esc(v(s, 'Course Name'))}</strong></td>
+        <td>${esc(v(s, 'Teacher'))}</td>
+        <td>${esc(v(s, 'Room'))}</td>
+        <td>${esc(v(s, 'Period'))}</td>
+        <td>${esc(v(s, 'Days'))}</td>
+        <td>${esc(v(s, 'Semester'))}</td>
+        <td>${fillBar(enr, cap)}</td>
+        <td>${badge(v(s, 'Status'))}</td>
+      </tr>`;
+    }).join('');
+    if (!subs.length) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:24px;">No sections found</td></tr>';
+
+    renderPagination('sections');
+  } catch (e) {
+    console.error('Sections load error:', e);
+    toast('Failed to load sections');
+  }
+}
+
+/* ===== ROOMS ===== */
+async function loadRooms() {
+  const building = document.getElementById('room-building-filter').value;
+  const type = document.getElementById('room-type-filter').value;
+  const status = document.getElementById('room-status-filter').value;
+  const pg = PAGE.rooms;
+
+  const parts = [];
+  if (building) parts.push(`values[Building]="${building}"`);
+  if (type) parts.push(`values[Type]="${type}"`);
+  if (status) parts.push(`values[Status]="${status}"`);
+  const kql = parts.join(' AND ') || null;
+
+  try {
+    const res = await fetchSubmissions('rooms', kql, pg.pageKeys[pg.page - 1]);
+    const subs = res.submissions || [];
+    pg.hasNext = !!res.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+    const tbody = document.getElementById('rooms-tbody');
+    tbody.innerHTML = subs.map(s =>
+      `<tr onclick="showRoomDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Room Number'))}</strong></td>
+        <td>${esc(v(s, 'Building'))}</td>
+        <td>${esc(v(s, 'Type'))}</td>
+        <td>${esc(v(s, 'Capacity'))}</td>
+        <td>${esc(v(s, 'Equipment'))}</td>
+        <td>${esc(v(s, 'ADA Accessible'))}</td>
+        <td>${badge(v(s, 'Status'))}</td>
+      </tr>`
+    ).join('');
+    if (!subs.length) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:24px;">No rooms found</td></tr>';
+
+    renderPagination('rooms');
+
+    // Room grid
+    const grid = document.getElementById('room-grid');
+    grid.innerHTML = subs.map(s => {
+      const st = v(s, 'Status').toLowerCase().replace(/\s+/g, '-');
+      return `<div class="room-cell ${st}" onclick="showRoomDetail('${s.id}')">
+        <div class="room-num">${esc(v(s, 'Room Number'))}</div>
+        <div class="room-type">${esc(v(s, 'Type'))}</div>
+        <div style="font-size:10px;color:var(--gray);margin-top:4px;">${esc(v(s, 'Building'))}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('Rooms load error:', e);
+    toast('Failed to load rooms');
+  }
+}
+
+/* ===== TEACHERS ===== */
+async function loadTeachers() {
+  const dept = document.getElementById('teacher-dept-filter').value;
+  const status = document.getElementById('teacher-status-filter').value;
+  const pg = PAGE.teachers;
+
+  const parts = [];
+  if (dept) parts.push(`values[Department]="${dept}"`);
+  if (status) parts.push(`values[Status]="${status}"`);
+  const kql = parts.join(' AND ') || null;
+
+  try {
+    const res = await fetchSubmissions('teacher-assignments', kql, pg.pageKeys[pg.page - 1]);
+    const subs = res.submissions || [];
+    pg.hasNext = !!res.nextPageToken;
+    if (pg.hasNext && subs.length) pg.pageKeys[pg.page] = subs[subs.length - 1].createdAt;
+    const tbody = document.getElementById('teachers-tbody');
+    tbody.innerHTML = subs.map(s => {
+      const assigned = parseInt(v(s, 'Sections Assigned')) || 0;
+      const max = parseInt(v(s, 'Max Sections')) || 6;
+      const pct = Math.round((assigned / max) * 100);
+      let cls = 'fill-low';
+      if (pct >= 90) cls = 'fill-full';
+      else if (pct >= 75) cls = 'fill-high';
+      else if (pct >= 50) cls = 'fill-mid';
+      return `<tr onclick="showTeacherDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Teacher Name'))}</strong></td>
+        <td>${esc(v(s, 'Employee ID'))}</td>
+        <td>${esc(v(s, 'Department'))}</td>
+        <td>
+          <div class="load-bar-container">
+            <div class="load-bar"><div class="load-bar-fill ${cls}" style="width:${pct}%"></div></div>
+            <span class="load-bar-text">${assigned}/${max}</span>
+          </div>
+        </td>
+        <td>${esc(v(s, 'Prep Periods'))}</td>
+        <td>${esc(v(s, 'Homeroom'))}</td>
+        <td>${esc(v(s, 'Certifications'))}</td>
+        <td>${badge(v(s, 'Status'))}</td>
+      </tr>`;
+    }).join('');
+    if (!subs.length) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:24px;">No teachers found</td></tr>';
+
+    renderPagination('teachers');
+  } catch (e) {
+    console.error('Teachers load error:', e);
+    toast('Failed to load teachers');
+  }
+}
+
+/* ===== PAGINATION ===== */
+function renderPagination(key) {
+  const pg = PAGE[key];
+  const el = document.getElementById(key + '-pagination');
+  const hasPrev = pg.page > 1;
+
+  el.innerHTML = `
+    <button ${hasPrev ? '' : 'disabled'} onclick="pagePrev('${key}')">Prev</button>
+    <span>Page ${pg.page}</span>
+    <button ${pg.hasNext ? '' : 'disabled'} onclick="pageNext('${key}')">Next</button>
+  `;
+}
+
+function pageNext(key) {
+  const pg = PAGE[key];
+  if (!pg.hasNext) return;
+  pg.page++;
+  loadTab(key);
+}
+
+function pagePrev(key) {
+  const pg = PAGE[key];
+  if (pg.page <= 1) return;
+  pg.page--;
+  loadTab(key);
+}
+
+function loadTab(key) {
+  if (key === 'courses') loadCourses();
+  else if (key === 'sections') loadSections();
+  else if (key === 'rooms') loadRooms();
+  else if (key === 'teachers') loadTeachers();
+}
+
+/* ===== DETAIL VIEWS ===== */
+async function showCourseDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    openModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s, 'Name'))}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label>Course ID</label><div>${esc(v(s, 'Course ID'))}</div></div>
+        <div><label>Department</label><div>${esc(v(s, 'Department'))}</div></div>
+        <div><label>Grade Level</label><div>${esc(v(s, 'Grade Level'))}</div></div>
+        <div><label>Credits</label><div>${esc(v(s, 'Credits'))}</div></div>
+        <div><label>Prerequisites</label><div>${esc(v(s, 'Prerequisites')) || 'None'}</div></div>
+        <div><label>Max Enrollment</label><div>${esc(v(s, 'Max Enrollment'))}</div></div>
+        <div><label>Status</label><div>${badge(v(s, 'Status'))}</div></div>
+      </div>
+      <label style="margin-top:16px;">Description</label>
+      <div style="font-size:13px;color:var(--gray);white-space:pre-wrap;">${esc(v(s, 'Description'))}</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="editCourse('${s.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteRecord('${s.id}','courses')">Delete</button>
+      </div>
+    `);
+  } catch (e) { toast('Failed to load course'); }
+}
+
+async function showSectionDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    openModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s, 'Course Name'))} - Section ${esc(v(s, 'Section ID'))}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label>Teacher</label><div>${esc(v(s, 'Teacher'))}</div></div>
+        <div><label>Room</label><div>${esc(v(s, 'Room'))}</div></div>
+        <div><label>Period</label><div>${esc(v(s, 'Period'))}</div></div>
+        <div><label>Days</label><div>${esc(v(s, 'Days'))}</div></div>
+        <div><label>Semester</label><div>${esc(v(s, 'Semester'))}</div></div>
+        <div><label>Course ID</label><div>${esc(v(s, 'Course ID'))}</div></div>
+        <div><label>Fill Rate</label><div>${fillBar(v(s, 'Enrolled'), v(s, 'Capacity'))}</div></div>
+        <div><label>Status</label><div>${badge(v(s, 'Status'))}</div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="editSection('${s.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteRecord('${s.id}','sections')">Delete</button>
+      </div>
+    `);
+  } catch (e) { toast('Failed to load section'); }
+}
+
+async function showRoomDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    openModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>Room ${esc(v(s, 'Room Number'))}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label>Building</label><div>${esc(v(s, 'Building'))}</div></div>
+        <div><label>Type</label><div>${esc(v(s, 'Type'))}</div></div>
+        <div><label>Capacity</label><div>${esc(v(s, 'Capacity'))}</div></div>
+        <div><label>ADA Accessible</label><div>${esc(v(s, 'ADA Accessible'))}</div></div>
+        <div><label>Equipment</label><div>${esc(v(s, 'Equipment'))}</div></div>
+        <div><label>Status</label><div>${badge(v(s, 'Status'))}</div></div>
+      </div>
+      <label style="margin-top:16px;">Notes</label>
+      <div style="font-size:13px;color:var(--gray);white-space:pre-wrap;">${esc(v(s, 'Notes')) || 'None'}</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="editRoom('${s.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteRecord('${s.id}','rooms')">Delete</button>
+      </div>
+    `);
+  } catch (e) { toast('Failed to load room'); }
+}
+
+async function showTeacherDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    const assigned = parseInt(v(s, 'Sections Assigned')) || 0;
+    const max = parseInt(v(s, 'Max Sections')) || 6;
+    openModal(`
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>${esc(v(s, 'Teacher Name'))}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label>Employee ID</label><div>${esc(v(s, 'Employee ID'))}</div></div>
+        <div><label>Department</label><div>${esc(v(s, 'Department'))}</div></div>
+        <div><label>Section Load</label><div>${assigned} / ${max}</div></div>
+        <div><label>Prep Periods</label><div>${esc(v(s, 'Prep Periods'))}</div></div>
+        <div><label>Homeroom</label><div>${esc(v(s, 'Homeroom')) || 'None'}</div></div>
+        <div><label>Certifications</label><div>${esc(v(s, 'Certifications'))}</div></div>
+        <div><label>Status</label><div>${badge(v(s, 'Status'))}</div></div>
+      </div>
+      <label style="margin-top:16px;">Notes</label>
+      <div style="font-size:13px;color:var(--gray);white-space:pre-wrap;">${esc(v(s, 'Notes')) || 'None'}</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="editTeacher('${s.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteRecord('${s.id}','teachers')">Delete</button>
+      </div>
+    `);
+  } catch (e) { toast('Failed to load teacher'); }
+}
+
+/* ===== MODALS ===== */
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+/* ===== CREATE MODALS ===== */
+function openCourseModal(existing) {
+  const vals = existing ? existing.values : {};
+  const id = existing ? existing.id : null;
+  const title = id ? 'Edit Course' : 'New Course';
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${title}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      <div><label>Course ID</label><input id="m-course-id" value="${esc(vals['Course ID'] || '')}"></div>
+      <div><label>Name</label><input id="m-course-name" value="${esc(vals['Name'] || '')}"></div>
+      <div><label>Department</label><select id="m-course-dept">
+        <option value="">Select...</option>
+        ${['Mathematics','English','Science','Social Studies','World Languages','Fine Arts','Technology','Physical Education','Business','Special Education'].map(d => `<option ${vals['Department']===d?'selected':''}>${d}</option>`).join('')}
+      </select></div>
+      <div><label>Grade Level</label><select id="m-course-grade">
+        <option value="">Select...</option>
+        ${['K-2','3-5','6-8','9-12'].map(g => `<option ${vals['Grade Level']===g?'selected':''}>${g}</option>`).join('')}
+      </select></div>
+      <div><label>Credits</label><input id="m-course-credits" value="${esc(vals['Credits'] || '')}"></div>
+      <div><label>Max Enrollment</label><input id="m-course-maxenr" value="${esc(vals['Max Enrollment'] || '')}"></div>
+      <div><label>Prerequisites</label><input id="m-course-prereqs" value="${esc(vals['Prerequisites'] || '')}"></div>
+      <div><label>Status</label><select id="m-course-status">
+        ${['Active','Inactive','Proposed'].map(s => `<option ${vals['Status']===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>
+    <label>Description</label>
+    <textarea id="m-course-desc" rows="3">${esc(vals['Description'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveCourse('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+function openSectionModal(existing) {
+  const vals = existing ? existing.values : {};
+  const id = existing ? existing.id : null;
+  const title = id ? 'Edit Section' : 'New Section';
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${title}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      <div><label>Section ID</label><input id="m-sec-id" value="${esc(vals['Section ID'] || '')}"></div>
+      <div><label>Course ID</label><input id="m-sec-courseid" value="${esc(vals['Course ID'] || '')}"></div>
+      <div><label>Course Name</label><input id="m-sec-coursename" value="${esc(vals['Course Name'] || '')}"></div>
+      <div><label>Teacher</label><input id="m-sec-teacher" value="${esc(vals['Teacher'] || '')}"></div>
+      <div><label>Room</label><input id="m-sec-room" value="${esc(vals['Room'] || '')}"></div>
+      <div><label>Period</label><select id="m-sec-period">
+        <option value="">Select...</option>
+        ${['1','2','3','4','5','6','7','8'].map(p => `<option ${vals['Period']===p?'selected':''}>${p}</option>`).join('')}
+      </select></div>
+      <div><label>Days</label><select id="m-sec-days">
+        <option value="">Select...</option>
+        ${['M-F','MWF','TTh','Daily','Block A','Block B'].map(d => `<option ${vals['Days']===d?'selected':''}>${d}</option>`).join('')}
+      </select></div>
+      <div><label>Semester</label><select id="m-sec-semester">
+        ${['Fall 2025','Spring 2026','Full Year'].map(s => `<option ${vals['Semester']===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div><label>Capacity</label><input id="m-sec-cap" value="${esc(vals['Capacity'] || '')}"></div>
+      <div><label>Enrolled</label><input id="m-sec-enrolled" value="${esc(vals['Enrolled'] || '')}"></div>
+      <div><label>Status</label><select id="m-sec-status">
+        ${['Open','Full','Closed','Cancelled'].map(s => `<option ${vals['Status']===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveSection('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+function openRoomModal(existing) {
+  const vals = existing ? existing.values : {};
+  const id = existing ? existing.id : null;
+  const title = id ? 'Edit Room' : 'New Room';
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${title}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      <div><label>Room Number</label><input id="m-room-num" value="${esc(vals['Room Number'] || '')}"></div>
+      <div><label>Building</label><select id="m-room-building">
+        <option value="">Select...</option>
+        ${['Main','Science Wing','Arts Building','Gym','Portable'].map(b => `<option ${vals['Building']===b?'selected':''}>${b}</option>`).join('')}
+      </select></div>
+      <div><label>Type</label><select id="m-room-type">
+        <option value="">Select...</option>
+        ${['Classroom','Lab','Computer Lab','Gym','Auditorium','Library','Conference','Office'].map(t => `<option ${vals['Type']===t?'selected':''}>${t}</option>`).join('')}
+      </select></div>
+      <div><label>Capacity</label><input id="m-room-cap" value="${esc(vals['Capacity'] || '')}"></div>
+      <div><label>Equipment</label><input id="m-room-equip" value="${esc(vals['Equipment'] || '')}"></div>
+      <div><label>ADA Accessible</label><select id="m-room-ada">
+        ${['Yes','No'].map(a => `<option ${vals['ADA Accessible']===a?'selected':''}>${a}</option>`).join('')}
+      </select></div>
+      <div><label>Status</label><select id="m-room-status">
+        ${['Available','In Use','Maintenance','Reserved'].map(s => `<option ${vals['Status']===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>
+    <label>Notes</label>
+    <textarea id="m-room-notes" rows="3">${esc(vals['Notes'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveRoom('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+function openTeacherModal(existing) {
+  const vals = existing ? existing.values : {};
+  const id = existing ? existing.id : null;
+  const title = id ? 'Edit Teacher' : 'New Teacher Assignment';
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${title}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      <div><label>Teacher Name</label><input id="m-teacher-name" value="${esc(vals['Teacher Name'] || '')}"></div>
+      <div><label>Employee ID</label><input id="m-teacher-empid" value="${esc(vals['Employee ID'] || '')}"></div>
+      <div><label>Department</label><select id="m-teacher-dept">
+        <option value="">Select...</option>
+        ${['Mathematics','English','Science','Social Studies','World Languages','Fine Arts','Technology','Physical Education','Business','Special Education'].map(d => `<option ${vals['Department']===d?'selected':''}>${d}</option>`).join('')}
+      </select></div>
+      <div><label>Sections Assigned</label><input id="m-teacher-sections" value="${esc(vals['Sections Assigned'] || '')}"></div>
+      <div><label>Max Sections</label><input id="m-teacher-max" value="${esc(vals['Max Sections'] || '6')}"></div>
+      <div><label>Prep Periods</label><input id="m-teacher-prep" value="${esc(vals['Prep Periods'] || '')}"></div>
+      <div><label>Homeroom</label><input id="m-teacher-homeroom" value="${esc(vals['Homeroom'] || '')}"></div>
+      <div><label>Certifications</label><input id="m-teacher-certs" value="${esc(vals['Certifications'] || '')}"></div>
+      <div><label>Status</label><select id="m-teacher-status">
+        ${['Active','Leave','Part-Time'].map(s => `<option ${vals['Status']===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>
+    <label>Notes</label>
+    <textarea id="m-teacher-notes" rows="3">${esc(vals['Notes'] || '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveTeacher('${id || ''}')">${id ? 'Update' : 'Create'}</button>
+    </div>
+  `);
+}
+
+/* ===== SAVE / UPDATE ===== */
+async function saveCourse(id) {
+  const values = {
+    'Course ID': document.getElementById('m-course-id').value,
+    'Name': document.getElementById('m-course-name').value,
+    'Department': document.getElementById('m-course-dept').value,
+    'Grade Level': document.getElementById('m-course-grade').value,
+    'Credits': document.getElementById('m-course-credits').value,
+    'Max Enrollment': document.getElementById('m-course-maxenr').value,
+    'Prerequisites': document.getElementById('m-course-prereqs').value,
+    'Status': document.getElementById('m-course-status').value,
+    'Description': document.getElementById('m-course-desc').value,
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+      toast('Course updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/course-catalog/submissions`, { method: 'POST', body: JSON.stringify({ values }) });
+      toast('Course created');
+    }
+    closeModal();
+    loadCourses();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function saveSection(id) {
+  const values = {
+    'Section ID': document.getElementById('m-sec-id').value,
+    'Course ID': document.getElementById('m-sec-courseid').value,
+    'Course Name': document.getElementById('m-sec-coursename').value,
+    'Teacher': document.getElementById('m-sec-teacher').value,
+    'Room': document.getElementById('m-sec-room').value,
+    'Period': document.getElementById('m-sec-period').value,
+    'Days': document.getElementById('m-sec-days').value,
+    'Semester': document.getElementById('m-sec-semester').value,
+    'Capacity': document.getElementById('m-sec-cap').value,
+    'Enrolled': document.getElementById('m-sec-enrolled').value,
+    'Status': document.getElementById('m-sec-status').value,
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+      toast('Section updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/sections/submissions`, { method: 'POST', body: JSON.stringify({ values }) });
+      toast('Section created');
+    }
+    closeModal();
+    loadSections();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function saveRoom(id) {
+  const values = {
+    'Room Number': document.getElementById('m-room-num').value,
+    'Building': document.getElementById('m-room-building').value,
+    'Type': document.getElementById('m-room-type').value,
+    'Capacity': document.getElementById('m-room-cap').value,
+    'Equipment': document.getElementById('m-room-equip').value,
+    'ADA Accessible': document.getElementById('m-room-ada').value,
+    'Status': document.getElementById('m-room-status').value,
+    'Notes': document.getElementById('m-room-notes').value,
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+      toast('Room updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/rooms/submissions`, { method: 'POST', body: JSON.stringify({ values }) });
+      toast('Room created');
+    }
+    closeModal();
+    loadRooms();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function saveTeacher(id) {
+  const values = {
+    'Teacher Name': document.getElementById('m-teacher-name').value,
+    'Employee ID': document.getElementById('m-teacher-empid').value,
+    'Department': document.getElementById('m-teacher-dept').value,
+    'Sections Assigned': document.getElementById('m-teacher-sections').value,
+    'Max Sections': document.getElementById('m-teacher-max').value,
+    'Prep Periods': document.getElementById('m-teacher-prep').value,
+    'Homeroom': document.getElementById('m-teacher-homeroom').value,
+    'Certifications': document.getElementById('m-teacher-certs').value,
+    'Status': document.getElementById('m-teacher-status').value,
+    'Notes': document.getElementById('m-teacher-notes').value,
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+      toast('Teacher updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/teacher-assignments/submissions`, { method: 'POST', body: JSON.stringify({ values }) });
+      toast('Teacher created');
+    }
+    closeModal();
+    loadTeachers();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ===== EDIT (re-open modal with existing data) ===== */
+async function editCourse(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openCourseModal(data.submission);
+}
+async function editSection(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openSectionModal(data.submission);
+}
+async function editRoom(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openRoomModal(data.submission);
+}
+async function editTeacher(id) {
+  const data = await api(`/submissions/${id}?include=values`);
+  openTeacherModal(data.submission);
+}
+
+/* ===== DELETE ===== */
+async function deleteRecord(id, tab) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Record deleted');
+    closeModal();
+    if (tab === 'courses') loadCourses();
+    else if (tab === 'sections') loadSections();
+    else if (tab === 'rooms') loadRooms();
+    else if (tab === 'teachers') loadTeachers();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+</script>
+</body>
+</html>

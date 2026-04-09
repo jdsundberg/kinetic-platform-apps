@@ -1,0 +1,747 @@
+{
+  "name": "Vendor Credentialing",
+  "slug": "vendor-cred",
+  "description": "Vendor credentialing with applications, documents, site access, training, and compliance verification.",
+  "forms": [
+    {
+      "slug": "vendors",
+      "name": "Vendors",
+      "fields": [
+        {
+          "name": "Vendor ID",
+          "required": true
+        },
+        {
+          "name": "Vendor Name",
+          "required": true
+        },
+        {
+          "name": "Vendor Type"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Zip"
+        },
+        {
+          "name": "Primary Contact"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Website"
+        },
+        {
+          "name": "Contract Status"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor company registry",
+      "submissionLabelExpression": "${values('Vendor Name')} (${values('Vendor ID')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Vendor ID]",
+          "values[Vendor Type]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Vendor Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "representatives",
+      "name": "Representatives",
+      "fields": [
+        {
+          "name": "Rep ID",
+          "required": true
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Photo ID Number"
+        },
+        {
+          "name": "Primary Department"
+        },
+        {
+          "name": "Specialization"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Compliance Status"
+        },
+        {
+          "name": "Last Visit Date"
+        },
+        {
+          "name": "Badge Issued"
+        },
+        {
+          "name": "Badge Expiration"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Individual reps/techs who enter facilities",
+      "submissionLabelExpression": "${values('Last Name')}, ${values('First Name')} (${values('Rep ID')})",
+      "indexes": {
+        "single": [
+          "values[Compliance Status]",
+          "values[Rep ID]",
+          "values[Status]",
+          "values[Vendor ID]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Compliance Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "credentials",
+      "name": "Credentials",
+      "fields": [
+        {
+          "name": "Credential ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Credential Type"
+        },
+        {
+          "name": "Credential Category"
+        },
+        {
+          "name": "Issuing Authority"
+        },
+        {
+          "name": "Certificate Number"
+        },
+        {
+          "name": "Issue Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Verification Status"
+        },
+        {
+          "name": "Verified By"
+        },
+        {
+          "name": "Verification Date"
+        },
+        {
+          "name": "Result"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Immunizations, background checks, training, drug screens",
+      "submissionLabelExpression": "${values('Rep Name')} - ${values('Credential Type')}"
+    },
+    {
+      "slug": "access-authorizations",
+      "name": "Access Authorizations",
+      "fields": [
+        {
+          "name": "Auth ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Access Level"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Approval Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Sponsoring Physician"
+        },
+        {
+          "name": "Purpose"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Conditions",
+          "rows": 2
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Department/OR access permissions per rep",
+      "submissionLabelExpression": "${values('Rep Name')} - ${values('Department')} (${values('Access Level')})",
+      "indexes": {
+        "single": [
+          "values[Auth ID]",
+          "values[Department]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Department]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "visits",
+      "name": "Visits",
+      "fields": [
+        {
+          "name": "Visit ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Check-In Date"
+        },
+        {
+          "name": "Check-In Time"
+        },
+        {
+          "name": "Check-Out Time"
+        },
+        {
+          "name": "Duration Minutes"
+        },
+        {
+          "name": "Purpose"
+        },
+        {
+          "name": "Sponsoring Staff"
+        },
+        {
+          "name": "Badge Number"
+        },
+        {
+          "name": "Products Involved"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Facility visit log with check-in/check-out",
+      "submissionLabelExpression": "${values('Rep Name')} - ${values('Check-In Date')} ${values('Department')}",
+      "indexes": {
+        "single": [
+          "values[Check-In Date]",
+          "values[Department]",
+          "values[Status]",
+          "values[Visit ID]"
+        ],
+        "compound": [
+          [
+            "values[Check-In Date]",
+            "values[Status]"
+          ],
+          [
+            "values[Check-In Date]",
+            "values[Department]"
+          ],
+          [
+            "values[Status]",
+            "values[Department]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "fields": [
+        {
+          "name": "Product ID",
+          "required": true
+        },
+        {
+          "name": "Product Name",
+          "required": true
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Requires OR Access"
+        },
+        {
+          "name": "Requires Sterile Environment"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Products/equipment vendors support at facility",
+      "submissionLabelExpression": "${values('Product Name')} (${values('Product ID')})",
+      "indexes": {
+        "single": [
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "incidents",
+      "name": "Incidents",
+      "fields": [
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Incident Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Incident Date"
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Investigation Notes",
+          "rows": 3
+        },
+        {
+          "name": "Corrective Action",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Resolution Date"
+        },
+        {
+          "name": "Escalated To"
+        }
+      ],
+      "description": "Policy violations, infection control events",
+      "submissionLabelExpression": "${values('Incident ID')} - ${values('Incident Type')} (${values('Severity')})",
+      "indexes": {
+        "single": [
+          "values[Incident ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "compliance-checks",
+      "name": "Compliance Checks",
+      "fields": [
+        {
+          "name": "Check ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Check Type"
+        },
+        {
+          "name": "Check Date"
+        },
+        {
+          "name": "Result"
+        },
+        {
+          "name": "Finding Details",
+          "rows": 3
+        },
+        {
+          "name": "Next Check Due"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Periodic verification checks",
+      "submissionLabelExpression": "${values('Rep Name')} - ${values('Check Type')} (${values('Check Date')})"
+    },
+    {
+      "slug": "documents",
+      "name": "Documents",
+      "fields": [
+        {
+          "name": "Document ID",
+          "required": true
+        },
+        {
+          "name": "Document Name"
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Document Type"
+        },
+        {
+          "name": "Related Entity ID"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Uploaded By"
+        },
+        {
+          "name": "Upload Date"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Document metadata",
+      "submissionLabelExpression": "${values('Document Name')} - ${values('Document Type')}"
+    },
+    {
+      "slug": "agreements",
+      "name": "Agreements",
+      "fields": [
+        {
+          "name": "Agreement ID",
+          "required": true
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Agreement Type"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Auto Renew"
+        },
+        {
+          "name": "Renewal Terms"
+        },
+        {
+          "name": "Value"
+        },
+        {
+          "name": "Contact Person"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor agreements/contracts",
+      "submissionLabelExpression": "${values('Vendor Name')} - ${values('Agreement Type')}",
+      "indexes": {
+        "single": [
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "training-requirements",
+      "name": "Training Requirements",
+      "fields": [
+        {
+          "name": "Requirement ID",
+          "required": true
+        },
+        {
+          "name": "Requirement Name",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Credential Type"
+        },
+        {
+          "name": "Frequency"
+        },
+        {
+          "name": "Required For"
+        },
+        {
+          "name": "Grace Period Days"
+        },
+        {
+          "name": "Enforcement"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Configurable requirements per department",
+      "submissionLabelExpression": "${values('Requirement Name')} - ${values('Department')}"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Rep Name')} (${values('Timestamp')})"
+    },
+    {
+      "slug": "notifications",
+      "name": "Notifications",
+      "fields": [
+        {
+          "name": "Notification ID",
+          "required": true
+        },
+        {
+          "name": "Rep Name"
+        },
+        {
+          "name": "Rep ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Alert Type"
+        },
+        {
+          "name": "Related Entity"
+        },
+        {
+          "name": "Related Entity ID"
+        },
+        {
+          "name": "Credential Name"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Sent Date"
+        },
+        {
+          "name": "Sent To"
+        },
+        {
+          "name": "Resolved Date"
+        },
+        {
+          "name": "Escalation Level"
+        }
+      ],
+      "description": "Expiration alerts and compliance notices",
+      "submissionLabelExpression": "${values('Alert Type')} - ${values('Rep Name')}"
+    }
+  ],
+  "category": "Compliance"
+}

@@ -1,0 +1,143 @@
+{
+  "name": "Camp Registry",
+  "slug": "camp-registry",
+  "description": "Campground management with locations, reservations, feedback, and store inventory.",
+  "forms": [
+    {
+      "slug": "locations",
+      "name": "Locations",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "Sites"
+        },
+        {
+          "name": "Amenities",
+          "rows": 2
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Campground locations",
+      "submissionLabelExpression": "${values('Name')} — ${values('State')}"
+    },
+    {
+      "slug": "reservations",
+      "name": "Reservations",
+      "fields": [
+        {
+          "name": "Guest Name",
+          "required": true
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Site Number"
+        },
+        {
+          "name": "Check In"
+        },
+        {
+          "name": "Check Out"
+        },
+        {
+          "name": "Guests"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Campsite reservations",
+      "submissionLabelExpression": "${values('Guest Name')} @ ${values('Location')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Location]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Location]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "fields": [
+        {
+          "name": "Guest Name",
+          "required": true
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Rating"
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Comments",
+          "rows": 3
+        }
+      ],
+      "description": "Guest feedback",
+      "submissionLabelExpression": "${values('Guest Name')} — ${values('Rating')} stars"
+    },
+    {
+      "slug": "store-inventory",
+      "name": "Store Inventory",
+      "fields": [
+        {
+          "name": "Item Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Price"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Camp store items",
+      "submissionLabelExpression": "${values('Item Name')} (${values('Category')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Category]",
+            "values[Status]"
+          ]
+        ]
+      }
+    }
+  ],
+  "category": "Hospitality"
+}

@@ -1,0 +1,484 @@
+{
+  "name": "Compliance & Regulatory",
+  "slug": "compliance-reg",
+  "description": "Regulatory compliance with requirements, controls, assessments, findings, and audit management.",
+  "forms": [
+    {
+      "slug": "standards",
+      "name": "Standards",
+      "fields": [
+        {
+          "name": "Standard ID",
+          "required": true
+        },
+        {
+          "name": "Standard Code"
+        },
+        {
+          "name": "Standard Title",
+          "required": true
+        },
+        {
+          "name": "Regulatory Body"
+        },
+        {
+          "name": "Chapter"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Last Assessed Date"
+        }
+      ],
+      "description": "Regulatory standards registry — Joint Commission EPs, CMS CoPs, OSHA, state regs",
+      "submissionLabelExpression": "${values('Standard Code')} - ${values('Standard Title')}"
+    },
+    {
+      "slug": "surveys",
+      "name": "Surveys",
+      "fields": [
+        {
+          "name": "Survey ID",
+          "required": true
+        },
+        {
+          "name": "Survey Type"
+        },
+        {
+          "name": "Regulatory Body"
+        },
+        {
+          "name": "Survey Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Lead Surveyor"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Critical Findings"
+        },
+        {
+          "name": "Score"
+        },
+        {
+          "name": "Outcome"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Survey and inspection tracking — real and mock",
+      "submissionLabelExpression": "${values('Survey ID')} - ${values('Survey Type')} (${values('Status')})"
+    },
+    {
+      "slug": "findings",
+      "name": "Findings",
+      "fields": [
+        {
+          "name": "Finding ID",
+          "required": true
+        },
+        {
+          "name": "Survey ID"
+        },
+        {
+          "name": "Standard Code"
+        },
+        {
+          "name": "Standard Title"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Finding Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Surveyor Notes",
+          "rows": 2
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Evidence Required"
+        }
+      ],
+      "description": "Survey findings, deficiencies, citations",
+      "submissionLabelExpression": "${values('Finding ID')} - ${values('Finding Type')} (${values('Severity')})",
+      "indexes": {
+        "single": [
+          "values[Severity]",
+          "values[Status]",
+          "values[Survey ID]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Severity]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "corrective-actions",
+      "name": "Corrective Actions",
+      "fields": [
+        {
+          "name": "CAPA ID",
+          "required": true
+        },
+        {
+          "name": "Finding ID"
+        },
+        {
+          "name": "Finding Description"
+        },
+        {
+          "name": "Standard Code"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Action Type"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Root Cause",
+          "rows": 2
+        },
+        {
+          "name": "Responsible Party"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Target Date"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Verification Method"
+        },
+        {
+          "name": "Verified By"
+        }
+      ],
+      "description": "CAPA plans tied to findings",
+      "submissionLabelExpression": "${values('CAPA ID')} - ${values('Action Type')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "policies",
+      "name": "Policies",
+      "fields": [
+        {
+          "name": "Policy ID",
+          "required": true
+        },
+        {
+          "name": "Policy Title",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Regulatory Reference"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Review Due Date"
+        },
+        {
+          "name": "Last Reviewed Date"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Content Summary",
+          "rows": 3
+        }
+      ],
+      "description": "Policy and procedure library with review cycles",
+      "submissionLabelExpression": "${values('Policy ID')} - ${values('Policy Title')}"
+    },
+    {
+      "slug": "attestations",
+      "name": "Attestations",
+      "fields": [
+        {
+          "name": "Attestation ID",
+          "required": true
+        },
+        {
+          "name": "Policy ID"
+        },
+        {
+          "name": "Policy Title"
+        },
+        {
+          "name": "Employee Name"
+        },
+        {
+          "name": "Employee ID"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Attestation Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Acknowledged By"
+        }
+      ],
+      "description": "Staff attestation tracking for policies",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Policy Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "departments",
+      "name": "Departments",
+      "fields": [
+        {
+          "name": "Dept ID",
+          "required": true
+        },
+        {
+          "name": "Department Name",
+          "required": true
+        },
+        {
+          "name": "Division"
+        },
+        {
+          "name": "Compliance Officer"
+        },
+        {
+          "name": "Compliance Score"
+        },
+        {
+          "name": "Last Assessment Date"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Department registry with compliance officers",
+      "submissionLabelExpression": "${values('Department Name')} (${values('Status')})"
+    },
+    {
+      "slug": "evidence",
+      "name": "Evidence",
+      "fields": [
+        {
+          "name": "Evidence ID",
+          "required": true
+        },
+        {
+          "name": "Finding ID"
+        },
+        {
+          "name": "CAPA ID"
+        },
+        {
+          "name": "Standard Code"
+        },
+        {
+          "name": "Document Name"
+        },
+        {
+          "name": "Document Type"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "Uploaded By"
+        },
+        {
+          "name": "Upload Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Expiration Date"
+        }
+      ],
+      "description": "Evidence and documentation for compliance proof",
+      "submissionLabelExpression": "${values('Document Name')} - ${values('Document Type')}"
+    },
+    {
+      "slug": "rounds",
+      "name": "Rounds",
+      "fields": [
+        {
+          "name": "Round ID",
+          "required": true
+        },
+        {
+          "name": "Round Type"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Area Inspected"
+        },
+        {
+          "name": "Inspector"
+        },
+        {
+          "name": "Round Date"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Critical Findings"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Score"
+        },
+        {
+          "name": "Follow Up Required"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Environment of care rounds and tracer activities",
+      "submissionLabelExpression": "${values('Round ID')} - ${values('Round Type')} (${values('Status')})"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Details",
+          "rows": 2
+        },
+        {
+          "name": "Related Standard"
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} ${values('Entity ID')}"
+    }
+  ],
+  "category": "Compliance"
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camp Registry</title>
+<style>
+:root{--blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;--green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;--light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15);--forest:#1B4332;--forest-light:#2D6A4F;--sky:#1B4965;--earth:#5C4033}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#333}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1B4332 0%,#2D6A4F 50%,#40916C 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:24px;color:var(--forest);margin-bottom:4px}.login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .bar{height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px}.login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.15)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--forest);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:var(--forest-light)}.login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--forest);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:18px;font-weight:700}.topbar .logo span{color:var(--orange)}
+.nav-tabs{display:flex;gap:4px;margin-left:24px}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.1);color:white}.nav-tabs button.active{background:var(--orange);color:white}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}.user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--orange);border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1200px;margin:0 auto}.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--forest);margin-bottom:4px}.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.kpi .val{font-size:26px;font-weight:700}.kpi .label{font-size:11px;color:var(--gray);margin-top:2px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)}tr:hover td{background:var(--light)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-confirmed{background:#E8F5E9;color:#2E7D32}.badge-checked-in{background:#E3F2FD;color:#1565C0}
+.badge-checked-out{background:#ECEFF1;color:#37474F}.badge-cancelled{background:#FFEBEE;color:#C62828}
+.badge-open{background:#E8F5E9;color:#2E7D32}.badge-seasonal{background:#FFF8E1;color:#F57F17}.badge-closed{background:#FFEBEE;color:#C62828}
+.badge-in-stock{background:#E8F5E9;color:#2E7D32}.badge-low-stock{background:#FFF8E1;color:#F57F17}.badge-out-of-stock{background:#FFEBEE;color:#C62828}
+.badge-tent{background:#E8F5E9;color:#1B4332}.badge-sleeping-bag{background:#E3F2FD;color:#1565C0}.badge-cookware{background:#FBE9E7;color:#BF360C}
+.badge-clothing{background:#F3E5F5;color:#7B1FA2}.badge-firewood{background:#EFEBE9;color:#4E342E}.badge-swag{background:#FFF3E0;color:#E65100}
+.badge-snacks{background:#FFF8E1;color:#F57F17}.badge-other{background:#ECEFF1;color:#37474F}
+.badge-midwest{background:#E3F2FD;color:#1565C0}.badge-west{background:#FBE9E7;color:#BF360C}.badge-southeast{background:#E8F5E9;color:#2E7D32}
+.badge-northeast{background:#F3E5F5;color:#7B1FA2}.badge-south{background:#FFF3E0;color:#E65100}
+
+.stars{color:var(--yellow);font-size:14px;letter-spacing:1px}.stars-dim{color:#ddd}
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--orange);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--border)}.btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:560px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--forest)}.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px}.modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px}.modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--forest);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)}
+#toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+.loc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.loc-card{background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .15s}
+.loc-card:hover{box-shadow:var(--shadow-lg)}
+.loc-card h4{font-size:14px;color:var(--forest);margin-bottom:4px}.loc-card .loc-meta{font-size:12px;color:var(--gray)}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box"><h1>Camp Registry</h1><div class="sub">Reservations, locations & camp store</div><div class="bar"></div>
+    <label>Server URL</label><input id="login-url" value="http://localhost:3022">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div></div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Camp<span>Registry</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('reservations')">Reservations</button>
+      <button onclick="switchTab('locations')">Locations</button>
+      <button onclick="switchTab('store')">Store</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('dash')">Dashboard</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- RESERVATIONS -->
+  <div id="console-reservations" class="console active">
+    <h2 class="page-title">Reservations</h2><div class="page-sub">Campsite bookings & check-ins</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openResModal()">+ New Reservation</button>
+      <div class="filter-bar">
+        <select id="f-rstat" onchange="loadRes()"><option value="">All Status</option><option>Confirmed</option><option>Checked In</option><option>Checked Out</option><option>Cancelled</option></select>
+        <select id="f-rloc" onchange="loadRes()"><option value="">All Locations</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Guest</th><th>Location</th><th>Site</th><th>Check In</th><th>Check Out</th><th>Guests</th><th>Status</th><th></th></tr></thead><tbody id="res-body"></tbody></table></div>
+    <div class="pagination" id="res-pag"></div>
+  </div>
+
+  <!-- LOCATIONS -->
+  <div id="console-locations" class="console">
+    <h2 class="page-title">Locations</h2><div class="page-sub">20 campgrounds across the US</div>
+    <div class="loc-grid" id="loc-grid"></div>
+  </div>
+
+  <!-- STORE -->
+  <div id="console-store" class="console">
+    <h2 class="page-title">Camp Store</h2><div class="page-sub">Gear, swag & supplies for sale</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openStoreModal()">+ Add Item</button>
+      <div class="filter-bar">
+        <select id="f-scat" onchange="loadStore()"><option value="">All Categories</option><option>Tent</option><option>Sleeping Bag</option><option>Cookware</option><option>Clothing</option><option>Firewood</option><option>Swag</option><option>Snacks</option><option>Other</option></select>
+        <select id="f-sstat" onchange="loadStore()"><option value="">All Status</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Qty</th><th>Status</th><th></th></tr></thead><tbody id="store-body"></tbody></table></div>
+    <div class="pagination" id="store-pag"></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Guest Feedback</h2><div class="page-sub">Reviews from campers</div>
+    <div class="toolbar"><button class="btn-primary" onclick="openFbModal()">+ Add Feedback</button></div>
+    <div class="card"><table><thead><tr><th>Guest</th><th>Location</th><th>Rating</th><th>Date</th><th>Comments</th><th></th></tr></thead><tbody id="fb-body"></tbody></table></div>
+    <div class="pagination" id="fb-pag"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="console-dash" class="console">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">System overview</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Reservations by Status</h3><div id="d-rstat"></div></div>
+      <div class="card"><h3>Locations by Region</h3><div id="d-region"></div></div>
+      <div class="card"><h3>Store by Category</h3><div id="d-scat"></div></div>
+      <div class="card"><h3>Recent Feedback</h3><div id="d-fb"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='camp-registry';
+const PS={res:{pt:null,p:1,h:[]},store:{pt:null,p:1,h:[]},fb:{pt:null,p:1,h:[]}};
+let locationNames=[];
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badge(val){const c=(val||'').toLowerCase().replace(/\s+/g,'-');return`<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function stars(n){let o='';const num=parseInt(n)||0;for(let i=1;i<=5;i++)o+=i<=num?'<span class="stars">\u2605</span>':'<span class="stars-dim">\u2605</span>';return o}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none'}
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+function switchTab(tab){document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+document.getElementById('console-'+tab).classList.add('active');const tabs=['reservations','locations','store','feedback','dash'];
+document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+({reservations:loadRes,locations:loadLocs,store:loadStore,feedback:loadFb,dash:loadDash})[tab]()}
+
+async function enterApp(){await loadLocationNames();loadRes()}
+
+async function loadLocationNames(){
+  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`);
+  locationNames=(d.submissions||[]).map(s=>v(s,'Name')).sort();
+  const sel=document.getElementById('f-rloc');sel.innerHTML='<option value="">All Locations</option>'+locationNames.map(n=>`<option>${esc(n)}</option>`).join('')}catch{}}
+
+/* ── RESERVATIONS ── */
+async function loadRes(dir){
+  const ps=PS.res;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  const stat=document.getElementById('f-rstat').value,loc=document.getElementById('f-rloc').value;
+  let p=`/kapps/${KAPP}/forms/reservations/submissions?include=values&limit=25`;const q=[];
+  if(stat)q.push(`values[Status]="${stat}"`);if(loc)q.push(`values[Location]="${loc}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('res-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Guest Name'))}</strong></td><td>${esc(v(s,'Location'))}</td><td>${esc(v(s,'Site Number'))}</td>
+    <td>${esc(v(s,'Check In'))}</td><td>${esc(v(s,'Check Out'))}</td><td>${esc(v(s,'Guests'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editRes('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--gray)">No reservations</td></tr>';
+  document.getElementById('res-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadRes('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadRes('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+function locOptions(sel){return locationNames.map(n=>`<option ${sel===n?'selected':''}>${n}</option>`).join('')}
+
+function openResModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Reservation':'New Reservation';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Guest Name</label><input id="mr-guest" value="${esc(vl['Guest Name']||'')}">
+    <label>Location</label><select id="mr-loc"><option value="">Select...</option>${locOptions(vl.Location)}</select>
+    <label>Site Number</label><input id="mr-site" value="${esc(vl['Site Number']||'')}">
+    <label>Check In</label><input id="mr-in" type="date" value="${esc(vl['Check In']||'')}">
+    <label>Check Out</label><input id="mr-out" type="date" value="${esc(vl['Check Out']||'')}">
+    <label>Guests</label><input id="mr-guests" type="number" value="${esc(vl.Guests||'2')}" min="1">
+    <label>Status</label><select id="mr-stat">${['Confirmed','Checked In','Checked Out','Cancelled'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Notes</label><textarea id="mr-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveRes('${s.id||''}')">${ex?'Update':'Book'}</button>
+    ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadRes')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open')}
+
+async function editRes(id){const d=await api(`/submissions/${id}?include=values`);openResModal(d.submission||d)}
+async function saveRes(id){const values={'Guest Name':document.getElementById('mr-guest').value,Location:document.getElementById('mr-loc').value,'Site Number':document.getElementById('mr-site').value,'Check In':document.getElementById('mr-in').value,'Check Out':document.getElementById('mr-out').value,Guests:document.getElementById('mr-guests').value,Status:document.getElementById('mr-stat').value,Notes:document.getElementById('mr-notes').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/reservations/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Booked');loadRes()}catch(e){toast('Error: '+e.message)}}
+
+/* ── LOCATIONS ── */
+async function loadLocs(){
+  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`);const subs=d.submissions||[];
+  document.getElementById('loc-grid').innerHTML=subs.map(s=>`
+    <div class="loc-card" onclick="viewLoc('${s.id}')">
+      <h4>${esc(v(s,'Name'))}</h4>
+      <div class="loc-meta">${esc(v(s,'State'))} ${badge(v(s,'Region'))} ${badge(v(s,'Status'))}</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:6px">${esc(v(s,'Sites'))} sites</div>
+    </div>`).join('')}catch(e){toast('Error: '+e.message)}}
+
+async function viewLoc(id){
+  const d=await api(`/submissions/${id}?include=values`);const s=d.submission||d;
+  document.getElementById('modal-title').textContent=v(s,'Name');
+  document.getElementById('modal-body').innerHTML=`
+    <div style="margin-bottom:12px">${badge(v(s,'Region'))} ${badge(v(s,'Status'))} <span style="font-size:13px;color:var(--gray);margin-left:8px">${esc(v(s,'State'))}</span></div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">${esc(v(s,'Sites'))} campsites</div>
+    <label>Amenities</label>
+    <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:6px">${esc(v(s,'Amenities'))}</div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Close</button>`;
+  document.getElementById('modal').classList.add('open')}
+
+/* ── STORE ── */
+async function loadStore(dir){
+  const ps=PS.store;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  const cat=document.getElementById('f-scat').value,stat=document.getElementById('f-sstat').value;
+  let p=`/kapps/${KAPP}/forms/store-inventory/submissions?include=values&limit=25`;const q=[];
+  if(cat)q.push(`values[Category]="${cat}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('store-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Item Name'))}</strong></td><td>${badge(v(s,'Category'))}</td>
+    <td style="font-weight:600;color:var(--forest)">$${esc(v(s,'Price'))}</td><td>${esc(v(s,'Quantity'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editStore('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No items</td></tr>';
+  document.getElementById('store-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadStore('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadStore('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+function openStoreModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Item':'New Item';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Item Name</label><input id="ms-name" value="${esc(vl['Item Name']||'')}">
+    <label>Category</label><select id="ms-cat">${['Tent','Sleeping Bag','Cookware','Clothing','Firewood','Swag','Snacks','Other'].map(c=>`<option ${vl.Category===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Price</label><input id="ms-price" value="${esc(vl.Price||'')}" placeholder="9.99">
+    <label>Quantity</label><input id="ms-qty" type="number" value="${esc(vl.Quantity||'0')}" min="0">
+    <label>Status</label><select id="ms-stat">${['In Stock','Low Stock','Out of Stock'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveStore('${s.id||''}')">${ex?'Update':'Add'}</button>
+    ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadStore')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open')}
+
+async function editStore(id){const d=await api(`/submissions/${id}?include=values`);openStoreModal(d.submission||d)}
+async function saveStore(id){const values={'Item Name':document.getElementById('ms-name').value,Category:document.getElementById('ms-cat').value,Price:document.getElementById('ms-price').value,Quantity:document.getElementById('ms-qty').value,Status:document.getElementById('ms-stat').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/store-inventory/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Added');loadStore()}catch(e){toast('Error: '+e.message)}}
+
+/* ── FEEDBACK ── */
+async function loadFb(dir){
+  const ps=PS.fb;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  let p=`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`;
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('fb-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Guest Name'))}</strong></td><td>${esc(v(s,'Location'))}</td><td>${stars(v(s,'Rating'))}</td><td>${esc(v(s,'Date'))}</td>
+    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Comments'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="viewFb('${s.id}')">View</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No feedback</td></tr>';
+  document.getElementById('fb-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadFb('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadFb('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+async function viewFb(id){const d=await api(`/submissions/${id}?include=values`);const s=d.submission||d;
+  document.getElementById('modal-title').textContent='Feedback from '+v(s,'Guest Name');
+  document.getElementById('modal-body').innerHTML=`
+    <div style="margin-bottom:12px">${stars(v(s,'Rating'))} <span style="color:var(--gray);font-size:13px;margin-left:8px">${esc(v(s,'Location'))} &mdash; ${esc(v(s,'Date'))}</span></div>
+    <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:12px;border-radius:6px">${esc(v(s,'Comments'))}</div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Close</button><button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadFb')">Delete</button>`;
+  document.getElementById('modal').classList.add('open')}
+
+function openFbModal(){
+  document.getElementById('modal-title').textContent='New Feedback';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Guest Name</label><input id="mf-guest">
+    <label>Location</label><select id="mf-loc"><option value="">Select...</option>${locOptions('')}</select>
+    <label>Rating</label><select id="mf-rat"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+    <label>Date</label><input id="mf-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+    <label>Comments</label><textarea id="mf-comments"></textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveFb()">Submit</button>`;
+  document.getElementById('modal').classList.add('open')}
+
+async function saveFb(){const values={'Guest Name':document.getElementById('mf-guest').value,Location:document.getElementById('mf-loc').value,Rating:document.getElementById('mf-rat').value,Date:document.getElementById('mf-date').value,Comments:document.getElementById('mf-comments').value};
+  try{await api(`/kapps/${KAPP}/forms/feedback/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});closeModal();toast('Feedback submitted');loadFb()}catch(e){toast('Error: '+e.message)}}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const[rD,lD,sD,fD]=await Promise.all([
+    api(`/kapps/${KAPP}/forms/reservations/submissions?include=values&limit=25`),
+    api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`),
+    api(`/kapps/${KAPP}/forms/store-inventory/submissions?include=values&limit=25`),
+    api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`)]);
+  const res=rD.submissions||[],locs=lD.submissions||[],store=sD.submissions||[],fb=fD.submissions||[];
+  const confirmed=res.filter(s=>v(s,'Status')==='Confirmed').length;
+  const checkedIn=res.filter(s=>v(s,'Status')==='Checked In').length;
+  const totalSites=locs.reduce((s,l)=>s+parseInt(v(l,'Sites')||0),0);
+  const avgRating=fb.length?(fb.reduce((s,f)=>s+(parseInt(v(f,'Rating'))||0),0)/fb.length).toFixed(1):'-';
+  const storeValue=store.reduce((s,i)=>s+parseFloat(v(i,'Price')||0)*parseInt(v(i,'Quantity')||0),0);
+
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="val" style="color:var(--green)">${confirmed}</div><div class="label">Confirmed</div></div>
+    <div class="kpi"><div class="val" style="color:#1565C0">${checkedIn}</div><div class="label">Checked In</div></div>
+    <div class="kpi"><div class="val" style="color:var(--forest)">${locs.length}</div><div class="label">Locations</div></div>
+    <div class="kpi"><div class="val" style="color:var(--forest)">${totalSites}</div><div class="label">Total Sites</div></div>
+    <div class="kpi"><div class="val" style="color:var(--yellow)">${avgRating}</div><div class="label">Avg Rating</div></div>
+    <div class="kpi"><div class="val" style="color:var(--forest)">$${Math.round(storeValue).toLocaleString()}</div><div class="label">Store Value</div></div>`;
+
+  const countBy=(arr,f)=>{const m={};arr.forEach(s=>{const k=v(s,f)||'Other';m[k]=(m[k]||0)+1});return m};
+  const distHtml=obj=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${badge(k)} <strong>${c}</strong></div>`).join('');
+  document.getElementById('d-rstat').innerHTML=distHtml(countBy(res,'Status'));
+  document.getElementById('d-region').innerHTML=distHtml(countBy(locs,'Region'));
+  document.getElementById('d-scat').innerHTML=distHtml(countBy(store,'Category'));
+  document.getElementById('d-fb').innerHTML=fb.slice(0,5).map(s=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+    <div style="display:flex;justify-content:space-between"><strong>${esc(v(s,'Guest Name'))}</strong>${stars(v(s,'Rating'))}</div>
+    <div style="color:var(--gray);font-size:12px">${esc(v(s,'Location'))} &mdash; ${esc(v(s,'Comments')).slice(0,80)}${v(s,'Comments').length>80?'...':''}</div></div>`).join('')||'<div style="color:var(--gray)">No feedback yet</div>'}catch(e){toast('Error: '+e.message)}}
+
+async function delSub(id,fn){if(!confirm('Delete?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>

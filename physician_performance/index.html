@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physician Performance</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00695C;
+  --teal-light: #00897B;
+  --indigo: #283593;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: var(--teal-light); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--teal-light); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: var(--indigo); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-completed, .badge-acknowledged, .badge-paid, .badge-final, .badge-current, .badge-verified, .badge-closed, .badge-built { background: #E8F5E9; color: #2E7D32; }
+.badge-draft, .badge-scheduled, .badge-preliminary, .badge-proposed, .badge-new, .badge-open { background: #E3F2FD; color: #1565C0; }
+.badge-in-progress, .badge-under-review, .badge-calculated { background: #F3E5F5; color: #6A1B9A; }
+.badge-on-leave, .badge-inactive, .badge-expired, .badge-outdated, .badge-disputed { background: #FFF3E0; color: #E65100; }
+.badge-retired, .badge-overdue { background: #FFEBEE; color: #C62828; }
+.badge-approved { background: #E0F2F1; color: #00695C; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 960px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--teal); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--teal); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== HORIZONTAL BAR ===== */
+.hbar-row { display: flex; align-items: center; margin-bottom: 8px; }
+.hbar-label { font-size: 12px; color: #333; min-width: 130px; font-weight: 500; }
+.hbar-track { flex: 1; background: var(--border); border-radius: 4px; height: 20px; position: relative; overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.hbar-val { font-size: 11px; color: var(--gray); min-width: 50px; text-align: right; margin-left: 8px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-teal { background: var(--teal); color: var(--white); }
+.act-btn-teal:hover { background: var(--teal-light); }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+
+/* Subtabs */
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtab { background: var(--light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--gray); }
+.subtab.active { background: var(--teal); color: var(--white); }
+.subtab:hover:not(.active) { background: var(--border); }
+
+/* wRVU gauge */
+.gauge-container { display: flex; align-items: center; gap: 6px; }
+.gauge-track { width: 80px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.gauge-fill { height: 100%; border-radius: 4px; }
+.gauge-pct { font-size: 11px; font-weight: 600; min-width: 40px; }
+.gauge-green .gauge-fill { background: var(--green); }
+.gauge-green .gauge-pct { color: var(--green); }
+.gauge-yellow .gauge-fill { background: var(--yellow); }
+.gauge-yellow .gauge-pct { color: #F57F17; }
+.gauge-red .gauge-fill { background: var(--red); }
+.gauge-red .gauge-pct { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Physician Performance</h1>
+      <p class="subtitle">Compensation & Productivity Analytics</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Physician <span class="accent">Performance</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="physicians">Physicians</button>
+      <button class="tab-btn" data-tab="performance">Performance</button>
+      <button class="tab-btn" data-tab="quality">Quality</button>
+      <button class="tab-btn" data-tab="compensation">Compensation</button>
+      <button class="tab-btn" data-tab="benchmarks">Benchmarks</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Performance Dashboard</div>
+      <div class="page-sub">Physician productivity, quality, and compensation overview</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Top Performers (wRVU %)</h3><div id="dash-top"></div></div>
+        <div class="card"><h3>Pending Reviews</h3><div id="dash-reviews"></div></div>
+      </div>
+    </div>
+
+    <!-- PHYSICIANS -->
+    <div class="tab-panel" id="panel-physicians">
+      <div class="page-title">Physician Roster</div>
+      <div class="page-sub">Active physicians with department and specialty</div>
+      <div class="filter-bar" id="phy-filters">
+        <select id="phy-f-status"><option value="">All Statuses</option><option>Active</option><option>On Leave</option><option>Inactive</option><option>Retired</option></select>
+        <select id="phy-f-dept"><option value="">All Departments</option><option>Internal Medicine</option><option>Surgery</option><option>Cardiology</option><option>Oncology</option><option>Emergency Medicine</option><option>Orthopedics</option><option>Pediatrics</option><option>Radiology</option></select>
+        <select id="phy-f-spec"><option value="">All Specialties</option><option>Internal Medicine</option><option>Surgery</option><option>Cardiology</option><option>Oncology</option><option>Neurology</option><option>Orthopedics</option><option>Pediatrics</option><option>Emergency Medicine</option><option>Radiology</option><option>Anesthesiology</option><option>Pathology</option><option>Psychiatry</option></select>
+        <select id="phy-f-emp"><option value="">All Types</option><option>Employed</option><option>Independent</option><option>Locum</option><option>Academic</option></select>
+        <input id="phy-f-search" type="text" placeholder="Search physicians...">
+      </div>
+      <div id="phy-table"></div>
+      <div id="phy-pag" class="pagination"></div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="tab-panel" id="panel-performance">
+      <div class="page-title">Performance Tracking</div>
+      <div class="page-sub">wRVU productivity and departmental rankings</div>
+      <div id="perf-content"></div>
+    </div>
+
+    <!-- QUALITY -->
+    <div class="tab-panel" id="panel-quality">
+      <div class="page-title">Quality Metrics</div>
+      <div class="page-sub">Quality scores, benchmarks, and distributions</div>
+      <div id="qual-content"></div>
+    </div>
+
+    <!-- COMPENSATION -->
+    <div class="tab-panel" id="panel-compensation">
+      <div class="page-title">Compensation & Incentives</div>
+      <div class="page-sub">Compensation models, incentive pipeline, and payment tracking</div>
+      <div class="subtabs" id="comp-subtabs">
+        <button class="subtab active" data-sub="models">Models</button>
+        <button class="subtab" data-sub="incentives">Incentives</button>
+        <button class="subtab" data-sub="pipeline">Payment Pipeline</button>
+      </div>
+      <div id="comp-content"></div>
+    </div>
+
+    <!-- BENCHMARKS -->
+    <div class="tab-panel" id="panel-benchmarks">
+      <div class="page-title">Industry Benchmarks</div>
+      <div class="page-sub">Specialty benchmark comparisons and percentile distributions</div>
+      <div id="bench-content"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHYSICIAN DETAIL MODAL -->
+<div class="modal-overlay" id="phy-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="phy-modal-title">Physician Detail</h2>
+      <button class="modal-close" onclick="closeModal('phy-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="phy-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="productivity">Productivity</button>
+        <button class="modal-tab" data-sec="quality">Quality</button>
+        <button class="modal-tab" data-sec="compensation">Compensation</button>
+        <button class="modal-tab" data-sec="reviews">Reviews</button>
+      </div>
+      <div id="phy-modal-overview" class="modal-section active"></div>
+      <div id="phy-modal-productivity" class="modal-section"></div>
+      <div id="phy-modal-quality" class="modal-section"></div>
+      <div id="phy-modal-compensation" class="modal-section"></div>
+      <div id="phy-modal-reviews" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =============== STATE & AUTH =============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'physician-performance';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* =============== API HELPERS =============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* =============== BADGES =============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+
+function wrvuGauge(pct) {
+  const n = parseFloat(pct) || 0;
+  const cls = n >= 100 ? 'gauge-green' : (n >= 80 ? 'gauge-yellow' : 'gauge-red');
+  const w = Math.min(n, 130);
+  return `<div class="gauge-container ${cls}"><div class="gauge-track"><div class="gauge-fill" style="width:${w}%"></div></div><span class="gauge-pct">${n}%</span></div>`;
+}
+
+function formatMoney(n) {
+  const num = parseFloat(n) || 0;
+  if (num >= 1000000) return '$' + (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'K';
+  return '$' + num.toFixed(0);
+}
+
+/* =============== PAGINATION =============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* =============== TAB NAVIGATION =============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'physicians') loadPhysicians();
+    else if (tab === 'performance') loadPerformance();
+    else if (tab === 'quality') loadQuality();
+    else if (tab === 'compensation') { compSub = 'models'; loadCompensation(); }
+    else if (tab === 'benchmarks') loadBenchmarks();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+function setupSubtabs(containerId, callback) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    if (!e.target.classList.contains('subtab')) return;
+    e.currentTarget.querySelectorAll('.subtab').forEach(s => s.classList.remove('active'));
+    e.target.classList.add('active');
+    callback(e.target.dataset.sub);
+  });
+}
+
+/* =============== MODAL =============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('phy-modal-tabs', ['phy-modal-overview', 'phy-modal-productivity', 'phy-modal-quality', 'phy-modal-compensation', 'phy-modal-reviews']);
+
+/* =============== DASHBOARD =============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/ppc/dashboard');
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.activePhysicians}</div><div class="kpi-label">Active Physicians</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${d.avgWRVUPct}%</div><div class="kpi-label">Avg wRVU %</div></div>
+      <div class="kpi-card kpi-blue"><div class="kpi-value">${parseFloat(d.avgQualScore).toFixed(1)}</div><div class="kpi-label">Avg Quality Score</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${formatMoney(d.totalIncentivesYTD)}</div><div class="kpi-label">Incentives YTD</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.openReviews}</div><div class="kpi-label">Open Reviews</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${d.aboveBenchmarkPct}%</div><div class="kpi-label">Above Benchmark</div></div>`;
+
+    // Top performers
+    document.getElementById('dash-top').innerHTML = d.topPerformers.length === 0
+      ? '<div class="loading">No productivity data</div>'
+      : `<table class="data-table"><thead><tr><th>Physician</th><th>Department</th><th>wRVU %</th><th>Total wRVU</th></tr></thead><tbody>${
+        d.topPerformers.map(p => `<tr onclick="openPhyDetail('${p.phyId}')"><td>${p.name}</td><td>${p.dept}</td><td>${wrvuGauge(p.wrvuPct)}</td><td>${p.totalWRVU}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Pending reviews
+    document.getElementById('dash-reviews').innerHTML = d.pendingReviews.length === 0
+      ? '<div class="loading">No pending reviews</div>'
+      : `<table class="data-table"><thead><tr><th>Physician</th><th>Period</th><th>Status</th><th>Reviewer</th></tr></thead><tbody>${
+        d.pendingReviews.map(r => `<tr><td>${r.physician}</td><td>${r.period}</td><td>${badge(r.status)}</td><td>${r.reviewer}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== PHYSICIANS TAB =============== */
+let phyPage = 1, phyPageKeys = [null], phyHasNext = false;
+
+['phy-f-status', 'phy-f-dept', 'phy-f-spec', 'phy-f-emp'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { phyPage = 1; phyPageKeys = [null]; phyHasNext = false; loadPhysicians(); });
+});
+document.getElementById('phy-f-search').addEventListener('input', debounce(() => { phyPage = 1; phyPageKeys = [null]; phyHasNext = false; loadPhysicians(); }, 300));
+
+async function loadPhysicians() {
+  const status = document.getElementById('phy-f-status').value;
+  const dept = document.getElementById('phy-f-dept').value;
+  const spec = document.getElementById('phy-f-spec').value;
+  const emp = document.getElementById('phy-f-emp').value;
+  const search = document.getElementById('phy-f-search').value.trim().toLowerCase();
+
+  // Use single-field KQL when possible
+  const filters = [];
+  if (status) filters.push({ field: 'Status', val: status });
+  if (dept) filters.push({ field: 'Department', val: dept });
+  if (spec) filters.push({ field: 'Specialty', val: spec });
+  if (emp) filters.push({ field: 'Employment Type', val: emp });
+
+  let kql = null;
+  if (filters.length === 1) kql = `values[${filters[0].field}] = "${filters[0].val}"`;
+
+  try {
+    const data = await kqlFetch('physicians', kql, 25, phyPageKeys[phyPage - 1]);
+    let subs = data.submissions || [];
+
+    // Client-side filter for multi-field or non-KQL
+    if (filters.length > 1 || (filters.length === 1 && !kql)) {
+      subs = subs.filter(s => {
+        for (const f of filters) { if (vf(s, f.field) !== f.val) return false; }
+        return true;
+      });
+    }
+    if (search) {
+      subs = subs.filter(s =>
+        (vf(s, 'Physician ID') + ' ' + vf(s, 'First Name') + ' ' + vf(s, 'Last Name') + ' ' + vf(s, 'Department') + ' ' + vf(s, 'Specialty')).toLowerCase().includes(search)
+      );
+    }
+
+    document.getElementById('phy-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No physicians found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Credentials</th><th>Department</th><th>Specialty</th><th>Type</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openPhyDetail('${vf(s, 'Physician ID')}')">
+          <td>${vf(s, 'Physician ID')}</td>
+          <td>${vf(s, 'First Name')} ${vf(s, 'Last Name')}</td>
+          <td>${vf(s, 'Credentials')}</td>
+          <td>${vf(s, 'Department')}</td>
+          <td>${vf(s, 'Specialty')}</td>
+          <td>${vf(s, 'Employment Type')}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    phyHasNext = !!data.nextPageToken;
+    if (phyHasNext && subs.length) phyPageKeys[phyPage] = subs[subs.length - 1].createdAt;
+    renderPag('phy-pag', phyPage, phyHasNext, 'phyPrev()', 'phyNext()');
+  } catch (e) {
+    document.getElementById('phy-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function phyNext() { if (!phyHasNext) return; phyPage++; loadPhysicians(); }
+function phyPrev() { if (phyPage <= 1) return; phyPage--; loadPhysicians(); }
+
+/* =============== PHYSICIAN DETAIL MODAL =============== */
+async function openPhyDetail(phyId) {
+  openModal('phy-modal');
+  document.getElementById('phy-modal-title').textContent = 'Loading...';
+  document.getElementById('phy-modal-overview').innerHTML = '<div class="loading">Loading physician profile...</div>';
+  ['phy-modal-productivity', 'phy-modal-quality', 'phy-modal-compensation', 'phy-modal-reviews'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  // Reset to overview tab
+  document.querySelectorAll('#phy-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#phy-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#phy-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('phy-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/ppc/physician/${encodeURIComponent(phyId)}/profile`);
+    const p = d.physician;
+    document.getElementById('phy-modal-title').textContent = `${p['First Name']} ${p['Last Name']}, ${p['Credentials']}`;
+
+    // Overview
+    document.getElementById('phy-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${badge(p.Status)} <span style="font-size:13px; color:var(--gray); margin-left:8px">${p.Title} | ${p['Employment Type']}</span></div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Physician ID</span><span class="detail-value">${p['Physician ID']}</span></div>
+        <div class="detail-row"><span class="detail-label">NPI</span><span class="detail-value">${p.NPI}</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${p.Department}</span></div>
+        <div class="detail-row"><span class="detail-label">Specialty</span><span class="detail-value">${p.Specialty}</span></div>
+        <div class="detail-row"><span class="detail-label">Hire Date</span><span class="detail-value">${p['Hire Date']}</span></div>
+        <div class="detail-row"><span class="detail-label">Base Salary</span><span class="detail-value">${formatMoney(p['Base Salary'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Comp Model</span><span class="detail-value">${p['Comp Model']}</span></div>
+        <div class="detail-row"><span class="detail-label">Panel Size</span><span class="detail-value">${p['Panel Size'] || 'N/A'}</span></div>
+      </div>`;
+
+    // Productivity
+    document.getElementById('phy-modal-productivity').innerHTML = d.productivity.length === 0
+      ? '<div class="loading">No productivity data</div>'
+      : `<table class="data-table"><thead><tr><th>Period</th><th>Total wRVU</th><th>Target</th><th>Variance</th><th>wRVU %</th><th>Encounters</th><th>Collections</th><th>Status</th></tr></thead><tbody>${
+        d.productivity.map(pr => {
+          const pct = parseFloat(pr['Target wRVUs']) > 0 ? ((parseFloat(pr['Total wRVUs']) / parseFloat(pr['Target wRVUs'])) * 100).toFixed(1) : '0';
+          return `<tr>
+            <td>${pr['Period Name']}</td><td>${pr['Total wRVUs']}</td><td>${pr['Target wRVUs']}</td>
+            <td style="color:${parseInt(pr['wRVU Variance']) >= 0 ? 'var(--green)' : 'var(--red)'}">${pr['wRVU Variance']}</td>
+            <td>${wrvuGauge(pct)}</td><td>${pr['Patient Encounters']}</td><td>${formatMoney(pr.Collections)}</td>
+            <td>${badge(pr.Status)}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    // Quality
+    document.getElementById('phy-modal-quality').innerHTML = d.quality.length === 0
+      ? '<div class="loading">No quality metrics</div>'
+      : `<table class="data-table"><thead><tr><th>Period</th><th>Metric</th><th>Score</th><th>Target</th><th>Percentile</th><th>Source</th><th>Status</th></tr></thead><tbody>${
+        d.quality.map(q => `<tr>
+          <td>${q['Period Name']}</td><td>${q['Metric Type']}</td>
+          <td>${q.Score}</td><td>${q.Target}</td><td>${q.Percentile}th</td>
+          <td>${q['Benchmark Source']}</td><td>${badge(q.Status)}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    // Compensation (incentives)
+    const totalInc = d.incentives.reduce((s, i) => s + (parseFloat(i.Amount) || 0), 0);
+    const paidInc = d.incentives.filter(i => i.Status === 'Paid').reduce((s, i) => s + (parseFloat(i.Amount) || 0), 0);
+    document.getElementById('phy-modal-compensation').innerHTML = d.incentives.length === 0
+      ? '<div class="loading">No incentive payments</div>'
+      : `<div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-teal"><div class="kpi-value">${formatMoney(totalInc)}</div><div class="kpi-label">Total Incentives</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${formatMoney(paidInc)}</div><div class="kpi-label">Paid</div></div>
+          <div class="kpi-card kpi-orange"><div class="kpi-value">${formatMoney(totalInc - paidInc)}</div><div class="kpi-label">Pending</div></div>
+        </div>
+        <table class="data-table"><thead><tr><th>Period</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+        d.incentives.map(i => {
+          const st = i.Status;
+          const iid = i['Incentive ID'];
+          let actions = '';
+          if (st === 'Calculated') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionIncentive('${iid}','Under Review')">Review</button>`;
+          else if (st === 'Under Review') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionIncentive('${iid}','Approved')">Approve</button>`;
+          else if (st === 'Approved') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionIncentive('${iid}','Paid')">Pay</button>`;
+          return `<tr><td>${i['Period Name']}</td><td>${i['Incentive Type']}</td><td>${formatMoney(i.Amount)}</td><td>${badge(st)}</td><td>${actions}</td></tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    // Reviews
+    document.getElementById('phy-modal-reviews').innerHTML = d.reviews.length === 0
+      ? '<div class="loading">No reviews</div>'
+      : d.reviews.map(r => {
+        const transitions = { 'Draft': ['Scheduled'], 'Scheduled': ['In Progress'], 'In Progress': ['Completed', 'Draft'], 'Completed': ['Acknowledged'] };
+        const allowed = transitions[r.Status] || [];
+        const btns = allowed.map(s => `<button class="act-btn act-btn-teal" onclick="transitionReview('${r['Review ID']}','${s}')" style="margin-left:4px">${s}</button>`).join('');
+        return `<div class="card" style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <span style="font-weight:600">${r['Review ID']} - ${r['Period Name']}</span>
+            <span>${badge(r.Status)} ${btns}</span>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-row"><span class="detail-label">Reviewer</span><span class="detail-value">${r.Reviewer}</span></div>
+            <div class="detail-row"><span class="detail-label">Review Date</span><span class="detail-value">${r['Review Date']}</span></div>
+            <div class="detail-row"><span class="detail-label">Overall Score</span><span class="detail-value">${r['Overall Score']}</span></div>
+            <div class="detail-row"><span class="detail-label">Productivity</span><span class="detail-value">${r['Productivity Score']}</span></div>
+            <div class="detail-row"><span class="detail-label">Quality</span><span class="detail-value">${r['Quality Score']}</span></div>
+            <div class="detail-row"><span class="detail-label">Citizenship</span><span class="detail-value">${r['Citizenship Score']}</span></div>
+          </div>
+          ${r.Strengths ? `<div style="margin-top:8px"><span class="detail-label">Strengths:</span> <span style="font-size:13px">${r.Strengths}</span></div>` : ''}
+          ${r['Improvement Areas'] ? `<div style="margin-top:4px"><span class="detail-label">Improvement Areas:</span> <span style="font-size:13px">${r['Improvement Areas']}</span></div>` : ''}
+          ${r.Goals ? `<div style="margin-top:4px"><span class="detail-label">Goals:</span> <span style="font-size:13px">${r.Goals}</span></div>` : ''}
+        </div>`;
+      }).join('');
+  } catch (e) {
+    document.getElementById('phy-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+async function transitionReview(reviewId, newStatus) {
+  try {
+    await apiPost(`/api/ppc/reviews/${encodeURIComponent(reviewId)}/transition`, { status: newStatus, performer: USERNAME });
+    // Reload the modal -- extract physician ID from the current modal title context
+    const titleEl = document.getElementById('phy-modal-title');
+    // Refresh by re-opening same physician (find phyId from reviews)
+    alert('Review transitioned to: ' + newStatus);
+    closeModal('phy-modal');
+    loadDashboard();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+async function transitionIncentive(incId, newStatus) {
+  try {
+    await apiPost(`/api/ppc/incentives/${encodeURIComponent(incId)}/transition`, { status: newStatus, performer: USERNAME });
+    alert('Incentive transitioned to: ' + newStatus);
+    closeModal('phy-modal');
+    loadDashboard();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== RECORD DETAIL MODAL =============== */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* =============== PERFORMANCE TAB =============== */
+async function loadPerformance() {
+  const el = document.getElementById('perf-content');
+  el.innerHTML = '<div class="loading">Loading performance data...</div>';
+  try {
+    const d = await apiFetch('/api/ppc/stats/performance');
+
+    // Department rankings
+    const deptRank = d.deptRank || [];
+    const maxPct = Math.max(...deptRank.map(r => parseFloat(r.pctOfTarget) || 0), 100);
+
+    let html = '<div class="card"><h3>Department wRVU Performance</h3>';
+    html += deptRank.map(r => {
+      const pct = parseFloat(r.pctOfTarget) || 0;
+      const color = pct >= 100 ? 'var(--green)' : (pct >= 80 ? 'var(--yellow)' : 'var(--red)');
+      return `<div class="hbar-row">
+        <span class="hbar-label">${r.dept}</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${(pct / maxPct * 100).toFixed(0)}%; background:${color}"></div></div>
+        <span class="hbar-val">${r.pctOfTarget}%</span>
+      </div>`;
+    }).join('');
+    html += '</div>';
+
+    // Quality trends by metric type
+    const qualEntries = Object.entries(d.qualByType || {});
+    html += '<div class="two-col">';
+    html += '<div class="card"><h3>Quality Score Averages by Metric</h3>';
+    if (qualEntries.length > 0) {
+      const maxAvg = Math.max(...qualEntries.map(([, v]) => parseFloat(v.avg) || 0), 1);
+      html += qualEntries.map(([mt, v]) => `<div class="hbar-row">
+        <span class="hbar-label">${mt}</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${((parseFloat(v.avg) / maxAvg) * 100).toFixed(0)}%; background:var(--teal)"></div></div>
+        <span class="hbar-val">${v.avg}</span>
+      </div>`).join('');
+    } else { html += '<div class="loading">No quality data</div>'; }
+    html += '</div>';
+
+    // wRVU by department summary table
+    html += '<div class="card"><h3>Department Summary</h3>';
+    html += `<table class="data-table"><thead><tr><th>Department</th><th>Avg wRVU</th><th>Avg Target</th><th>% of Target</th><th>Physicians</th></tr></thead><tbody>${
+      deptRank.map(r => `<tr><td>${r.dept}</td><td>${r.avgWRVU}</td><td>${r.avgTarget}</td><td>${wrvuGauge(r.pctOfTarget)}</td><td>${r.count}</td></tr>`).join('')
+    }</tbody></table>`;
+    html += '</div></div>';
+
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== QUALITY TAB =============== */
+async function loadQuality() {
+  const el = document.getElementById('qual-content');
+  el.innerHTML = '<div class="loading">Loading quality data...</div>';
+  try {
+    const d = await apiFetch('/api/ppc/stats/performance');
+    const qualEntries = Object.entries(d.qualByType || {});
+
+    let html = '<div class="kpi-grid">';
+    for (const [mt, v] of qualEntries) {
+      html += `<div class="kpi-card kpi-teal"><div class="kpi-value">${v.avg}</div><div class="kpi-label">${mt} (avg)</div></div>`;
+    }
+    html += '</div>';
+
+    // Detail table
+    html += '<div class="card"><h3>Quality Metric Summary</h3>';
+    html += `<table class="data-table"><thead><tr><th>Metric Type</th><th>Avg Score</th><th>Min</th><th>Max</th><th>Count</th></tr></thead><tbody>${
+      qualEntries.map(([mt, v]) => `<tr><td>${mt}</td><td style="font-weight:600">${v.avg}</td><td>${v.min}</td><td>${v.max}</td><td>${v.count}</td></tr>`).join('')
+    }</tbody></table></div>`;
+
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== COMPENSATION TAB =============== */
+let compSub = 'models';
+setupSubtabs('comp-subtabs', sub => { compSub = sub; loadCompensation(); });
+
+async function loadCompensation() {
+  const el = document.getElementById('comp-content');
+  el.innerHTML = '<div class="loading">Loading compensation data...</div>';
+  try {
+    const d = await apiFetch('/api/ppc/stats/compensation');
+
+    if (compSub === 'models') {
+      const models = d.modelSummary || [];
+      el.innerHTML = `<div class="card"><h3>Compensation Models</h3>
+        <table class="data-table"><thead><tr><th>Model</th><th>Type</th><th>Base</th><th>Productivity</th><th>Quality</th><th>wRVU Rate</th><th>Status</th></tr></thead><tbody>${
+        models.map(m => `<tr><td>${m.name}</td><td>${m.type}</td><td>${m.base}</td><td>${m.productivity}</td><td>${m.quality}</td><td>$${m.wrvuRate}</td><td>${badge(m.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (compSub === 'incentives') {
+      const byType = Object.entries(d.incByType || {});
+      let html = '<div class="card"><h3>Incentive Breakdown by Type</h3>';
+      if (byType.length > 0) {
+        const maxTotal = Math.max(...byType.map(([, v]) => v.total), 1);
+        html += byType.map(([t, v]) => `<div class="hbar-row">
+          <span class="hbar-label">${t}</span>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${(v.total / maxTotal * 100).toFixed(0)}%; background:var(--teal)"></div></div>
+          <span class="hbar-val">${formatMoney(v.total)} (${v.count})</span>
+        </div>`).join('');
+      }
+      html += '</div>';
+      el.innerHTML = html;
+    } else {
+      // Pipeline
+      const byStatus = Object.entries(d.incByStatus || {});
+      const statusOrder = ['Calculated', 'Under Review', 'Approved', 'Paid', 'Disputed'];
+      const sortedStatus = statusOrder.filter(s => byStatus.find(([k]) => k === s)).map(s => byStatus.find(([k]) => k === s));
+
+      let html = '<div class="kpi-grid">';
+      for (const [s, v] of sortedStatus) {
+        const cls = s === 'Paid' ? 'kpi-green' : (s === 'Approved' ? 'kpi-teal' : (s === 'Disputed' ? 'kpi-red' : 'kpi-orange'));
+        html += `<div class="kpi-card ${cls}"><div class="kpi-value">${formatMoney(v.amount)}</div><div class="kpi-label">${s} (${v.count})</div></div>`;
+      }
+      html += '</div>';
+
+      html += '<div class="card"><h3>Payment Pipeline</h3>';
+      html += `<table class="data-table"><thead><tr><th>Status</th><th>Count</th><th>Total Amount</th></tr></thead><tbody>${
+        sortedStatus.map(([s, v]) => `<tr><td>${badge(s)}</td><td>${v.count}</td><td>${formatMoney(v.amount)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+
+      el.innerHTML = html;
+    }
+  } catch (e) {
+    el.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== BENCHMARKS TAB =============== */
+async function loadBenchmarks() {
+  const el = document.getElementById('bench-content');
+  el.innerHTML = '<div class="loading">Loading benchmark data...</div>';
+  try {
+    const d = await apiFetch('/api/ppc/stats/compensation');
+    const bm = d.bmSummary || [];
+
+    // Group by metric type
+    const byMetric = {};
+    for (const b of bm) {
+      const mt = b.metricType || 'Unknown';
+      if (!byMetric[mt]) byMetric[mt] = [];
+      byMetric[mt].push(b);
+    }
+
+    let html = '';
+    for (const [mt, items] of Object.entries(byMetric)) {
+      html += `<div class="card"><h3>${mt} Benchmarks</h3>
+        <table class="data-table"><thead><tr><th>Specialty</th><th>Source</th><th>25th</th><th>50th</th><th>75th</th><th>90th</th><th>Status</th></tr></thead><tbody>${
+        items.map(b => `<tr><td>${b.specialty}</td><td>${b.source}</td>
+          <td>${mt === 'Compensation' ? formatMoney(b.p25) : b.p25}</td>
+          <td style="font-weight:600">${mt === 'Compensation' ? formatMoney(b.p50) : b.p50}</td>
+          <td>${mt === 'Compensation' ? formatMoney(b.p75) : b.p75}</td>
+          <td>${mt === 'Compensation' ? formatMoney(b.p90) : b.p90}</td>
+          <td>${badge(b.status)}</td>
+        </tr>`).join('')
+      }</tbody></table></div>`;
+    }
+
+    el.innerHTML = html || '<div class="loading">No benchmark data</div>';
+  } catch (e) {
+    el.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== ANALYTICS TAB =============== */
+const REPORT_TYPES = [
+  { id: 'performance', name: 'Performance Report', desc: 'Physician wRVU productivity data with targets, variance, and encounter volume' },
+  { id: 'compensation', name: 'Compensation Report', desc: 'Incentive payments with type, amount, approval status, and payment dates' },
+  { id: 'quality', name: 'Quality Report', desc: 'Quality metric scores, targets, and benchmark percentiles by physician' },
+  { id: 'productivity', name: 'Productivity Summary', desc: 'Aggregated physician productivity rankings with total wRVUs and encounters' },
+  { id: 'benchmark', name: 'Benchmark Report', desc: 'Industry benchmarks by specialty showing percentile distributions' },
+  { id: 'review', name: 'Review Summary', desc: 'Physician performance reviews with scores and status tracking' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/ppc/report/${type}`);
+
+    if (type === 'performance') {
+      const csvRows = [['Physician ID', 'Name', 'Department', 'Period', 'Total wRVU', 'Target wRVU', 'Variance', 'Encounters', 'Collections', 'Benchmark %', 'Status']];
+      d.items.forEach(i => csvRows.push([i.phyId, i.name, i.dept, i.period, i.totalWRVU, i.targetWRVU, i.variance, i.encounters, i.collections, i.benchPct, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'performance-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Physician</th><th>Dept</th><th>Period</th><th>wRVU</th><th>Target</th><th>Var</th><th>Encounters</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.name}</td><td>${i.dept}</td><td>${i.period}</td><td>${i.totalWRVU}</td><td>${i.targetWRVU}</td><td style="color:${parseInt(i.variance) >= 0 ? 'var(--green)' : 'var(--red)'}">${i.variance}</td><td>${i.encounters}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'compensation') {
+      const csvRows = [['Incentive ID', 'Physician', 'Period', 'Type', 'Amount', 'Basis', 'Approved By', 'Payment Date', 'Status']];
+      d.items.forEach(i => csvRows.push([i.incId, i.name, i.period, i.type, i.amount, i.basis, i.approvedBy, i.payDate, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'compensation-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Physician</th><th>Period</th><th>Type</th><th>Amount</th><th>Approved By</th><th>Pay Date</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.name}</td><td>${i.period}</td><td>${i.type}</td><td>${formatMoney(i.amount)}</td><td>${i.approvedBy || '-'}</td><td>${i.payDate || '-'}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'quality') {
+      const csvRows = [['Metric ID', 'Physician', 'Period', 'Metric Type', 'Score', 'Target', 'Percentile', 'Source', 'Status']];
+      d.items.forEach(i => csvRows.push([i.metricId, i.name, i.period, i.metricType, i.score, i.target, i.percentile, i.source, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'quality-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Physician</th><th>Period</th><th>Metric</th><th>Score</th><th>Target</th><th>Percentile</th><th>Source</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.name}</td><td>${i.period}</td><td>${i.metricType}</td><td>${i.score}</td><td>${i.target}</td><td>${i.percentile}th</td><td>${i.source}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'productivity') {
+      const csvRows = [['Physician', 'Department', 'Total wRVU', 'Target wRVU', '% of Target', 'Encounters', 'Periods']];
+      d.items.forEach(i => csvRows.push([i.name, i.dept, i.totalWRVU, i.targetWRVU, i.pctOfTarget, i.encounters, i.periods]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} physicians)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'productivity-summary.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Physician</th><th>Department</th><th>Total wRVU</th><th>Target</th><th>% of Target</th><th>Encounters</th><th>Periods</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.name}</td><td>${i.dept}</td><td>${i.totalWRVU}</td><td>${i.targetWRVU}</td><td>${wrvuGauge(i.pctOfTarget)}</td><td>${i.encounters}</td><td>${i.periods}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'benchmark') {
+      const csvRows = [['Specialty', 'Source', 'Year', 'Metric Type', '25th', '50th', '75th', '90th', 'Status']];
+      d.items.forEach(i => csvRows.push([i.specialty, i.source, i.year, i.metricType, i.p25, i.p50, i.p75, i.p90, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'benchmark-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Specialty</th><th>Source</th><th>Metric</th><th>25th</th><th>50th</th><th>75th</th><th>90th</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.specialty}</td><td>${i.source}</td><td>${i.metricType}</td><td>${i.p25}</td><td style="font-weight:600">${i.p50}</td><td>${i.p75}</td><td>${i.p90}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'review') {
+      const csvRows = [['Review ID', 'Physician', 'Period', 'Reviewer', 'Date', 'Overall', 'Productivity', 'Quality', 'Citizenship', 'Status']];
+      d.items.forEach(i => csvRows.push([i.revId, i.name, i.period, i.reviewer, i.date, i.overall, i.prodScore, i.qualScore, i.citizenScore, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} reviews)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'review-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Physician</th><th>Period</th><th>Reviewer</th><th>Overall</th><th>Prod.</th><th>Quality</th><th>Citizen.</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.name}</td><td>${i.period}</td><td>${i.reviewer}</td><td style="font-weight:600">${i.overall}</td><td>${i.prodScore}</td><td>${i.qualScore}</td><td>${i.citizenScore}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* =============== UTILITY =============== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

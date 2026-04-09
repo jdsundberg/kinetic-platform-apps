@@ -1,0 +1,584 @@
+{
+  "name": "Data Atlas",
+  "slug": "atlas",
+  "description": "Enterprise data catalog and lineage tool for systems, datasets, fields, and data quality.",
+  "forms": [
+    {
+      "slug": "domain",
+      "name": "Domains",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Icon Color"
+        }
+      ],
+      "description": "Data domains",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "system",
+      "name": "Systems",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "System Type"
+        },
+        {
+          "name": "Technology"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Connection Info"
+        }
+      ],
+      "description": "Source systems",
+      "submissionLabelExpression": "${values('Name')}",
+      "indexes": {
+        "single": [
+          "values[Domain]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "dataset",
+      "name": "Datasets",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "System"
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Dataset Type"
+        },
+        {
+          "name": "Schema Name"
+        },
+        {
+          "name": "Record Count"
+        },
+        {
+          "name": "Refresh Frequency"
+        },
+        {
+          "name": "Source of Truth"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Classification"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Version"
+        }
+      ],
+      "description": "Data sets and tables",
+      "submissionLabelExpression": "${values('Name')} - ${values('System')}",
+      "indexes": {
+        "single": [
+          "values[Classification]",
+          "values[Dataset Type]",
+          "values[Domain]",
+          "values[Status]",
+          "values[System]"
+        ],
+        "compound": [
+          [
+            "values[Domain]",
+            "values[System]"
+          ],
+          [
+            "values[Domain]",
+            "values[Dataset Type]"
+          ],
+          [
+            "values[Domain]",
+            "values[Classification]"
+          ],
+          [
+            "values[Domain]",
+            "values[Status]"
+          ],
+          [
+            "values[System]",
+            "values[Dataset Type]"
+          ],
+          [
+            "values[System]",
+            "values[Classification]"
+          ],
+          [
+            "values[System]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "field",
+      "name": "Fields",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Dataset"
+        },
+        {
+          "name": "System"
+        },
+        {
+          "name": "Data Type"
+        },
+        {
+          "name": "Max Length"
+        },
+        {
+          "name": "Nullable"
+        },
+        {
+          "name": "Primary Key"
+        },
+        {
+          "name": "Foreign Key Target"
+        },
+        {
+          "name": "Default Value"
+        },
+        {
+          "name": "Allowed Values"
+        },
+        {
+          "name": "Example Values"
+        },
+        {
+          "name": "Business Definition",
+          "rows": 3
+        },
+        {
+          "name": "Glossary Term"
+        },
+        {
+          "name": "Classification"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Sort Order"
+        }
+      ],
+      "description": "Dataset fields and columns",
+      "submissionLabelExpression": "${values('Name')} - ${values('Dataset')}",
+      "indexes": {
+        "single": [
+          "values[Data Type]",
+          "values[Dataset]",
+          "values[System]"
+        ],
+        "compound": [
+          [
+            "values[Dataset]",
+            "values[System]"
+          ],
+          [
+            "values[Dataset]",
+            "values[Data Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "glossary-term",
+      "name": "Glossary Terms",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Definition",
+          "rows": 5
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Synonyms"
+        },
+        {
+          "name": "Related Terms"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Tags"
+        }
+      ],
+      "description": "Business glossary terms",
+      "submissionLabelExpression": "${values('Name')}",
+      "indexes": {
+        "single": [
+          "values[Domain]",
+          "values[Name]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Domain]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "relationship",
+      "name": "Relationships",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Relationship Type"
+        },
+        {
+          "name": "Source Entity Type"
+        },
+        {
+          "name": "Source Entity"
+        },
+        {
+          "name": "Target Entity Type"
+        },
+        {
+          "name": "Target Entity"
+        },
+        {
+          "name": "Confidence"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Entity relationships",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "classification",
+      "name": "Classifications",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Sensitivity Level"
+        },
+        {
+          "name": "Regulation"
+        },
+        {
+          "name": "Retention Period"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Data classifications",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "owner",
+      "name": "Owners",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Team"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Domains"
+        },
+        {
+          "name": "Systems"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Data owners and stewards",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "quality-rule",
+      "name": "Quality Rules",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Dataset"
+        },
+        {
+          "name": "Field"
+        },
+        {
+          "name": "Rule Type"
+        },
+        {
+          "name": "Expression"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Data quality rules",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "issue",
+      "name": "Issues",
+      "fields": [
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 5
+        },
+        {
+          "name": "Issue Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Related Domain"
+        },
+        {
+          "name": "Related System"
+        },
+        {
+          "name": "Related Dataset"
+        },
+        {
+          "name": "Related Field"
+        },
+        {
+          "name": "Related Term"
+        },
+        {
+          "name": "Evidence",
+          "rows": 3
+        },
+        {
+          "name": "Recommendation",
+          "rows": 3
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Resolution",
+          "rows": 3
+        }
+      ],
+      "description": "Data quality issues",
+      "submissionLabelExpression": "${values('Title')}",
+      "indexes": {
+        "single": [
+          "values[Severity]",
+          "values[Status]",
+          "values[Issue Type]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Severity]"
+          ],
+          [
+            "values[Status]",
+            "values[Issue Type]"
+          ],
+          [
+            "values[Issue Type]",
+            "values[Severity]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "change-log",
+      "name": "Change Log",
+      "fields": [
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Entity Name"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Changed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        },
+        {
+          "name": "Notes"
+        }
+      ],
+      "description": "Entity change history",
+      "submissionLabelExpression": "${values('Entity Name')} - ${values('Action')}"
+    },
+    {
+      "slug": "scan-result",
+      "name": "Scan Results",
+      "fields": [
+        {
+          "name": "Scan ID"
+        },
+        {
+          "name": "Source Type"
+        },
+        {
+          "name": "Source Name"
+        },
+        {
+          "name": "Scan Status"
+        },
+        {
+          "name": "Started At"
+        },
+        {
+          "name": "Completed At"
+        },
+        {
+          "name": "Systems Found"
+        },
+        {
+          "name": "Datasets Found"
+        },
+        {
+          "name": "Fields Found"
+        },
+        {
+          "name": "Relationships Found"
+        },
+        {
+          "name": "Issues Found"
+        },
+        {
+          "name": "Scanned By"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Automated scan results",
+      "submissionLabelExpression": "${values('Scan ID')} - ${values('Source Name')}"
+    }
+  ],
+  "category": "Data & Analytics"
+}

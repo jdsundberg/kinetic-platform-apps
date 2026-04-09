@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Address Standardizer</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --accent: #1565C0;
+  --accent-light: #E3F2FD;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--accent); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--accent); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--accent); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #1976D2; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.logo .accent { color: var(--accent); }
+.topbar-nav { display: flex; gap: 2px; margin-left: 24px; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--accent); color: var(--white); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+
+/* ===== STANDARDIZE TAB ===== */
+.std-input textarea { width: 100%; min-height: 100px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; }
+.std-input textarea:focus { border-color: var(--accent); outline: none; }
+.std-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; }
+.btn-primary { background: var(--accent); color: var(--white); }
+.btn-primary:hover { background: #1976D2; }
+.btn-secondary { background: var(--light); color: var(--gray); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-success { background: var(--green); color: var(--white); }
+.btn-success:hover { background: #2E8B57; }
+.btn-danger { background: var(--red); color: var(--white); }
+.btn-danger:hover { background: #C62828; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.result-card { margin-top: 20px; }
+.result-card .preview-line { background: var(--accent-light); border: 2px solid var(--accent); border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 16px; letter-spacing: .3px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.field-group label { display: block; font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; margin-bottom: 4px; }
+.field-group input, .field-group select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.field-group input:focus, .field-group select:focus { border-color: var(--accent); outline: none; }
+.dup-warning { background: #FDECEA; border: 1px solid #FCCCC7; border-radius: 8px; padding: 12px 16px; color: #C62828; font-size: 13px; margin-bottom: 12px; }
+.save-status { font-size: 13px; margin-top: 8px; }
+.save-status.success { color: var(--green); }
+.save-status.error { color: var(--red); }
+
+/* ===== TABLES ===== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; background: var(--light); border-bottom: 1px solid var(--border); }
+tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: #F0F7FF; }
+.empty-row td { text-align: center; padding: 30px; color: var(--gray); font-style: italic; }
+
+/* ===== BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-standardized { background: #E8F5E9; color: #2E7D32; }
+.badge-needs-review { background: #FFF8E1; color: #F9A825; }
+.badge-duplicate { background: #FDECEA; color: #C62828; }
+.badge-invalid { background: #F1F3F4; color: #5F6368; }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { padding: 6px 12px; border: 1px solid var(--border); background: var(--white); border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--light); }
+.pagination button:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ===== SEARCH ===== */
+.search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+.search-bar input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+.search-bar input:focus { border-color: var(--accent); outline: none; }
+
+/* ===== DETAIL PANEL (inserted row) ===== */
+.detail-row td { background: #FAFBFC; padding: 0; }
+.detail-panel { padding: 20px 24px; border-top: 2px solid var(--accent); }
+.detail-panel h4 { font-size: 14px; color: var(--blue); margin-bottom: 12px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 13px; margin-bottom: 16px; }
+.detail-grid .dl { display: flex; flex-direction: column; }
+.detail-grid .dt { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; }
+.detail-grid .dd { margin-top: 2px; }
+.detail-actions { display: flex; gap: 8px; }
+
+/* ===== DUPLICATES TAB ===== */
+.dup-group { margin-bottom: 20px; }
+.dup-group-header { font-size: 13px; font-weight: 600; color: var(--blue); padding: 10px 0 6px; border-bottom: 2px solid var(--accent); margin-bottom: 8px; }
+.dup-group-header .std-addr { font-family: 'Courier New', monospace; color: var(--accent); }
+.dup-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; background: var(--white); }
+.dup-item-info { font-size: 13px; }
+.dup-item-info .addr-id { font-weight: 600; color: var(--blue); margin-right: 8px; }
+.dup-item-info .raw { color: var(--gray); font-size: 12px; }
+.dup-item-actions { display: flex; gap: 6px; }
+.dup-item-actions button { padding: 4px 10px; font-size: 11px; }
+.loading { text-align: center; padding: 40px; color: var(--gray); }
+
+/* ===== MAP ===== */
+#map-container { margin-top: 16px; }
+#map-container .card h3 { margin-bottom: 10px; }
+#map { height: 300px; border-radius: 8px; border: 1px solid var(--border); }
+.map-status { font-size: 12px; color: var(--gray); margin-top: 6px; }
+.map-status.error { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Address Standardizer</h1>
+      <p class="subtitle">Parse, standardize & deduplicate postal addresses</p>
+      <label>Server URL</label>
+      <input id="login-url" value="https://second.jdsultra1.lan" placeholder="https://server.example.com">
+      <label>Username</label>
+      <input id="login-user" value="second_admin">
+      <label>Password</label>
+      <input id="login-pass" type="password" value="password2">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Address <span class="accent">Standardizer</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" onclick="switchTab('standardize')">Standardize</button>
+      <button class="tab-btn" onclick="switchTab('addresses')">Addresses</button>
+      <button class="tab-btn" onclick="switchTab('duplicates')">Duplicates</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- TAB: Standardize -->
+    <div id="tab-standardize" class="tab-panel active">
+      <h2 class="page-title">Standardize Address</h2>
+      <p class="page-sub">Paste or type a US postal address. The parser normalizes it to USPS Publication 28 format.</p>
+      <div class="card">
+        <h3>Raw Address Input</h3>
+        <div class="std-input">
+          <textarea id="raw-input" placeholder="123 North Main Street, Apartment 4B, Springfield, Illinois 62704"></textarea>
+        </div>
+        <div class="std-actions">
+          <button class="btn btn-primary" onclick="standardizeAddress()">Standardize</button>
+          <button class="btn btn-secondary" onclick="clearInput()">Clear</button>
+        </div>
+      </div>
+      <div id="result-area"></div>
+    </div>
+
+    <!-- TAB: Addresses -->
+    <div id="tab-addresses" class="tab-panel">
+      <h2 class="page-title">Addresses</h2>
+      <p class="page-sub">All standardized addresses. Click a row for details.</p>
+      <div class="search-bar">
+        <input id="addr-search" placeholder="Search by standardized address..." onkeydown="if(event.key==='Enter')searchAddresses()">
+        <button class="btn btn-primary" onclick="searchAddresses()">Search</button>
+        <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Address ID</th>
+              <th>Standardized</th>
+              <th>City</th>
+              <th>State</th>
+              <th>Zip</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="addr-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="addr-pagination"></div>
+    </div>
+
+    <!-- TAB: Duplicates -->
+    <div id="tab-duplicates" class="tab-panel">
+      <h2 class="page-title">Duplicates</h2>
+      <p class="page-sub">Addresses sharing the same standardized form, or flagged as Duplicate.</p>
+      <div id="dup-area"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ADDRESS STANDARDIZER — Client-side app
+   ═══════════════════════════════════════════════════════════════ */
+
+const KAPP = 'address-std';
+let API = '', AUTH = '', USERNAME = '';
+let stateLookup = {}; // { "CALIFORNIA": "CA", ... }
+let stateAbbrevs = new Set(); // {"AL","AK",...}
+
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function v(sub, field) { return sub?.values?.[field] || ''; }
+
+/* ── Auth ── */
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    const s = JSON.parse(sess);
+    API = s.url || '';
+    AUTH = 'Basic ' + s.auth;
+    USERNAME = s.displayName || s.user || '';
+    enterApp();
+  }
+})();
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!url || !user || !pass) { errEl.textContent = 'All fields required'; return; }
+
+  const auth = 'Basic ' + btoa(user + ':' + pass);
+  try {
+    // Set proxy target
+    await fetch('/api/base/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const r = await fetch('/app/api/v1/me', { headers: { Authorization: auth } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    API = '';
+    AUTH = auth;
+    USERNAME = me.displayName || me.username || user;
+    const session = { url: '', auth: btoa(user + ':' + pass), user, displayName: USERNAME, server: url };
+    sessionStorage.setItem('kinetic_session', JSON.stringify(session));
+    enterApp();
+  } catch (e) {
+    errEl.textContent = e.message || 'Login failed';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  sessionStorage.removeItem('base_session');
+  localStorage.removeItem('base_session');
+  location.reload();
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = USERNAME;
+  loadStateLookup();
+}
+
+/* ── API helper ── */
+async function kfetch(path, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  opts.headers['Authorization'] = AUTH;
+  if (!opts.headers['Content-Type'] && opts.body) opts.headers['Content-Type'] = 'application/json';
+  const r = await fetch(`${API}/app/api/v1${path}`, opts);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const text = await r.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Load state lookup ── */
+async function loadStateLookup() {
+  try {
+    const data = await kfetch(`/kapps/${KAPP}/forms/state-lookup/submissions?include=values&limit=200`);
+    (data.submissions || []).forEach(s => {
+      const name = (v(s, 'State Name') || '').toUpperCase();
+      const abbr = (v(s, 'Abbreviation') || '').toUpperCase();
+      if (name && abbr) {
+        stateLookup[name] = abbr;
+        stateAbbrevs.add(abbr);
+      }
+    });
+  } catch (e) {
+    console.error('Failed to load state lookup:', e);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADDRESS PARSING — USPS Pub 28 Rules
+   ═══════════════════════════════════════════════════════════════ */
+
+const DIRECTIONALS = {
+  NORTH:'N', SOUTH:'S', EAST:'E', WEST:'W',
+  NORTHEAST:'NE', NORTHWEST:'NW', SOUTHEAST:'SE', SOUTHWEST:'SW',
+  'N.':'N', 'S.':'S', 'E.':'E', 'W.':'W',
+  'NE.':'NE', 'NW.':'NW', 'SE.':'SE', 'SW.':'SW',
+};
+
+const SUFFIXES = {
+  STREET:'ST', AVENUE:'AVE', BOULEVARD:'BLVD', DRIVE:'DR', LANE:'LN',
+  COURT:'CT', PLACE:'PL', ROAD:'RD', CIRCLE:'CIR', WAY:'WAY',
+  TRAIL:'TRL', PARKWAY:'PKWY', TERRACE:'TER', HIGHWAY:'HWY',
+  FREEWAY:'FWY', EXPRESSWAY:'EXPY', SQUARE:'SQ', LOOP:'LOOP',
+  PATH:'PATH', ALLEY:'ALY', CROSSING:'XING',
+  // Common abbreviations that might appear
+  'ST.':'ST', 'AVE.':'AVE', 'BLVD.':'BLVD', 'DR.':'DR', 'LN.':'LN',
+  'CT.':'CT', 'PL.':'PL', 'RD.':'RD', 'CIR.':'CIR', 'TRL.':'TRL',
+  'PKWY.':'PKWY', 'TER.':'TER', 'HWY.':'HWY',
+};
+
+const UNIT_DESIGNATORS = {
+  APARTMENT:'APT', SUITE:'STE', UNIT:'UNIT', BUILDING:'BLDG',
+  FLOOR:'FL', ROOM:'RM', DEPARTMENT:'DEPT',
+  'APT.':'APT', 'STE.':'STE', 'BLDG.':'BLDG', 'FL.':'FL', 'RM.':'RM', 'DEPT.':'DEPT',
+  'APT':'APT', 'STE':'STE', 'BLDG':'BLDG',
+};
+
+function normalizeWord(w) {
+  const up = w.toUpperCase().replace(/\./g, '');
+  // Check directionals first (with period)
+  const wUp = w.toUpperCase();
+  if (DIRECTIONALS[wUp]) return DIRECTIONALS[wUp];
+  if (DIRECTIONALS[up]) return DIRECTIONALS[up];
+  if (SUFFIXES[wUp]) return SUFFIXES[wUp];
+  if (SUFFIXES[up]) return SUFFIXES[up];
+  if (UNIT_DESIGNATORS[wUp]) return UNIT_DESIGNATORS[wUp];
+  if (UNIT_DESIGNATORS[up]) return UNIT_DESIGNATORS[up];
+  return up;
+}
+
+function parseAddress(raw) {
+  if (!raw || !raw.trim()) return null;
+
+  // Normalize input
+  let input = raw.trim()
+    .replace(/\r\n/g, ', ')
+    .replace(/\n/g, ', ')
+    .replace(/\s+/g, ' ')
+    .replace(/P\.?\s*O\.?\s*BOX/gi, 'PO BOX')
+    .replace(/RURAL\s+ROUTE/gi, 'RR');
+
+  // Replace # with APT
+  input = input.replace(/#\s*/g, 'APT ');
+
+  // Split into tokens by comma
+  const tokens = input.split(',').map(t => t.trim()).filter(Boolean);
+
+  let street = '', city = '', state = '', zip = '';
+
+  // Work backward from last token
+  // Last token might contain: "STATE ZIP" or just "ZIP" or "CITY STATE ZIP"
+  if (tokens.length >= 2) {
+    // Try to extract zip from last token
+    const lastToken = tokens[tokens.length - 1].trim();
+    const zipMatch = lastToken.match(/(\d{5}(?:-\d{4})?)$/);
+
+    if (zipMatch) {
+      zip = zipMatch[1];
+      let remainder = lastToken.slice(0, -zipMatch[0].length).trim();
+
+      // Try to extract state from remainder
+      const stateResult = extractState(remainder);
+      if (stateResult) {
+        state = stateResult.abbr;
+        remainder = stateResult.remainder.trim();
+      }
+
+      if (remainder) {
+        // Remaining text in last token is city (or part of it)
+        city = remainder;
+      } else if (tokens.length >= 3) {
+        // City is the second-to-last token
+        const cityCandidate = tokens[tokens.length - 2].trim();
+        // Check if it's actually a state
+        const stCheck = extractState(cityCandidate);
+        if (stCheck && !stCheck.remainder.trim() && !state) {
+          state = stCheck.abbr;
+          city = tokens.length >= 4 ? tokens[tokens.length - 3].trim() : '';
+          street = tokens.slice(0, Math.max(0, tokens.length - 3)).join(', ').trim();
+        } else {
+          city = cityCandidate;
+          street = tokens.slice(0, tokens.length - 2).join(', ').trim();
+        }
+      } else {
+        street = tokens.slice(0, tokens.length - 1).join(', ').trim();
+      }
+
+      if (!street && tokens.length >= 3 && city) {
+        street = tokens.slice(0, tokens.length - 2).join(', ').trim();
+      } else if (!street && tokens.length === 2 && city) {
+        // Only two tokens, first is street
+        street = tokens[0].trim();
+      }
+    } else {
+      // No zip found — try state as last token
+      const stateResult = extractState(lastToken);
+      if (stateResult && !stateResult.remainder.trim()) {
+        state = stateResult.abbr;
+        if (tokens.length >= 3) {
+          city = tokens[tokens.length - 2].trim();
+          street = tokens.slice(0, tokens.length - 2).join(', ').trim();
+        } else {
+          street = tokens[0].trim();
+        }
+      } else {
+        // Try second-to-last as city, last as... unclear
+        city = lastToken;
+        street = tokens.slice(0, tokens.length - 1).join(', ').trim();
+      }
+    }
+  } else {
+    // Single token — try to parse as a full address
+    const words = tokens[0].split(/\s+/);
+    const zipMatch = tokens[0].match(/(\d{5}(?:-\d{4})?)$/);
+    if (zipMatch) {
+      zip = zipMatch[1];
+      const remainder = tokens[0].slice(0, -zipMatch[0].length).trim();
+      const stResult = extractState(remainder);
+      if (stResult) {
+        state = stResult.abbr;
+        street = stResult.remainder.trim();
+      } else {
+        street = remainder;
+      }
+    } else {
+      street = tokens[0];
+    }
+  }
+
+  // Normalize components
+  street = normalizeStreet(street);
+  city = city.toUpperCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+  state = state.toUpperCase().trim();
+  zip = zip.trim();
+
+  // Build standardized line
+  let standardized = street;
+  if (city) standardized += ', ' + city;
+  if (state) standardized += ', ' + state;
+  if (zip) standardized += ' ' + zip;
+
+  return { street, city, state, zip, standardized: standardized.trim() };
+}
+
+function extractState(text) {
+  const words = text.trim().split(/\s+/);
+  // Check last word as 2-letter abbreviation
+  const lastWord = (words[words.length - 1] || '').toUpperCase().replace(/\./g, '');
+  if (lastWord.length === 2 && stateAbbrevs.has(lastWord)) {
+    return { abbr: lastWord, remainder: words.slice(0, -1).join(' ') };
+  }
+  // Check for full state name (may be multi-word)
+  const upper = text.toUpperCase().replace(/\./g, '').trim();
+  // Try longest matches first
+  const stateNames = Object.keys(stateLookup).sort((a, b) => b.length - a.length);
+  for (const name of stateNames) {
+    if (upper.endsWith(name)) {
+      const remainder = upper.slice(0, -name.length).trim();
+      return { abbr: stateLookup[name], remainder };
+    }
+  }
+  return null;
+}
+
+function normalizeStreet(s) {
+  if (!s) return '';
+  // Remove periods, uppercase, collapse whitespace
+  let result = s.toUpperCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+  // Normalize word-by-word
+  const words = result.split(' ');
+  const normalized = words.map(w => normalizeWord(w));
+  return normalized.join(' ');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB: STANDARDIZE
+   ═══════════════════════════════════════════════════════════════ */
+
+let currentParsed = null;
+
+function standardizeAddress() {
+  const raw = document.getElementById('raw-input').value;
+  if (!raw.trim()) return;
+
+  const parsed = parseAddress(raw);
+  if (!parsed) {
+    document.getElementById('result-area').innerHTML = '<div class="card"><p style="color:var(--red)">Could not parse address</p></div>';
+    return;
+  }
+  currentParsed = parsed;
+  currentParsed.rawInput = raw.trim();
+  renderResult(parsed, raw);
+}
+
+function renderResult(parsed, raw) {
+  const stateOptions = buildStateOptions(parsed.state);
+  const area = document.getElementById('result-area');
+  area.innerHTML = `
+    <div class="card result-card">
+      <h3>Standardized Result</h3>
+      <div class="preview-line" id="preview-line">${esc(parsed.standardized || '(incomplete)')}</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Street</label>
+          <input id="res-street" value="${esc(parsed.street)}" oninput="updatePreview()">
+        </div>
+        <div class="field-group">
+          <label>City</label>
+          <input id="res-city" value="${esc(parsed.city)}" oninput="updatePreview()">
+        </div>
+        <div class="field-group">
+          <label>State</label>
+          <select id="res-state" onchange="updatePreview()">${stateOptions}</select>
+        </div>
+        <div class="field-group">
+          <label>Zip</label>
+          <input id="res-zip" value="${esc(parsed.zip)}" oninput="updatePreview()" placeholder="00000 or 00000-0000">
+        </div>
+      </div>
+      <div id="dup-check-msg"></div>
+      <div class="std-actions">
+        <button class="btn btn-success" onclick="saveAddress()" id="save-btn">Save</button>
+        <button class="btn btn-secondary" onclick="checkDuplicate()">Check Duplicates</button>
+      </div>
+      <div class="save-status" id="save-status"></div>
+    </div>
+    <div id="map-container">
+      <div class="card">
+        <h3>Location</h3>
+        <div id="map"></div>
+        <div class="map-status" id="map-status">Locating address...</div>
+      </div>
+    </div>`;
+
+  checkDuplicate();
+  geocodeAndShowMap(parsed);
+}
+
+function buildStateOptions(selected) {
+  let html = '<option value="">-- Select --</option>';
+  const sorted = Object.entries(stateLookup).sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [name, abbr] of sorted) {
+    const titleName = name.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    const sel = abbr === selected.toUpperCase() ? ' selected' : '';
+    html += `<option value="${esc(abbr)}"${sel}>${esc(abbr)} - ${esc(titleName)}</option>`;
+  }
+  return html;
+}
+
+let mapDebounceTimer = null;
+
+function updatePreview() {
+  const street = document.getElementById('res-street').value.toUpperCase().trim();
+  const city = document.getElementById('res-city').value.toUpperCase().trim();
+  const state = document.getElementById('res-state').value.toUpperCase().trim();
+  const zip = document.getElementById('res-zip').value.trim();
+  let line = street;
+  if (city) line += ', ' + city;
+  if (state) line += ', ' + state;
+  if (zip) line += ' ' + zip;
+  document.getElementById('preview-line').textContent = line || '(incomplete)';
+
+  // Update currentParsed
+  if (currentParsed) {
+    currentParsed.street = street;
+    currentParsed.city = city;
+    currentParsed.state = state;
+    currentParsed.zip = zip;
+    currentParsed.standardized = line;
+  }
+
+  // Debounce map update (re-geocode after 800ms of inactivity)
+  clearTimeout(mapDebounceTimer);
+  mapDebounceTimer = setTimeout(() => {
+    if (currentParsed) geocodeAndShowMap(currentParsed);
+  }, 800);
+}
+
+async function checkDuplicate() {
+  const msgEl = document.getElementById('dup-check-msg');
+  if (!msgEl) return;
+  const stdLine = document.getElementById('preview-line')?.textContent || '';
+  if (!stdLine || stdLine === '(incomplete)') { msgEl.innerHTML = ''; return; }
+
+  try {
+    const q = encodeURIComponent(`values[Standardized]="${stdLine}"`);
+    const data = await kfetch(`/kapps/${KAPP}/forms/addresses/submissions?include=values&limit=1&q=${q}`);
+    if (data.submissions && data.submissions.length > 0) {
+      const existing = data.submissions[0];
+      msgEl.innerHTML = `<div class="dup-warning">Duplicate detected: <strong>${esc(v(existing, 'Address ID'))}</strong> already has this standardized address.</div>`;
+    } else {
+      msgEl.innerHTML = '';
+    }
+  } catch (e) {
+    msgEl.innerHTML = '';
+  }
+}
+
+async function saveAddress() {
+  const statusEl = document.getElementById('save-status');
+  const btn = document.getElementById('save-btn');
+  if (!currentParsed) return;
+  btn.disabled = true;
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'save-status';
+
+  try {
+    // Check for duplicate
+    const stdLine = currentParsed.standardized;
+    let status = 'Standardized';
+    if (stdLine) {
+      const q = encodeURIComponent(`values[Standardized]="${stdLine}"`);
+      const dupCheck = await kfetch(`/kapps/${KAPP}/forms/addresses/submissions?include=values&limit=1&q=${q}`);
+      if (dupCheck.submissions && dupCheck.submissions.length > 0) {
+        status = 'Duplicate';
+      }
+    }
+
+    if (!currentParsed.state || !currentParsed.zip) {
+      status = 'Needs Review';
+    }
+
+    // Generate next Address ID
+    const addrId = await getNextAddressId();
+
+    const values = {
+      'Address ID': addrId,
+      'Raw Input': currentParsed.rawInput || '',
+      'Street': currentParsed.street,
+      'City': currentParsed.city,
+      'State': currentParsed.state,
+      'Zip': currentParsed.zip,
+      'Status': status,
+      'Standardized': currentParsed.standardized,
+      'Source': 'Manual',
+    };
+
+    await kfetch(`/kapps/${KAPP}/forms/addresses/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({ values }),
+    });
+
+    statusEl.textContent = `Saved as ${addrId} (${status})`;
+    statusEl.className = 'save-status success';
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.className = 'save-status error';
+  }
+  btn.disabled = false;
+}
+
+async function getNextAddressId() {
+  // Fetch latest to determine next ID
+  try {
+    const data = await kfetch(`/kapps/${KAPP}/forms/addresses/submissions?include=values&limit=25`);
+    let maxNum = 0;
+    (data.submissions || []).forEach(s => {
+      const id = v(s, 'Address ID');
+      const m = id.match(/ADDR-(\d+)/);
+      if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+    });
+    return `ADDR-${String(maxNum + 1).padStart(3, '0')}`;
+  } catch {
+    return `ADDR-${String(Date.now()).slice(-6)}`;
+  }
+}
+
+function clearInput() {
+  document.getElementById('raw-input').value = '';
+  document.getElementById('result-area').innerHTML = '';
+  currentParsed = null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB: ADDRESSES
+   ═══════════════════════════════════════════════════════════════ */
+
+let addrPageKeys = [null]; // createdAt keyset keys per page
+let addrCurrentPage = 0;
+let addrHasNext = false;
+let addrSearchQuery = '';
+let expandedAddrId = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.textContent.toLowerCase().replace(/\s/g, '') === tab.toLowerCase().replace(/\s/g, '')) b.classList.add('active');
+  });
+  if (tab === 'addresses') loadAddresses();
+  if (tab === 'duplicates') loadDuplicates();
+}
+
+async function loadAddresses() {
+  const tbody = document.getElementById('addr-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Loading...</td></tr>';
+
+  try {
+    let url = `/kapps/${KAPP}/forms/addresses/submissions?include=values&limit=25`;
+    let kql = '';
+    if (addrSearchQuery) {
+      kql = `values[Standardized]=*"${addrSearchQuery}"`;
+      url += `&orderBy=values[Standardized]`;
+    }
+    const lastCreatedAt = addrPageKeys[addrCurrentPage];
+    if (lastCreatedAt) {
+      kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    }
+    if (kql) url += `&q=${encodeURIComponent(kql)}`;
+
+    const data = await kfetch(url);
+    const subs = data.submissions || [];
+
+    if (subs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-row">No addresses found</td></tr>';
+      renderAddrPagination(null);
+      return;
+    }
+
+    tbody.innerHTML = subs.map(s => {
+      const id = v(s, 'Address ID');
+      const std = v(s, 'Standardized');
+      const city = v(s, 'City');
+      const state = v(s, 'State');
+      const zip = v(s, 'Zip');
+      const status = v(s, 'Status');
+      return `<tr class="clickable" data-id="${esc(s.id)}" onclick="toggleAddrDetail(this, '${esc(s.id)}')">
+        <td><strong>${esc(id)}</strong></td>
+        <td>${esc(std)}</td>
+        <td>${esc(city)}</td>
+        <td>${esc(state)}</td>
+        <td>${esc(zip)}</td>
+        <td>${statusBadge(status)}</td>
+      </tr>`;
+    }).join('');
+
+    addrHasNext = !!data.nextPageToken;
+    if (addrHasNext && subs.length) addrPageKeys[addrCurrentPage + 1] = subs[subs.length - 1].createdAt;
+    renderAddrPagination();
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-row">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function statusBadge(status) {
+  const cls = {
+    'Standardized': 'badge-standardized',
+    'Needs Review': 'badge-needs-review',
+    'Duplicate': 'badge-duplicate',
+    'Invalid': 'badge-invalid',
+  }[status] || 'badge-invalid';
+  return `<span class="badge ${cls}">${esc(status || 'Unknown')}</span>`;
+}
+
+function renderAddrPagination() {
+  const el = document.getElementById('addr-pagination');
+  el.innerHTML = `
+    <span>Page ${addrCurrentPage + 1}</span>
+    <button ${addrCurrentPage === 0 ? 'disabled' : ''} onclick="addrPrev()">Prev</button>
+    <button ${!addrHasNext ? 'disabled' : ''} onclick="addrNext()">Next</button>`;
+}
+
+function addrPrev() { if (addrCurrentPage > 0) { addrCurrentPage--; loadAddresses(); } }
+function addrNext() { addrCurrentPage++; loadAddresses(); }
+
+function searchAddresses() {
+  const q = document.getElementById('addr-search').value.trim();
+  addrSearchQuery = q;
+  addrPageKeys = [null];
+  addrCurrentPage = 0;
+  loadAddresses();
+}
+
+function clearSearch() {
+  document.getElementById('addr-search').value = '';
+  addrSearchQuery = '';
+  addrPageKeys = [null];
+  addrCurrentPage = 0;
+  loadAddresses();
+}
+
+async function toggleAddrDetail(rowEl, subId) {
+  // If already expanded, collapse
+  const existing = rowEl.nextElementSibling;
+  if (existing && existing.classList.contains('detail-row')) {
+    existing.remove();
+    expandedAddrId = null;
+    return;
+  }
+
+  // Collapse any other expanded row
+  document.querySelectorAll('.detail-row').forEach(r => r.remove());
+  expandedAddrId = subId;
+
+  // Fetch full submission
+  try {
+    const data = await kfetch(`/submissions/${subId}?include=values,details`);
+    const s = data.submission || data;
+    const tr = document.createElement('tr');
+    tr.className = 'detail-row';
+    tr.innerHTML = `<td colspan="6"><div class="detail-panel">
+      <h4>${esc(v(s, 'Address ID'))} - Detail</h4>
+      <div class="detail-grid">
+        <div class="dl"><span class="dt">Raw Input</span><span class="dd">${esc(v(s, 'Raw Input'))}</span></div>
+        <div class="dl"><span class="dt">Standardized</span><span class="dd" style="font-family:monospace;color:var(--accent)">${esc(v(s, 'Standardized'))}</span></div>
+        <div class="dl"><span class="dt">Street</span><span class="dd">${esc(v(s, 'Street'))}</span></div>
+        <div class="dl"><span class="dt">City</span><span class="dd">${esc(v(s, 'City'))}</span></div>
+        <div class="dl"><span class="dt">State</span><span class="dd">${esc(v(s, 'State'))}</span></div>
+        <div class="dl"><span class="dt">Zip</span><span class="dd">${esc(v(s, 'Zip'))}</span></div>
+        <div class="dl"><span class="dt">Status</span><span class="dd">${statusBadge(v(s, 'Status'))}</span></div>
+        <div class="dl"><span class="dt">Source</span><span class="dd">${esc(v(s, 'Source'))}</span></div>
+        <div class="dl"><span class="dt">Notes</span><span class="dd">${esc(v(s, 'Notes') || '—')}</span></div>
+        <div class="dl"><span class="dt">Created</span><span class="dd">${esc(s.createdAt ? new Date(s.createdAt).toLocaleString() : '—')}</span></div>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteAddress('${esc(s.id)}')">Delete</button>
+      </div>
+    </div></td>`;
+    tr.onclick = e => e.stopPropagation();
+    rowEl.parentNode.insertBefore(tr, rowEl.nextSibling);
+  } catch (e) {
+    console.error('Failed to load detail:', e);
+  }
+}
+
+async function deleteAddress(subId) {
+  if (!confirm('Delete this address?')) return;
+  try {
+    await kfetch(`/submissions/${subId}`, { method: 'DELETE' });
+    loadAddresses();
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB: DUPLICATES
+   ═══════════════════════════════════════════════════════════════ */
+
+async function loadDuplicates() {
+  const area = document.getElementById('dup-area');
+  area.innerHTML = '<div class="loading">Loading duplicates...</div>';
+
+  try {
+    // Load addresses with Status = Duplicate
+    const q = encodeURIComponent('values[Status]="Duplicate"');
+    const data = await kfetch(`/kapps/${KAPP}/forms/addresses/submissions?include=values,details&limit=25&q=${q}`);
+    const subs = data.submissions || [];
+
+    if (subs.length === 0) {
+      area.innerHTML = '<div class="card"><p style="color:var(--gray);text-align:center;padding:20px">No duplicates found</p></div>';
+      return;
+    }
+
+    // Group by Standardized value
+    const groups = {};
+    subs.forEach(s => {
+      const key = v(s, 'Standardized') || '(empty)';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+
+    let html = '';
+    for (const [stdAddr, items] of Object.entries(groups)) {
+      html += `<div class="dup-group card">
+        <div class="dup-group-header">
+          <span class="std-addr">${esc(stdAddr)}</span>
+          <span style="color:var(--gray); font-weight:400; margin-left:8px">(${items.length} duplicate${items.length > 1 ? 's' : ''})</span>
+        </div>`;
+
+      for (const s of items) {
+        html += `<div class="dup-item" id="dup-${esc(s.id)}">
+          <div class="dup-item-info">
+            <span class="addr-id">${esc(v(s, 'Address ID'))}</span>
+            <span class="raw">${esc(v(s, 'Raw Input'))}</span>
+            <span style="margin-left:8px;font-size:11px;color:var(--gray)">${esc(v(s, 'Source'))}</span>
+          </div>
+          <div class="dup-item-actions">
+            <button class="btn btn-secondary" onclick="keepDuplicate('${esc(s.id)}')">Keep</button>
+            <button class="btn btn-danger" onclick="removeDuplicate('${esc(s.id)}')">Remove</button>
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    area.innerHTML = html;
+  } catch (e) {
+    area.innerHTML = `<div class="card"><p style="color:var(--red)">Error: ${esc(e.message)}</p></div>`;
+  }
+}
+
+async function keepDuplicate(subId) {
+  try {
+    await kfetch(`/submissions/${subId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values: { Status: 'Standardized' } }),
+    });
+    document.getElementById('dup-' + subId)?.remove();
+  } catch (e) {
+    alert('Failed: ' + e.message);
+  }
+}
+
+async function removeDuplicate(subId) {
+  if (!confirm('Permanently delete this duplicate?')) return;
+  try {
+    await kfetch(`/submissions/${subId}`, { method: 'DELETE' });
+    document.getElementById('dup-' + subId)?.remove();
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAP — Leaflet + Nominatim geocoding
+   ═══════════════════════════════════════════════════════════════ */
+
+let leafletMap = null;
+let mapMarker = null;
+
+async function geocodeAndShowMap(parsed) {
+  const statusEl = document.getElementById('map-status');
+  const mapEl = document.getElementById('map');
+  if (!statusEl || !mapEl) return;
+
+  // Build query from parsed components
+  const parts = [parsed.street, parsed.city, parsed.state, parsed.zip].filter(Boolean);
+  const q = parts.join(', ');
+  if (!q) {
+    statusEl.textContent = 'No address to locate';
+    statusEl.className = 'map-status error';
+    return;
+  }
+
+  statusEl.textContent = 'Locating address...';
+  statusEl.className = 'map-status';
+
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q);
+    const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!resp.ok) throw new Error('Geocoding request failed');
+    const results = await resp.json();
+
+    if (!results.length) {
+      statusEl.textContent = 'Address not found on map. Try editing the fields for a more precise match.';
+      statusEl.className = 'map-status error';
+      // Show default US view
+      initMap(39.8, -98.5, 4, null);
+      return;
+    }
+
+    const lat = parseFloat(results[0].lat);
+    const lon = parseFloat(results[0].lon);
+    const displayName = results[0].display_name;
+    initMap(lat, lon, 16, displayName);
+    statusEl.textContent = displayName;
+    statusEl.className = 'map-status';
+  } catch (e) {
+    statusEl.textContent = 'Geocoding error: ' + e.message;
+    statusEl.className = 'map-status error';
+    initMap(39.8, -98.5, 4, null);
+  }
+}
+
+function initMap(lat, lon, zoom, popupText) {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+
+  // Destroy previous map instance
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+    mapMarker = null;
+  }
+
+  leafletMap = L.map('map').setView([lat, lon], zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  if (popupText) {
+    mapMarker = L.marker([lat, lon]).addTo(leafletMap);
+    mapMarker.bindPopup(esc(popupText)).openPopup();
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookstore Management</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light);position:sticky;top:0;z-index:1}
+td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px}
+tbody tr:hover{background:#FAFAFA}
+tbody tr.clickable{cursor:pointer}tbody tr.clickable:hover{background:#EEF1F6}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{margin-bottom:16px}
+.login-box .login-btn{width:100%;padding:12px;background:var(--orange);color:white;border:none;border-radius:8px;font-weight:600;font-size:15px}
+.login-box .login-btn:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* Shell */
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;margin-left:32px}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;white-space:nowrap;transition:all .15s}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.logout-btn:hover{border-color:#F36C24;color:#F36C24}
+
+/* Main */
+.main{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.main.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+/* Cards */
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:14px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:white;border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::before{background:var(--indigo)}.kpi.green::before{background:var(--green)}.kpi.orange::before{background:var(--orange)}.kpi.red::before{background:var(--red)}.kpi.purple::before{background:var(--purple)}.kpi.teal::before{background:var(--teal)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0}
+.kpi.blue .val{color:var(--indigo)}.kpi.green .val{color:var(--green)}.kpi.orange .val{color:var(--orange)}.kpi.red .val{color:var(--red)}.kpi.purple .val{color:var(--purple)}.kpi.teal .val{color:var(--teal)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-gray{background:#F1F3F4;color:#5F6368}
+.badge-blue{background:#E3F2FD;color:#1565C0}
+.badge-orange{background:#FFF3E0;color:#E65100}
+.badge-red{background:#FDECEA;color:#C62828}
+.badge-yellow{background:#FFF8E1;color:#F57F17}
+.badge-purple{background:#F3E5F5;color:#6A1B9A}
+.badge-teal{background:#E0F2F1;color:#00695C}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none}
+.btn-primary{background:var(--blue);color:white}.btn-primary:hover{background:var(--blue-light)}
+.btn-accent{background:var(--orange);color:white}.btn-accent:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border)}.btn-secondary:hover{background:#E8EAED}
+.btn-danger{background:var(--red);color:white}
+.btn-success{background:var(--green);color:white}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:6px}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.toolbar input[type="text"]{flex:1;min-width:180px}
+.toolbar select{min-width:120px;width:auto}
+
+/* Pagination */
+.pagination{display:flex;gap:8px;align-items:center;justify-content:center;padding:12px}
+.pagination .page-info{font-size:12px;color:var(--gray);font-weight:600}
+
+/* Modal */
+#modal{display:none;position:fixed;inset:0;z-index:200}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--white);margin:40px auto;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;border-radius:16px;box-shadow:var(--shadow-lg);padding:28px;z-index:1}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-close{position:absolute;top:12px;right:16px;background:none;font-size:22px;color:var(--gray);padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--light)}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Loan cards */
+.loan-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:16px}
+.loan-card{background:white;border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .15s}
+.loan-card:hover{box-shadow:var(--shadow-lg)}
+.loan-card .loan-title{font-weight:700;font-size:14px;color:var(--blue);margin-bottom:4px}
+.loan-card .loan-borrower{font-size:13px;color:#202124;margin-bottom:8px}
+.loan-card .loan-meta{display:flex;gap:12px;font-size:11px;color:var(--gray)}
+.loan-card .loan-meta span{display:flex;align-items:center;gap:4px}
+.loan-card.overdue{border-left:3px solid var(--red)}
+.loan-card.active-loan{border-left:3px solid var(--green)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .3s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.error{background:var(--red)}
+
+.empty{text-align:center;padding:40px;color:var(--gray);font-size:13px}
+.loading{text-align:center;padding:40px;color:var(--gray)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Subtabs */
+.subtabs{display:flex;gap:4px;margin-bottom:16px}
+.subtabs button{background:var(--light);color:var(--gray);padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;border:1px solid var(--border)}
+.subtabs button.active{background:var(--blue);color:white;border-color:var(--blue)}
+
+@media(max-width:900px){.field-row{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.loan-cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Bookstore</h1>
+    <div class="sub">Inventory, Employees & Book Loaner Program</div>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://second.jdsultra1.lan">
+    <label>Username</label>
+    <input id="login-user" value="second_admin">
+    <label>Password</label>
+    <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Book<span>store</span></div>
+    <nav>
+      <button onclick="switchTab('inventory')" data-tab="inventory">Inventory</button>
+      <button onclick="switchTab('loans')" data-tab="loans">Loans</button>
+      <button onclick="switchTab('borrowers')" data-tab="borrowers">Borrowers</button>
+      <button onclick="switchTab('employees')" data-tab="employees">Employees</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══ INVENTORY ═══ -->
+  <div class="main" id="tab-inventory">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Book Inventory</div>
+      <button class="btn btn-accent btn-sm" onclick="showBookModal()">+ Add Book</button>
+    </div>
+    <div class="page-sub">Catalog of all books in stock</div>
+    <div id="inv-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="inv-search" placeholder="Search title, author, ISBN..." oninput="renderInventory()">
+      <select id="inv-genre-filter" onchange="invPage=1;invPageKeys={1:null};invHasNext=false;loadInventory()">
+        <option value="">All Genres</option>
+        <option>Fiction</option><option>Science Fiction</option><option>Fantasy</option>
+        <option>Non-Fiction</option><option>Memoir</option><option>Self-Help</option>
+        <option>Mystery</option><option>Technology</option><option>Children</option>
+        <option>Cooking</option>
+      </select>
+      <select id="inv-status-filter" onchange="invPage=1;invPageKeys={1:null};invHasNext=false;loadInventory()">
+        <option value="">All Status</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Title</th><th>Author</th><th>Genre</th><th>ISBN</th><th>Price</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody id="inv-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="inv-pagination"></div>
+  </div>
+
+  <!-- ═══ LOANS ═══ -->
+  <div class="main" id="tab-loans">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Book Loans</div>
+      <button class="btn btn-accent btn-sm" onclick="showCheckoutModal()">+ Check Out Book</button>
+    </div>
+    <div class="page-sub">Track book check-outs, returns, and overdue items</div>
+    <div id="loan-kpis" class="kpi-row"></div>
+    <div class="subtabs" id="loan-subtabs">
+      <button class="active" onclick="setLoanView('active')">Active</button>
+      <button onclick="setLoanView('overdue')">Overdue</button>
+      <button onclick="setLoanView('returned')">Returned</button>
+      <button onclick="setLoanView('all')">All</button>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="loan-search" placeholder="Search by book or borrower..." oninput="renderLoans()">
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Book</th><th>Borrower</th><th>Checkout</th><th>Due</th><th>Returned</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="loan-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="loan-pagination"></div>
+  </div>
+
+  <!-- ═══ BORROWERS ═══ -->
+  <div class="main" id="tab-borrowers">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Borrowers</div>
+      <button class="btn btn-accent btn-sm" onclick="showBorrowerModal()">+ Add Borrower</button>
+    </div>
+    <div class="page-sub">Members registered in the loaner program</div>
+    <div id="bor-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="bor-search" placeholder="Search borrowers..." oninput="renderBorrowers()">
+      <select id="bor-mem-filter" onchange="renderBorrowers()"><option value="">All Memberships</option><option>Basic</option><option>Standard</option><option>Premium</option></select>
+      <select id="bor-status-filter" onchange="renderBorrowers()"><option value="">All Status</option><option>Active</option><option>Suspended</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Membership</th><th>Status</th><th>Notes</th></tr></thead>
+        <tbody id="bor-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="bor-pagination"></div>
+  </div>
+
+  <!-- ═══ EMPLOYEES ═══ -->
+  <div class="main" id="tab-employees">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Employees</div>
+      <button class="btn btn-accent btn-sm" onclick="showEmployeeModal()">+ Add Employee</button>
+    </div>
+    <div class="page-sub">Staff profiles, roles & schedules</div>
+    <div id="emp-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="emp-search" placeholder="Search employees..." oninput="renderEmployees()">
+      <select id="emp-role-filter" onchange="renderEmployees()"><option value="">All Roles</option><option>Manager</option><option>Senior Clerk</option><option>Clerk</option><option>Events Coordinator</option><option>Stock Room</option></select>
+      <select id="emp-status-filter" onchange="renderEmployees()"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Schedule</th><th>Rate</th><th>Status</th></tr></thead>
+        <tbody id="emp-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="emp-pagination"></div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal"><div class="modal-overlay" onclick="closeModal()"></div><div class="modal-content" id="modal-body"></div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   Bookstore Management
+   ═══════════════════════════════════════ */
+
+const KAPP = 'bookstore';
+let API = { url: '', user: '', pass: '' };
+
+function authHeader() { return 'Basic ' + btoa(API.user + ':' + API.pass); }
+
+async function api(path, opts = {}) {
+  const headers = { 'Authorization': authHeader(), 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const res = await fetch(API.url + path, { ...opts, headers });
+  if (!res.ok) { const t = await res.text(); throw new Error(t.slice(0, 200)); }
+  const t = await res.text();
+  return t ? JSON.parse(t) : {};
+}
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, f) { return (sub.values && sub.values[f]) || ''; }
+function toast(msg, err) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show' + (err ? ' error' : ''); setTimeout(() => el.className = 'toast', 3000); }
+function openModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal').style.display = 'block'; }
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+/* ── Auth ─── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  try {
+    const res = await fetch(url + '/app/api/v1/me', { headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass) } });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const me = await res.json();
+    API = { url: url + '/app/api/v1', user, pass };
+    document.getElementById('user-display').textContent = me.displayName || me.username || user;
+    showApp();
+  } catch (e) {
+    const el = document.getElementById('login-error');
+    el.textContent = e.message; el.style.display = 'block';
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  switchTab('inventory');
+}
+
+function doLogout() {
+  API = { url: '', user: '', pass: '' };
+  try { sessionStorage.removeItem('kinetic_session'); } catch {}
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function restoreSession() {
+  try {
+    const s = sessionStorage.getItem('kinetic_session');
+    if (!s) return false;
+    const sess = JSON.parse(s);
+    API = { url: (sess.url || '') + '/app/api/v1', user: sess.user, pass: sess.pass || atob(sess.auth || '').split(':')[1] || '' };
+    document.getElementById('user-display').textContent = sess.displayName || sess.user;
+    return true;
+  } catch { return false; }
+}
+
+/* ── Tab switching ─── */
+function switchTab(tab) {
+  document.querySelectorAll('.main').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'inventory') loadInventory();
+  else if (tab === 'loans') loadLoans();
+  else if (tab === 'borrowers') loadBorrowers();
+  else if (tab === 'employees') loadEmployees();
+}
+
+/* ══════════════════════════════════════
+   INVENTORY (Books)
+   ══════════════════════════════════════ */
+let invData = [], invPage = 1, invPageKeys = { 1: null }, invHasNext = false;
+
+async function loadInventory() {
+  try {
+    const genre = document.getElementById('inv-genre-filter').value;
+    const status = document.getElementById('inv-status-filter').value;
+    let kql = '';
+    if (genre && status) kql = `values[Genre]="${genre}" AND values[Status]="${status}"`;
+    else if (genre) kql = `values[Genre]="${genre}"`;
+    else if (status) kql = `values[Status]="${status}"`;
+
+    const lastCreatedAt = invPageKeys[invPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/books/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    invData = res.submissions || [];
+    invHasNext = !!res.nextPageToken;
+    if (invHasNext && invData.length) invPageKeys[invPage + 1] = invData[invData.length - 1].createdAt;
+    renderInventory();
+  } catch (e) { toast('Failed to load inventory: ' + e.message, true); }
+}
+
+function renderInventory() {
+  const q = (document.getElementById('inv-search').value || '').toLowerCase();
+  const filtered = invData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Title'),v(s,'Author'),v(s,'ISBN')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = invData.length;
+  const inStock = invData.filter(s => v(s,'Status') === 'In Stock').length;
+  const low = invData.filter(s => v(s,'Status') === 'Low Stock').length;
+  const out = invData.filter(s => v(s,'Status') === 'Out of Stock').length;
+  document.getElementById('inv-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">In Stock</div><div class="val">${inStock}</div></div>
+    <div class="kpi orange"><div class="label">Low Stock</div><div class="val">${low}</div></div>
+    <div class="kpi red"><div class="label">Out of Stock</div><div class="val">${out}</div></div>
+  `;
+
+  const tbody = document.getElementById('inv-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No books found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'In Stock' ? 'badge-green' : s === 'Low Stock' ? 'badge-yellow' : s === 'Out of Stock' ? 'badge-red' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showBookDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Title'))}</strong></td>
+      <td>${esc(v(s,'Author'))}</td>
+      <td><span class="badge badge-purple">${esc(v(s,'Genre'))}</span></td>
+      <td style="font-family:monospace;font-size:11px">${esc(v(s,'ISBN'))}</td>
+      <td>$${esc(v(s,'Price'))}</td>
+      <td>${esc(v(s,'Quantity'))}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('inv-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="invPrev()" ${invPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${invPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="invNext()" ${!invHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function invPrev() { if (invPage > 1) { invPage--; loadInventory(); } }
+function invNext() { if (invHasNext) { invPage++; loadInventory(); } }
+
+function showBookDetail(id) {
+  const s = invData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Title'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Author:</strong> ${esc(v(s,'Author'))}</div>
+      <div><strong style="color:var(--gray)">Genre:</strong> <span class="badge badge-purple">${esc(v(s,'Genre'))}</span></div>
+      <div><strong style="color:var(--gray)">ISBN:</strong> <span style="font-family:monospace">${esc(v(s,'ISBN'))}</span></div>
+      <div><strong style="color:var(--gray)">Publisher:</strong> ${esc(v(s,'Publisher'))}</div>
+      <div><strong style="color:var(--gray)">Price:</strong> $${esc(v(s,'Price'))}</div>
+      <div><strong style="color:var(--gray)">Quantity:</strong> ${esc(v(s,'Quantity'))}</div>
+      <div><strong style="color:var(--gray)">Condition:</strong> ${esc(v(s,'Condition'))}</div>
+      <div><strong style="color:var(--gray)">Location:</strong> ${esc(v(s,'Location'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    ${v(s,'Description') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Description:</strong> ${esc(v(s,'Description'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-accent btn-sm" onclick="closeModal();showCheckoutModalForBook('${esc(v(s,'Title'))}','${esc(v(s,'ISBN'))}')">Check Out</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showBookModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Book</h2>
+    <div class="field-group"><label>Title</label><input id="bk-title"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Author</label><input id="bk-author"></div>
+      <div class="field-group"><label>Genre</label><select id="bk-genre"><option>Fiction</option><option>Science Fiction</option><option>Fantasy</option><option>Non-Fiction</option><option>Memoir</option><option>Self-Help</option><option>Mystery</option><option>Technology</option><option>Children</option><option>Cooking</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>ISBN</label><input id="bk-isbn"></div>
+      <div class="field-group"><label>Publisher</label><input id="bk-publisher"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Price</label><input id="bk-price" placeholder="19.99"></div>
+      <div class="field-group"><label>Quantity</label><input id="bk-qty" type="number" value="1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Condition</label><select id="bk-condition"><option>New</option><option>Used</option><option>Like New</option></select></div>
+      <div class="field-group"><label>Location</label><input id="bk-location" placeholder="Aisle 1-A"></div>
+    </div>
+    <div class="field-group"><label>Description</label><textarea id="bk-desc" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveBook()">Add Book</button>
+    </div>
+  `);
+}
+
+async function saveBook() {
+  const values = {
+    Title: document.getElementById('bk-title').value,
+    Author: document.getElementById('bk-author').value,
+    Genre: document.getElementById('bk-genre').value,
+    ISBN: document.getElementById('bk-isbn').value,
+    Publisher: document.getElementById('bk-publisher').value,
+    Price: document.getElementById('bk-price').value,
+    Quantity: document.getElementById('bk-qty').value,
+    Condition: document.getElementById('bk-condition').value,
+    Location: document.getElementById('bk-location').value,
+    Status: parseInt(document.getElementById('bk-qty').value) > 3 ? 'In Stock' : parseInt(document.getElementById('bk-qty').value) > 0 ? 'Low Stock' : 'Out of Stock',
+    Description: document.getElementById('bk-desc').value,
+  };
+  if (!values.Title) { toast('Title is required', true); return; }
+  if (!values.Author) { toast('Author is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/books/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Book added'); loadInventory();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   LOANS
+   ══════════════════════════════════════ */
+let loanData = [], loanPage = 1, loanPageKeys = { 1: null }, loanHasNext = false, loanView = 'active';
+
+function setLoanView(view) {
+  loanView = view;
+  loanPage = 1; loanPageKeys = { 1: null }; loanHasNext = false;
+  document.querySelectorAll('#loan-subtabs button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#loan-subtabs button[onclick="setLoanView('${view}')"]`).classList.add('active');
+  loadLoans();
+}
+
+async function loadLoans() {
+  try {
+    let kql = '';
+    if (loanView === 'active') kql = 'values[Status]="Checked Out"';
+    else if (loanView === 'overdue') kql = 'values[Status]="Overdue"';
+    else if (loanView === 'returned') kql = 'values[Status]="Returned"';
+
+    const lastCreatedAt = loanPageKeys[loanPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/loans/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    loanData = res.submissions || [];
+    loanHasNext = !!res.nextPageToken;
+    if (loanHasNext && loanData.length) loanPageKeys[loanPage + 1] = loanData[loanData.length - 1].createdAt;
+    renderLoans();
+  } catch (e) { toast('Failed to load loans: ' + e.message, true); }
+}
+
+function renderLoans() {
+  const q = (document.getElementById('loan-search').value || '').toLowerCase();
+  const filtered = loanData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Book Title'),v(s,'Borrower Name')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const checkedOut = loanData.filter(s => v(s,'Status') === 'Checked Out').length;
+  const overdue = loanData.filter(s => v(s,'Status') === 'Overdue').length;
+  const returned = loanData.filter(s => v(s,'Status') === 'Returned').length;
+  document.getElementById('loan-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${loanData.length}</div></div>
+    <div class="kpi green"><div class="label">Checked Out</div><div class="val">${checkedOut}</div></div>
+    <div class="kpi red"><div class="label">Overdue</div><div class="val">${overdue}</div></div>
+    <div class="kpi teal"><div class="label">Returned</div><div class="val">${returned}</div></div>
+  `;
+
+  const tbody = document.getElementById('loan-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No loans found</td></tr>'; }
+  else {
+    const today = new Date().toISOString().slice(0, 10);
+    tbody.innerHTML = filtered.map(s => {
+      const st = v(s, 'Status');
+      const due = v(s, 'Due Date');
+      const isOverdue = st === 'Overdue' || (st === 'Checked Out' && due && due < today);
+      const badge = st === 'Checked Out' ? (isOverdue ? 'badge-red' : 'badge-blue') : st === 'Overdue' ? 'badge-red' : st === 'Returned' ? 'badge-green' : 'badge-gray';
+      const displayStatus = isOverdue && st === 'Checked Out' ? 'Overdue' : st;
+      return `<tr class="clickable" onclick="showLoanDetail('${s.id}')">
+        <td><strong>${esc(v(s,'Book Title'))}</strong></td>
+        <td>${esc(v(s,'Borrower Name'))}</td>
+        <td>${esc(v(s,'Checkout Date'))}</td>
+        <td>${esc(due)}</td>
+        <td>${esc(v(s,'Return Date')) || '—'}</td>
+        <td><span class="badge ${badge}">${esc(displayStatus)}</span></td>
+        <td>${st !== 'Returned' ? `<button class="btn btn-success btn-sm" onclick="event.stopPropagation();returnBook('${s.id}')">Return</button>` : ''}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('loan-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="loanPrev()" ${loanPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${loanPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="loanNext()" ${!loanHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function loanPrev() { if (loanPage > 1) { loanPage--; loadLoans(); } }
+function loanNext() { if (loanHasNext) { loanPage++; loadLoans(); } }
+
+function showLoanDetail(id) {
+  const s = loanData.find(x => x.id === id);
+  if (!s) return;
+  const st = v(s, 'Status');
+  const today = new Date().toISOString().slice(0, 10);
+  const due = v(s, 'Due Date');
+  const daysLeft = due ? Math.ceil((new Date(due) - new Date(today)) / 86400000) : null;
+
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Loan Details</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Book:</strong> ${esc(v(s,'Book Title'))}</div>
+      <div><strong style="color:var(--gray)">ISBN:</strong> <span style="font-family:monospace">${esc(v(s,'ISBN'))}</span></div>
+      <div><strong style="color:var(--gray)">Borrower:</strong> ${esc(v(s,'Borrower Name'))}</div>
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Borrower Email'))}</div>
+      <div><strong style="color:var(--gray)">Checkout:</strong> ${esc(v(s,'Checkout Date'))}</div>
+      <div><strong style="color:var(--gray)">Due:</strong> ${esc(due)} ${daysLeft !== null && st !== 'Returned' ? (daysLeft < 0 ? `<span class="badge badge-red">${Math.abs(daysLeft)} days overdue</span>` : daysLeft <= 3 ? `<span class="badge badge-yellow">${daysLeft} days left</span>` : `<span class="badge badge-green">${daysLeft} days left</span>`) : ''}</div>
+      <div><strong style="color:var(--gray)">Returned:</strong> ${esc(v(s,'Return Date')) || '—'}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> <span class="badge ${st==='Checked Out'?'badge-blue':st==='Overdue'?'badge-red':st==='Returned'?'badge-green':'badge-gray'}">${esc(st)}</span></div>
+    </div>
+    ${v(s, 'Notes') ? `<div style="font-size:13px;margin-bottom:16px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s, 'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${st !== 'Returned' ? `<button class="btn btn-success btn-sm" onclick="returnBook('${s.id}')">Return Book</button>` : ''}
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+async function returnBook(id) {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: { Status: 'Returned', 'Return Date': today } }) });
+    closeModal(); toast('Book returned'); loadLoans();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+function showCheckoutModal() {
+  const today = new Date().toISOString().slice(0, 10);
+  const due = new Date();
+  due.setDate(due.getDate() + 14);
+  const dueStr = due.toISOString().slice(0, 10);
+
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Check Out Book</h2>
+    <div class="field-group"><label>Book Title</label><input id="co-title"></div>
+    <div class="field-group"><label>ISBN</label><input id="co-isbn"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Borrower Name</label><input id="co-borrower"></div>
+      <div class="field-group"><label>Borrower Email</label><input id="co-email"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Checkout Date</label><input id="co-date" type="date" value="${today}"></div>
+      <div class="field-group"><label>Due Date</label><input id="co-due" type="date" value="${dueStr}"></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="co-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveCheckout()">Check Out</button>
+    </div>
+  `);
+}
+
+function showCheckoutModalForBook(title, isbn) {
+  showCheckoutModal();
+  setTimeout(() => {
+    document.getElementById('co-title').value = title;
+    document.getElementById('co-isbn').value = isbn;
+  }, 50);
+}
+
+async function saveCheckout() {
+  const values = {
+    'Book Title': document.getElementById('co-title').value,
+    'Book ID': '',
+    ISBN: document.getElementById('co-isbn').value,
+    'Borrower Name': document.getElementById('co-borrower').value,
+    'Borrower Email': document.getElementById('co-email').value,
+    'Checkout Date': document.getElementById('co-date').value,
+    'Due Date': document.getElementById('co-due').value,
+    'Return Date': '',
+    Status: 'Checked Out',
+    Notes: document.getElementById('co-notes').value,
+  };
+  if (!values['Book Title']) { toast('Book title is required', true); return; }
+  if (!values['Borrower Name']) { toast('Borrower name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/loans/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Book checked out'); loadLoans();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   BORROWERS
+   ══════════════════════════════════════ */
+let borData = [], borPage = 1, borPageKeys = { 1: null }, borHasNext = false;
+
+async function loadBorrowers() {
+  try {
+    let kql = '';
+    const lastCreatedAt = borPageKeys[borPage];
+    if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/borrowers/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    borData = res.submissions || [];
+    borHasNext = !!res.nextPageToken;
+    if (borHasNext && borData.length) borPageKeys[borPage + 1] = borData[borData.length - 1].createdAt;
+    renderBorrowers();
+  } catch (e) { toast('Failed to load borrowers: ' + e.message, true); }
+}
+
+function renderBorrowers() {
+  const q = (document.getElementById('bor-search').value || '').toLowerCase();
+  const memFilter = document.getElementById('bor-mem-filter').value;
+  const statusFilter = document.getElementById('bor-status-filter').value;
+  const filtered = borData.filter(s => {
+    if (q && ![v(s,'Name'),v(s,'Email')].some(f => (f||'').toLowerCase().includes(q))) return false;
+    if (memFilter && v(s,'Membership') !== memFilter) return false;
+    if (statusFilter && v(s,'Status') !== statusFilter) return false;
+    return true;
+  });
+
+  const total = borData.length;
+  const active = borData.filter(s => v(s,'Status') === 'Active').length;
+  const premium = borData.filter(s => v(s,'Membership') === 'Premium').length;
+  document.getElementById('bor-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Total</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+    <div class="kpi purple"><div class="label">Premium</div><div class="val">${premium}</div></div>
+  `;
+
+  const tbody = document.getElementById('bor-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No borrowers found</td></tr>'; }
+  else {
+    const memBadge = m => m === 'Premium' ? 'badge-purple' : m === 'Standard' ? 'badge-blue' : 'badge-gray';
+    const statusBadge = s => s === 'Active' ? 'badge-green' : s === 'Suspended' ? 'badge-red' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showBorrowerDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td><span class="badge ${memBadge(v(s,'Membership'))}">${esc(v(s,'Membership'))}</span></td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Notes'))}</td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('bor-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="borPrev()" ${borPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${borPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="borNext()" ${!borHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function borPrev() { if (borPage > 1) { borPage--; loadBorrowers(); } }
+function borNext() { if (borHasNext) { borPage++; loadBorrowers(); } }
+
+function showBorrowerDetail(id) {
+  const s = borData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Email'))}</div>
+      <div><strong style="color:var(--gray)">Phone:</strong> ${esc(v(s,'Phone'))}</div>
+      <div><strong style="color:var(--gray)">Membership:</strong> ${esc(v(s,'Membership'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+      <div style="grid-column:span 2"><strong style="color:var(--gray)">Address:</strong> ${esc(v(s,'Address'))}</div>
+    </div>
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-accent btn-sm" onclick="closeModal();showCheckoutModalForBorrower('${esc(v(s,'Name'))}','${esc(v(s,'Email'))}')">Check Out Book</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showCheckoutModalForBorrower(name, email) {
+  showCheckoutModal();
+  setTimeout(() => {
+    document.getElementById('co-borrower').value = name;
+    document.getElementById('co-email').value = email;
+  }, 50);
+}
+
+function showBorrowerModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Borrower</h2>
+    <div class="field-group"><label>Name</label><input id="br-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Email</label><input id="br-email"></div>
+      <div class="field-group"><label>Phone</label><input id="br-phone"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Membership</label><select id="br-mem"><option>Basic</option><option>Standard</option><option>Premium</option></select></div>
+      <div class="field-group"><label>Status</label><select id="br-status"><option>Active</option><option>Suspended</option></select></div>
+    </div>
+    <div class="field-group"><label>Address</label><textarea id="br-address" rows="2"></textarea></div>
+    <div class="field-group"><label>Notes</label><textarea id="br-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveBorrower()">Add Borrower</button>
+    </div>
+  `);
+}
+
+async function saveBorrower() {
+  const values = {
+    Name: document.getElementById('br-name').value,
+    Email: document.getElementById('br-email').value,
+    Phone: document.getElementById('br-phone').value,
+    Membership: document.getElementById('br-mem').value,
+    Address: document.getElementById('br-address').value,
+    Status: document.getElementById('br-status').value,
+    Notes: document.getElementById('br-notes').value,
+  };
+  if (!values.Name) { toast('Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/borrowers/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Borrower added'); loadBorrowers();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   EMPLOYEES
+   ══════════════════════════════════════ */
+let empData = [], empPage = 1, empPageKeys = { 1: null }, empHasNext = false;
+
+async function loadEmployees() {
+  try {
+    let kql = '';
+    const lastCreatedAt = empPageKeys[empPage];
+    if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    empData = res.submissions || [];
+    empHasNext = !!res.nextPageToken;
+    if (empHasNext && empData.length) empPageKeys[empPage + 1] = empData[empData.length - 1].createdAt;
+    renderEmployees();
+  } catch (e) { toast('Failed to load employees: ' + e.message, true); }
+}
+
+function renderEmployees() {
+  const q = (document.getElementById('emp-search').value || '').toLowerCase();
+  const roleFilter = document.getElementById('emp-role-filter').value;
+  const statusFilter = document.getElementById('emp-status-filter').value;
+  const filtered = empData.filter(s => {
+    if (q && ![v(s,'Name'),v(s,'Email')].some(f => (f||'').toLowerCase().includes(q))) return false;
+    if (roleFilter && v(s,'Role') !== roleFilter) return false;
+    if (statusFilter && v(s,'Status') !== statusFilter) return false;
+    return true;
+  });
+
+  const total = empData.length;
+  const active = empData.filter(s => v(s,'Status') === 'Active').length;
+  document.getElementById('emp-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Total Staff</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+  `;
+
+  const tbody = document.getElementById('emp-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No employees found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'Active' ? 'badge-green' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showEmployeeDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td><span class="badge badge-blue">${esc(v(s,'Role'))}</span></td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td>${esc(v(s,'Schedule'))}</td>
+      <td>$${esc(v(s,'Hourly Rate'))}/hr</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('emp-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="empPrev()" ${empPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${empPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="empNext()" ${!empHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function empPrev() { if (empPage > 1) { empPage--; loadEmployees(); } }
+function empNext() { if (empHasNext) { empPage++; loadEmployees(); } }
+
+function showEmployeeDetail(id) {
+  const s = empData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Role:</strong> ${esc(v(s,'Role'))}</div>
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Email'))}</div>
+      <div><strong style="color:var(--gray)">Phone:</strong> ${esc(v(s,'Phone'))}</div>
+      <div><strong style="color:var(--gray)">Hire Date:</strong> ${esc(v(s,'Hire Date'))}</div>
+      <div><strong style="color:var(--gray)">Schedule:</strong> ${esc(v(s,'Schedule'))}</div>
+      <div><strong style="color:var(--gray)">Rate:</strong> $${esc(v(s,'Hourly Rate'))}/hr</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+function showEmployeeModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Employee</h2>
+    <div class="field-group"><label>Name</label><input id="em-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Role</label><select id="em-role"><option>Manager</option><option>Senior Clerk</option><option>Clerk</option><option>Events Coordinator</option><option>Stock Room</option></select></div>
+      <div class="field-group"><label>Status</label><select id="em-status"><option>Active</option><option>Inactive</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Email</label><input id="em-email"></div>
+      <div class="field-group"><label>Phone</label><input id="em-phone"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Hire Date</label><input id="em-hire" type="date"></div>
+      <div class="field-group"><label>Hourly Rate</label><input id="em-rate" placeholder="18.00"></div>
+    </div>
+    <div class="field-group"><label>Schedule</label><input id="em-schedule" placeholder="Mon-Fri 9am-5pm"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEmployee()">Add Employee</button>
+    </div>
+  `);
+}
+
+async function saveEmployee() {
+  const values = {
+    Name: document.getElementById('em-name').value,
+    Role: document.getElementById('em-role').value,
+    Email: document.getElementById('em-email').value,
+    Phone: document.getElementById('em-phone').value,
+    'Hire Date': document.getElementById('em-hire').value,
+    Schedule: document.getElementById('em-schedule').value,
+    'Hourly Rate': document.getElementById('em-rate').value,
+    Status: document.getElementById('em-status').value,
+  };
+  if (!values.Name) { toast('Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/employees/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Employee added'); loadEmployees();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ── Init ─── */
+(function init() {
+  if (restoreSession()) showApp();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Powered Enterprise Development — One-Day Training</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2d3a5c;
+  --blue-dark: #1a2240;
+  --orange: #F36C24;
+  --orange-light: #ff8a4c;
+  --green: #27ae60;
+  --red: #e74c3c;
+  --yellow: #f39c12;
+  --gray: #6b7a99;
+  --light: #f0f2f7;
+  --white: #ffffff;
+  --text: #2c3e50;
+  --text-light: #7f8c9b;
+  --code-bg: #1e1e2e;
+  --code-text: #cdd6f4;
+  --slide-max: 960px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--light); color: var(--text); overflow: hidden; height: 100vh; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 280px; min-width: 280px; background: var(--blue); color: white;
+  display: flex; flex-direction: column; transition: margin-left .3s;
+  z-index: 10; overflow-y: auto;
+}
+.sidebar.collapsed { margin-left: -280px; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.sidebar-header h2 { font-size: 15px; font-weight: 600; letter-spacing: .5px; }
+.sidebar-header .subtitle { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+.module-list { flex: 1; padding: 8px 0; }
+.module-item {
+  padding: 10px 20px; cursor: pointer; font-size: 13px;
+  border-left: 3px solid transparent; transition: all .2s;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.module-item:hover { background: rgba(255,255,255,.06); }
+.module-item.active { background: rgba(255,255,255,.1); border-left-color: var(--orange); }
+.module-item .mod-num {
+  background: rgba(255,255,255,.15); border-radius: 4px; min-width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.module-item.active .mod-num { background: var(--orange); }
+.module-item .mod-info { flex: 1; }
+.module-item .mod-title { font-weight: 500; line-height: 1.3; }
+.module-item .mod-time { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 2px; }
+
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.1);
+  font-size: 11px; color: rgba(255,255,255,.4);
+}
+.sidebar-footer .schedule-label { font-weight: 600; color: rgba(255,255,255,.6); margin-bottom: 6px; }
+.sidebar-footer .time-row { display: flex; justify-content: space-between; padding: 2px 0; }
+
+/* Main area */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Top bar */
+.topbar {
+  height: 48px; background: white; border-bottom: 1px solid #e0e4eb;
+  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+}
+.btn-toggle {
+  background: none; border: 1px solid #d0d5de; border-radius: 6px; padding: 6px 10px;
+  cursor: pointer; font-size: 16px; color: var(--gray);
+}
+.btn-toggle:hover { background: var(--light); }
+.progress-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
+.progress-bar { flex: 1; height: 4px; background: #e0e4eb; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--orange); border-radius: 2px; transition: width .4s; }
+.progress-text { font-size: 12px; color: var(--gray); min-width: 60px; text-align: right; }
+.nav-btns { display: flex; gap: 6px; }
+.nav-btn {
+  background: white; border: 1px solid #d0d5de; border-radius: 6px; padding: 6px 14px;
+  cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: all .15s;
+}
+.nav-btn:hover { background: var(--light); border-color: var(--orange); color: var(--orange); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+.nav-btn:disabled:hover { background: white; border-color: #d0d5de; color: var(--text); }
+
+/* Slide area */
+.slide-area {
+  flex: 1; overflow-y: auto; display: flex; justify-content: center;
+  padding: 40px 40px 60px;
+}
+.slide {
+  width: 100%; max-width: var(--slide-max); animation: fadeIn .35s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Slide content styles */
+.slide h1 { font-size: 36px; font-weight: 700; color: var(--blue); margin-bottom: 8px; line-height: 1.2; }
+.slide .slide-subtitle { font-size: 18px; color: var(--gray); margin-bottom: 32px; font-weight: 400; }
+.slide h2 { font-size: 24px; font-weight: 600; color: var(--blue); margin: 32px 0 16px; }
+.slide h3 { font-size: 18px; font-weight: 600; color: var(--blue-light); margin: 24px 0 12px; }
+.slide p { font-size: 16px; line-height: 1.7; margin-bottom: 16px; color: var(--text); }
+.slide ul, .slide ol { margin: 0 0 20px 24px; }
+.slide li { font-size: 16px; line-height: 1.7; margin-bottom: 8px; }
+.slide li strong { color: var(--blue); }
+.slide .highlight { color: var(--orange); font-weight: 600; }
+
+/* Title slide */
+.title-slide { text-align: center; padding-top: 60px; }
+.title-slide h1 { font-size: 44px; margin-bottom: 12px; }
+.title-slide .slide-subtitle { font-size: 22px; margin-bottom: 40px; }
+.title-slide .presenter { font-size: 16px; color: var(--gray); margin-bottom: 8px; }
+.title-slide .date { font-size: 14px; color: var(--text-light); }
+.title-badge {
+  display: inline-block; background: var(--orange); color: white; padding: 8px 24px;
+  border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 32px;
+}
+
+/* Metric cards */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.metric {
+  background: white; border-radius: 12px; padding: 24px; text-align: center;
+  border: 1px solid #e0e4eb; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.metric .val { font-size: 36px; font-weight: 700; color: var(--blue); }
+.metric .val.orange { color: var(--orange); }
+.metric .val.green { color: var(--green); }
+.metric .label { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+
+/* Comparison */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+.compare-col { background: white; border-radius: 12px; padding: 24px; border: 1px solid #e0e4eb; }
+.compare-col.old { border-top: 3px solid var(--red); }
+.compare-col.new { border-top: 3px solid var(--green); }
+.compare-col h3 { margin-top: 0; font-size: 16px; }
+.compare-col.old h3 { color: var(--red); }
+.compare-col.new h3 { color: var(--green); }
+.compare-col li { font-size: 14px; }
+
+/* Code blocks */
+.code-block {
+  background: var(--code-bg); color: var(--code-text); border-radius: 10px;
+  padding: 20px 24px; margin: 16px 0; overflow-x: auto; font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; line-height: 1.6;
+}
+.code-block .comment { color: #6c7086; }
+.code-block .keyword { color: #cba6f7; }
+.code-block .string { color: #a6e3a1; }
+.code-block .func { color: #89b4fa; }
+.code-block .num { color: #fab387; }
+.code-block .label { color: var(--code-text); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; opacity: .5; }
+
+/* Callout boxes */
+.callout {
+  border-radius: 10px; padding: 20px 24px; margin: 20px 0;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.callout-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.callout p { margin: 0; font-size: 15px; }
+.callout.insight { background: #eef2ff; border-left: 4px solid #6366f1; }
+.callout.warning { background: #fff7ed; border-left: 4px solid var(--orange); }
+.callout.success { background: #f0fdf4; border-left: 4px solid var(--green); }
+.callout.exercise { background: #fefce8; border-left: 4px solid var(--yellow); }
+
+/* Timeline */
+.timeline { margin: 24px 0; }
+.timeline-item {
+  display: flex; gap: 16px; padding: 12px 0;
+  border-bottom: 1px solid #e0e4eb;
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-time { min-width: 90px; font-size: 13px; font-weight: 600; color: var(--orange); padding-top: 2px; }
+.timeline-content { font-size: 15px; }
+.timeline-content strong { color: var(--blue); }
+
+/* Architecture diagram */
+.arch-diagram {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 24px 0;
+}
+.arch-row { display: flex; gap: 16px; align-items: center; }
+.arch-box {
+  background: white; border: 2px solid var(--blue); border-radius: 10px;
+  padding: 14px 24px; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--blue); min-width: 160px;
+}
+.arch-box.highlight { background: var(--orange); border-color: var(--orange); color: white; }
+.arch-box.secondary { border-color: var(--gray); color: var(--gray); border-style: dashed; }
+.arch-arrow { color: var(--gray); font-size: 20px; }
+
+/* Gen table */
+.gen-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+.gen-table th { background: var(--blue); color: white; padding: 10px 14px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.gen-table td { padding: 10px 14px; border-bottom: 1px solid #e0e4eb; }
+.gen-table tr:nth-child(even) { background: #f8f9fc; }
+.gen-table .badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+}
+.gen-table .badge.red { background: #fde8e8; color: var(--red); }
+.gen-table .badge.yellow { background: #fef3c7; color: #92400e; }
+.gen-table .badge.green { background: #d1fae5; color: #065f46; }
+
+/* Case study cards */
+.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.case-card {
+  background: white; border-radius: 12px; padding: 20px;
+  border: 1px solid #e0e4eb; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.case-card .industry { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); font-weight: 700; margin-bottom: 6px; }
+.case-card h3 { margin: 0 0 8px; font-size: 16px; }
+.case-card p { font-size: 13px; color: var(--gray); margin: 0; line-height: 1.5; }
+.case-card .stat { font-size: 22px; font-weight: 700; color: var(--blue); margin-top: 8px; }
+
+/* Exercise box */
+.exercise-box {
+  background: white; border: 2px solid var(--yellow); border-radius: 12px;
+  padding: 24px; margin: 20px 0;
+}
+.exercise-box h3 { color: var(--yellow); margin: 0 0 12px; font-size: 16px; }
+.exercise-box ol { margin: 0 0 0 20px; }
+.exercise-box li { font-size: 14px; margin-bottom: 6px; }
+.exercise-box .duration { font-size: 12px; color: var(--gray); margin-top: 12px; font-style: italic; }
+
+/* Pill tags */
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.pill {
+  background: #eef2ff; color: #4338ca; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+.pill.orange { background: #fff7ed; color: #c2410c; }
+.pill.green { background: #f0fdf4; color: #15803d; }
+
+/* Section divider */
+.section-divider {
+  text-align: center; padding: 80px 0 40px;
+}
+.section-divider .mod-badge {
+  background: var(--orange); color: white; display: inline-block;
+  padding: 6px 16px; border-radius: 16px; font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.section-divider h1 { font-size: 40px; margin-bottom: 12px; }
+.section-divider p { font-size: 18px; color: var(--gray); max-width: 600px; margin: 0 auto; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; }
+  .sidebar.collapsed { margin-left: -280px; }
+  .slide-area { padding: 24px 20px 40px; }
+  .compare { grid-template-columns: 1fr; }
+  .case-grid { grid-template-columns: 1fr; }
+  .slide h1 { font-size: 28px; }
+  .title-slide h1 { font-size: 32px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Keyboard hint */
+.key-hint {
+  position: fixed; bottom: 16px; right: 16px; background: rgba(0,0,0,.7);
+  color: white; padding: 6px 14px; border-radius: 8px; font-size: 11px;
+  opacity: .5; pointer-events: none;
+}
+.key-hint kbd {
+  background: rgba(255,255,255,.2); padding: 2px 6px; border-radius: 3px;
+  font-family: inherit; margin: 0 2px;
+}
+
+/* Print styles */
+@media print {
+  .sidebar, .topbar, .nav-btns, .key-hint, .btn-toggle { display: none !important; }
+  .slide-area { padding: 20px; overflow: visible; }
+  .slide { page-break-after: always; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>AI-Powered Enterprise Development</h2>
+      <div class="subtitle">One-Day Training Course</div>
+    </div>
+    <div class="module-list" id="moduleList"></div>
+    <div class="sidebar-footer">
+      <div class="schedule-label">Schedule</div>
+      <div class="time-row"><span>Morning</span><span>9:00 - 12:00</span></div>
+      <div class="time-row"><span>Lunch</span><span>12:00 - 1:00</span></div>
+      <div class="time-row"><span>Afternoon</span><span>1:00 - 5:00</span></div>
+      <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.3)">Use arrow keys or buttons to navigate</div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <button class="btn-toggle" onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText"></div>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="btnPrev" onclick="prevSlide()">&larr; Prev</button>
+        <button class="nav-btn" id="btnNext" onclick="nextSlide()">Next &rarr;</button>
+      </div>
+    </div>
+    <div class="slide-area" id="slideArea"></div>
+  </div>
+</div>
+
+<div class="key-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate &middot; <kbd>S</kbd> sidebar</div>
+
+<script>
+// ── Presentation Data ──────────────────────────────────────────────
+const MODULES = [
+  {
+    title: 'Welcome',
+    time: '9:00 - 9:15',
+    slides: [
+      {
+        type: 'title',
+        html: `
+          <div class="title-slide">
+            <div class="title-badge">One-Day Training</div>
+            <h1>Building Enterprise Apps<br>with AI</h1>
+            <p class="slide-subtitle">How we built 50+ production applications in weeks, not months &mdash; and how your organization can too.</p>
+            <p class="presenter">Presented by JD Sundberg</p>
+            <p class="date">2026</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Today's Journey</h1>
+          <p class="slide-subtitle">Eight modules, hands-on exercises, and a clear implementation roadmap.</p>
+          <div class="timeline">
+            <div class="timeline-item"><div class="timeline-time">9:00</div><div class="timeline-content"><strong>The AI Shift</strong> &mdash; Why this changes everything for enterprise IT</div></div>
+            <div class="timeline-item"><div class="timeline-time">9:45</div><div class="timeline-content"><strong>Architecture</strong> &mdash; Patterns that make AI-built apps maintainable</div></div>
+            <div class="timeline-item"><div class="timeline-time">10:45</div><div class="timeline-content"><strong>Live Build</strong> &mdash; Watch an enterprise app built from scratch</div></div>
+            <div class="timeline-item"><div class="timeline-time">12:00</div><div class="timeline-content"><strong>Lunch</strong></div></div>
+            <div class="timeline-item"><div class="timeline-time">1:00</div><div class="timeline-content"><strong>Workflow Automation</strong> &mdash; Event-driven business processes</div></div>
+            <div class="timeline-item"><div class="timeline-time">1:45</div><div class="timeline-content"><strong>Security &amp; Quality</strong> &mdash; What AI gets wrong and how to catch it</div></div>
+            <div class="timeline-item"><div class="timeline-time">2:45</div><div class="timeline-content"><strong>Case Studies</strong> &mdash; Real apps across 8 industries</div></div>
+            <div class="timeline-item"><div class="timeline-time">3:30</div><div class="timeline-content"><strong>Hands-On Workshop</strong> &mdash; Build your own application</div></div>
+            <div class="timeline-item"><div class="timeline-time">4:15</div><div class="timeline-content"><strong>Implementation Roadmap</strong> &mdash; Taking it home</div></div>
+          </div>`
+      },
+      {
+        html: `
+          <h1>What You'll Walk Away With</h1>
+          <p class="slide-subtitle">Concrete skills and a plan, not just concepts.</p>
+          <ul>
+            <li><strong>Understand AI-assisted development</strong> &mdash; what it can and cannot do today</li>
+            <li><strong>Architectural patterns</strong> that keep AI-generated code maintainable and secure</li>
+            <li><strong>Workflow automation skills</strong> &mdash; event-driven business process design</li>
+            <li><strong>Security awareness</strong> &mdash; the specific vulnerabilities AI introduces and how to catch them</li>
+            <li><strong>Hands-on experience</strong> building an enterprise application with AI</li>
+            <li><strong>Implementation roadmap</strong> tailored to your organization's maturity level</li>
+          </ul>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>This course is built on real production experience &mdash; 50+ apps, 163 workflows, 293 automated tests, and 22 documented lessons learned.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'The AI Shift',
+    time: '9:15 - 9:45',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 1</div>
+          <h1>The AI Shift</h1>
+          <p>Why AI-assisted development changes everything for enterprise software &mdash; and what it means for your team.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>The Old Way vs. The New Way</h1>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>Traditional Development</h3>
+              <ul>
+                <li>Requirements gathering (weeks)</li>
+                <li>Architecture review (days)</li>
+                <li>Sprint planning & estimation</li>
+                <li>Code, review, test cycles</li>
+                <li>Months to first working prototype</li>
+                <li>Heavy framework dependencies</li>
+                <li>Team of 5-10 developers</li>
+              </ul>
+            </div>
+            <div class="compare-col new">
+              <h3>AI-Assisted Development</h3>
+              <ul>
+                <li>Describe what you need (minutes)</li>
+                <li>AI proposes architecture instantly</li>
+                <li>Iterative conversation replaces sprints</li>
+                <li>Working prototype in hours</li>
+                <li>Production app in 1-3 days</li>
+                <li>Zero external dependencies</li>
+                <li>1 developer + AI pair</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p><strong>This doesn't eliminate developers.</strong> It eliminates the tedious parts &mdash; boilerplate, wiring, repetitive patterns. Developers shift to architecture decisions, domain expertise, and quality assurance.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>The Evidence</h1>
+          <p class="slide-subtitle">Real results from a single developer + AI over 3 weeks.</p>
+          <div class="metrics">
+            <div class="metric"><div class="val orange">50+</div><div class="label">Applications Built</div></div>
+            <div class="metric"><div class="val">17</div><div class="label">Admin Tools</div></div>
+            <div class="metric"><div class="val green">163</div><div class="label">Workflows Automated</div></div>
+            <div class="metric"><div class="val">293</div><div class="label">Automated Tests</div></div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="val">8</div><div class="label">Industry Verticals</div></div>
+            <div class="metric"><div class="val orange">0</div><div class="label">NPM Dependencies</div></div>
+            <div class="metric"><div class="val">2,830</div><div class="label">Knowledge Articles</div></div>
+            <div class="metric"><div class="val green">22</div><div class="label">Lessons Documented</div></div>
+          </div>`
+      },
+      {
+        html: `
+          <h1>What AI Does Well</h1>
+          <div class="pills">
+            <span class="pill green">Boilerplate code</span>
+            <span class="pill green">CRUD operations</span>
+            <span class="pill green">UI layouts & CSS</span>
+            <span class="pill green">API integrations</span>
+            <span class="pill green">Data transformation</span>
+            <span class="pill green">Test generation</span>
+            <span class="pill green">Documentation</span>
+            <span class="pill green">Refactoring</span>
+          </div>
+          <h2>What AI Cannot Replace</h2>
+          <div class="pills">
+            <span class="pill orange">Domain expertise</span>
+            <span class="pill orange">Business judgment</span>
+            <span class="pill orange">Security review</span>
+            <span class="pill orange">Architecture trade-offs</span>
+            <span class="pill orange">User experience design</span>
+            <span class="pill orange">Regulatory compliance</span>
+            <span class="pill orange">Stakeholder management</span>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p><strong>The sweet spot:</strong> AI handles the 80% that's repetitive patterns. Humans focus on the 20% that requires judgment, creativity, and domain knowledge.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>The Developer's New Role</h1>
+          <p class="slide-subtitle">From code writer to code director.</p>
+          <h3>Prompt Engineering</h3>
+          <p>Clear, specific instructions produce dramatically better results. "Build a form with name, email, and phone" vs. "Build an intake form for new vendor credentialing with legal name, DBA, primary contact email, and 24-hour emergency phone."</p>
+          <h3>Architecture Oversight</h3>
+          <p>AI proposes; you decide. Every architectural choice &mdash; pagination strategy, state management, security model &mdash; needs human review.</p>
+          <h3>Quality Assurance</h3>
+          <p>AI code <em>works</em> but may not be <em>secure</em>. Our code review found XSS vulnerabilities in 50% of AI-generated apps. The human catches what AI misses.</p>
+          <h3>Domain Translation</h3>
+          <p>The developer becomes the bridge between business requirements and AI capabilities. Understanding the domain is now the most valuable skill.</p>`
+      },
+      {
+        html: `
+          <h1>The ROI Conversation</h1>
+          <p class="slide-subtitle">Numbers your leadership team needs to hear.</p>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>Traditional Project</h3>
+              <ul>
+                <li>5 developers &times; 3 months</li>
+                <li>~2,400 developer-hours</li>
+                <li>Framework setup: 2 weeks</li>
+                <li>Dependencies: 200+ packages</li>
+                <li>Security audit: separate phase</li>
+                <li>Result: 1-2 applications</li>
+              </ul>
+            </div>
+            <div class="compare-col new">
+              <h3>AI-Assisted Project</h3>
+              <ul>
+                <li>1 developer &times; 3 weeks</li>
+                <li>~120 developer-hours</li>
+                <li>Framework: zero (pure standards)</li>
+                <li>Dependencies: 0 packages</li>
+                <li>Security: continuous review</li>
+                <li>Result: 50+ applications</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>20x productivity gain</strong> is real, but only with the right architecture patterns and human oversight. AI without architecture produces throwaway prototypes, not production software.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Architecture & Patterns',
+    time: '9:45 - 10:30',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 2</div>
+          <h1>Architecture &amp; Patterns</h1>
+          <p>The architectural decisions that make AI-generated code production-ready, maintainable, and secure.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>Zero-Dependency Architecture</h1>
+          <p class="slide-subtitle">Why we use zero NPM packages &mdash; and why it matters.</p>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>Typical Enterprise App</h3>
+              <ul>
+                <li>200+ NPM packages</li>
+                <li>node_modules: 500MB+</li>
+                <li>Build step: Webpack/Vite</li>
+                <li>Security: monthly CVE patches</li>
+                <li>Breaking changes on upgrade</li>
+                <li>Supply chain attack surface</li>
+              </ul>
+            </div>
+            <div class="compare-col new">
+              <h3>Our Approach</h3>
+              <ul>
+                <li>0 NPM packages</li>
+                <li>Pure Node.js built-ins</li>
+                <li>No build step at all</li>
+                <li>No CVEs to patch</li>
+                <li>Node.js LTS = 3-year stability</li>
+                <li>Zero supply chain risk</li>
+              </ul>
+            </div>
+          </div>
+          <div class="code-block">
+<span class="label">Everything you need is built in</span>
+<span class="keyword">import</span> http <span class="keyword">from</span> <span class="string">'node:http'</span>;
+<span class="keyword">import</span> https <span class="keyword">from</span> <span class="string">'node:https'</span>;
+<span class="keyword">import</span> fs <span class="keyword">from</span> <span class="string">'node:fs'</span>;
+<span class="keyword">import</span> path <span class="keyword">from</span> <span class="string">'node:path'</span>;
+<span class="keyword">import</span> crypto <span class="keyword">from</span> <span class="string">'node:crypto'</span>;
+<span class="comment">// That's it. No package.json needed.</span></div>`
+      },
+      {
+        html: `
+          <h1>Single-File Applications</h1>
+          <p class="slide-subtitle">One HTML file per app. All CSS and JavaScript inline.</p>
+          <h3>Why Single File?</h3>
+          <ul>
+            <li><strong>AI-friendly</strong> &mdash; AI can read and modify the entire app in one context window</li>
+            <li><strong>Deploy anywhere</strong> &mdash; copy one file, you're done</li>
+            <li><strong>No build tools</strong> &mdash; no Webpack, no Vite, no transpilation</li>
+            <li><strong>Instant iteration</strong> &mdash; save and refresh, no compile step</li>
+            <li><strong>Self-documenting</strong> &mdash; everything is in one place to read</li>
+          </ul>
+          <div class="arch-diagram">
+            <div class="arch-row">
+              <div class="arch-box">index.html<br><small>CSS + JS + HTML</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box">server.mjs<br><small>Proxy + API</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box highlight">Platform API<br><small>Data + Workflows</small></div>
+            </div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>A typical app is 800-2000 lines of HTML. That sounds large, but AI can generate, modify, and reason about it efficiently because it's all in one file with no import chains to follow.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Three Generations of Evolution</h1>
+          <p class="slide-subtitle">AI code gets better when you give it better patterns to follow.</p>
+          <table class="gen-table">
+            <tr><th>Aspect</th><th>Gen 1</th><th>Gen 2</th><th>Gen 3</th></tr>
+            <tr><td>Data loading</td><td><span class="badge red">limit: 1000</span></td><td><span class="badge yellow">Hybrid</span></td><td><span class="badge green">limit: 25 + paging</span></td></tr>
+            <tr><td>XSS protection</td><td><span class="badge red">None</span></td><td><span class="badge green">esc() added</span></td><td><span class="badge green">Consistent</span></td></tr>
+            <tr><td>State management</td><td><span class="badge red">Scattered vars</span></td><td><span class="badge yellow">Partial objects</span></td><td><span class="badge green">Single DATA = {}</span></td></tr>
+            <tr><td>Error handling</td><td><span class="badge red">alert()</span></td><td><span class="badge green">showToast()</span></td><td><span class="badge green">Toast + parsed errors</span></td></tr>
+            <tr><td>Server pattern</td><td><span class="badge yellow">Proxy only</span></td><td><span class="badge yellow">Custom API</span></td><td><span class="badge green">BFF + aggregation</span></td></tr>
+            <tr><td>Session mgmt</td><td><span class="badge red">No validation</span></td><td><span class="badge yellow">Basic</span></td><td><span class="badge green">Validate on restore</span></td></tr>
+          </table>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p><strong>Key lesson:</strong> AI reproduces the patterns you give it. If your first app has limit:1000, every subsequent app will too &mdash; until you establish and enforce better patterns in your project instructions.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>The Backend-for-Frontend Pattern</h1>
+          <p class="slide-subtitle">Server-side aggregation solves the N+1 API problem.</p>
+          <div class="arch-diagram">
+            <div class="arch-row">
+              <div class="arch-box">Browser<br><small>1 fetch call</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box highlight">BFF Server<br><small>Aggregate + compute</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box">Platform API<br><small>Multiple queries</small></div>
+            </div>
+          </div>
+          <h3>What the BFF Does</h3>
+          <ul>
+            <li><strong>Aggregation</strong> &mdash; combines data from multiple API calls into a single response</li>
+            <li><strong>Computation</strong> &mdash; calculates KPIs, percentages, and trends server-side</li>
+            <li><strong>Pagination safety</strong> &mdash; server pages through all records, client gets summary</li>
+            <li><strong>Security</strong> &mdash; credentials stay on the server, never in the browser</li>
+          </ul>
+          <div class="code-block">
+<span class="label">Server endpoint example</span>
+<span class="comment">// One client call to GET /api/secops/dashboard</span>
+<span class="comment">// Server makes 6 API calls internally:</span>
+<span class="keyword">const</span> [alerts, incidents, vulns, playbooks, metrics, trends] =
+  <span class="keyword">await</span> Promise.<span class="func">all</span>([
+    <span class="func">fetchAlerts</span>(auth),
+    <span class="func">fetchIncidents</span>(auth),
+    <span class="func">fetchVulnerabilities</span>(auth),
+    <span class="func">fetchPlaybooks</span>(auth),
+    <span class="func">computeMetrics</span>(auth),
+    <span class="func">computeTrends</span>(auth)
+  ]);</div>`
+      },
+      {
+        html: `
+          <h1>Design System Discipline</h1>
+          <p class="slide-subtitle">Consistency across 50+ apps requires a single source of truth.</p>
+          <h3>Why It Matters for AI</h3>
+          <p>Without a design system, AI generates different styling for every app. Colors drift, spacing varies, component names diverge. After 10 apps, your suite looks like it was built by 10 different teams.</p>
+          <h3>Our Approach</h3>
+          <ul>
+            <li><strong>branding.md</strong> &mdash; single reference document with colors, typography, spacing, component patterns</li>
+            <li><strong>CSS variables</strong> &mdash; --blue, --orange, --green across every app</li>
+            <li><strong>Component naming</strong> &mdash; .topbar, .kpi-row, .data-table, .badge</li>
+            <li><strong>Topbar contract</strong> &mdash; exact class names required for cross-app injection</li>
+          </ul>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>Result:</strong> 50+ apps that look and feel like one product. Users move between apps seamlessly because the design language is consistent.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Golden Rules</h1>
+          <p class="slide-subtitle">Hard-won constraints that prevent the most common AI mistakes.</p>
+          <h3>1. Max 25 Records Per Client Fetch</h3>
+          <p>AI defaults to fetching everything. This works in testing with 10 records but breaks in production with 10,000. Enforce limit=25 with pageToken pagination.</p>
+          <h3>2. Never Change a Form Slug</h3>
+          <p>Code, URLs, workflows, indexes, and queries all reference form slugs. Changing one creates a cascade of silent failures.</p>
+          <h3>3. Always Escape User Data</h3>
+          <p>Every <code>\${value}</code> in innerHTML must be wrapped in <code>esc()</code>. AI forgets this in ~50% of generated code.</p>
+          <h3>4. Validate Sessions on Restore</h3>
+          <p>Stale tokens cause cryptic errors. Always verify credentials when restoring a saved session.</p>
+          <h3>5. Use treeJson, Not treeXml</h3>
+          <p>Workflow definitions use JSON for reliable updates. XML in PUT body is silently ignored by the platform.</p>`
+      }
+    ]
+  },
+  {
+    title: 'Live Build Demo',
+    time: '10:45 - 12:00',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 3</div>
+          <h1>Live Build Demo</h1>
+          <p>Watch an enterprise application built from scratch in real-time using AI-assisted development.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>The Development Loop</h1>
+          <p class="slide-subtitle">How AI-assisted development actually works in practice.</p>
+          <div class="arch-diagram">
+            <div class="arch-row">
+              <div class="arch-box highlight">1. Describe</div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box">2. AI Generates</div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box">3. Review</div>
+            </div>
+            <div class="arch-arrow" style="transform:rotate(180deg)">&larr;</div>
+            <div class="arch-row">
+              <div class="arch-box secondary">6. Ship</div>
+              <div class="arch-arrow">&larr;</div>
+              <div class="arch-box secondary">5. Test</div>
+              <div class="arch-arrow">&larr;</div>
+              <div class="arch-box">4. Refine</div>
+            </div>
+          </div>
+          <h3>The Conversation Is the Process</h3>
+          <p>There's no separate requirements doc, design phase, or sprint planning. The conversation between developer and AI <em>is</em> the development process. Each exchange produces working, testable code.</p>`
+      },
+      {
+        html: `
+          <h1>Step 1: Platform Setup</h1>
+          <p class="slide-subtitle">Provisioning the data layer takes minutes, not weeks.</p>
+          <div class="code-block">
+<span class="label">setup.mjs — Provision a kapp with forms</span>
+<span class="comment">// Tell AI: "Create a kapp called 'vendor-cred' with forms for</span>
+<span class="comment">// vendors, credentials, site-visits, and compliance-checks"</span>
+
+<span class="keyword">const</span> forms = [
+  { name: <span class="string">'Vendors'</span>, slug: <span class="string">'vendors'</span>, fields: [
+    <span class="string">'Legal Name'</span>, <span class="string">'DBA'</span>, <span class="string">'Tax ID'</span>, <span class="string">'Primary Contact'</span>,
+    <span class="string">'Email'</span>, <span class="string">'Phone'</span>, <span class="string">'Status'</span>, <span class="string">'Risk Level'</span>
+  ]},
+  { name: <span class="string">'Credentials'</span>, slug: <span class="string">'credentials'</span>, fields: [
+    <span class="string">'Vendor'</span>, <span class="string">'Type'</span>, <span class="string">'Issued'</span>, <span class="string">'Expires'</span>,
+    <span class="string">'Verified'</span>, <span class="string">'Verified By'</span>, <span class="string">'Status'</span>
+  ]}
+];
+<span class="comment">// AI generates the full setup.mjs: API calls, error handling, idempotency</span></div>
+          <h3>Three-Phase Lifecycle</h3>
+          <ol>
+            <li><strong>setup.mjs</strong> &mdash; create kapp, forms, field definitions, and indexes</li>
+            <li><strong>build_indexes.mjs</strong> &mdash; create search indexes for KQL queries</li>
+            <li><strong>seed.mjs</strong> &mdash; populate with realistic test data (concurrent batches)</li>
+          </ol>`
+      },
+      {
+        html: `
+          <h1>Step 2: The UI</h1>
+          <p class="slide-subtitle">AI generates the complete single-page application.</p>
+          <div class="code-block">
+<span class="label">Prompt to AI</span>
+<span class="string">"Build a single-file HTML app for vendor credentialing.
+Dashboard tab with KPI cards (total vendors, expiring soon,
+non-compliant, pending review). Vendors tab with searchable
+table, click to expand details. Credentials tab with status
+filters. Use the branding.md design system."</span></div>
+          <h3>What AI Produces</h3>
+          <ul>
+            <li><strong>Complete HTML/CSS/JS</strong> in one file (~1,200 lines)</li>
+            <li><strong>Tab navigation</strong> with URL hash routing</li>
+            <li><strong>KPI dashboard</strong> with server-side aggregation</li>
+            <li><strong>Data tables</strong> with pagination, search, and filters</li>
+            <li><strong>CRUD operations</strong> with toast notifications</li>
+            <li><strong>Session management</strong> with login/logout</li>
+          </ul>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>The quality of the prompt determines the quality of the output. Specific, detailed prompts with references to existing patterns produce production-ready code. Vague prompts produce prototypes.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Step 3: The Server</h1>
+          <p class="slide-subtitle">Backend-for-Frontend pattern with custom API endpoints.</p>
+          <div class="code-block">
+<span class="label">server.mjs — Custom API layer</span>
+<span class="keyword">const</span> server = http.<span class="func">createServer</span>(<span class="keyword">async</span> (req, res) => {
+  <span class="keyword">if</span> (req.url === <span class="string">'/api/vendor/dashboard'</span>) {
+    <span class="comment">// Server aggregates from multiple forms</span>
+    <span class="keyword">const</span> vendors = <span class="keyword">await</span> <span class="func">queryAll</span>(<span class="string">'vendors'</span>, auth);
+    <span class="keyword">const</span> creds   = <span class="keyword">await</span> <span class="func">queryAll</span>(<span class="string">'credentials'</span>, auth);
+    <span class="keyword">const</span> expiring = creds.<span class="func">filter</span>(c =>
+      <span class="func">daysUntil</span>(c.values[<span class="string">'Expires'</span>]) < <span class="num">30</span>
+    );
+    <span class="func">json</span>(res, {
+      totalVendors: vendors.length,
+      expiringSoon: expiring.length,
+      complianceRate: <span class="func">calcRate</span>(vendors, creds)
+    });
+  }
+});</div>
+          <p>The browser makes <strong>one call</strong>. The server makes as many platform API calls as needed, aggregates, computes, and returns a clean response.</p>`
+      },
+      {
+        html: `
+          <h1>Step 4: Review & Refine</h1>
+          <p class="slide-subtitle">The human's role is critical at this stage.</p>
+          <h3>Security Review Checklist</h3>
+          <ul>
+            <li>Is every <code>\${value}</code> wrapped in <code>esc()</code>?</li>
+            <li>Are credentials on the server, never in the browser?</li>
+            <li>Is pagination enforced (limit=25)?</li>
+            <li>Are sessions validated on restore?</li>
+            <li>Are error messages sanitized before display?</li>
+          </ul>
+          <h3>Architecture Review Checklist</h3>
+          <ul>
+            <li>Does the BFF aggregate appropriately?</li>
+            <li>Are form slugs correct and matching the platform?</li>
+            <li>Do search indexes exist for KQL queries?</li>
+            <li>Is the design system followed consistently?</li>
+          </ul>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p><strong>Never skip review.</strong> Our code review found XSS vulnerabilities in 50% of Gen 1 apps. AI writes <em>functional</em> code, but functional != secure.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Step 5: Seed & Test</h1>
+          <p class="slide-subtitle">Realistic data and automated testing complete the picture.</p>
+          <div class="code-block">
+<span class="label">seed.mjs — Concurrent data population</span>
+<span class="comment">// Create 200 vendor records in batches of 10</span>
+<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="num">0</span>; i < vendors.length; i += <span class="num">10</span>) {
+  <span class="keyword">const</span> batch = vendors.<span class="func">slice</span>(i, i + <span class="num">10</span>);
+  <span class="keyword">await</span> Promise.<span class="func">all</span>(
+    batch.<span class="func">map</span>(v => <span class="func">createSubmission</span>(<span class="string">'vendors'</span>, v))
+  );
+}
+<span class="comment">// 10x faster than sequential creation</span></div>
+          <h3>Testing Strategy</h3>
+          <div class="metrics">
+            <div class="metric"><div class="val">203</div><div class="label">API Tests</div></div>
+            <div class="metric"><div class="val">90</div><div class="label">UI Tests</div></div>
+            <div class="metric"><div class="val">51</div><div class="label">Workflow Tests</div></div>
+          </div>
+          <p>AI generates test suites too. But the developer designs <em>what</em> to test &mdash; edge cases, security boundaries, and integration points that AI wouldn't think to verify.</p>`
+      }
+    ]
+  },
+  {
+    title: 'Workflow Automation',
+    time: '1:00 - 1:45',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 4</div>
+          <h1>Workflow Automation</h1>
+          <p>Event-driven business processes that connect forms, approvals, notifications, and integrations.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>Workflow Concepts</h1>
+          <p class="slide-subtitle">Understanding the workflow engine's architecture.</p>
+          <div class="arch-diagram">
+            <div class="arch-row">
+              <div class="arch-box">Event<br><small>Form submitted</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box highlight">Tree<br><small>Workflow definition</small></div>
+              <div class="arch-arrow">&rarr;</div>
+              <div class="arch-box">Run<br><small>Single execution</small></div>
+            </div>
+          </div>
+          <h3>Key Concepts</h3>
+          <ul>
+            <li><strong>Trees</strong> &mdash; workflow definitions (the blueprint)</li>
+            <li><strong>Runs</strong> &mdash; individual executions (the instance)</li>
+            <li><strong>Triggers</strong> &mdash; node activations within a run</li>
+            <li><strong>Handlers</strong> &mdash; the actions nodes perform (email, API call, wait, etc.)</li>
+            <li><strong>Connectors</strong> &mdash; links between nodes (Complete, Create, Update)</li>
+          </ul>
+          <h3>Three Workflow Types</h3>
+          <ol>
+            <li><strong>Event-triggered</strong> &mdash; fires on form submission, update, or close</li>
+            <li><strong>WebAPI</strong> &mdash; invoked via HTTP endpoint, returns response</li>
+            <li><strong>Routine</strong> &mdash; reusable sub-workflow called by other trees</li>
+          </ol>`
+      },
+      {
+        html: `
+          <h1>163 Workflows Built</h1>
+          <p class="slide-subtitle">Real-world automation across every industry vertical.</p>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">ITSM</div>
+              <h3>Incident Response</h3>
+              <p>Auto-assign based on category, escalate on SLA breach, notify stakeholders, close with resolution.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Healthcare</div>
+              <h3>Credential Expiration</h3>
+              <p>Monitor license dates, send renewal reminders at 90/60/30 days, suspend privileges on expiry.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Security</div>
+              <h3>Alert Triage</h3>
+              <p>Ingest alerts, de-duplicate, apply severity rules, create incidents, trigger playbook execution.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Education</div>
+              <h3>Welcome Email</h3>
+              <p>On student enrollment, send personalized welcome with schedule, assign mentor, create attendance record.</p>
+            </div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>AI can generate workflow definitions programmatically &mdash; including the tree JSON, node parameters, and connector logic. We built a complete workflow test suite that creates, executes, and validates workflows via API.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Programmatic Workflow Creation</h1>
+          <p class="slide-subtitle">AI creates workflows through the API, not a drag-and-drop builder.</p>
+          <div class="code-block">
+<span class="label">Creating a workflow via Core API</span>
+<span class="comment">// Step 1: Register the workflow</span>
+POST /kapps/{kapp}/forms/{form}/workflows
+{
+  <span class="string">"name"</span>: <span class="string">"Submission Submitted - Welcome Email"</span>,
+  <span class="string">"event"</span>: <span class="string">"Submission Submitted"</span>,
+  <span class="string">"type"</span>: <span class="string">"Tree"</span>,
+  <span class="string">"status"</span>: <span class="string">"Active"</span>
+}
+
+<span class="comment">// Step 2: Upload the tree definition (treeJson)</span>
+PUT /kapps/{kapp}/workflows/{id}
+{
+  <span class="string">"treeXml"</span>: <span class="string">"&lt;taskTree&gt;...nodes...connectors...&lt;/taskTree&gt;"</span>
+}</div>
+          <h3>Critical Gotchas (Discovered Through Testing)</h3>
+          <ul>
+            <li><strong>Node ID suffixes must be unique</strong> across all handler types in a tree</li>
+            <li><strong>Parameter names are case-sensitive</strong> &mdash; "Time to wait" not "time_to_wait"</li>
+            <li><strong>Deferrable nodes need 3 message types</strong> (Create, Update, Complete)</li>
+            <li><strong>Use Core API for event workflows</strong> &mdash; Task API breaks kapp linkage</li>
+          </ul>`
+      },
+      {
+        html: `
+          <h1>Testing Workflows Programmatically</h1>
+          <p class="slide-subtitle">51 automated tests that validate workflow behavior.</p>
+          <div class="code-block">
+<span class="label">Workflow test categories</span>
+handlers    (<span class="num">3</span>)  <span class="comment">— handler catalog, echo, parameter sensitivity</span>
+discovery   (<span class="num">5</span>)  <span class="comment">— list, source filter, sourceGroup filter</span>
+crud        (<span class="num">8</span>)  <span class="comment">— create/list/get/delete round-trip</span>
+round-trip  (<span class="num">6</span>)  <span class="comment">— treeJson preserve/restore cycle</span>
+export      (<span class="num">3</span>)  <span class="comment">— export endpoint validation</span>
+webapi-exec (<span class="num">6</span>)  <span class="comment">— runtime invocation + run verification</span>
+event-exec  (<span class="num">5</span>)  <span class="comment">— form submission triggering</span>
+builder-app (<span class="num">6</span>)  <span class="comment">— visual builder UI (Puppeteer)</span>
+debugger    (<span class="num">5</span>)  <span class="comment">— debugger UI verification</span>
+edge-cases  (<span class="num">4</span>)  <span class="comment">— error handling, stale versions</span></div>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>3 platform bugs discovered</strong> through automated testing. AI-generated test suites catch issues that manual testing misses because they systematically explore edge cases.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Security & Quality',
+    time: '1:45 - 2:30',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 5</div>
+          <h1>Security &amp; Quality</h1>
+          <p>The specific security vulnerabilities AI introduces, how to catch them, and quality patterns that prevent regression.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>What AI Gets Wrong</h1>
+          <p class="slide-subtitle">Findings from reviewing 50+ AI-generated applications.</p>
+          <div class="metrics">
+            <div class="metric"><div class="val" style="color:var(--red)">50%</div><div class="label">Apps Missing XSS Protection</div></div>
+            <div class="metric"><div class="val" style="color:var(--red)">30%</div><div class="label">Over-fetching Data</div></div>
+            <div class="metric"><div class="val" style="color:var(--yellow)">25%</div><div class="label">Missing Session Validation</div></div>
+            <div class="metric"><div class="val" style="color:var(--yellow)">40%</div><div class="label">Inconsistent Error Handling</div></div>
+          </div>
+          <h3>The Pattern</h3>
+          <p>AI generates code that <em>works</em> functionally but cuts corners on security. It builds for the happy path. XSS escaping, input validation, session management, and error boundaries are consistently under-implemented unless explicitly requested.</p>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p><strong>AI is an optimistic coder.</strong> It assumes good input, trusted users, and small datasets. Enterprise apps face adversarial input, untrusted users, and unbounded data. You must bridge this gap.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>XSS: The #1 AI Vulnerability</h1>
+          <p class="slide-subtitle">Cross-Site Scripting was found in half of all generated apps.</p>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>What AI Writes</h3>
+              <div class="code-block" style="font-size:12px">
+row.innerHTML = \`
+  &lt;td&gt;\${sub.values['Name']}&lt;/td&gt;
+  &lt;td&gt;\${sub.values['Email']}&lt;/td&gt;
+\`;</div>
+              <p style="font-size:13px;margin-top:8px;color:var(--red)">If Name contains <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code>, it executes.</p>
+            </div>
+            <div class="compare-col new">
+              <h3>What You Must Enforce</h3>
+              <div class="code-block" style="font-size:12px">
+<span class="keyword">function</span> <span class="func">esc</span>(s) {
+  <span class="keyword">const</span> d = document.<span class="func">createElement</span>(<span class="string">'div'</span>);
+  d.textContent = s;
+  <span class="keyword">return</span> d.innerHTML;
+}
+row.innerHTML = \`
+  &lt;td&gt;\${<span class="func">esc</span>(sub.values['Name'])}&lt;/td&gt;
+  &lt;td&gt;\${<span class="func">esc</span>(sub.values['Email'])}&lt;/td&gt;
+\`;</div>
+            </div>
+          </div>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>Fix:</strong> Add the <code>esc()</code> function to your project instructions. AI will include it automatically in every subsequent app. One instruction prevents hundreds of vulnerabilities.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>ABAC Security Model</h1>
+          <p class="slide-subtitle">Attribute-Based Access Control &mdash; more powerful than roles.</p>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>Traditional RBAC</h3>
+              <ul>
+                <li>Fixed roles (Admin, User, Viewer)</li>
+                <li>"Group explosion" at scale</li>
+                <li>Can't express complex conditions</li>
+                <li>Hard to audit and maintain</li>
+              </ul>
+            </div>
+            <div class="compare-col new">
+              <h3>ABAC (Kinetic Approach)</h3>
+              <ul>
+                <li>Expressive policy rules</li>
+                <li>Attributes + context = decision</li>
+                <li>No role proliferation</li>
+                <li>Self-documenting policies</li>
+              </ul>
+            </div>
+          </div>
+          <div class="code-block">
+<span class="label">Example ABAC policy (JavaScript)</span>
+<span class="comment">// "Users can only see submissions from their own department"</span>
+identity(<span class="string">'attribute:Department'</span>) == values(<span class="string">'Department'</span>)
+  || identity(<span class="string">'spaceAdmin'</span>)
+
+<span class="comment">// "Managers can modify, others can only view"</span>
+identity(<span class="string">'attribute:Role'</span>) == <span class="string">'Manager'</span>
+  || submission(<span class="string">'createdBy'</span>) == identity(<span class="string">'username'</span>)</div>`
+      },
+      {
+        html: `
+          <h1>The 22 Lessons</h1>
+          <p class="slide-subtitle">Key findings from a formal code review of 3 generations of apps.</p>
+          <h3>Critical (Fix Immediately)</h3>
+          <ol>
+            <li><strong>XSS escaping</strong> &mdash; add esc() to every app that renders user data</li>
+            <li><strong>Pagination</strong> &mdash; replace limit:1000 with limit:25 + pageToken</li>
+            <li><strong>Session validation</strong> &mdash; verify credentials on every session restore</li>
+            <li><strong>/me parsing</strong> &mdash; response is flat ({username}), not nested ({user:{username}})</li>
+          </ol>
+          <h3>Important (Fix Soon)</h3>
+          <ol start="5">
+            <li><strong>State management</strong> &mdash; single DATA object beats scattered variables</li>
+            <li><strong>Error handling</strong> &mdash; standardize on showToast() with parsed error messages</li>
+            <li><strong>Topbar contract</strong> &mdash; exact CSS class names required for cross-app injection</li>
+          </ol>
+          <h3>Architecture (Plan For)</h3>
+          <ol start="8">
+            <li><strong>Server modularization</strong> &mdash; split 9,300-line monolith into domain handlers</li>
+            <li><strong>Data-driven routing</strong> &mdash; one routing table, not 26 if-blocks</li>
+            <li><strong>Shared utilities</strong> &mdash; extract common patterns (transitions, badges, toasts)</li>
+          </ol>`
+      },
+      {
+        html: `
+          <h1>Quality Gates</h1>
+          <p class="slide-subtitle">Automated checks that catch problems before they reach production.</p>
+          <h3>Testing Pyramid for AI-Generated Code</h3>
+          <div class="metrics">
+            <div class="metric"><div class="val">203</div><div class="label">API Tests (Fastest)</div></div>
+            <div class="metric"><div class="val">51</div><div class="label">Workflow Tests</div></div>
+            <div class="metric"><div class="val">90</div><div class="label">UI Tests (Puppeteer)</div></div>
+          </div>
+          <h3>What Each Layer Catches</h3>
+          <ul>
+            <li><strong>API tests</strong> &mdash; authentication, authorization, CRUD operations, query behavior, error responses</li>
+            <li><strong>Workflow tests</strong> &mdash; handler execution, connector routing, deferral behavior, error handling</li>
+            <li><strong>UI tests</strong> &mdash; session restore, tab navigation, content rendering, JavaScript errors</li>
+          </ul>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>AI is excellent at generating test suites &mdash; especially for API testing. Give it the API spec and it will produce comprehensive tests. But the developer must define <em>what</em> to test and <em>what edge cases matter</em>.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Industry Case Studies',
+    time: '2:45 - 3:30',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 6</div>
+          <h1>Industry Case Studies</h1>
+          <p>Real applications built across 8 industries &mdash; proving the patterns work everywhere.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>Healthcare</h1>
+          <p class="slide-subtitle">6 applications covering credentialing, compliance, patient safety, and research.</p>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">Credentialing</div>
+              <h3>Staff Credential Manager</h3>
+              <p>Provider registry, license tracking, privileging engine, committee approval workflows. JCAHO/CMS/OSHA compliance.</p>
+              <div class="stat">14 forms</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Equipment</div>
+              <h3>Clinical Equipment</h3>
+              <p>Biomedical asset tracking, maintenance scheduling, FDA recall management, calibration records.</p>
+              <div class="stat">8 forms</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Safety</div>
+              <h3>Patient Safety</h3>
+              <p>Incident reporting, root cause analysis, CAPA tracking, anonymous submissions for sensitive events.</p>
+              <div class="stat">6 forms</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Research</div>
+              <h3>Clinical Research</h3>
+              <p>Protocol management, IRB tracking, enrollment, adverse event monitoring, compliance dashboards.</p>
+              <div class="stat">7 forms</div>
+            </div>
+          </div>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>Pattern:</strong> Healthcare apps share common compliance patterns (audit trails, expiration monitoring, approval workflows) that AI replicates across apps once established.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Energy & Natural Resources</h1>
+          <p class="slide-subtitle">Mining operations and oil & gas compliance management.</p>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">Mining</div>
+              <h3>Mining Operations</h3>
+              <p>Site management, equipment tracking, safety incidents, environmental monitoring, regulatory compliance.</p>
+              <div class="stat">8 custom API endpoints</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Oil & Gas</div>
+              <h3>OG Compliance</h3>
+              <p>CAPA management, regulatory audits, ESG sustainability tracking, corrective action workflows.</p>
+              <div class="stat">10 forms, 6 endpoints</div>
+            </div>
+          </div>
+          <h3>Key Insight: Domain Transfer</h3>
+          <p>Once the ITSM app (incidents, problems, changes) was built, the mining and oil & gas apps reused 70% of the same patterns. AI recognized that "safety incident" follows the same lifecycle as "IT incident" &mdash; create, triage, investigate, resolve, close.</p>`
+      },
+      {
+        html: `
+          <h1>Education & Hospitality</h1>
+          <p class="slide-subtitle">K-12 school management and multi-property hotel operations.</p>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">Education</div>
+              <h3>School Management Suite</h3>
+              <p>7 apps: SIS, LMS, attendance, behavior, scheduling, parent communication, and the SchoolForGood program.</p>
+              <div class="stat">7 applications</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Hospitality</div>
+              <h3>Hotel Management</h3>
+              <p>Room inventory, reservations, housekeeping, guest services. Multi-property support with chain-level dashboards.</p>
+              <div class="stat">2 variants built</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Food Service</div>
+              <h3>Restaurant Management</h3>
+              <p>Menu management, inventory, reservations, P&L tracking, staff scheduling.</p>
+              <div class="stat">6 forms</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Finance</div>
+              <h3>Capital Assets & Grants</h3>
+              <p>Asset lifecycle, depreciation, funding applications, grant compliance, budget tracking.</p>
+              <div class="stat">Cross-domain</div>
+            </div>
+          </div>`
+      },
+      {
+        html: `
+          <h1>IT Service Management</h1>
+          <p class="slide-subtitle">The foundation app that informed all others.</p>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">ITSM</div>
+              <h3>ITIL Console</h3>
+              <p>Full ITIL implementation: Incident, Problem, Change, and Service Request management with SLA tracking.</p>
+              <div class="stat">First app built</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Security</div>
+              <h3>Security Operations</h3>
+              <p>SOC dashboard: alerts, incidents, vulnerabilities, playbooks. 9 forms, 10 custom API endpoints, KPI aggregation.</p>
+              <div class="stat">Most complex app</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Data</div>
+              <h3>Data Atlas & Governance</h3>
+              <p>Data dictionary, catalog, lineage tracking. Multi-datasource scanning (Cassandra, MongoDB, CouchDB).</p>
+              <div class="stat">Multi-DB integration</div>
+            </div>
+            <div class="case-card">
+              <div class="industry">Knowledge</div>
+              <h3>Knowledge Portal</h3>
+              <p>2,830+ HR articles, full-text search, category browsing, article management with publish workflow.</p>
+              <div class="stat">2,830 articles</div>
+            </div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p><strong>The compounding effect:</strong> Each app teaches AI better patterns. By app #50, generation quality was dramatically higher than app #1, because the project instructions encoded 22 lessons learned.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Hands-On Workshop',
+    time: '3:30 - 4:15',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 7</div>
+          <h1>Hands-On Workshop</h1>
+          <p>Build your own enterprise application using AI-assisted development. Three exercises, 45 minutes.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>Exercise 1: Prompt Engineering</h1>
+          <p class="slide-subtitle">Write prompts that produce production-quality code.</p>
+          <div class="exercise-box">
+            <h3>The Challenge</h3>
+            <p>Write a prompt to build a "Visitor Check-In" application for your office lobby.</p>
+            <ol>
+              <li>Write a <strong>vague prompt</strong> (1-2 sentences) and note what it would produce</li>
+              <li>Write a <strong>detailed prompt</strong> with specific fields, layout, and behavior</li>
+              <li>Add <strong>constraints</strong> (pagination, XSS escaping, session management)</li>
+              <li>Compare the two approaches &mdash; what would each produce?</li>
+            </ol>
+            <div class="duration">15 minutes &middot; Individual exercise</div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p><strong>Key principle:</strong> The specificity of your prompt determines whether AI produces a prototype or a production app. "Build a check-in app" vs. "Build a visitor check-in with legal name, company, host employee, badge number, photo capture, NDA checkbox, and auto-notification to the host via email."</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Exercise 2: Architecture Review</h1>
+          <p class="slide-subtitle">Identify issues in AI-generated code before they reach production.</p>
+          <div class="exercise-box">
+            <h3>The Challenge</h3>
+            <p>Review this AI-generated code snippet and identify all issues:</p>
+            <div class="code-block" style="font-size:12px">
+<span class="keyword">async function</span> <span class="func">loadAllRecords</span>() {
+  <span class="keyword">const</span> resp = <span class="keyword">await</span> <span class="func">fetch</span>(<span class="string">'/api/submissions?limit=5000'</span>);
+  <span class="keyword">const</span> data = <span class="keyword">await</span> resp.<span class="func">json</span>();
+  data.submissions.<span class="func">forEach</span>(s => {
+    table.innerHTML += \`&lt;tr&gt;
+      &lt;td&gt;\${s.values['Name']}&lt;/td&gt;
+      &lt;td&gt;\${s.values['Email']}&lt;/td&gt;
+      &lt;td&gt;\${s.values['Notes']}&lt;/td&gt;
+    &lt;/tr&gt;\`;
+  });
+}
+<span class="func">loadAllRecords</span>();  <span class="comment">// called on page load</span></div>
+            <ol>
+              <li>List every security, performance, and architecture issue</li>
+              <li>Write the corrected version</li>
+              <li>What project instructions would prevent these issues?</li>
+            </ol>
+            <div class="duration">15 minutes &middot; Group exercise</div>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Exercise 3: Security Audit</h1>
+          <p class="slide-subtitle">Apply the security checklist to a real application design.</p>
+          <div class="exercise-box">
+            <h3>The Challenge</h3>
+            <p>You're building an employee expense reporting system. Design the security model:</p>
+            <ol>
+              <li><strong>Who can submit</strong> expenses? (all employees)</li>
+              <li><strong>Who can view</strong> an expense? (submitter + their manager + finance team)</li>
+              <li><strong>Who can approve</strong>? (manager for &lt;$500, director for &lt;$5000, VP for above)</li>
+              <li><strong>Who can modify</strong> after submission? (only finance team can adjust)</li>
+              <li>Write ABAC policy expressions for each rule</li>
+              <li>What form indexes do you need for the dashboard queries?</li>
+            </ol>
+            <div class="duration">15 minutes &middot; Group exercise</div>
+          </div>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p><strong>Common mistake:</strong> AI defaults to "everyone can see everything." Security policies must be explicitly designed &mdash; AI won't add them unless you ask.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Workshop Debrief</h1>
+          <p class="slide-subtitle">Key takeaways from the exercises.</p>
+          <h3>What We Learned</h3>
+          <ul>
+            <li><strong>Prompt quality = code quality</strong> &mdash; specific prompts produce specific, correct code</li>
+            <li><strong>Review is non-negotiable</strong> &mdash; AI code works but has predictable blind spots</li>
+            <li><strong>Security requires design</strong> &mdash; it's never an afterthought with AI-generated apps</li>
+            <li><strong>Project instructions compound</strong> &mdash; each lesson learned prevents future mistakes</li>
+          </ul>
+          <h3>The Pattern for Success</h3>
+          <ol>
+            <li>Start with a <strong>design system</strong> and <strong>architectural rules</strong></li>
+            <li>Build a <strong>reference app</strong> that embodies best practices</li>
+            <li>Give AI the reference app as <strong>context</strong> for every new project</li>
+            <li><strong>Review every app</strong> against the security checklist</li>
+            <li><strong>Document lessons</strong> in project instructions (they compound)</li>
+          </ol>`
+      }
+    ]
+  },
+  {
+    title: 'Implementation Roadmap',
+    time: '4:15 - 5:00',
+    slides: [
+      {
+        type: 'divider',
+        html: `<div class="section-divider">
+          <div class="mod-badge">Module 8</div>
+          <h1>Implementation Roadmap</h1>
+          <p>How to bring AI-assisted development to your organization &mdash; starting tomorrow.</p>
+        </div>`
+      },
+      {
+        html: `
+          <h1>Maturity Levels</h1>
+          <p class="slide-subtitle">Where are you today, and where do you want to be?</p>
+          <table class="gen-table">
+            <tr><th>Level</th><th>Description</th><th>Timeline</th></tr>
+            <tr>
+              <td><span class="badge green">1. Explore</span></td>
+              <td>Individual developers using AI for code completion and boilerplate. No shared patterns.</td>
+              <td>Week 1-2</td>
+            </tr>
+            <tr>
+              <td><span class="badge green">2. Standardize</span></td>
+              <td>Project instructions, design system, and architectural patterns established. Reference app built.</td>
+              <td>Week 3-4</td>
+            </tr>
+            <tr>
+              <td><span class="badge yellow">3. Scale</span></td>
+              <td>Multiple developers using shared patterns. Code review process includes AI-specific checks. Test suites automated.</td>
+              <td>Month 2-3</td>
+            </tr>
+            <tr>
+              <td><span class="badge yellow">4. Optimize</span></td>
+              <td>AI generates 80% of code. Humans focus on architecture, security, domain expertise. Lessons compound across projects.</td>
+              <td>Month 4-6</td>
+            </tr>
+            <tr>
+              <td><span class="badge red">5. Transform</span></td>
+              <td>AI-first development culture. New apps in hours. Workflow automation handles business processes. Continuous security monitoring.</td>
+              <td>Month 6+</td>
+            </tr>
+          </table>`
+      },
+      {
+        html: `
+          <h1>Week 1: Getting Started</h1>
+          <p class="slide-subtitle">Concrete steps your team can take immediately.</p>
+          <h3>Day 1-2: Foundation</h3>
+          <ul>
+            <li>Choose an AI coding assistant (Claude Code, GitHub Copilot, Cursor)</li>
+            <li>Set up a project with <strong>CLAUDE.md</strong> (or equivalent project instructions)</li>
+            <li>Document your tech stack constraints and coding standards</li>
+          </ul>
+          <h3>Day 3-4: Reference App</h3>
+          <ul>
+            <li>Build one small, complete app using AI (visitor check-in, inventory tracker, etc.)</li>
+            <li>Review it thoroughly &mdash; document every issue found</li>
+            <li>Fix issues and add the lessons to project instructions</li>
+          </ul>
+          <h3>Day 5: Design System</h3>
+          <ul>
+            <li>Create a branding/design document (colors, spacing, components)</li>
+            <li>Extract reusable patterns from the reference app</li>
+            <li>Add security requirements to project instructions (XSS, pagination, sessions)</li>
+          </ul>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p>By end of Week 1, you have a working app, documented patterns, and project instructions that will improve every subsequent app.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Month 1: Building Momentum</h1>
+          <p class="slide-subtitle">Scale from one app to a portfolio.</p>
+          <h3>Week 2: Second & Third Apps</h3>
+          <ul>
+            <li>Build apps in different domains to test pattern portability</li>
+            <li>Each app should reference the design system and project instructions</li>
+            <li>Continue documenting lessons learned</li>
+          </ul>
+          <h3>Week 3: Workflow Automation</h3>
+          <ul>
+            <li>Add workflows to existing apps (notifications, approvals, escalations)</li>
+            <li>Build a workflow test suite &mdash; AI is excellent at generating these</li>
+            <li>Document workflow patterns and handler configurations</li>
+          </ul>
+          <h3>Week 4: Team Expansion</h3>
+          <ul>
+            <li>Share project instructions with a second developer</li>
+            <li>Have them build an app using the same patterns</li>
+            <li>Compare quality &mdash; well-documented patterns should produce consistent results</li>
+          </ul>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p><strong>The compounding effect:</strong> By Week 4, your project instructions encode lessons from 5-10 apps. AI quality improves with every iteration because it has better patterns to follow.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Risk Mitigation</h1>
+          <p class="slide-subtitle">Address these concerns proactively with your leadership.</p>
+          <h3>Security Risks</h3>
+          <ul>
+            <li><strong>Mitigation:</strong> Mandatory security review checklist for every AI-generated app</li>
+            <li><strong>Evidence:</strong> We found and fixed XSS in 50% of apps through systematic review</li>
+          </ul>
+          <h3>Quality Risks</h3>
+          <ul>
+            <li><strong>Mitigation:</strong> Automated test suites (API + UI) catch regressions</li>
+            <li><strong>Evidence:</strong> 293 automated tests across our portfolio</li>
+          </ul>
+          <h3>Dependency on AI</h3>
+          <ul>
+            <li><strong>Mitigation:</strong> Zero external dependencies means the code is standard JS/HTML/CSS</li>
+            <li><strong>Reality:</strong> Any developer can read and maintain the generated code</li>
+          </ul>
+          <h3>Intellectual Property</h3>
+          <ul>
+            <li><strong>Mitigation:</strong> AI generates code, you own it. Standard work-for-hire principles apply</li>
+            <li><strong>Best practice:</strong> Use enterprise AI tools with data privacy guarantees</li>
+          </ul>`
+      },
+      {
+        html: `
+          <h1>Measuring Success</h1>
+          <p class="slide-subtitle">KPIs to track your AI-assisted development program.</p>
+          <div class="metrics">
+            <div class="metric"><div class="val orange">Time to App</div><div class="label">Days from concept to working prototype</div></div>
+            <div class="metric"><div class="val green">Security Score</div><div class="label">% of apps passing security review</div></div>
+            <div class="metric"><div class="val">Test Coverage</div><div class="label">Automated tests per application</div></div>
+            <div class="metric"><div class="val orange">Reuse Rate</div><div class="label">% of patterns reused across apps</div></div>
+          </div>
+          <h3>Benchmarks from Our Experience</h3>
+          <table class="gen-table">
+            <tr><th>Metric</th><th>Start</th><th>After 3 Weeks</th></tr>
+            <tr><td>Time to working app</td><td>1 week</td><td>4-8 hours</td></tr>
+            <tr><td>Security review pass rate</td><td>50%</td><td>95%+</td></tr>
+            <tr><td>Lines of project instructions</td><td>20</td><td>200+</td></tr>
+            <tr><td>Automated tests</td><td>0</td><td>293</td></tr>
+            <tr><td>Apps in portfolio</td><td>1</td><td>50+</td></tr>
+          </table>`
+      },
+      {
+        html: `
+          <h1>Resources & Next Steps</h1>
+          <p class="slide-subtitle">Everything you need to get started.</p>
+          <h3>Essential Documents to Create</h3>
+          <ul>
+            <li><strong>CLAUDE.md</strong> &mdash; project instructions, conventions, constraints</li>
+            <li><strong>branding.md</strong> &mdash; design system (colors, typography, components)</li>
+            <li><strong>code-review-lessons.md</strong> &mdash; lessons learned (grows with each app)</li>
+            <li><strong>security-checklist.md</strong> &mdash; review criteria for AI-generated code</li>
+          </ul>
+          <h3>Architecture Decisions to Make Early</h3>
+          <ul>
+            <li>Framework or no framework? (We chose zero dependencies)</li>
+            <li>Single-file or component-based? (We chose single-file for AI-friendliness)</li>
+            <li>Pagination limit? (We chose 25 records per page)</li>
+            <li>State management pattern? (We chose single state object)</li>
+            <li>Testing strategy? (We chose API tests + Puppeteer UI tests)</li>
+          </ul>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>Start small, learn fast, document everything.</strong> The project instructions are your most valuable asset &mdash; they turn every lesson into a permanent improvement.</p>
+          </div>`
+      },
+      {
+        type: 'title',
+        html: `
+          <div class="title-slide">
+            <div class="title-badge">Thank You</div>
+            <h1>Let's Build the Future</h1>
+            <p class="slide-subtitle">AI doesn't replace developers. It gives them superpowers.</p>
+            <div style="margin-top:40px">
+              <div class="metrics" style="max-width:500px;margin:0 auto">
+                <div class="metric"><div class="val orange">50+</div><div class="label">Apps in 3 Weeks</div></div>
+                <div class="metric"><div class="val green">0</div><div class="label">Dependencies</div></div>
+                <div class="metric"><div class="val">22</div><div class="label">Lessons Learned</div></div>
+              </div>
+            </div>
+            <p class="presenter" style="margin-top:40px">JD Sundberg</p>
+            <p class="date">Questions? Let's talk.</p>
+          </div>`
+      }
+    ]
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────────
+let currentSlide = 0;
+const allSlides = [];
+const moduleStarts = [];
+
+// Flatten modules into slide array
+MODULES.forEach((mod, mi) => {
+  moduleStarts.push(allSlides.length);
+  mod.slides.forEach(s => {
+    allSlides.push({ ...s, moduleIndex: mi });
+  });
+});
+
+// ── Render ────────────────────────────────────────────────────────
+function renderModuleList() {
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((mod, i) => `
+    <div class="module-item ${i === 0 ? 'active' : ''}" data-mod="${i}" onclick="goToModule(${i})">
+      <div class="mod-num">${i === 0 ? '&#9733;' : i}</div>
+      <div class="mod-info">
+        <div class="mod-title">${mod.title}</div>
+        <div class="mod-time">${mod.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSlide() {
+  const slide = allSlides[currentSlide];
+  document.getElementById('slideArea').innerHTML = `<div class="slide">${slide.html}</div>`;
+
+  // Update progress
+  const pct = ((currentSlide + 1) / allSlides.length * 100).toFixed(0);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${currentSlide + 1} / ${allSlides.length}`;
+
+  // Update nav buttons
+  document.getElementById('btnPrev').disabled = currentSlide === 0;
+  document.getElementById('btnNext').disabled = currentSlide === allSlides.length - 1;
+
+  // Update active module
+  document.querySelectorAll('.module-item').forEach(el => {
+    const mi = parseInt(el.dataset.mod);
+    el.classList.toggle('active', mi === slide.moduleIndex);
+  });
+
+  // Scroll slide area to top
+  document.getElementById('slideArea').scrollTop = 0;
+}
+
+// ── Navigation ────────────────────────────────────────────────────
+function nextSlide() { if (currentSlide < allSlides.length - 1) { currentSlide++; renderSlide(); } }
+function prevSlide() { if (currentSlide > 0) { currentSlide--; renderSlide(); } }
+function goToModule(mi) { currentSlide = moduleStarts[mi]; renderSlide(); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  if (e.key === 's' || e.key === 'S') { toggleSidebar(); }
+});
+
+// Touch swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 60) { diff > 0 ? prevSlide() : nextSlide(); }
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+renderModuleList();
+renderSlide();
+</script>
+</body>
+</html>

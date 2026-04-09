@@ -1,0 +1,549 @@
+{
+  "name": "Third-Party Risk",
+  "slug": "third-party-risk",
+  "description": "Third-party risk management with vendors, assessments, findings, contracts, and due diligence.",
+  "forms": [
+    {
+      "slug": "vendors",
+      "name": "Vendors",
+      "fields": [
+        {
+          "name": "Vendor ID",
+          "required": true
+        },
+        {
+          "name": "Vendor Name",
+          "required": true
+        },
+        {
+          "name": "Vendor Type"
+        },
+        {
+          "name": "Industry"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Primary Contact"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Data Access Level"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Tier"
+        },
+        {
+          "name": "Annual Spend"
+        },
+        {
+          "name": "Contract Reference"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Third-party vendor registry",
+      "submissionLabelExpression": "${values('Vendor Name')} (${values('Vendor ID')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "assessments",
+      "name": "Assessments",
+      "fields": [
+        {
+          "name": "Assessment ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Assessment Type"
+        },
+        {
+          "name": "Assessor"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Overall Risk Score"
+        },
+        {
+          "name": "Cyber Risk Score"
+        },
+        {
+          "name": "Compliance Risk Score"
+        },
+        {
+          "name": "Financial Risk Score"
+        },
+        {
+          "name": "Operational Risk Score"
+        },
+        {
+          "name": "Methodology"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor risk assessments",
+      "submissionLabelExpression": "${values('Assessment ID')} - ${values('Vendor Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Assessment ID]",
+          "values[Status]",
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "risks",
+      "name": "Risks",
+      "fields": [
+        {
+          "name": "Risk ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Assessment ID"
+        },
+        {
+          "name": "Risk Category"
+        },
+        {
+          "name": "Risk Description",
+          "rows": 3
+        },
+        {
+          "name": "Likelihood"
+        },
+        {
+          "name": "Impact"
+        },
+        {
+          "name": "Inherent Risk Score"
+        },
+        {
+          "name": "Residual Risk Score"
+        },
+        {
+          "name": "Control Effectiveness"
+        },
+        {
+          "name": "Mitigation Status"
+        },
+        {
+          "name": "Risk Owner"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Identified vendor risks",
+      "submissionLabelExpression": "${values('Risk ID')} - ${values('Vendor Name')} (${values('Mitigation Status')})",
+      "indexes": {
+        "single": [
+          "values[Mitigation Status]",
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "controls",
+      "name": "Controls",
+      "fields": [
+        {
+          "name": "Control ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Control Category"
+        },
+        {
+          "name": "Control Description",
+          "rows": 3
+        },
+        {
+          "name": "Framework Reference"
+        },
+        {
+          "name": "Implementation Status"
+        },
+        {
+          "name": "Effectiveness"
+        },
+        {
+          "name": "Last Tested Date"
+        },
+        {
+          "name": "Next Review Date"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor security controls",
+      "submissionLabelExpression": "${values('Control ID')} - ${values('Vendor Name')} (${values('Implementation Status')})"
+    },
+    {
+      "slug": "incidents",
+      "name": "Incidents",
+      "fields": [
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Incident Type"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Discovery Date"
+        },
+        {
+          "name": "Resolution Date"
+        },
+        {
+          "name": "Impact Description",
+          "rows": 3
+        },
+        {
+          "name": "Root Cause",
+          "rows": 3
+        },
+        {
+          "name": "Corrective Action",
+          "rows": 3
+        },
+        {
+          "name": "Notification Required"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor-related incidents",
+      "submissionLabelExpression": "${values('Incident ID')} - ${values('Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Incident ID]",
+          "values[Status]",
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "questionnaires",
+      "name": "Questionnaires",
+      "fields": [
+        {
+          "name": "Questionnaire ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Questionnaire Type"
+        },
+        {
+          "name": "Sent Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Received Date"
+        },
+        {
+          "name": "Reviewer"
+        },
+        {
+          "name": "Completeness Score"
+        },
+        {
+          "name": "Risk Findings"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor questionnaire tracking",
+      "submissionLabelExpression": "${values('Questionnaire ID')} - ${values('Vendor Name')} (${values('Status')})"
+    },
+    {
+      "slug": "certifications",
+      "name": "Certifications",
+      "fields": [
+        {
+          "name": "Certification ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Certification Type"
+        },
+        {
+          "name": "Certifying Body"
+        },
+        {
+          "name": "Issue Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Scope"
+        },
+        {
+          "name": "Verification Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor certifications and attestations",
+      "submissionLabelExpression": "${values('Certification ID')} - ${values('Vendor Name')} ${values('Certification Type')}",
+      "indexes": {
+        "single": [
+          "values[Vendor ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "remediation-plans",
+      "name": "Remediation Plans",
+      "fields": [
+        {
+          "name": "Plan ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Risk ID"
+        },
+        {
+          "name": "Assessment ID"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Target Date"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Evidence Required"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Risk remediation plans",
+      "submissionLabelExpression": "${values('Plan ID')} - ${values('Vendor Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "monitoring-alerts",
+      "name": "Monitoring Alerts",
+      "fields": [
+        {
+          "name": "Alert ID",
+          "required": true
+        },
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Alert Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Message",
+          "rows": 3
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Detected Date"
+        },
+        {
+          "name": "Acknowledged By"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Vendor monitoring alerts",
+      "submissionLabelExpression": "${values('Alert ID')} - ${values('Vendor Name')} (${values('Status')})"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Compliance"
+}

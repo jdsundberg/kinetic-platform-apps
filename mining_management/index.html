@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mining Operations Management</title>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+  --deep-orange: #BF360C;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: var(--bg);
+}
+.login-card {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg);
+  width: 400px; max-width: 95vw; overflow: hidden;
+}
+.login-accent { height: 4px; background: var(--deep-orange); }
+.login-body { padding: 32px; }
+.login-body h1 { font-size: 22px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 14px; outline: none; transition: border-color .2s;
+}
+.login-body input:focus { border-color: var(--deep-orange); }
+.login-btn {
+  width: 100%; padding: 11px; margin-top: 20px; background: var(--deep-orange); color: var(--white);
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.login-btn:hover { background: #A02E00; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: var(--blue); color: var(--white); display: flex; align-items: center;
+  padding: 0 20px; height: 52px; position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 28px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--deep-orange); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.topbar-nav button {
+  background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 14px;
+  font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all .15s;
+}
+.topbar-nav button:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.topbar-nav button.active { background: var(--deep-orange); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+}
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== CARDS & GRIDS ===== */
+.card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+.card h3 { font-size: 15px; color: var(--blue); margin-bottom: 14px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 18px; position: relative;
+  border-left: 4px solid var(--gray); overflow: hidden;
+}
+.kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--blue); }
+.kpi-card .kpi-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.kpi-card .kpi-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) {
+  .two-col { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+}
+
+/* ===== SUBTABS ===== */
+.subtabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--light); border-radius: 8px; padding: 3px; width: fit-content; }
+.subtabs button {
+  background: none; border: none; padding: 7px 16px; font-size: 13px; color: var(--gray);
+  border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.subtabs button:hover { color: var(--blue); }
+.subtabs button.active { background: var(--white); color: var(--deep-orange); box-shadow: var(--shadow); font-weight: 600; }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filter-bar select {
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+  background: var(--white); color: #333; outline: none; cursor: pointer;
+}
+.filter-bar select:focus { border-color: var(--deep-orange); }
+
+/* ===== TABLES ===== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px; color: var(--gray);
+  background: var(--light); border-bottom: 1px solid var(--border);
+}
+tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: #F8F9FB; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: #EFF1F5; }
+tbody tr.maint-due { background: #FFFDE7; }
+tbody tr.maint-due:hover { background: #FFF9C4; }
+
+.empty-row td { text-align: center; padding: 30px; color: var(--gray); font-style: italic; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+/* Severity */
+.badge-critical { background: #FDECEA; color: #C62828; }
+.badge-high { background: #FFF3E0; color: #E65100; }
+.badge-medium { background: #FFF8E1; color: #F9A825; }
+.badge-low { background: #E8F5E9; color: #2E7D32; }
+/* Issue Status */
+.badge-open { background: #E3F2FD; color: #1565C0; }
+.badge-triage { background: #E8EAF6; color: #283593; }
+.badge-investigating { background: #F3E5F5; color: #7B1FA2; }
+.badge-capa { background: #FFF3E0; color: #E65100; }
+.badge-verify { background: #FFF8E1; color: #F9A825; }
+.badge-closed, .badge-inactive, .badge-decommissioned, .badge-revoked, .badge-waived, .badge-cancelled { background: #F1F3F4; color: #5F6368; }
+/* Permit/General Status */
+.badge-active, .badge-operational, .badge-compliant { background: #E8F5E9; color: #2E7D32; }
+.badge-pending, .badge-new, .badge-scheduled { background: #E3F2FD; color: #1565C0; }
+.badge-expired, .badge-suspended, .badge-non-compliant, .badge-overdue, .badge-out-of-service { background: #FDECEA; color: #C62828; }
+.badge-renewal-pending { background: #FFF8E1; color: #F9A825; }
+.badge-under-maintenance, .badge-in-progress { background: #F3E5F5; color: #7B1FA2; }
+.badge-complete { background: #E8F5E9; color: #2E7D32; }
+/* Environmental */
+.badge-normal { background: #E8F5E9; color: #2E7D32; }
+.badge-warning { background: #FFF8E1; color: #F9A825; }
+.badge-exceedance { background: #FFF3E0; color: #E65100; }
+/* Employment Type */
+.badge-full-time { background: #E3F2FD; color: #1565C0; }
+.badge-part-time { background: #FFF8E1; color: #F9A825; }
+.badge-contractor { background: #F3E5F5; color: #7B1FA2; }
+/* Incident types */
+.badge-incident { background: #FDECEA; color: #C62828; }
+.badge-near-miss { background: #FFF3E0; color: #E65100; }
+.badge-non-conformance { background: #FFF8E1; color: #F9A825; }
+.badge-observation { background: #E3F2FD; color: #1565C0; }
+.badge-complaint { background: #F3E5F5; color: #7B1FA2; }
+/* Category */
+.badge-safety { background: #FDECEA; color: #C62828; }
+.badge-environmental { background: #E0F2F1; color: #00695C; }
+.badge-equipment { background: #E3F2FD; color: #1565C0; }
+.badge-compliance { background: #E8EAF6; color: #283593; }
+.badge-operational { background: #E8F5E9; color: #2E7D32; }
+
+/* ===== PIPELINE ===== */
+.pipeline { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.pipeline-chip {
+  padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 100px;
+  font-size: 13px; font-weight: 600; position: relative;
+}
+.pipeline-chip .chip-count { font-size: 22px; font-weight: 700; display: block; }
+.pipeline-chip .chip-label { font-size: 11px; font-weight: 400; opacity: .8; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { margin-bottom: 10px; }
+.bar-row { display: flex; align-items: center; margin-bottom: 8px; }
+.bar-label { width: 80px; font-size: 12px; font-weight: 600; color: var(--gray); }
+.bar-track { flex: 1; background: var(--light); border-radius: 4px; height: 22px; overflow: hidden; margin: 0 10px; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: var(--white); min-width: 0; }
+.bar-count { font-size: 12px; color: var(--gray); width: 30px; text-align: right; }
+
+/* ===== MODAL ===== */
+#modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.5); z-index: 200; justify-content: center; align-items: flex-start;
+  padding-top: 5vh; overflow-y: auto;
+}
+#modal.show { display: flex; }
+.modal-content {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg);
+  max-width: 700px; width: 95%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative;
+}
+.modal-content h2 { font-size: 18px; color: var(--blue); margin-bottom: 16px; }
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  font-size: 22px; color: var(--gray); cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: var(--red); }
+.modal-section { margin-top: 18px; }
+.modal-section h4 { font-size: 13px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-field label { font-size: 11px; color: var(--gray); display: block; margin-bottom: 2px; }
+.modal-field .val { font-size: 14px; color: #333; }
+
+/* ===== MODAL FORMS ===== */
+.modal-form label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-form input, .modal-form textarea, .modal-form select {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; outline: none; font-family: inherit;
+}
+.modal-form input:focus, .modal-form textarea:focus, .modal-form select:focus { border-color: var(--deep-orange); }
+.modal-form textarea { resize: vertical; }
+
+/* ===== TRANSITION BUTTONS ===== */
+.transition-btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.transition-btn {
+  padding: 8px 18px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.transition-btn:hover { opacity: .85; }
+.transition-btn.green { background: var(--green); color: var(--white); }
+.transition-btn.blue { background: #1565C0; color: var(--white); }
+.transition-btn.orange { background: var(--orange); color: var(--white); }
+.transition-btn.red { background: var(--red); color: var(--white); }
+.transition-btn.gray { background: var(--gray); color: var(--white); }
+.transition-btn.purple { background: var(--purple); color: var(--white); }
+.transition-btn.indigo { background: var(--indigo); color: var(--white); }
+
+/* ===== STATUS HISTORY TIMELINE ===== */
+.timeline { margin-top: 10px; }
+.timeline-item { display: flex; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+.timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--deep-orange); margin-top: 4px; flex-shrink: 0; }
+.timeline-text { color: #333; }
+.timeline-date { color: var(--gray); font-size: 11px; }
+
+/* ===== REPORTS GRID ===== */
+.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .reports-grid { grid-template-columns: 1fr; } }
+.report-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.report-card .report-icon { font-size: 28px; }
+.report-card h4 { font-size: 15px; color: var(--blue); }
+.report-card p { font-size: 12px; color: var(--gray); flex: 1; }
+.report-btn {
+  align-self: flex-start; padding: 8px 20px; background: var(--deep-orange); color: var(--white);
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.report-btn:hover { background: #A02E00; }
+.report-btn:disabled { background: var(--gray); cursor: wait; }
+
+/* ===== CSV EXPORT BUTTON ===== */
+.export-btn {
+  padding: 8px 18px; background: var(--green); color: var(--white); border: none;
+  border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 14px;
+}
+.export-btn:hover { opacity: .85; }
+
+/* ===== REGION CARDS ===== */
+.region-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.region-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px;
+  border-left: 4px solid var(--deep-orange);
+}
+.region-card h4 { font-size: 16px; color: var(--blue); margin-bottom: 8px; }
+.region-card .region-stat { font-size: 13px; color: var(--gray); margin-bottom: 4px; }
+.region-card .region-stat strong { color: #333; }
+
+/* ===== ENV STATUS SUMMARY ===== */
+.env-summary { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.env-chip {
+  padding: 10px 20px; border-radius: 8px; text-align: center; font-size: 13px;
+}
+.env-chip .env-count { font-size: 22px; font-weight: 700; display: block; }
+.env-chip .env-label { font-size: 11px; opacity: .8; }
+
+/* ===== PRODUCTION SUMMARY CARDS ===== */
+.prod-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.prod-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 16px;
+  border-top: 3px solid var(--deep-orange);
+}
+.prod-card h4 { font-size: 14px; color: var(--blue); margin-bottom: 8px; }
+.prod-card .prod-stat { font-size: 12px; color: var(--gray); margin-bottom: 3px; }
+.prod-card .prod-stat strong { color: #333; }
+
+/* ===== TOAST ===== */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: var(--white); padding: 12px 28px; border-radius: 8px;
+  font-size: 14px; box-shadow: var(--shadow-lg); z-index: 300;
+  display: none; white-space: nowrap;
+}
+#toast.show { display: block; }
+
+/* ===== LOADING ===== */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Mining Operations</h1>
+      <p class="subtitle">Mine compliance, operations &amp; environmental monitoring</p>
+      <label>Server URL</label>
+      <input id="login-url" type="text" value="http://localhost:3016">
+      <label>Username</label>
+      <input id="login-user" type="text">
+      <label>Password</label>
+      <input id="login-pass" type="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Mining<span class="accent">Ops</span></div>
+    <div class="topbar-nav" id="topbar-nav">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="sites">Sites</button>
+      <button data-tab="compliance">Compliance</button>
+      <button data-tab="issues">Issues</button>
+      <button data-tab="inspections">Inspections</button>
+      <button data-tab="operations">Operations</button>
+      <button data-tab="reports">Reports</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- ===== TAB 1: DASHBOARD ===== -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div id="dash-loading" class="loading">Loading dashboard...</div>
+      <div id="dash-content" style="display:none">
+        <div class="kpi-grid" id="dash-kpis"></div>
+        <div class="card" id="dash-severity-card">
+          <h3>Issues by Severity</h3>
+          <div id="dash-severity-chart" class="bar-chart"></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <h3>Recent Issues</h3>
+            <div style="overflow-x:auto"><table id="dash-issues-table"><thead><tr>
+              <th>Issue ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Site</th><th>Date</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="card">
+            <h3>Expiring Permits</h3>
+            <div style="overflow-x:auto"><table id="dash-permits-table"><thead><tr>
+              <th>Permit ID</th><th>Type</th><th>Site</th><th>Expiry Date</th><th>Status</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: SITES ===== -->
+    <div id="tab-sites" class="tab-panel">
+      <div class="subtabs" id="sites-subtabs">
+        <button class="active" data-sub="regions">Regions</button>
+        <button data-sub="sites">Sites</button>
+        <button data-sub="zones">Zones</button>
+      </div>
+      <div id="sites-sub-regions" class="subtab-panel active">
+        <div id="regions-loading" class="loading">Loading regions...</div>
+        <div id="regions-grid" class="region-grid"></div>
+      </div>
+      <div id="sites-sub-sites" class="subtab-panel">
+        <div id="sites-loading" class="loading">Loading sites...</div>
+        <div id="sites-content" style="display:none">
+          <div style="overflow-x:auto"><table id="sites-table"><thead><tr>
+            <th>Name</th><th>Region</th><th>Status</th><th>Site Manager</th><th>Emergency Contact</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="sites-sub-zones" class="subtab-panel">
+        <div id="zones-loading" class="loading">Loading zones...</div>
+        <div id="zones-content" style="display:none">
+          <div style="overflow-x:auto"><table id="zones-table"><thead><tr>
+            <th>Zone Name</th><th>Parent Site</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 3: COMPLIANCE ===== -->
+    <div id="tab-compliance" class="tab-panel">
+      <div class="subtabs" id="compliance-subtabs">
+        <button class="active" data-sub="permits">Permits</button>
+        <button data-sub="obligations">Obligations</button>
+      </div>
+      <div id="compliance-sub-permits" class="subtab-panel active">
+        <div class="filter-bar" id="permits-filters">
+          <select id="permits-status-filter"><option value="">All Statuses</option>
+            <option>Active</option><option>Pending</option><option>Expired</option>
+            <option>Suspended</option><option>Renewal Pending</option><option>Revoked</option>
+          </select>
+          <select id="permits-type-filter"><option value="">All Types</option></select>
+        </div>
+        <div id="permits-loading" class="loading">Loading permits...</div>
+        <div id="permits-content" style="display:none">
+          <div style="overflow-x:auto"><table id="permits-table"><thead><tr>
+            <th>Permit ID</th><th>Type</th><th>Site</th><th>Status</th><th>Issue Date</th><th>Expiry Date</th><th>Responsible</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="compliance-sub-obligations" class="subtab-panel">
+        <div class="filter-bar" id="obligations-filters">
+          <select id="obligations-status-filter"><option value="">All Statuses</option>
+            <option>Compliant</option><option>Non-Compliant</option><option>Pending</option>
+            <option>Overdue</option><option>Waived</option>
+          </select>
+          <select id="obligations-category-filter"><option value="">All Categories</option>
+            <option>Reporting</option><option>Monitoring</option><option>Remediation</option>
+            <option>Safety</option><option>Financial</option><option>Environmental</option>
+          </select>
+        </div>
+        <div id="obligations-loading" class="loading">Loading obligations...</div>
+        <div id="obligations-content" style="display:none">
+          <div style="overflow-x:auto"><table id="obligations-table"><thead><tr>
+            <th>Obligation ID</th><th>Title</th><th>Permit ID</th><th>Category</th><th>Status</th><th>Due Date</th><th>Responsible</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 4: ISSUES ===== -->
+    <div id="tab-issues" class="tab-panel">
+      <div id="issues-pipeline" class="pipeline"></div>
+      <div class="filter-bar" id="issues-filters">
+        <select id="issues-status-filter"><option value="">All Statuses</option>
+          <option>Open</option><option>Triage</option><option>Investigating</option>
+          <option>CAPA</option><option>Verify</option><option>Closed</option>
+        </select>
+        <select id="issues-severity-filter"><option value="">All Severities</option>
+          <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+        <select id="issues-category-filter"><option value="">All Categories</option>
+          <option>Safety</option><option>Environmental</option><option>Equipment</option>
+          <option>Compliance</option><option>Operational</option>
+        </select>
+        <select id="issues-site-filter"><option value="">All Sites</option></select>
+      </div>
+      <div id="issues-loading" class="loading">Loading issues...</div>
+      <div id="issues-content" style="display:none">
+        <div style="overflow-x:auto"><table id="issues-table"><thead><tr>
+          <th>Issue ID</th><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Site</th><th>Reported</th><th>Assigned To</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 5: INSPECTIONS ===== -->
+    <div id="tab-inspections" class="tab-panel">
+      <div class="filter-bar" id="inspections-filters">
+        <select id="inspections-status-filter"><option value="">All Statuses</option>
+          <option>Scheduled</option><option>In Progress</option><option>Complete</option>
+          <option>Cancelled</option><option>Overdue</option>
+        </select>
+        <select id="inspections-type-filter"><option value="">All Types</option>
+          <option>Routine</option><option>Ad-Hoc</option><option>Regulatory</option>
+          <option>Safety Audit</option><option>Environmental</option>
+        </select>
+      </div>
+      <div id="inspections-loading" class="loading">Loading inspections...</div>
+      <div id="inspections-content" style="display:none">
+        <div style="overflow-x:auto"><table id="inspections-table"><thead><tr>
+          <th>Inspection ID</th><th>Type</th><th>Site</th><th>Zone</th><th>Status</th><th>Scheduled</th><th>Score</th><th>Critical</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 6: OPERATIONS ===== -->
+    <div id="tab-operations" class="tab-panel">
+      <div class="subtabs" id="operations-subtabs">
+        <button class="active" data-sub="assets">Assets</button>
+        <button data-sub="production">Production</button>
+        <button data-sub="environmental">Environmental</button>
+      </div>
+      <div id="operations-sub-assets" class="subtab-panel active">
+        <div class="filter-bar" id="assets-filters">
+          <select id="assets-status-filter"><option value="">All Statuses</option>
+            <option>Operational</option><option>Under Maintenance</option><option>Out of Service</option><option>Decommissioned</option>
+          </select>
+          <select id="assets-category-filter"><option value="">All Categories</option>
+            <option>Heavy Equipment</option><option>Vehicles</option><option>Processing</option>
+            <option>Safety</option><option>Infrastructure</option><option>Monitoring</option>
+          </select>
+        </div>
+        <div id="assets-loading" class="loading">Loading assets...</div>
+        <div id="assets-content" style="display:none">
+          <div style="overflow-x:auto"><table id="assets-table"><thead><tr>
+            <th>Asset ID</th><th>Name</th><th>Category</th><th>Type</th><th>Site</th><th>Status</th><th>Hours</th><th>Next Maintenance</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="operations-sub-production" class="subtab-panel">
+        <div id="production-loading" class="loading">Loading production data...</div>
+        <div id="production-content" style="display:none">
+          <div id="production-summary" class="prod-summary"></div>
+          <div class="card">
+            <h3>Production Logs</h3>
+            <div style="overflow-x:auto"><table id="production-table"><thead><tr>
+              <th>Site</th><th>Date</th><th>Shift</th><th>Material</th><th>Extracted</th><th>Processed</th><th>Grade</th><th>Recovery</th><th>Utilization</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+      <div id="operations-sub-environmental" class="subtab-panel">
+        <div id="env-loading" class="loading">Loading environmental data...</div>
+        <div id="env-content" style="display:none">
+          <div id="env-summary" class="env-summary"></div>
+          <div class="filter-bar" id="env-filters">
+            <select id="env-param-filter"><option value="">All Parameters</option></select>
+            <select id="env-status-filter"><option value="">All Statuses</option>
+              <option>Normal</option><option>Warning</option><option>Exceedance</option><option>Critical</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto"><table id="env-table"><thead><tr>
+            <th>Monitoring Point</th><th>Site</th><th>Date</th><th>Parameter</th><th>Value</th><th>Unit</th><th>Threshold</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 7: REPORTS ===== -->
+    <div id="tab-reports" class="tab-panel">
+      <div class="reports-grid" id="reports-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div id="modal">
+  <div class="modal-content" id="modal-body">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+/* ===== GLOBAL STATE ===== */
+let API = { url: '', auth: '', user: '', displayName: '' };
+let DATA = {
+  locations: [], personnel: [], permits: [], obligations: [],
+  issues: [], inspections: [], assets: [], production: [], environmental: []
+};
+const KAPP = 'mining-ops';
+
+/* ===== API HELPERS ===== */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function mapi(path, opts = {}) {
+  const res = await fetch(`/api/mining${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+/* ===== UTILITY HELPERS ===== */
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString(); } catch { return d; }
+}
+
+function fmtNum(n) {
+  if (n == null || n === '') return '';
+  return Number(n).toLocaleString();
+}
+
+function badge(text) {
+  if (!text) return '';
+  const cls = 'badge-' + text.toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge ${cls}">${esc(text)}</span>`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  const el = document.createElement('span');
+  el.textContent = s;
+  return el.innerHTML;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showModal(html) {
+  document.getElementById('modal-inner').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function emptyRow(cols) {
+  return `<tr class="empty-row"><td colspan="${cols}">No records found</td></tr>`;
+}
+
+/* ===== COLLECT ALL SUBMISSIONS FOR A FORM ===== */
+async function collectForm(formSlug) {
+  const all = [];
+  let lastCreatedAt = null;
+  for (let i = 0; i < 10; i++) {
+    let kql = lastCreatedAt ? `createdAt < "${lastCreatedAt}"` : '';
+    let url = `/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=25`;
+    if (kql) url += `&q=${encodeURIComponent(kql)}`;
+    const r = await api(url);
+    const subs = r.submissions || [];
+    all.push(...subs);
+    if (!r.nextPageToken || subs.length < 25) break;
+    lastCreatedAt = subs[subs.length - 1].createdAt;
+  }
+  return all;
+}
+
+/* ===== LOGIN ===== */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!url || !user || !pass) { errEl.textContent = 'All fields are required'; errEl.style.display = 'block'; return; }
+
+  API.url = url;
+  API.auth = btoa(`${user}:${pass}`);
+  API.user = user;
+
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+    try {
+      const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': `Basic ${API.auth}`, 'Accept': 'application/json' } });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+(async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    API = JSON.parse(s);
+    const me = await api('/me');
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': `Basic ${API.auth}`, 'Accept': 'application/json' } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById('user-display').textContent = (API.displayName || API.user) + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '', displayName: '' };
+  }
+})();
+
+/* ===== TAB NAVIGATION ===== */
+document.getElementById('topbar-nav').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  // Load data on tab switch
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'sites') loadSites();
+  else if (tab === 'compliance') loadCompliance();
+  else if (tab === 'issues') loadIssues();
+  else if (tab === 'inspections') loadInspections();
+  else if (tab === 'operations') loadOperations();
+  else if (tab === 'reports') renderReports();
+});
+
+/* ===== SUBTAB WIRING ===== */
+function wireSubtabs(containerId, prefix) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const sub = btn.dataset.sub;
+    document.querySelectorAll(`#${containerId} button`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll(`#tab-${prefix} .subtab-panel`).forEach(p => p.classList.remove('active'));
+    document.getElementById(`${prefix}-sub-${sub}`).classList.add('active');
+  });
+}
+wireSubtabs('sites-subtabs', 'sites');
+wireSubtabs('compliance-subtabs', 'compliance');
+wireSubtabs('operations-subtabs', 'operations');
+
+/* ===== MODAL CLOSE ON OUTSIDE CLICK ===== */
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+/* ================================================================ */
+/* ===== TAB 1: DASHBOARD                                    ===== */
+/* ================================================================ */
+async function loadDashboard() {
+  const loadEl = document.getElementById('dash-loading');
+  const contentEl = document.getElementById('dash-content');
+  loadEl.style.display = 'block';
+  contentEl.style.display = 'none';
+
+  try {
+    const d = await mapi('/dashboard');
+
+    // KPI cards
+    const compColor = d.complianceRate > 90 ? 'var(--green)' : d.complianceRate > 75 ? 'var(--yellow)' : 'var(--red)';
+    const envColor = d.envExceedances > 0 ? 'var(--red)' : 'var(--green)';
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card" style="border-left-color:var(--orange)">
+        <div class="kpi-value">${fmtNum(d.openIssues)}</div>
+        <div class="kpi-label">Open Issues</div>
+        <div class="kpi-sub">${fmtNum(d.criticalIssues)} critical</div>
+      </div>
+      <div class="kpi-card" style="border-left-color:var(--green)">
+        <div class="kpi-value">${fmtNum(d.activePermits)}</div>
+        <div class="kpi-label">Active Permits</div>
+        <div class="kpi-sub">${fmtNum(d.expiringPermits)} expiring soon</div>
+      </div>
+      <div class="kpi-card" style="border-left-color:${compColor}">
+        <div class="kpi-value">${d.complianceRate}%</div>
+        <div class="kpi-label">Compliance Rate</div>
+        <div class="kpi-sub">${fmtNum(d.obligationsCompliant)} / ${fmtNum(d.obligationsTotal)} obligations</div>
+      </div>
+      <div class="kpi-card" style="border-left-color:var(--teal)">
+        <div class="kpi-value">${d.avgInspectionScore != null ? d.avgInspectionScore : 'N/A'}</div>
+        <div class="kpi-label">Inspection Score</div>
+        <div class="kpi-sub">Average of completed</div>
+      </div>
+      <div class="kpi-card" style="border-left-color:var(--green)">
+        <div class="kpi-value">${fmtNum(d.assetsOperational)} / ${fmtNum(d.assetsTotal)}</div>
+        <div class="kpi-label">Assets Operational</div>
+        <div class="kpi-sub">total in fleet</div>
+      </div>
+      <div class="kpi-card" style="border-left-color:${envColor}">
+        <div class="kpi-value">${fmtNum(d.envExceedances)}</div>
+        <div class="kpi-label">Env Exceedances</div>
+        <div class="kpi-sub">last 7 days</div>
+      </div>
+    `;
+
+    // Severity bar chart
+    const sev = d.issuesBySeverity || {};
+    const maxSev = Math.max(sev.Critical || 0, sev.High || 0, sev.Medium || 0, sev.Low || 0, 1);
+    const sevColors = { Critical: '#C62828', High: '#E65100', Medium: '#F9A825', Low: '#2E7D32' };
+    document.getElementById('dash-severity-chart').innerHTML = ['Critical', 'High', 'Medium', 'Low'].map(s => `
+      <div class="bar-row">
+        <div class="bar-label">${s}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${((sev[s]||0)/maxSev*100)}%;background:${sevColors[s]}">${sev[s]||0}</div>
+        </div>
+        <div class="bar-count">${sev[s]||0}</div>
+      </div>
+    `).join('');
+
+    // Recent issues table
+    const itbody = document.querySelector('#dash-issues-table tbody');
+    if (d.recentIssues && d.recentIssues.length) {
+      itbody.innerHTML = d.recentIssues.map(i => `
+        <tr class="clickable" onclick="openIssueDetail('${i.id}')">
+          <td>${esc(i.issueId)}</td><td>${esc(i.title)}</td>
+          <td>${badge(i.severity)}</td><td>${badge(i.status)}</td>
+          <td>${esc(i.site)}</td><td>${fmtDate(i.reportedDate)}</td>
+        </tr>
+      `).join('');
+    } else {
+      itbody.innerHTML = emptyRow(6);
+    }
+
+    // Expiring permits table
+    const ptbody = document.querySelector('#dash-permits-table tbody');
+    if (d.expiringPermitsList && d.expiringPermitsList.length) {
+      ptbody.innerHTML = d.expiringPermitsList.map(p => `
+        <tr class="clickable" onclick="openPermitDetail('${p.id}')">
+          <td>${esc(p.permitId)}</td><td>${esc(p.type)}</td>
+          <td>${esc(p.site)}</td><td>${fmtDate(p.expiryDate)}</td>
+          <td>${badge(p.status)}</td>
+        </tr>
+      `).join('');
+    } else {
+      ptbody.innerHTML = emptyRow(5);
+    }
+
+    loadEl.style.display = 'none';
+    contentEl.style.display = 'block';
+  } catch (e) {
+    loadEl.textContent = 'Error loading dashboard: ' + e.message;
+  }
+}
+
+/* ================================================================ */
+/* ===== TAB 2: SITES                                         ===== */
+/* ================================================================ */
+let sitesLoaded = false;
+async function loadSites() {
+  if (sitesLoaded) return;
+  try {
+    DATA.locations = await collectForm('locations');
+    sitesLoaded = true;
+    renderRegions();
+    renderSitesList();
+    renderZones();
+  } catch (e) {
+    document.getElementById('regions-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderRegions() {
+  const regions = DATA.locations.filter(l => v(l, 'Type') === 'Region');
+  const sites = DATA.locations.filter(l => v(l, 'Type') === 'Site');
+  const grid = document.getElementById('regions-grid');
+  document.getElementById('regions-loading').style.display = 'none';
+
+  if (!regions.length) { grid.innerHTML = '<p class="loading">No regions found</p>'; return; }
+
+  grid.innerHTML = regions.map(r => {
+    const regionName = v(r, 'Name');
+    const regionSites = sites.filter(s => v(s, 'Parent') === regionName);
+    const activeSites = regionSites.filter(s => v(s, 'Status') === 'Active').length;
+    return `
+      <div class="region-card">
+        <h4>${esc(regionName)}</h4>
+        <div class="region-stat">Sites: <strong>${regionSites.length}</strong></div>
+        <div class="region-stat">Active: <strong>${activeSites}</strong></div>
+        <div class="region-stat">Country: <strong>${esc(v(r, 'Country'))}</strong></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSitesList() {
+  const sites = DATA.locations.filter(l => v(l, 'Type') === 'Site');
+  document.getElementById('sites-loading').style.display = 'none';
+  document.getElementById('sites-content').style.display = 'block';
+  const tbody = document.querySelector('#sites-table tbody');
+  if (!sites.length) { tbody.innerHTML = emptyRow(5); return; }
+  tbody.innerHTML = sites.map(s => `
+    <tr class="clickable" onclick="openSiteDetail('${esc(v(s,'Name'))}')">
+      <td>${esc(v(s,'Name'))}</td><td>${esc(v(s,'Parent'))}</td>
+      <td>${badge(v(s,'Status'))}</td><td>${esc(v(s,'Site Manager'))}</td>
+      <td>${esc(v(s,'Emergency Contact'))}</td>
+    </tr>
+  `).join('');
+}
+
+function renderZones() {
+  const zones = DATA.locations.filter(l => v(l, 'Type') === 'Zone');
+  document.getElementById('zones-loading').style.display = 'none';
+  document.getElementById('zones-content').style.display = 'block';
+  const tbody = document.querySelector('#zones-table tbody');
+  if (!zones.length) { tbody.innerHTML = emptyRow(3); return; }
+  tbody.innerHTML = zones.map(z => `
+    <tr><td>${esc(v(z,'Name'))}</td><td>${esc(v(z,'Parent'))}</td><td>${badge(v(z,'Status'))}</td></tr>
+  `).join('');
+}
+
+async function openSiteDetail(siteName) {
+  showModal('<div class="loading">Loading site details...</div>');
+  try {
+    const d = await mapi(`/site-summary?site=${encodeURIComponent(siteName)}`);
+    const site = DATA.locations.find(l => v(l, 'Name') === siteName && v(l, 'Type') === 'Site');
+    const status = site ? v(site, 'Status') : '';
+    const manager = site ? v(site, 'Site Manager') : '';
+
+    let html = `<h2>${esc(siteName)} ${badge(status)}</h2>`;
+    if (manager) html += `<p style="color:var(--gray);font-size:13px;margin-bottom:16px">Manager: <strong>${esc(manager)}</strong></p>`;
+
+    // KPIs
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--indigo)"><div class="kpi-value">${fmtNum(d.personnel?.active || 0)}</div><div class="kpi-label">Personnel</div></div>
+      <div class="kpi-card" style="border-left-color:var(--teal)"><div class="kpi-value">${fmtNum(d.assets?.total || 0)}</div><div class="kpi-label">Assets</div></div>
+      <div class="kpi-card" style="border-left-color:var(--orange)"><div class="kpi-value">${fmtNum(d.issues?.open || 0)}</div><div class="kpi-label">Open Issues</div></div>
+      <div class="kpi-card" style="border-left-color:var(--green)"><div class="kpi-value">${fmtNum(d.permits?.total || 0)}</div><div class="kpi-label">Active Permits</div></div>
+    </div>`;
+
+    // Personnel list
+    if (d.personnel?.list?.length) {
+      html += `<div class="modal-section"><h4>Personnel</h4><table><thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead><tbody>`;
+      html += d.personnel.list.map(p => `<tr><td>${esc(p.fullName)}</td><td>${esc(p.role)}</td><td>${badge(p.status)}</td></tr>`).join('');
+      html += '</tbody></table></div>';
+    }
+
+    // Assets list
+    if (d.assets?.list?.length) {
+      html += `<div class="modal-section"><h4>Assets</h4><table><thead><tr><th>Name</th><th>Category</th><th>Status</th></tr></thead><tbody>`;
+      html += d.assets.list.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.category)}</td><td>${badge(a.status)}</td></tr>`).join('');
+      html += '</tbody></table></div>';
+    }
+
+    // Recent Issues
+    if (d.issues?.recent?.length) {
+      html += `<div class="modal-section"><h4>Recent Issues</h4><table><thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th></tr></thead><tbody>`;
+      html += d.issues.recent.map(i => `<tr><td>${esc(i.issueId)}</td><td>${esc(i.title)}</td><td>${badge(i.severity)}</td><td>${badge(i.status)}</td></tr>`).join('');
+      html += '</tbody></table></div>';
+    }
+
+    // Recent Inspections
+    if (d.inspections?.recent?.length) {
+      html += `<div class="modal-section"><h4>Inspections</h4><table><thead><tr><th>ID</th><th>Type</th><th>Status</th><th>Score</th></tr></thead><tbody>`;
+      html += d.inspections.recent.map(i => `<tr><td>${esc(i.inspectionId)}</td><td>${esc(i.type)}</td><td>${badge(i.status)}</td><td>${esc(i.score)}</td></tr>`).join('');
+      html += '</tbody></table></div>';
+    }
+
+    document.getElementById('modal-inner').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-inner').innerHTML = `<p style="color:var(--red)">Error: ${esc(e.message)}</p>`;
+  }
+}
+
+/* ================================================================ */
+/* ===== TAB 3: COMPLIANCE                                    ===== */
+/* ================================================================ */
+let complianceLoaded = false;
+async function loadCompliance() {
+  if (complianceLoaded) return;
+  try {
+    [DATA.permits, DATA.obligations] = await Promise.all([
+      collectForm('permits'),
+      collectForm('obligations')
+    ]);
+    complianceLoaded = true;
+
+    // Populate permit type filter
+    const types = [...new Set(DATA.permits.map(p => v(p, 'Permit Type')).filter(Boolean))].sort();
+    const typeSelect = document.getElementById('permits-type-filter');
+    types.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; typeSelect.appendChild(o); });
+
+    renderPermits();
+    renderObligations();
+  } catch (e) {
+    document.getElementById('permits-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderPermits() {
+  const statusFilter = document.getElementById('permits-status-filter').value;
+  const typeFilter = document.getElementById('permits-type-filter').value;
+  let filtered = DATA.permits;
+  if (statusFilter) filtered = filtered.filter(p => v(p, 'Status') === statusFilter);
+  if (typeFilter) filtered = filtered.filter(p => v(p, 'Permit Type') === typeFilter);
+
+  document.getElementById('permits-loading').style.display = 'none';
+  document.getElementById('permits-content').style.display = 'block';
+  const tbody = document.querySelector('#permits-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(7); return; }
+  tbody.innerHTML = filtered.map(p => `
+    <tr class="clickable" onclick="openPermitDetail('${p.id}')">
+      <td>${esc(v(p,'Permit ID'))}</td><td>${esc(v(p,'Permit Type'))}</td>
+      <td>${esc(v(p,'Site'))}</td><td>${badge(v(p,'Status'))}</td>
+      <td>${fmtDate(v(p,'Issue Date'))}</td><td>${fmtDate(v(p,'Expiry Date'))}</td>
+      <td>${esc(v(p,'Responsible Person'))}</td>
+    </tr>
+  `).join('');
+}
+
+function renderObligations() {
+  const statusFilter = document.getElementById('obligations-status-filter').value;
+  const catFilter = document.getElementById('obligations-category-filter').value;
+  let filtered = DATA.obligations;
+  if (statusFilter) filtered = filtered.filter(o => v(o, 'Status') === statusFilter);
+  if (catFilter) filtered = filtered.filter(o => v(o, 'Category') === catFilter);
+
+  document.getElementById('obligations-loading').style.display = 'none';
+  document.getElementById('obligations-content').style.display = 'block';
+  const tbody = document.querySelector('#obligations-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(7); return; }
+  tbody.innerHTML = filtered.map(o => `
+    <tr>
+      <td>${esc(v(o,'Obligation ID'))}</td><td>${esc(v(o,'Title'))}</td>
+      <td>${esc(v(o,'Permit ID'))}</td><td>${esc(v(o,'Category'))}</td>
+      <td>${badge(v(o,'Status'))}</td><td>${fmtDate(v(o,'Due Date'))}</td>
+      <td>${esc(v(o,'Responsible Person'))}</td>
+    </tr>
+  `).join('');
+}
+
+// Filter event listeners
+document.getElementById('permits-status-filter').addEventListener('change', renderPermits);
+document.getElementById('permits-type-filter').addEventListener('change', renderPermits);
+document.getElementById('obligations-status-filter').addEventListener('change', renderObligations);
+document.getElementById('obligations-category-filter').addEventListener('change', renderObligations);
+
+/* ===== PERMIT DETAIL MODAL ===== */
+const PERMIT_TRANSITIONS = {
+  "Pending": ["Active"],
+  "Active": ["Renewal Pending", "Suspended"],
+  "Renewal Pending": ["Active"],
+  "Suspended": ["Active", "Revoked"],
+  "Expired": ["Renewal Pending"],
+};
+
+const TRANSITION_COLORS = {
+  "Active": "green", "Renewal Pending": "orange", "Suspended": "red",
+  "Revoked": "gray", "Triage": "indigo", "Investigating": "purple",
+  "CAPA": "orange", "Verify": "orange", "Closed": "gray",
+  "Open": "blue", "Pending": "blue",
+};
+
+async function openPermitDetail(submissionId) {
+  showModal('<div class="loading">Loading permit...</div>');
+  try {
+    const r = await api(`/submissions/${submissionId}?include=values`);
+    const sub = r.submission;
+    const vals = sub.values || {};
+    const status = vals['Status'] || '';
+    const transitions = PERMIT_TRANSITIONS[status] || [];
+
+    let html = `<h2>${esc(vals['Permit ID'])} ${badge(status)}</h2>`;
+    html += `<div class="modal-grid">
+      <div class="modal-field"><label>Type</label><div class="val">${esc(vals['Permit Type'])}</div></div>
+      <div class="modal-field"><label>Site</label><div class="val">${esc(vals['Site'])}</div></div>
+      <div class="modal-field"><label>Issuing Authority</label><div class="val">${esc(vals['Issuing Authority'])}</div></div>
+      <div class="modal-field"><label>Reference Number</label><div class="val">${esc(vals['Reference Number'])}</div></div>
+      <div class="modal-field"><label>Issue Date</label><div class="val">${fmtDate(vals['Issue Date'])}</div></div>
+      <div class="modal-field"><label>Expiry Date</label><div class="val">${fmtDate(vals['Expiry Date'])}</div></div>
+      <div class="modal-field"><label>Responsible Person</label><div class="val">${esc(vals['Responsible Person'])}</div></div>
+      <div class="modal-field"><label>Fees Paid</label><div class="val">${esc(vals['Fees Paid'])}</div></div>
+    </div>`;
+
+    if (vals['Conditions']) {
+      html += `<div class="modal-section"><h4>Conditions</h4><p style="font-size:13px;white-space:pre-wrap">${esc(vals['Conditions'])}</p></div>`;
+    }
+    if (vals['Notes']) {
+      html += `<div class="modal-section"><h4>Notes</h4><p style="font-size:13px;white-space:pre-wrap">${esc(vals['Notes'])}</p></div>`;
+    }
+
+    // Transition buttons
+    if (transitions.length) {
+      html += `<div class="modal-section"><h4>Status Transition</h4>
+        <div class="modal-form"><label>Notes</label><textarea id="permit-trans-notes" rows="2" placeholder="Transition notes..."></textarea></div>
+        <div class="transition-btns">
+          ${transitions.map(t => `<button class="transition-btn ${TRANSITION_COLORS[t] || 'blue'}" onclick="transitionPermit('${sub.id}','${t}')">${esc(t)}</button>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Status History
+    if (vals['Status History']) {
+      html += `<div class="modal-section"><h4>Status History</h4><div class="timeline">`;
+      const lines = vals['Status History'].split('\n').filter(Boolean).reverse();
+      html += lines.map(line => {
+        const parts = line.split(' | ');
+        return `<div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div><div class="timeline-text">${esc(parts[1] || '')}</div><div class="timeline-date">${esc(parts[0] || '')} ${esc(parts[2] || '')}</div></div>
+        </div>`;
+      }).join('');
+      html += '</div></div>';
+    }
+
+    document.getElementById('modal-inner').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-inner').innerHTML = `<p style="color:var(--red)">Error: ${esc(e.message)}</p>`;
+  }
+}
+
+async function transitionPermit(id, newStatus) {
+  const notes = document.getElementById('permit-trans-notes')?.value || '';
+  try {
+    await mapi(`/permits/${id}/transition`, {
+      method: 'POST',
+      body: JSON.stringify({ newStatus, notes, user: API.user })
+    });
+    toast(`Permit transitioned to ${newStatus}`);
+    complianceLoaded = false;
+    loadCompliance();
+    openPermitDetail(id);
+  } catch (e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ================================================================ */
+/* ===== TAB 4: ISSUES                                        ===== */
+/* ================================================================ */
+let issuesLoaded = false;
+async function loadIssues() {
+  if (issuesLoaded) return;
+  try {
+    DATA.issues = await collectForm('issues');
+    issuesLoaded = true;
+
+    // Populate site filter
+    const sites = [...new Set(DATA.issues.map(i => v(i, 'Site')).filter(Boolean))].sort();
+    const siteSelect = document.getElementById('issues-site-filter');
+    siteSelect.innerHTML = '<option value="">All Sites</option>';
+    sites.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; siteSelect.appendChild(o); });
+
+    renderIssues();
+  } catch (e) {
+    document.getElementById('issues-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderIssues() {
+  const statusFilter = document.getElementById('issues-status-filter').value;
+  const sevFilter = document.getElementById('issues-severity-filter').value;
+  const catFilter = document.getElementById('issues-category-filter').value;
+  const siteFilter = document.getElementById('issues-site-filter').value;
+
+  let filtered = DATA.issues;
+  if (statusFilter) filtered = filtered.filter(i => v(i, 'Status') === statusFilter);
+  if (sevFilter) filtered = filtered.filter(i => v(i, 'Severity') === sevFilter);
+  if (catFilter) filtered = filtered.filter(i => v(i, 'Category') === catFilter);
+  if (siteFilter) filtered = filtered.filter(i => v(i, 'Site') === siteFilter);
+
+  // Pipeline
+  const pipeStatuses = ['Open', 'Triage', 'Investigating', 'CAPA', 'Verify', 'Closed'];
+  const pipeCounts = {};
+  DATA.issues.forEach(i => { const s = v(i, 'Status'); pipeCounts[s] = (pipeCounts[s] || 0) + 1; });
+  const pipeColors = {
+    Open: '#E3F2FD;color:#1565C0', Triage: '#E8EAF6;color:#283593',
+    Investigating: '#F3E5F5;color:#7B1FA2', CAPA: '#FFF3E0;color:#E65100',
+    Verify: '#FFF8E1;color:#F9A825', Closed: '#F1F3F4;color:#5F6368'
+  };
+  document.getElementById('issues-pipeline').innerHTML = pipeStatuses.map(s => `
+    <div class="pipeline-chip" style="background:${pipeColors[s]}">
+      <span class="chip-count">${pipeCounts[s] || 0}</span>
+      <span class="chip-label">${s}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('issues-loading').style.display = 'none';
+  document.getElementById('issues-content').style.display = 'block';
+  const tbody = document.querySelector('#issues-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(8); return; }
+
+  filtered.sort((a, b) => (v(b, 'Reported Date') || '').localeCompare(v(a, 'Reported Date') || ''));
+  tbody.innerHTML = filtered.map(i => `
+    <tr class="clickable" onclick="openIssueDetail('${i.id}')">
+      <td>${esc(v(i,'Issue ID'))}</td><td>${esc(v(i,'Title'))}</td>
+      <td>${badge(v(i,'Type'))}</td><td>${badge(v(i,'Severity'))}</td>
+      <td>${badge(v(i,'Status'))}</td><td>${esc(v(i,'Site'))}</td>
+      <td>${fmtDate(v(i,'Reported Date'))}</td><td>${esc(v(i,'Assigned To'))}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('issues-status-filter').addEventListener('change', renderIssues);
+document.getElementById('issues-severity-filter').addEventListener('change', renderIssues);
+document.getElementById('issues-category-filter').addEventListener('change', renderIssues);
+document.getElementById('issues-site-filter').addEventListener('change', renderIssues);
+
+/* ===== ISSUE DETAIL MODAL ===== */
+const ISSUE_TRANSITIONS = {
+  "Open": ["Triage"],
+  "Triage": ["Investigating", "Closed"],
+  "Investigating": ["CAPA", "Closed"],
+  "CAPA": ["Verify"],
+  "Verify": ["Closed", "CAPA"],
+};
+
+async function openIssueDetail(submissionId) {
+  showModal('<div class="loading">Loading issue...</div>');
+  try {
+    const r = await api(`/submissions/${submissionId}?include=values`);
+    const sub = r.submission;
+    const vals = sub.values || {};
+    const status = vals['Status'] || '';
+    const transitions = ISSUE_TRANSITIONS[status] || [];
+
+    let html = `<h2>${esc(vals['Issue ID'])} - ${esc(vals['Title'])}</h2>`;
+    html += `<div style="margin-bottom:12px">${badge(vals['Status'])} ${badge(vals['Severity'])} ${badge(vals['Type'])}</div>`;
+    html += `<div class="modal-grid">
+      <div class="modal-field"><label>Category</label><div class="val">${esc(vals['Category'])}</div></div>
+      <div class="modal-field"><label>Site</label><div class="val">${esc(vals['Site'])}</div></div>
+      <div class="modal-field"><label>Zone</label><div class="val">${esc(vals['Zone'])}</div></div>
+      <div class="modal-field"><label>Reported By</label><div class="val">${esc(vals['Reported By'])}</div></div>
+      <div class="modal-field"><label>Reported Date</label><div class="val">${fmtDate(vals['Reported Date'])}</div></div>
+      <div class="modal-field"><label>Assigned To</label><div class="val">${esc(vals['Assigned To'])}</div></div>
+    </div>`;
+
+    if (vals['Description']) {
+      html += `<div class="modal-section"><h4>Description</h4><p style="font-size:13px;white-space:pre-wrap">${esc(vals['Description'])}</p></div>`;
+    }
+
+    // CAPA info
+    if (vals['Root Cause'] || vals['CAPA Description'] || vals['CAPA Status']) {
+      html += `<div class="modal-section"><h4>CAPA Information</h4><div class="modal-grid">
+        <div class="modal-field"><label>CAPA Status</label><div class="val">${badge(vals['CAPA Status'])}</div></div>
+        <div class="modal-field"><label>CAPA Due Date</label><div class="val">${fmtDate(vals['CAPA Due Date'])}</div></div>
+      </div>`;
+      if (vals['Root Cause']) html += `<p style="font-size:13px;margin-top:8px"><strong>Root Cause:</strong> ${esc(vals['Root Cause'])}</p>`;
+      if (vals['CAPA Description']) html += `<p style="font-size:13px;margin-top:6px"><strong>CAPA Description:</strong> ${esc(vals['CAPA Description'])}</p>`;
+      if (vals['Verification Notes']) html += `<p style="font-size:13px;margin-top:6px"><strong>Verification Notes:</strong> ${esc(vals['Verification Notes'])}</p>`;
+      html += `</div>`;
+    }
+
+    // Transition buttons
+    if (transitions.length) {
+      html += `<div class="modal-section"><h4>Status Transition</h4><div class="modal-form" id="issue-trans-form">`;
+      html += `<label>Notes</label><textarea id="issue-trans-notes" rows="2" placeholder="Transition notes..."></textarea>`;
+
+      // Extra fields for CAPA transition
+      if (transitions.includes('CAPA')) {
+        html += `<div id="capa-fields">
+          <label>Root Cause</label><textarea id="issue-root-cause" rows="2" placeholder="Root cause analysis..."></textarea>
+          <label>CAPA Description</label><textarea id="issue-capa-desc" rows="2" placeholder="Corrective action plan..."></textarea>
+          <label>CAPA Due Date</label><input id="issue-capa-due" type="date">
+        </div>`;
+      }
+
+      // Extra fields for Verify/Closed transitions
+      if (transitions.includes('Closed') && (status === 'Verify' || status === 'Triage' || status === 'Investigating')) {
+        html += `<label>Verification Notes</label><textarea id="issue-verify-notes" rows="2" placeholder="Verification notes..."></textarea>`;
+      }
+
+      html += `</div><div class="transition-btns">
+        ${transitions.map(t => `<button class="transition-btn ${TRANSITION_COLORS[t] || 'blue'}" onclick="transitionIssue('${sub.id}','${t}')">${esc(t)}</button>`).join('')}
+      </div></div>`;
+    }
+
+    // Status History
+    if (vals['Status History']) {
+      html += `<div class="modal-section"><h4>Status History</h4><div class="timeline">`;
+      const lines = vals['Status History'].split('\n').filter(Boolean).reverse();
+      html += lines.map(line => {
+        const parts = line.split(' | ');
+        return `<div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div><div class="timeline-text">${esc(parts[1] || '')}</div><div class="timeline-date">${esc(parts[0] || '')} ${esc(parts[2] || '')}</div></div>
+        </div>`;
+      }).join('');
+      html += '</div></div>';
+    }
+
+    document.getElementById('modal-inner').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-inner').innerHTML = `<p style="color:var(--red)">Error: ${esc(e.message)}</p>`;
+  }
+}
+
+async function transitionIssue(id, newStatus) {
+  const notes = document.getElementById('issue-trans-notes')?.value || '';
+  const body = { newStatus, notes, user: API.user };
+
+  if (newStatus === 'CAPA') {
+    body.rootCause = document.getElementById('issue-root-cause')?.value || '';
+    body.capaDescription = document.getElementById('issue-capa-desc')?.value || '';
+    body.capaDueDate = document.getElementById('issue-capa-due')?.value || '';
+  }
+  if (newStatus === 'Closed' || newStatus === 'Verify') {
+    body.verificationNotes = document.getElementById('issue-verify-notes')?.value || '';
+  }
+
+  try {
+    await mapi(`/issues/${id}/transition`, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    toast(`Issue transitioned to ${newStatus}`);
+    issuesLoaded = false;
+    loadIssues();
+    openIssueDetail(id);
+  } catch (e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ================================================================ */
+/* ===== TAB 5: INSPECTIONS                                   ===== */
+/* ================================================================ */
+let inspectionsLoaded = false;
+async function loadInspections() {
+  if (inspectionsLoaded) return;
+  try {
+    DATA.inspections = await collectForm('inspections');
+    inspectionsLoaded = true;
+    renderInspections();
+  } catch (e) {
+    document.getElementById('inspections-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderInspections() {
+  const statusFilter = document.getElementById('inspections-status-filter').value;
+  const typeFilter = document.getElementById('inspections-type-filter').value;
+  let filtered = DATA.inspections;
+  if (statusFilter) filtered = filtered.filter(i => v(i, 'Status') === statusFilter);
+  if (typeFilter) filtered = filtered.filter(i => v(i, 'Type') === typeFilter);
+
+  document.getElementById('inspections-loading').style.display = 'none';
+  document.getElementById('inspections-content').style.display = 'block';
+  const tbody = document.querySelector('#inspections-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(8); return; }
+
+  filtered.sort((a, b) => (v(b, 'Scheduled Date') || '').localeCompare(v(a, 'Scheduled Date') || ''));
+  tbody.innerHTML = filtered.map(i => `
+    <tr class="clickable" onclick="openInspectionDetail('${i.id}')">
+      <td>${esc(v(i,'Inspection ID'))}</td><td>${esc(v(i,'Type'))}</td>
+      <td>${esc(v(i,'Site'))}</td><td>${esc(v(i,'Zone'))}</td>
+      <td>${badge(v(i,'Status'))}</td><td>${fmtDate(v(i,'Scheduled Date'))}</td>
+      <td>${esc(v(i,'Score'))}</td><td>${esc(v(i,'Critical Findings'))}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('inspections-status-filter').addEventListener('change', renderInspections);
+document.getElementById('inspections-type-filter').addEventListener('change', renderInspections);
+
+/* ===== INSPECTION DETAIL MODAL ===== */
+async function openInspectionDetail(submissionId) {
+  showModal('<div class="loading">Loading inspection...</div>');
+  try {
+    const r = await api(`/submissions/${submissionId}?include=values`);
+    const sub = r.submission;
+    const vals = sub.values || {};
+    const status = vals['Status'] || '';
+
+    let html = `<h2>${esc(vals['Inspection ID'])} ${badge(status)}</h2>`;
+    html += `<div class="modal-grid">
+      <div class="modal-field"><label>Type</label><div class="val">${esc(vals['Type'])}</div></div>
+      <div class="modal-field"><label>Site</label><div class="val">${esc(vals['Site'])}</div></div>
+      <div class="modal-field"><label>Zone</label><div class="val">${esc(vals['Zone'])}</div></div>
+      <div class="modal-field"><label>Inspector</label><div class="val">${esc(vals['Inspector'])}</div></div>
+      <div class="modal-field"><label>Scheduled Date</label><div class="val">${fmtDate(vals['Scheduled Date'])}</div></div>
+      <div class="modal-field"><label>Completed Date</label><div class="val">${fmtDate(vals['Completed Date'])}</div></div>
+      <div class="modal-field"><label>Score</label><div class="val">${esc(vals['Score'])}</div></div>
+      <div class="modal-field"><label>Critical Findings</label><div class="val">${esc(vals['Critical Findings'])}</div></div>
+      <div class="modal-field"><label>Follow Up Required</label><div class="val">${esc(vals['Follow Up Required'])}</div></div>
+      <div class="modal-field"><label>Follow Up Due</label><div class="val">${fmtDate(vals['Follow Up Due Date'])}</div></div>
+    </div>`;
+
+    // Findings
+    if (vals['Findings']) {
+      html += `<div class="modal-section"><h4>Findings</h4>`;
+      try {
+        const findings = JSON.parse(vals['Findings']);
+        if (Array.isArray(findings) && findings.length) {
+          html += `<table><thead><tr><th>Description</th><th>Severity</th><th>Category</th></tr></thead><tbody>`;
+          html += findings.map(f => `<tr><td>${esc(f.description || f.title || '')}</td><td>${badge(f.severity || '')}</td><td>${esc(f.category || '')}</td></tr>`).join('');
+          html += '</tbody></table>';
+        } else {
+          html += `<p style="font-size:13px;white-space:pre-wrap">${esc(vals['Findings'])}</p>`;
+        }
+      } catch {
+        html += `<p style="font-size:13px;white-space:pre-wrap">${esc(vals['Findings'])}</p>`;
+      }
+      html += '</div>';
+    }
+
+    if (vals['Notes']) {
+      html += `<div class="modal-section"><h4>Notes</h4><p style="font-size:13px;white-space:pre-wrap">${esc(vals['Notes'])}</p></div>`;
+    }
+
+    // Complete inspection form (only if Scheduled or In Progress)
+    if (status === 'Scheduled' || status === 'In Progress') {
+      html += `<div class="modal-section"><h4>Complete Inspection</h4>
+        <div class="modal-form">
+          <label>Score (0-100)</label>
+          <input id="insp-score" type="number" min="0" max="100" placeholder="85">
+          <label>Findings (JSON array)</label>
+          <textarea id="insp-findings" rows="4" placeholder='[{"description":"...","severity":"High","category":"Safety"}]'></textarea>
+          <label>Notes</label>
+          <textarea id="insp-notes" rows="2" placeholder="Inspection notes..."></textarea>
+          <label>Critical Findings Count</label>
+          <input id="insp-critical" type="number" min="0" placeholder="0">
+          <button class="transition-btn green" style="margin-top:14px" onclick="completeInspection('${sub.id}')">Complete Inspection</button>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('modal-inner').innerHTML = html;
+  } catch (e) {
+    document.getElementById('modal-inner').innerHTML = `<p style="color:var(--red)">Error: ${esc(e.message)}</p>`;
+  }
+}
+
+async function completeInspection(id) {
+  const body = {
+    score: document.getElementById('insp-score')?.value || '',
+    findings: document.getElementById('insp-findings')?.value || '[]',
+    notes: document.getElementById('insp-notes')?.value || '',
+    inspector: API.displayName,
+    criticalFindings: document.getElementById('insp-critical')?.value || '0',
+  };
+
+  try {
+    const result = await mapi(`/inspections/${id}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    let msg = 'Inspection completed';
+    if (result.issuesCreated > 0) msg += ` (${result.issuesCreated} issues auto-created)`;
+    toast(msg);
+    inspectionsLoaded = false;
+    issuesLoaded = false;
+    loadInspections();
+    openInspectionDetail(id);
+  } catch (e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ================================================================ */
+/* ===== TAB 6: OPERATIONS                                    ===== */
+/* ================================================================ */
+let operationsLoaded = false;
+async function loadOperations() {
+  if (operationsLoaded) return;
+  try {
+    [DATA.assets, DATA.production, DATA.environmental] = await Promise.all([
+      collectForm('assets'),
+      collectForm('production-logs'),
+      collectForm('environmental-readings')
+    ]);
+    operationsLoaded = true;
+
+    // Populate env parameter filter
+    const params = [...new Set(DATA.environmental.map(e => v(e, 'Parameter')).filter(Boolean))].sort();
+    const paramSelect = document.getElementById('env-param-filter');
+    paramSelect.innerHTML = '<option value="">All Parameters</option>';
+    params.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; paramSelect.appendChild(o); });
+
+    renderAssets();
+    renderProduction();
+    renderEnvironmental();
+  } catch (e) {
+    document.getElementById('assets-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderAssets() {
+  const statusFilter = document.getElementById('assets-status-filter').value;
+  const catFilter = document.getElementById('assets-category-filter').value;
+  let filtered = DATA.assets;
+  if (statusFilter) filtered = filtered.filter(a => v(a, 'Status') === statusFilter);
+  if (catFilter) filtered = filtered.filter(a => v(a, 'Category') === catFilter);
+
+  document.getElementById('assets-loading').style.display = 'none';
+  document.getElementById('assets-content').style.display = 'block';
+  const tbody = document.querySelector('#assets-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(8); return; }
+
+  const now = new Date();
+  const fourteenDays = new Date(now.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+
+  tbody.innerHTML = filtered.map(a => {
+    const nextMaint = v(a, 'Next Maintenance');
+    const isMaintDue = nextMaint && nextMaint <= fourteenDays;
+    return `
+      <tr class="${isMaintDue ? 'maint-due' : ''}">
+        <td>${esc(v(a,'Asset ID'))}</td><td>${esc(v(a,'Name'))}</td>
+        <td>${esc(v(a,'Category'))}</td><td>${esc(v(a,'Type'))}</td>
+        <td>${esc(v(a,'Site'))}</td><td>${badge(v(a,'Status'))}</td>
+        <td>${fmtNum(v(a,'Operating Hours'))}</td><td>${fmtDate(v(a,'Next Maintenance'))}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderProduction() {
+  document.getElementById('production-loading').style.display = 'none';
+  document.getElementById('production-content').style.display = 'block';
+
+  // Summary by material type
+  const byMaterial = {};
+  DATA.production.forEach(p => {
+    const mat = v(p, 'Material Type') || 'Unknown';
+    if (!byMaterial[mat]) byMaterial[mat] = { extracted: 0, processed: 0, count: 0, totalGrade: 0, gradeCount: 0 };
+    byMaterial[mat].extracted += parseFloat(v(p, 'Tonnes Extracted')) || 0;
+    byMaterial[mat].processed += parseFloat(v(p, 'Tonnes Processed')) || 0;
+    byMaterial[mat].count++;
+    const grade = parseFloat(v(p, 'Grade'));
+    if (!isNaN(grade)) { byMaterial[mat].totalGrade += grade; byMaterial[mat].gradeCount++; }
+  });
+
+  const summaryEl = document.getElementById('production-summary');
+  summaryEl.innerHTML = Object.entries(byMaterial).map(([mat, d]) => `
+    <div class="prod-card">
+      <h4>${esc(mat)}</h4>
+      <div class="prod-stat">Extracted: <strong>${fmtNum(Math.round(d.extracted))} t</strong></div>
+      <div class="prod-stat">Processed: <strong>${fmtNum(Math.round(d.processed))} t</strong></div>
+      <div class="prod-stat">Avg Grade: <strong>${d.gradeCount > 0 ? (d.totalGrade / d.gradeCount).toFixed(2) : 'N/A'}</strong></div>
+      <div class="prod-stat">Logs: <strong>${d.count}</strong></div>
+    </div>
+  `).join('');
+
+  // Table
+  const tbody = document.querySelector('#production-table tbody');
+  if (!DATA.production.length) { tbody.innerHTML = emptyRow(9); return; }
+
+  const sorted = [...DATA.production].sort((a, b) => (v(b, 'Date') || '').localeCompare(v(a, 'Date') || ''));
+  tbody.innerHTML = sorted.map(p => `
+    <tr>
+      <td>${esc(v(p,'Site'))}</td><td>${fmtDate(v(p,'Date'))}</td>
+      <td>${esc(v(p,'Shift'))}</td><td>${esc(v(p,'Material Type'))}</td>
+      <td>${fmtNum(v(p,'Tonnes Extracted'))}</td><td>${fmtNum(v(p,'Tonnes Processed'))}</td>
+      <td>${esc(v(p,'Grade'))}</td><td>${esc(v(p,'Recovery Rate'))}</td>
+      <td>${esc(v(p,'Equipment Utilization'))}</td>
+    </tr>
+  `).join('');
+}
+
+function renderEnvironmental() {
+  document.getElementById('env-loading').style.display = 'none';
+  document.getElementById('env-content').style.display = 'block';
+
+  // Status summary
+  const byStatus = { Normal: 0, Warning: 0, Exceedance: 0, Critical: 0 };
+  DATA.environmental.forEach(e => {
+    const st = v(e, 'Status');
+    if (st in byStatus) byStatus[st]++;
+  });
+  const envColors = { Normal: '#E8F5E9;color:#2E7D32', Warning: '#FFF8E1;color:#F9A825', Exceedance: '#FFF3E0;color:#E65100', Critical: '#FDECEA;color:#C62828' };
+  document.getElementById('env-summary').innerHTML = Object.entries(byStatus).map(([st, ct]) => `
+    <div class="env-chip" style="background:${envColors[st]}">
+      <span class="env-count">${ct}</span>
+      <span class="env-label">${st}</span>
+    </div>
+  `).join('');
+
+  renderEnvTable();
+}
+
+function renderEnvTable() {
+  const paramFilter = document.getElementById('env-param-filter').value;
+  const statusFilter = document.getElementById('env-status-filter').value;
+  let filtered = DATA.environmental;
+  if (paramFilter) filtered = filtered.filter(e => v(e, 'Parameter') === paramFilter);
+  if (statusFilter) filtered = filtered.filter(e => v(e, 'Status') === statusFilter);
+
+  const tbody = document.querySelector('#env-table tbody');
+  if (!filtered.length) { tbody.innerHTML = emptyRow(8); return; }
+
+  const sorted = [...filtered].sort((a, b) => (v(b, 'Date') || '').localeCompare(v(a, 'Date') || ''));
+  tbody.innerHTML = sorted.map(e => `
+    <tr>
+      <td>${esc(v(e,'Monitoring Point'))}</td><td>${esc(v(e,'Site'))}</td>
+      <td>${fmtDate(v(e,'Date'))}</td><td>${esc(v(e,'Parameter'))}</td>
+      <td>${esc(v(e,'Value'))}</td><td>${esc(v(e,'Unit'))}</td>
+      <td>${esc(v(e,'Threshold'))}</td><td>${badge(v(e,'Status'))}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('assets-status-filter').addEventListener('change', renderAssets);
+document.getElementById('assets-category-filter').addEventListener('change', renderAssets);
+document.getElementById('env-param-filter').addEventListener('change', renderEnvTable);
+document.getElementById('env-status-filter').addEventListener('change', renderEnvTable);
+
+/* ================================================================ */
+/* ===== TAB 7: REPORTS                                       ===== */
+/* ================================================================ */
+const REPORT_DEFS = [
+  { type: 'issues-summary', icon: '\u26A0', title: 'Issues Summary', desc: 'Overview of all issues by status, severity, and category' },
+  { type: 'compliance-status', icon: '\u2696', title: 'Compliance Status', desc: 'Permit compliance rates and obligation status across sites' },
+  { type: 'inspection-results', icon: '\u2611', title: 'Inspection Results', desc: 'Completed inspection scores and findings by site' },
+  { type: 'production-summary', icon: '\u2692', title: 'Production Summary', desc: 'Extraction and processing totals by site and material' },
+  { type: 'environmental-summary', icon: '\u2618', title: 'Environmental Summary', desc: 'Environmental monitoring results and exceedances' },
+  { type: 'asset-inventory', icon: '\u2699', title: 'Asset Inventory', desc: 'Equipment inventory with maintenance status and categories' },
+  { type: 'personnel-roster', icon: '\uD83D\uDC64', title: 'Personnel Roster', desc: 'Staff directory organized by site and role' },
+  { type: 'overdue-items', icon: '\u23F0', title: 'Overdue Items', desc: 'All overdue inspections, permits, obligations, and CAPAs' },
+];
+
+function renderReports() {
+  document.getElementById('reports-grid').innerHTML = REPORT_DEFS.map(r => `
+    <div class="report-card">
+      <div class="report-icon">${r.icon}</div>
+      <h4>${r.title}</h4>
+      <p>${r.desc}</p>
+      <button class="report-btn" onclick="generateReport('${r.type}', this)"}>Generate</button>
+    </div>
+  `).join('');
+}
+
+async function generateReport(type, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  try {
+    const result = await mapi(`/report/${type}`);
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+    showReportModal(result);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+    toast('Error generating report: ' + e.message);
+  }
+}
+
+function showReportModal(report) {
+  const type = report.type;
+  const data = report.data;
+  let html = `<h2>${REPORT_DEFS.find(r => r.type === type)?.title || type}</h2>`;
+  html += `<p style="font-size:12px;color:var(--gray);margin-bottom:16px">Generated: ${fmtDate(report.generatedAt)}</p>`;
+
+  let tableHeaders = [];
+  let tableRows = [];
+
+  if (type === 'issues-summary') {
+    // Summary stats
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--orange)"><div class="kpi-value">${data.total}</div><div class="kpi-label">Total Issues</div></div>
+    </div>`;
+    // Breakdowns
+    html += `<div class="two-col" style="margin-bottom:16px">
+      <div class="card"><h3>By Status</h3>${objToMiniTable(data.byStatus)}</div>
+      <div class="card"><h3>By Severity</h3>${objToMiniTable(data.bySeverity)}</div>
+    </div>`;
+    tableHeaders = ['Issue ID', 'Title', 'Type', 'Severity', 'Category', 'Site', 'Status', 'Reported', 'Assigned To'];
+    tableRows = (data.issues || []).map(i => [i.issueId, i.title, i.type, i.severity, i.category, i.site, i.status, fmtDate(i.reportedDate), i.assignedTo]);
+
+  } else if (type === 'compliance-status') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--green)"><div class="kpi-value">${data.complianceRate}%</div><div class="kpi-label">Overall Compliance</div></div>
+    </div>`;
+    if (data.complianceRateBySite) {
+      html += `<div class="card" style="margin-bottom:16px"><h3>Compliance by Site</h3>${objToMiniTable(data.complianceRateBySite, '%')}</div>`;
+    }
+    tableHeaders = ['Permit ID', 'Type', 'Site', 'Status', 'Expiry Date', 'Obligations'];
+    tableRows = (data.permits || []).map(p => [p.permitId, p.type, p.site, p.status, fmtDate(p.expiryDate), p.obligations?.length || 0]);
+
+  } else if (type === 'inspection-results') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--teal)"><div class="kpi-value">${data.total}</div><div class="kpi-label">Completed Inspections</div></div>
+    </div>`;
+    tableHeaders = ['Site', 'Avg Score', 'Count'];
+    tableRows = Object.entries(data.bySite || {}).map(([site, d]) => [site, d.avgScore, d.count]);
+
+  } else if (type === 'production-summary') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--deep-orange)"><div class="kpi-value">${fmtNum(data.totalExtracted)}</div><div class="kpi-label">Total Extracted (t)</div></div>
+      <div class="kpi-card" style="border-left-color:var(--teal)"><div class="kpi-value">${fmtNum(data.totalProcessed)}</div><div class="kpi-label">Total Processed (t)</div></div>
+      <div class="kpi-card" style="border-left-color:var(--indigo)"><div class="kpi-value">${fmtNum(data.totalLogs)}</div><div class="kpi-label">Production Logs</div></div>
+    </div>`;
+    tableHeaders = ['Site', 'Material', 'Extracted (t)', 'Processed (t)', 'Logs'];
+    tableRows = [];
+    for (const [site, mats] of Object.entries(data.bySite || {})) {
+      for (const [mat, d] of Object.entries(mats)) {
+        tableRows.push([site, mat, fmtNum(d.extracted), fmtNum(d.processed), d.count]);
+      }
+    }
+
+  } else if (type === 'environmental-summary') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--teal)"><div class="kpi-value">${fmtNum(data.totalReadings)}</div><div class="kpi-label">Total Readings</div></div>
+    </div>`;
+    if (data.byStatus) {
+      html += `<div class="card" style="margin-bottom:16px"><h3>By Status</h3>${objToMiniTable(data.byStatus)}</div>`;
+    }
+    tableHeaders = ['Site', 'Monitoring Point', 'Date', 'Parameter', 'Value', 'Unit', 'Threshold', 'Status'];
+    tableRows = (data.exceedances || []).map(e => [e.site, e.monitoringPoint, fmtDate(e.date), e.parameter, e.value, e.unit, e.threshold, e.status]);
+    if (tableRows.length) html += `<p style="font-size:13px;color:var(--gray);margin-bottom:8px">Showing exceedances and critical readings only:</p>`;
+
+  } else if (type === 'asset-inventory') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--indigo)"><div class="kpi-value">${fmtNum(data.totalAssets)}</div><div class="kpi-label">Total Assets</div></div>
+    </div>`;
+    if (data.byStatus) {
+      html += `<div class="card" style="margin-bottom:16px"><h3>By Status</h3>${objToMiniTable(data.byStatus)}</div>`;
+    }
+    tableHeaders = ['Asset ID', 'Name', 'Category', 'Type', 'Site', 'Status', 'Hours', 'Next Maint'];
+    tableRows = [];
+    for (const [cat, assets] of Object.entries(data.byCategory || {})) {
+      for (const a of assets) {
+        tableRows.push([a.assetId, a.name, cat, a.type, a.site, a.status, fmtNum(a.operatingHours), fmtDate(a.nextMaintenance)]);
+      }
+    }
+
+  } else if (type === 'personnel-roster') {
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--indigo)"><div class="kpi-value">${fmtNum(data.totalPersonnel)}</div><div class="kpi-label">Total Personnel</div></div>
+    </div>`;
+    if (data.byRole) {
+      html += `<div class="card" style="margin-bottom:16px"><h3>By Role</h3>${objToMiniTable(data.byRole)}</div>`;
+    }
+    tableHeaders = ['Employee ID', 'Name', 'Role', 'Department', 'Site', 'Type', 'Status'];
+    tableRows = [];
+    for (const [site, people] of Object.entries(data.bySite || {})) {
+      for (const p of people) {
+        tableRows.push([p.employeeId, p.fullName, p.role, p.department, site, p.employmentType, p.status]);
+      }
+    }
+
+  } else if (type === 'overdue-items') {
+    const counts = [
+      (data.overdueInspections || []).length,
+      (data.expiredPermits || []).length,
+      (data.expiringPermits || []).length,
+      (data.overdueObligations || []).length,
+      (data.overdueCAPAs || []).length,
+    ];
+    const total = counts.reduce((a, b) => a + b, 0);
+    html += `<div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-card" style="border-left-color:var(--red)"><div class="kpi-value">${total}</div><div class="kpi-label">Total Overdue Items</div></div>
+    </div>`;
+
+    // Show each section
+    const sections = [
+      { title: 'Overdue Inspections', items: data.overdueInspections || [], headers: ['ID', 'Type', 'Site', 'Scheduled'], rowFn: i => [i.inspectionId, i.type, i.site, fmtDate(i.scheduledDate)] },
+      { title: 'Expired Permits', items: data.expiredPermits || [], headers: ['ID', 'Type', 'Site', 'Expiry'], rowFn: i => [i.permitId, i.type, i.site, fmtDate(i.expiryDate)] },
+      { title: 'Expiring Permits (30 days)', items: data.expiringPermits || [], headers: ['ID', 'Type', 'Site', 'Expiry'], rowFn: i => [i.permitId, i.type, i.site, fmtDate(i.expiryDate)] },
+      { title: 'Overdue Obligations', items: data.overdueObligations || [], headers: ['ID', 'Title', 'Category', 'Due Date', 'Status'], rowFn: i => [i.obligationId, i.title, i.category, fmtDate(i.dueDate), i.status] },
+      { title: 'Overdue CAPAs', items: data.overdueCAPAs || [], headers: ['Issue ID', 'Title', 'Site', 'CAPA Due'], rowFn: i => [i.issueId, i.title, i.site, fmtDate(i.capaDueDate)] },
+    ];
+
+    for (const sec of sections) {
+      if (sec.items.length) {
+        html += `<div class="card" style="margin-bottom:12px"><h3>${sec.title} (${sec.items.length})</h3>`;
+        html += `<table><thead><tr>${sec.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+        html += sec.items.map(item => `<tr>${sec.rowFn(item).map(c => `<td>${esc(String(c || ''))}</td>`).join('')}</tr>`).join('');
+        html += '</tbody></table></div>';
+      }
+    }
+
+    // For CSV, combine all overdue items
+    tableHeaders = ['Category', 'ID', 'Title/Type', 'Site', 'Date', 'Status'];
+    tableRows = [];
+    for (const i of (data.overdueInspections || [])) tableRows.push(['Inspection', i.inspectionId, i.type, i.site, fmtDate(i.scheduledDate), i.status || 'Overdue']);
+    for (const i of (data.expiredPermits || [])) tableRows.push(['Permit', i.permitId, i.type, i.site, fmtDate(i.expiryDate), i.status || 'Expired']);
+    for (const i of (data.expiringPermits || [])) tableRows.push(['Permit (Expiring)', i.permitId, i.type, i.site, fmtDate(i.expiryDate), 'Expiring']);
+    for (const i of (data.overdueObligations || [])) tableRows.push(['Obligation', i.obligationId, i.title, '', fmtDate(i.dueDate), i.status]);
+    for (const i of (data.overdueCAPAs || [])) tableRows.push(['CAPA', i.issueId, i.title, i.site, fmtDate(i.capaDueDate), 'Overdue']);
+  }
+
+  // Main data table
+  if (tableHeaders.length && tableRows.length && type !== 'overdue-items') {
+    html += `<div style="overflow-x:auto"><table id="report-table"><thead><tr>${tableHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    html += tableRows.map(row => `<tr>${row.map(c => `<td>${esc(String(c || ''))}</td>`).join('')}</tr>`).join('');
+    html += '</tbody></table></div>';
+  }
+
+  // Export CSV button
+  if (tableHeaders.length && tableRows.length) {
+    html += `<button class="export-btn" onclick="exportCSV()">Export CSV</button>`;
+  }
+
+  // Store for CSV export
+  window._reportCSV = { headers: tableHeaders, rows: tableRows, type };
+  showModal(html);
+}
+
+function objToMiniTable(obj, suffix = '') {
+  return `<table><tbody>${Object.entries(obj).map(([k, v]) => `<tr><td style="font-weight:600">${esc(k)}</td><td>${v}${suffix}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function exportCSV() {
+  const { headers, rows, type } = window._reportCSV || {};
+  if (!headers || !rows) return;
+
+  const csvContent = [
+    headers.map(h => `"${h}"`).join(','),
+    ...rows.map(row => row.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mining-${type}-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exported');
+}
+
+/* ===== INIT ===== */
+renderReports();
+</script>
+</body>
+</html>

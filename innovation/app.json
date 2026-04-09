@@ -1,0 +1,274 @@
+{
+  "name": "Innovation Intake",
+  "slug": "innovation",
+  "description": "Innovation proposal pipeline with review scoring, decision workflows, and AI prompt management.",
+  "forms": [
+    {
+      "slug": "proposals",
+      "name": "Proposals",
+      "fields": [
+        {
+          "name": "Proposal ID"
+        },
+        {
+          "name": "App Name",
+          "required": true
+        },
+        {
+          "name": "Submitter"
+        },
+        {
+          "name": "Submitter Display Name"
+        },
+        {
+          "name": "Business Justification",
+          "required": true,
+          "rows": 4
+        },
+        {
+          "name": "Goals Outcomes",
+          "required": true,
+          "rows": 4
+        },
+        {
+          "name": "Target Users",
+          "required": true
+        },
+        {
+          "name": "Expected Business Impact",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Known Alternatives",
+          "rows": 3
+        },
+        {
+          "name": "Custom AI Prompt",
+          "required": true,
+          "rows": 8
+        },
+        {
+          "name": "Approved Prompt",
+          "rows": 8
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Complexity"
+        },
+        {
+          "name": "Assigned Reviewer"
+        },
+        {
+          "name": "Innovation Score"
+        },
+        {
+          "name": "Overlap Risk Score"
+        },
+        {
+          "name": "Strategic Alignment Score"
+        },
+        {
+          "name": "Decision"
+        },
+        {
+          "name": "Decision Reason",
+          "rows": 3
+        },
+        {
+          "name": "Merge Target"
+        },
+        {
+          "name": "Redirect Target"
+        },
+        {
+          "name": "Submitted At"
+        },
+        {
+          "name": "Reviewed At"
+        },
+        {
+          "name": "Decided At"
+        },
+        {
+          "name": "Approved At"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Prompt Version"
+        },
+        {
+          "name": "Similar Apps",
+          "rows": 3
+        }
+      ],
+      "description": "Application innovation proposals",
+      "submissionLabelExpression": "${values('Proposal ID')} - ${values('App Name')}",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Status]",
+          "values[Submitter]"
+        ],
+        "compound": [
+          [
+            "values[Submitter]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "comments",
+      "name": "Comments",
+      "fields": [
+        {
+          "name": "Proposal ID"
+        },
+        {
+          "name": "Author"
+        },
+        {
+          "name": "Author Display Name"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Content",
+          "rows": 4
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Field Changed"
+        }
+      ],
+      "description": "Proposal comments and audit trail",
+      "submissionLabelExpression": "${values('Type')} by ${values('Author')} on ${values('Proposal ID')}",
+      "indexes": {
+        "single": [
+          "values[Proposal ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "reviews",
+      "name": "Reviews",
+      "fields": [
+        {
+          "name": "Proposal ID"
+        },
+        {
+          "name": "Reviewer"
+        },
+        {
+          "name": "Reviewer Display Name"
+        },
+        {
+          "name": "Innovation Score"
+        },
+        {
+          "name": "Overlap Risk Score"
+        },
+        {
+          "name": "Strategic Alignment Score"
+        },
+        {
+          "name": "Complexity Assessment"
+        },
+        {
+          "name": "Cost Estimate"
+        },
+        {
+          "name": "Risk Assessment"
+        },
+        {
+          "name": "Similar Apps Found",
+          "rows": 3
+        },
+        {
+          "name": "Overlap Analysis",
+          "rows": 4
+        },
+        {
+          "name": "Recommendation"
+        },
+        {
+          "name": "Recommendation Notes",
+          "rows": 4
+        },
+        {
+          "name": "Reviewed At"
+        }
+      ],
+      "description": "Proposal review assessments",
+      "submissionLabelExpression": "Review of ${values('Proposal ID')} by ${values('Reviewer')}",
+      "indexes": {
+        "single": [
+          "values[Proposal ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "prompt-versions",
+      "name": "Prompt Versions",
+      "fields": [
+        {
+          "name": "Proposal ID"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Prompt Content",
+          "rows": 8
+        },
+        {
+          "name": "Author"
+        },
+        {
+          "name": "Author Display Name"
+        },
+        {
+          "name": "Change Notes",
+          "rows": 2
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Is Approved"
+        }
+      ],
+      "description": "AI prompt version history",
+      "submissionLabelExpression": "${values('Proposal ID')} v${values('Version')}",
+      "indexes": {
+        "single": [
+          "values[Proposal ID]"
+        ],
+        "compound": []
+      }
+    }
+  ],
+  "category": "Business"
+}

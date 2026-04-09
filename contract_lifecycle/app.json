@@ -1,0 +1,527 @@
+{
+  "name": "Contract Lifecycle",
+  "slug": "contract-lifecycle",
+  "description": "Contract management from drafting through execution with milestones, amendments, and renewals.",
+  "forms": [
+    {
+      "slug": "payers",
+      "name": "Payers",
+      "fields": [
+        {
+          "name": "Payer ID",
+          "required": true
+        },
+        {
+          "name": "Payer Name",
+          "required": true
+        },
+        {
+          "name": "Payer Type"
+        },
+        {
+          "name": "Tax ID"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Primary Contact"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Lives Covered"
+        },
+        {
+          "name": "Market Share"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Insurance payer organizations",
+      "submissionLabelExpression": "${values('Payer Name')} (${values('Payer ID')})",
+      "indexes": {
+        "single": [
+          "values[Payer ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "contracts",
+      "name": "Contracts",
+      "fields": [
+        {
+          "name": "Contract ID",
+          "required": true
+        },
+        {
+          "name": "Contract Name",
+          "required": true
+        },
+        {
+          "name": "Payer ID"
+        },
+        {
+          "name": "Payer Name"
+        },
+        {
+          "name": "Contract Type"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Auto Renew"
+        },
+        {
+          "name": "Annual Value"
+        },
+        {
+          "name": "Payment Terms"
+        },
+        {
+          "name": "Negotiated By"
+        },
+        {
+          "name": "Managed By"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Payer contracts and agreements",
+      "submissionLabelExpression": "${values('Contract Name')} (${values('Contract ID')})",
+      "indexes": {
+        "single": [
+          "values[Contract ID]",
+          "values[Contract Type]",
+          "values[Risk Level]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Contract Type]"
+          ],
+          [
+            "values[Status]",
+            "values[Risk Level]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "fee-schedules",
+      "name": "Fee Schedules",
+      "fields": [
+        {
+          "name": "Schedule ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Service Code"
+        },
+        {
+          "name": "Service Description"
+        },
+        {
+          "name": "Rate Type"
+        },
+        {
+          "name": "Rate Amount"
+        },
+        {
+          "name": "Medicare Rate"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contracted rate schedules by service",
+      "submissionLabelExpression": "${values('Service Code')} - ${values('Service Description')} (${values('Schedule ID')})",
+      "indexes": {
+        "single": [
+          "values[Contract ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "terms",
+      "name": "Terms",
+      "fields": [
+        {
+          "name": "Term ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Term Type"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Requirement",
+          "rows": 3
+        },
+        {
+          "name": "Compliance Deadline"
+        },
+        {
+          "name": "Responsible Party"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract terms and obligations",
+      "submissionLabelExpression": "${values('Term Type')} - ${values('Contract Name')} (${values('Term ID')})",
+      "indexes": {
+        "single": [
+          "values[Contract ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "amendments",
+      "name": "Amendments",
+      "fields": [
+        {
+          "name": "Amendment ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Amendment Type"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Requested By"
+        },
+        {
+          "name": "Requested Date"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Financial Impact"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract amendment requests and tracking",
+      "submissionLabelExpression": "${values('Amendment Type')} - ${values('Contract Name')} (${values('Amendment ID')})",
+      "indexes": {
+        "single": [
+          "values[Amendment ID]",
+          "values[Contract ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "renewals",
+      "name": "Renewals",
+      "fields": [
+        {
+          "name": "Renewal ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Payer Name"
+        },
+        {
+          "name": "Current Expiration"
+        },
+        {
+          "name": "Proposed Start"
+        },
+        {
+          "name": "Proposed End"
+        },
+        {
+          "name": "Proposed Changes",
+          "rows": 3
+        },
+        {
+          "name": "Negotiation Lead"
+        },
+        {
+          "name": "Financial Impact"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract renewal tracking",
+      "submissionLabelExpression": "${values('Contract Name')} - ${values('Status')} (${values('Renewal ID')})"
+    },
+    {
+      "slug": "compliance-checks",
+      "name": "Compliance Checks",
+      "fields": [
+        {
+          "name": "Check ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Check Type"
+        },
+        {
+          "name": "Auditor"
+        },
+        {
+          "name": "Audit Date"
+        },
+        {
+          "name": "Findings",
+          "rows": 3
+        },
+        {
+          "name": "Compliance Score"
+        },
+        {
+          "name": "Issues Found"
+        },
+        {
+          "name": "Corrective Action",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract compliance audits",
+      "submissionLabelExpression": "${values('Check Type')} - ${values('Contract Name')} (${values('Check ID')})",
+      "indexes": {
+        "single": [
+          "values[Contract ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "notifications",
+      "name": "Notifications",
+      "fields": [
+        {
+          "name": "Notification ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Message",
+          "rows": 3
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract-related alerts and reminders",
+      "submissionLabelExpression": "${values('Type')} - ${values('Contract Name')} (${values('Notification ID')})"
+    },
+    {
+      "slug": "documents",
+      "name": "Documents",
+      "fields": [
+        {
+          "name": "Document ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Contract Name"
+        },
+        {
+          "name": "Document Type"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Uploaded By"
+        },
+        {
+          "name": "Upload Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Contract document registry",
+      "submissionLabelExpression": "${values('Title')} - ${values('Document Type')} (${values('Document ID')})",
+      "indexes": {
+        "single": [
+          "values[Contract ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail for contract actions",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Legal"
+}

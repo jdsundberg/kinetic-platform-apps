@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Store</title>
+<style>
+:root { --blue:#242F4D; --blue-light:#2E3B5E; --orange:#F36C24; --orange-light:#FF8A4C; --green:#34A853; --red:#EA4335; --yellow:#FBBC04; --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff; --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); --shadow-lg:0 4px 12px rgba(0,0,0,.15); --purple:#7B1FA2; --teal:#00695C; --indigo:#283593; }
+*{margin:0;padding:0;box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#333}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a237e 0%,#283593 50%,#3f51b5 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:24px;color:var(--indigo);margin-bottom:4px} .login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .orange-bar{height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.15)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--orange);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:var(--orange-light)} .login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--blue);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:18px;font-weight:700} .topbar .logo span{color:var(--orange)}
+.nav-tabs{display:flex;gap:4px;margin-left:24px}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.1);color:white} .nav-tabs button.active{background:var(--orange);color:white}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px} .user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--orange);border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1200px;margin:0 auto} .console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px} .page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.kpi .val{font-size:26px;font-weight:700} .kpi .label{font-size:11px;color:var(--gray);margin-top:2px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)} tr:hover td{background:var(--light)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-guitar{background:#FFF3E0;color:#E65100} .badge-bass{background:#E3F2FD;color:#1565C0} .badge-drums{background:#F3E5F5;color:#7B1FA2}
+.badge-keys{background:#E8F5E9;color:#2E7D32} .badge-wind{background:#FBE9E7;color:#BF360C} .badge-strings{background:#E0F7FA;color:#00695C}
+.badge-accessories{background:#ECEFF1;color:#37474F}
+.badge-new{background:#E8F5E9;color:#2E7D32} .badge-used{background:#FFF8E1;color:#F57F17} .badge-refurbished{background:#E3F2FD;color:#1565C0}
+.badge-in-stock{background:#E8F5E9;color:#2E7D32} .badge-sold{background:#FFEBEE;color:#C62828} .badge-on-hold{background:#FFF8E1;color:#F57F17} .badge-consignment{background:#F3E5F5;color:#7B1FA2}
+.badge-active{background:#E8F5E9;color:#2E7D32} .badge-inactive{background:#FFEBEE;color:#C62828}
+.badge-gold{background:#FFF8E1;color:#F57F17} .badge-silver{background:#ECEFF1;color:#37474F} .badge-none{background:#F5F5F5;color:#999}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--orange);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--border)} .btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--blue)} .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px} .modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)}
+#toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+.price{font-weight:600;color:var(--indigo)}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Music Store</h1><div class="sub">Instruments, people & inventory</div><div class="orange-bar"></div>
+    <label>Server URL</label><input id="login-url" value="http://localhost:3021">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Note<span>Worthy</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('inventory')">Inventory</button>
+      <button onclick="switchTab('team')">Team</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('dash')">Dashboard</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <div id="console-inventory" class="console active">
+    <h2 class="page-title">Inventory</h2><div class="page-sub">Instruments, gear & accessories</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openInvModal()">+ Add Item</button>
+      <div class="filter-bar">
+        <select id="f-cat" onchange="loadInv()"><option value="">All Categories</option><option>Guitar</option><option>Bass</option><option>Drums</option><option>Keys</option><option>Wind</option><option>Strings</option><option>Accessories</option></select>
+        <select id="f-stat" onchange="loadInv()"><option value="">All Status</option><option>In Stock</option><option>Sold</option><option>On Hold</option><option>Consignment</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Item</th><th>Category</th><th>Brand</th><th>Cond.</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody id="inv-body"></tbody></table></div>
+    <div class="pagination" id="inv-pag"></div>
+  </div>
+
+  <div id="console-team" class="console">
+    <h2 class="page-title">Team</h2><div class="page-sub">Store staff directory</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEmpModal()">+ Add Employee</button>
+      <div class="filter-bar">
+        <select id="f-role" onchange="loadEmp()"><option value="">All Roles</option><option>Manager</option><option>Sales</option><option>Repair Tech</option><option>Instructor</option></select>
+        <select id="f-empstat" onchange="loadEmp()"><option value="">All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Hired</th><th>Status</th><th></th></tr></thead><tbody id="emp-body"></tbody></table></div>
+    <div class="pagination" id="emp-pag"></div>
+  </div>
+
+  <div id="console-customers" class="console">
+    <h2 class="page-title">Customers</h2><div class="page-sub">Customer directory & membership</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openCustModal()">+ Add Customer</button>
+      <div class="filter-bar">
+        <select id="f-mem" onchange="loadCust()"><option value="">All Memberships</option><option>Gold</option><option>Silver</option><option>None</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Membership</th><th>Notes</th><th></th></tr></thead><tbody id="cust-body"></tbody></table></div>
+    <div class="pagination" id="cust-pag"></div>
+  </div>
+
+  <div id="console-dash" class="console">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">Store overview</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Inventory by Category</h3><div id="cat-dist"></div></div>
+      <div class="card"><h3>Inventory by Status</h3><div id="stat-dist"></div></div>
+      <div class="card"><h3>Team by Role</h3><div id="role-dist"></div></div>
+      <div class="card"><h3>Top Brands</h3><div id="brand-dist"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='music-store';
+const PS={inv:{pt:null,p:1,h:[]},emp:{pt:null,p:1,h:[]},cust:{pt:null,p:1,h:[]}};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badge(val,type){const c=(val||'').toLowerCase().replace(/\s+/g,'-');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid credentials');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('login-pass').value=''}
+
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+function switchTab(tab){document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+document.getElementById('console-'+tab).classList.add('active');const tabs=['inventory','team','customers','dash'];document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+if(tab==='inventory')loadInv();else if(tab==='team')loadEmp();else if(tab==='customers')loadCust();else loadDash()}
+function enterApp(){loadInv()}
+
+/* ── INVENTORY ── */
+async function loadInv(dir){
+  const ps=PS.inv;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  const cat=document.getElementById('f-cat').value,stat=document.getElementById('f-stat').value;
+  let p=`/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25`;const q=[];
+  if(cat)q.push(`values[Category]="${cat}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('inv-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Serial Number'))}</div></td>
+    <td>${badge(v(s,'Category'))}</td><td>${esc(v(s,'Brand'))}</td><td>${badge(v(s,'Condition'))}</td>
+    <td class="price">$${esc(v(s,'Price'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editInv('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No items</td></tr>';
+  document.getElementById('inv-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadInv('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadInv('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+function openInvModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Item':'New Item';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Name</label><input id="m-name" value="${esc(vl.Name||'')}">
+    <label>Category</label><select id="m-cat"><option value="">Select...</option>${['Guitar','Bass','Drums','Keys','Wind','Strings','Accessories'].map(c=>`<option ${vl.Category===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Brand</label><input id="m-brand" value="${esc(vl.Brand||'')}">
+    <label>Condition</label><select id="m-cond">${['New','Used','Refurbished'].map(c=>`<option ${vl.Condition===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Price</label><input id="m-price" value="${esc(vl.Price||'')}" placeholder="999.99">
+    <label>Serial Number</label><input id="m-sn" value="${esc(vl['Serial Number']||'')}">
+    <label>Status</label><select id="m-status">${['In Stock','Sold','On Hold','Consignment'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveInv('${s.id||''}')">${ex?'Update':'Create'}</button>
+    ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadInv')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open')}
+
+async function editInv(id){const d=await api(`/submissions/${id}?include=values`);openInvModal(d.submission||d)}
+async function saveInv(id){const values={Name:document.getElementById('m-name').value,Category:document.getElementById('m-cat').value,Brand:document.getElementById('m-brand').value,Condition:document.getElementById('m-cond').value,Price:document.getElementById('m-price').value,'Serial Number':document.getElementById('m-sn').value,Status:document.getElementById('m-status').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/inventory/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadInv()}catch(e){toast('Error: '+e.message)}}
+
+/* ── EMPLOYEES ── */
+async function loadEmp(dir){
+  const ps=PS.emp;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  const role=document.getElementById('f-role').value,stat=document.getElementById('f-empstat').value;
+  let p=`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`;const q=[];
+  if(role)q.push(`values[Role]="${role}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('emp-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Role'))}</td><td>${esc(v(s,'Phone'))}</td><td>${esc(v(s,'Email'))}</td><td>${esc(v(s,'Hire Date'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editEmp('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No employees</td></tr>';
+  document.getElementById('emp-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadEmp('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadEmp('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+function openEmpModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Employee':'New Employee';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Name</label><input id="me-name" value="${esc(vl.Name||'')}">
+    <label>Role</label><select id="me-role"><option value="">Select...</option>${['Manager','Sales','Repair Tech','Instructor'].map(c=>`<option ${vl.Role===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Phone</label><input id="me-phone" value="${esc(vl.Phone||'')}">
+    <label>Email</label><input id="me-email" value="${esc(vl.Email||'')}">
+    <label>Hire Date</label><input id="me-hire" type="date" value="${esc(vl['Hire Date']||'')}">
+    <label>Status</label><select id="me-stat">${['Active','Inactive'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEmp('${s.id||''}')">${ex?'Update':'Create'}</button>
+    ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadEmp')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open')}
+
+async function editEmp(id){const d=await api(`/submissions/${id}?include=values`);openEmpModal(d.submission||d)}
+async function saveEmp(id){const values={Name:document.getElementById('me-name').value,Role:document.getElementById('me-role').value,Phone:document.getElementById('me-phone').value,Email:document.getElementById('me-email').value,'Hire Date':document.getElementById('me-hire').value,Status:document.getElementById('me-stat').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/employees/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Added');loadEmp()}catch(e){toast('Error: '+e.message)}}
+
+/* ── CUSTOMERS ── */
+async function loadCust(dir){
+  const ps=PS.cust;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+  const mem=document.getElementById('f-mem').value;
+  let p=`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`;
+  if(mem)p+='&q='+encodeURIComponent(`values[Membership]="${mem}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('cust-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Phone'))}</td><td>${esc(v(s,'Email'))}</td><td>${badge(v(s,'Membership'))}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Notes'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editCust('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No customers</td></tr>';
+  document.getElementById('cust-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadCust('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadCust('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
+
+function openCustModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Customer':'New Customer';
+  document.getElementById('modal-body').innerHTML=`
+    <label>Name</label><input id="mc-name" value="${esc(vl.Name||'')}">
+    <label>Phone</label><input id="mc-phone" value="${esc(vl.Phone||'')}">
+    <label>Email</label><input id="mc-email" value="${esc(vl.Email||'')}">
+    <label>Membership</label><select id="mc-mem">${['None','Silver','Gold'].map(c=>`<option ${vl.Membership===c?'selected':''}>${c}</option>`).join('')}</select>
+    <label>Notes</label><textarea id="mc-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveCust('${s.id||''}')">${ex?'Update':'Create'}</button>
+    ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadCust')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open')}
+
+async function editCust(id){const d=await api(`/submissions/${id}?include=values`);openCustModal(d.submission||d)}
+async function saveCust(id){const values={Name:document.getElementById('mc-name').value,Phone:document.getElementById('mc-phone').value,Email:document.getElementById('mc-email').value,Membership:document.getElementById('mc-mem').value,Notes:document.getElementById('mc-notes').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/customers/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Added');loadCust()}catch(e){toast('Error: '+e.message)}}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const[invD,empD,custD]=await Promise.all([
+    api(`/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25`),
+    api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`),
+    api(`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`)]);
+  const inv=invD.submissions||[],emp=empD.submissions||[],cust=custD.submissions||[];
+  const inStock=inv.filter(s=>v(s,'Status')==='In Stock').length;
+  const totalValue=inv.filter(s=>v(s,'Status')==='In Stock').reduce((sum,s)=>sum+parseFloat(v(s,'Price')||0),0);
+  const activeEmp=emp.filter(s=>v(s,'Status')==='Active').length;
+  const goldCust=cust.filter(s=>v(s,'Membership')==='Gold').length;
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="val" style="color:var(--indigo)">${inv.length}</div><div class="label">Total Items</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green)">${inStock}</div><div class="label">In Stock</div></div>
+    <div class="kpi"><div class="val" style="color:var(--indigo)">$${Math.round(totalValue).toLocaleString()}</div><div class="label">Stock Value</div></div>
+    <div class="kpi"><div class="val" style="color:var(--orange)">${activeEmp}</div><div class="label">Active Staff</div></div>
+    <div class="kpi"><div class="val" style="color:#F57F17">${goldCust}</div><div class="label">Gold Members</div></div>`;
+  const countBy=(arr,field)=>{const m={};arr.forEach(s=>{const k=v(s,field)||'Other';m[k]=(m[k]||0)+1});return m};
+  const distHtml=(obj)=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${badge(k)} <strong>${c}</strong></div>`).join('');
+  document.getElementById('cat-dist').innerHTML=distHtml(countBy(inv,'Category'));
+  document.getElementById('stat-dist').innerHTML=distHtml(countBy(inv,'Status'));
+  document.getElementById('role-dist').innerHTML=distHtml(countBy(emp.filter(s=>v(s,'Status')==='Active'),'Role'));
+  document.getElementById('brand-dist').innerHTML=distHtml(countBy(inv,'Brand'))}catch(e){toast('Dashboard error: '+e.message)}}
+
+/* ── SHARED ── */
+async function delSub(id,fn){if(!confirm('Delete?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>

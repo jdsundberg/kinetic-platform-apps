@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Innovation Intake</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+
+/* Login */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input, .login-box select { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus, .login-box select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* Topbar */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:4px; margin-left:24px; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.7); padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; }
+.topbar nav button:hover { background:rgba(255,255,255,.1); color:white; }
+.topbar nav button.active { background:var(--orange); color:white; }
+.topbar .spacer { flex:1; }
+.topbar .user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.topbar .user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+/* Console */
+.console { padding:24px; max-width:1400px; margin:0 auto; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* Cards */
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:12px; }
+
+/* KPI */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); }
+.kpi .lbl { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+.kpi .sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal .val { color:var(--teal); }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; }
+th { background:var(--light); text-align:left; padding:8px 10px; font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; position:sticky; top:0; }
+td { padding:8px 10px; border-bottom:1px solid var(--border); font-size:13px; }
+tr:hover td { background:#FAFAFA; }
+tr.clickable { cursor:pointer; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-submitted { background:#E3F2FD; color:#1565C0; }
+.badge-under-review { background:#FFF8E1; color:#F9A825; }
+.badge-needs-clarification { background:#FFF3E0; color:#E65100; }
+.badge-approved { background:#E8F5E9; color:#2E7D32; }
+.badge-rejected { background:#FDECEA; color:#C62828; }
+.badge-merged { background:#F3E5F5; color:#7B1FA2; }
+.badge-redirected { background:#E0F2F1; color:#00695C; }
+.badge-ready-for-ai-build { background:#E8F5E9; color:#1B5E20; border:1px solid #A5D6A7; }
+
+/* Toolbar */
+.toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.toolbar select, .toolbar input { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; outline:none; }
+.toolbar select:focus, .toolbar input:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+
+/* Buttons */
+.btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; border:none; font-family:inherit; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { background:#ECEDEF; }
+.btn-success { background:var(--green); color:white; }
+.btn-success:hover { background:#2E9149; }
+.btn-danger { background:var(--red); color:white; }
+.btn-danger:hover { background:#D32F2F; }
+.btn-sm { padding:4px 10px; border-radius:6px; font-size:12px; }
+
+/* Pagination */
+.pager-row { display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:13px; color:var(--gray); }
+.pager-row button { padding:6px 14px; border:1px solid var(--border); border-radius:6px; background:white; font-size:12px; font-weight:600; font-family:inherit; }
+.pager-row button:disabled { opacity:.4; cursor:default; }
+
+/* Forms */
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.form-group input, .form-group textarea, .form-group select { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; outline:none; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.form-group textarea { resize:vertical; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
+
+/* Modal */
+#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:flex-start; justify-content:center; padding:30px 20px; overflow-y:auto; }
+#modal.open { display:flex; }
+.modal-box { background:white; border-radius:16px; width:100%; max-width:800px; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-header { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.modal-header h2 { flex:1; font-size:18px; color:var(--blue); }
+.modal-header .close-btn { background:none; border:none; font-size:22px; color:var(--gray); padding:4px 8px; border-radius:6px; }
+.modal-header .close-btn:hover { background:var(--light); }
+.modal-body { padding:24px; }
+
+/* Modal tabs */
+.modal-tabs { display:flex; gap:4px; padding:0 24px; border-bottom:1px solid var(--border); }
+.modal-tabs button { background:none; border:none; padding:10px 14px; font-size:13px; font-weight:600; color:var(--gray); border-bottom:2px solid transparent; font-family:inherit; }
+.modal-tabs button.active { color:var(--orange); border-bottom-color:var(--orange); }
+.modal-tab-panel { display:none; }
+.modal-tab-panel.active { display:block; }
+
+/* Score bars */
+.score-bar-wrap { margin-bottom:10px; }
+.score-bar-label { font-size:12px; color:var(--gray); margin-bottom:4px; display:flex; justify-content:space-between; }
+.score-bar { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:4px; transition:width .3s; }
+
+/* Key-value pairs */
+.kv-grid { display:grid; grid-template-columns:140px 1fr; gap:8px 12px; }
+.kv-grid .k { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; padding:4px 0; }
+.kv-grid .v { font-size:13px; padding:4px 0; word-break:break-word; }
+
+/* Comment thread */
+.comment { border-left:3px solid var(--border); padding:8px 12px; margin-bottom:8px; }
+.comment.type-audit { border-left-color:var(--purple); }
+.comment.type-status-change { border-left-color:var(--orange); }
+.comment.type-clarification-request { border-left-color:var(--red); }
+.comment.type-clarification-response { border-left-color:var(--green); }
+.comment .c-header { font-size:12px; color:var(--gray); margin-bottom:4px; }
+.comment .c-header strong { color:var(--blue); }
+.comment .c-body { font-size:13px; }
+.comment .c-meta { font-size:11px; color:var(--gray); margin-top:4px; }
+
+/* Prompt version */
+.prompt-ver { background:var(--light); border-radius:8px; padding:12px; margin-bottom:8px; border:1px solid var(--border); }
+.prompt-ver.approved { border-color:var(--green); background:#F1F8E9; }
+.prompt-ver pre { white-space:pre-wrap; font-size:12px; margin-top:8px; background:white; padding:8px; border-radius:6px; border:1px solid var(--border); }
+
+/* Grid layouts */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
+
+/* Toast */
+#toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:300; white-space:nowrap; }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Loading */
+.loading { text-align:center; padding:40px; color:var(--gray); font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Innovation Intake</h1>
+    <div class="sub">Application proposal intake, review & AI build pipeline</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="http://localhost:3013">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Innovation <span>Intake</span></div>
+    <nav>
+      <button class="active" onclick="switchTab('submit')">Submit Proposal</button>
+      <button onclick="switchTab('my')">My Proposals</button>
+      <button onclick="switchTab('review')">Review Queue</button>
+      <button onclick="switchTab('dashboard')">Dashboard</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- SUBMIT TAB -->
+    <div id="tab-submit" class="tab-panel active">
+      <div class="page-title">Submit New Proposal</div>
+      <div class="page-sub">Describe your application idea with business justification and AI prompt</div>
+
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>App Name *</label>
+            <input id="f-appname" placeholder="e.g., Customer Feedback Portal">
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="f-category">
+              <option value="New Application">New Application</option>
+              <option value="Enhancement">Enhancement</option>
+              <option value="Integration">Integration</option>
+              <option value="Data/Analytics">Data/Analytics</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Business Justification *</label>
+          <textarea id="f-justification" rows="4" placeholder="Why is this application needed?"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Goals & Outcomes *</label>
+          <textarea id="f-goals" rows="4" placeholder="What will this application achieve?"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Target Users *</label>
+            <input id="f-users" placeholder="Who will use this?">
+          </div>
+          <div class="form-group">
+            <label>Known Alternatives</label>
+            <input id="f-alternatives" placeholder="Existing tools considered">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Expected Business Impact *</label>
+          <textarea id="f-impact" rows="3" placeholder="Quantify the expected impact"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Custom AI Prompt *</label>
+          <textarea id="f-prompt" rows="8" placeholder="Write the AI prompt that will be used to build this application..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitProposal()" id="submit-btn">Submit Proposal</button>
+      </div>
+    </div>
+
+    <!-- MY PROPOSALS TAB -->
+    <div id="tab-my" class="tab-panel">
+      <div class="page-title">My Proposals</div>
+      <div class="page-sub">Track your submitted proposals</div>
+      <div class="toolbar">
+        <select id="my-status-filter" onchange="loadMyProposals('reset')">
+          <option value="">All Statuses</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Under Review">Under Review</option>
+          <option value="Needs Clarification">Needs Clarification</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Merged">Merged</option>
+          <option value="Redirected">Redirected</option>
+          <option value="Ready for AI Build">Ready for AI Build</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0; overflow:auto;">
+        <table>
+          <thead><tr><th>Proposal ID</th><th>App Name</th><th>Category</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody id="my-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager-row">
+        <span id="my-page-info">Page 1</span>
+        <div>
+          <button onclick="loadMyProposals('prev')" id="my-prev" disabled>Prev</button>
+          <button onclick="loadMyProposals('next')" id="my-next" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEW QUEUE TAB -->
+    <div id="tab-review" class="tab-panel">
+      <div class="page-title">Review Queue</div>
+      <div class="page-sub">Review and assess submitted proposals</div>
+      <div class="toolbar">
+        <select id="rq-status-filter" onchange="loadReviewQueue('reset')">
+          <option value="">All Statuses</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Under Review">Under Review</option>
+          <option value="Needs Clarification">Needs Clarification</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Merged">Merged</option>
+          <option value="Redirected">Redirected</option>
+          <option value="Ready for AI Build">Ready for AI Build</option>
+        </select>
+        <select id="rq-category-filter" onchange="loadReviewQueue('reset')">
+          <option value="">All Categories</option>
+          <option value="New Application">New Application</option>
+          <option value="Enhancement">Enhancement</option>
+          <option value="Integration">Integration</option>
+          <option value="Data/Analytics">Data/Analytics</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0; overflow:auto;">
+        <table>
+          <thead><tr><th>Proposal ID</th><th>App Name</th><th>Submitter</th><th>Category</th><th>Status</th><th>Scores</th><th>Submitted</th></tr></thead>
+          <tbody id="rq-tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager-row">
+        <span id="rq-page-info">Page 1</span>
+        <div>
+          <button onclick="loadReviewQueue('prev')" id="rq-prev" disabled>Prev</button>
+          <button onclick="loadReviewQueue('next')" id="rq-next" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab-panel">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Innovation pipeline metrics and insights</div>
+      <div id="dash-content"><div class="loading">Loading dashboard...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title">Proposal Detail</h2>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-tabs" id="modal-tabs">
+      <button class="active" onclick="switchModalTab('details')">Details</button>
+      <button onclick="switchModalTab('review-tab')">Review</button>
+      <button onclick="switchModalTab('comments-tab')">Comments</button>
+      <button onclick="switchModalTab('prompt-tab')">Prompt</button>
+      <button onclick="switchModalTab('actions-tab')">Actions</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'innovation';
+let currentProposal = null;
+let modalData = {};
+
+const myPager = { pageKeys: [null], pageIndex: 0, hasNext: false };
+const rqPager = { pageKeys: [null], pageIndex: 0, hasNext: false };
+
+/* ── API Layer ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function customApi(path, opts = {}) {
+  const res = await fetch(`${API.url}${path}`, {
+    ...opts,
+    headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let msg;
+    try { msg = JSON.parse(text).error; } catch { msg = text; }
+    throw new Error(msg || `${res.status}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('text/markdown')) return res.text();
+  return res.json();
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+/* ── Login / Logout ── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    API = { url, auth: btoa(user + ':' + pass), user, displayName: '' };
+    const res = await fetch(`${url}/app/api/v1/me`, { headers: { 'Authorization': 'Basic ' + API.auth } });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const d = await res.json();
+    API.displayName = d.displayName || d.user?.displayName || user;
+    try {
+      const sr = await fetch(`${url}/app/api/v1/space`, { headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' } });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    switchTab('submit');
+  } catch(e) {
+    err.textContent = e.message.includes('Failed to fetch') ? 'Cannot reach server.' : 'Login failed: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+async function restoreSession() {
+  const saved = sessionStorage.getItem('kinetic_session');
+  if (!saved) return;
+  try {
+    API = JSON.parse(saved);
+    const res = await fetch(`${API.url}/app/api/v1/me`, { headers: { 'Authorization': 'Basic ' + API.auth } });
+    if (!res.ok) throw new Error('expired');
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(`${API.url}/app/api/v1/space`, { headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    switchTab('submit');
+  } catch { doLogout(); }
+}
+restoreSession();
+
+/* ── Tab Switching ── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const labels = { submit: 'Submit Proposal', my: 'My Proposals', review: 'Review Queue', dashboard: 'Dashboard' };
+  document.querySelectorAll('.topbar nav button').forEach(b => { if (b.textContent === labels[tab]) b.classList.add('active'); });
+
+  if (tab === 'my') loadMyProposals('reset');
+  if (tab === 'review') loadReviewQueue('reset');
+  if (tab === 'dashboard') loadDashboard();
+}
+
+/* ── Status Badge ── */
+function statusBadge(status) {
+  const cls = (status || '').toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge badge-${cls}">${status || 'Unknown'}</span>`;
+}
+
+function scoreDisplay(inn, ovr, ali) {
+  if (!inn && !ovr && !ali) return '<span style="color:var(--gray)">--</span>';
+  return `<span style="color:var(--green)">${inn || '-'}</span>/<span style="color:var(--red)">${ovr || '-'}</span>/<span style="color:var(--blue)">${ali || '-'}</span>`;
+}
+
+function shortDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/* ── Submit Proposal ── */
+async function submitProposal() {
+  const appName = document.getElementById('f-appname').value.trim();
+  const category = document.getElementById('f-category').value;
+  const justification = document.getElementById('f-justification').value.trim();
+  const goals = document.getElementById('f-goals').value.trim();
+  const users = document.getElementById('f-users').value.trim();
+  const impact = document.getElementById('f-impact').value.trim();
+  const alternatives = document.getElementById('f-alternatives').value.trim();
+  const prompt = document.getElementById('f-prompt').value.trim();
+
+  if (!appName || !justification || !goals || !users || !impact || !prompt) {
+    showToast('Please fill in all required fields'); return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  try {
+    // Generate proposal ID
+    const existing = await api(`/kapps/${KAPP}/forms/proposals/submissions?limit=1`);
+    const count = (existing.submissions || []).length > 0 ? 10000 : 0;
+    // Simple ID generation: fetch recent to find max
+    let maxNum = 0;
+    const recent = await api(`/kapps/${KAPP}/forms/proposals/submissions?include=values&limit=25`);
+    for (const s of (recent.submissions || [])) {
+      const pid = v(s, 'Proposal ID');
+      const m = pid.match(/INN-(\d+)/);
+      if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+    }
+    const proposalId = 'INN-' + String(maxNum + 1).padStart(5, '0');
+    const now = new Date().toISOString();
+
+    // Create proposal
+    const result = await api(`/kapps/${KAPP}/forms/proposals/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': proposalId,
+          'App Name': appName,
+          'Submitter': API.user,
+          'Submitter Display Name': API.displayName,
+          'Business Justification': justification,
+          'Goals Outcomes': goals,
+          'Target Users': users,
+          'Expected Business Impact': impact,
+          'Known Alternatives': alternatives,
+          'Custom AI Prompt': prompt,
+          'Status': 'Submitted',
+          'Category': category,
+          'Submitted At': now,
+          'Prompt Version': '1',
+        }
+      })
+    });
+
+    // Create prompt v1
+    await api(`/kapps/${KAPP}/forms/prompt-versions/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': proposalId,
+          'Version': '1',
+          'Prompt Content': prompt,
+          'Author': API.user,
+          'Author Display Name': API.displayName,
+          'Change Notes': 'Initial prompt',
+          'Timestamp': now,
+        }
+      })
+    });
+
+    // Create audit comment
+    await api(`/kapps/${KAPP}/forms/comments/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': proposalId,
+          'Author': API.user,
+          'Author Display Name': API.displayName,
+          'Type': 'Audit',
+          'Content': 'Proposal submitted',
+          'Timestamp': now,
+          'Field Changed': 'Status',
+          'New Value': 'Submitted',
+        }
+      })
+    });
+
+    // Clear form
+    ['f-appname', 'f-justification', 'f-goals', 'f-users', 'f-alternatives', 'f-impact', 'f-prompt'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+
+    showToast(`Proposal ${proposalId} submitted successfully`);
+    switchTab('my');
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit Proposal';
+  }
+}
+
+/* ── My Proposals ── */
+async function loadMyProposals(direction) {
+  if (direction === 'reset') { myPager.pageKeys = [null]; myPager.pageIndex = 0; myPager.hasNext = false; }
+  else if (direction === 'next') { myPager.pageIndex++; }
+  else if (direction === 'prev' && myPager.pageIndex > 0) { myPager.pageIndex--; }
+
+  const statusFilter = document.getElementById('my-status-filter').value;
+  let kql = `values[Submitter]="${API.user}"`;
+  if (statusFilter) kql += ` AND values[Status]="${statusFilter}"`;
+  const lastCreatedAt = myPager.pageKeys[myPager.pageIndex];
+  if (lastCreatedAt) kql = '(' + kql + ') AND createdAt < "' + lastCreatedAt + '"';
+
+  let url = `/kapps/${KAPP}/forms/proposals/submissions?include=values,details&limit=25&q=${encodeURIComponent(kql)}`;
+
+  try {
+    const data = await api(url);
+    const subs = data.submissions || [];
+    myPager.hasNext = !!data.nextPageToken;
+    if (myPager.hasNext && subs.length) myPager.pageKeys[myPager.pageIndex + 1] = subs[subs.length - 1].createdAt;
+    const tbody = document.getElementById('my-tbody');
+    tbody.innerHTML = subs.map(s => `
+      <tr class="clickable" onclick="openProposal('${s.id}')">
+        <td>${v(s,'Proposal ID')}</td>
+        <td>${v(s,'App Name')}</td>
+        <td>${v(s,'Category')}</td>
+        <td>${statusBadge(v(s,'Status'))}</td>
+        <td>${shortDate(v(s,'Submitted At'))}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gray);padding:24px">No proposals found</td></tr>';
+
+    document.getElementById('my-page-info').textContent = `Page ${myPager.pageIndex + 1}`;
+    document.getElementById('my-prev').disabled = myPager.pageIndex === 0;
+    document.getElementById('my-next').disabled = !myPager.hasNext;
+  } catch(e) { showToast('Error loading proposals: ' + e.message); }
+}
+
+/* ── Review Queue ── */
+async function loadReviewQueue(direction) {
+  if (direction === 'reset') { rqPager.pageKeys = [null]; rqPager.pageIndex = 0; rqPager.hasNext = false; }
+  else if (direction === 'next') { rqPager.pageIndex++; }
+  else if (direction === 'prev' && rqPager.pageIndex > 0) { rqPager.pageIndex--; }
+
+  const statusFilter = document.getElementById('rq-status-filter').value;
+  const catFilter = document.getElementById('rq-category-filter').value;
+
+  // Build KQL - only use compound index if both filters present
+  let kql = '';
+  if (statusFilter && catFilter) {
+    // Would need compound index for Status+Category; use Status only in KQL, filter Category client-side
+    kql = `values[Status]="${statusFilter}"`;
+  } else if (statusFilter) {
+    kql = `values[Status]="${statusFilter}"`;
+  } else if (catFilter) {
+    kql = `values[Category]="${catFilter}"`;
+  }
+
+  const rqLastCreated = rqPager.pageKeys[rqPager.pageIndex];
+  if (rqLastCreated) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + rqLastCreated + '"';
+  let url = `/kapps/${KAPP}/forms/proposals/submissions?include=values&limit=25`;
+  if (kql) url += `&q=${encodeURIComponent(kql)}`;
+
+  try {
+    const data = await api(url);
+    let subs = data.submissions || [];
+    rqPager.hasNext = !!data.nextPageToken;
+    if (rqPager.hasNext && subs.length) rqPager.pageKeys[rqPager.pageIndex + 1] = subs[subs.length - 1].createdAt;
+
+    // Client-side filter for category when combined with status
+    if (statusFilter && catFilter) {
+      subs = subs.filter(s => v(s, 'Category') === catFilter);
+    }
+
+    const tbody = document.getElementById('rq-tbody');
+    tbody.innerHTML = subs.map(s => `
+      <tr class="clickable" onclick="openProposal('${s.id}')">
+        <td>${v(s,'Proposal ID')}</td>
+        <td>${v(s,'App Name')}</td>
+        <td>${v(s,'Submitter Display Name') || v(s,'Submitter')}</td>
+        <td>${v(s,'Category')}</td>
+        <td>${statusBadge(v(s,'Status'))}</td>
+        <td>${scoreDisplay(v(s,'Innovation Score'), v(s,'Overlap Risk Score'), v(s,'Strategic Alignment Score'))}</td>
+        <td>${shortDate(v(s,'Submitted At'))}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:24px">No proposals found</td></tr>';
+
+    document.getElementById('rq-page-info').textContent = `Page ${rqPager.pageIndex + 1}`;
+    document.getElementById('rq-prev').disabled = rqPager.pageIndex === 0;
+    document.getElementById('rq-next').disabled = !rqPager.hasNext;
+  } catch(e) { showToast('Error loading review queue: ' + e.message); }
+}
+
+/* ── Dashboard ── */
+async function loadDashboard() {
+  const el = document.getElementById('dash-content');
+  el.innerHTML = '<div class="loading">Loading dashboard...</div>';
+  try {
+    const stats = await customApi('/api/innovation/stats');
+
+    let html = '<div class="kpi-row">';
+    html += kpiCard('Total Proposals', stats.total, 'orange');
+    html += kpiCard('Approved', (stats.byStatus?.['Approved'] || 0) + (stats.byStatus?.['Ready for AI Build'] || 0), 'green');
+    html += kpiCard('Under Review', stats.byStatus?.['Under Review'] || 0, 'purple');
+    html += kpiCard('Rejected', stats.byStatus?.['Rejected'] || 0, 'red');
+    html += kpiCard('Total Reviews', stats.totalReviews, 'teal');
+    html += kpiCard('Avg Days to Decision', stats.avgDaysToDecision || '--', '');
+    html += '</div>';
+
+    // Avg Scores
+    if (stats.avgScores) {
+      html += '<div class="grid-2">';
+      html += '<div class="card"><h3>Average Scores</h3>';
+      html += scoreBarHTML('Innovation', stats.avgScores.innovation, 10, 'var(--green)');
+      html += scoreBarHTML('Overlap Risk', stats.avgScores.overlapRisk, 10, 'var(--red)');
+      html += scoreBarHTML('Strategic Alignment', stats.avgScores.alignment, 10, 'var(--blue)');
+      html += '</div>';
+
+      // Status breakdown
+      html += '<div class="card"><h3>Status Breakdown</h3>';
+      const statuses = ['Submitted', 'Under Review', 'Needs Clarification', 'Approved', 'Rejected', 'Merged', 'Redirected', 'Ready for AI Build'];
+      for (const st of statuses) {
+        const count = stats.byStatus?.[st] || 0;
+        if (count > 0) {
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)">
+            <span>${statusBadge(st)}</span><span style="font-weight:600">${count}</span></div>`;
+        }
+      }
+      html += '</div></div>';
+    }
+
+    // Category breakdown
+    if (stats.byCategory && Object.keys(stats.byCategory).length) {
+      html += '<div class="card"><h3>By Category</h3><div class="grid-2">';
+      for (const [cat, count] of Object.entries(stats.byCategory)) {
+        html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px">${cat}</span><span style="font-weight:700">${count}</span></div>`;
+      }
+      html += '</div></div>';
+    }
+
+    // Recent decisions
+    if (stats.recentDecisions?.length) {
+      html += '<div class="card"><h3>Recent Decisions</h3>';
+      html += '<table><thead><tr><th>Proposal</th><th>App Name</th><th>Decision</th><th>Category</th><th>Date</th></tr></thead><tbody>';
+      for (const d of stats.recentDecisions) {
+        html += `<tr class="clickable" onclick="openProposal('${d.id}')">
+          <td>${d.proposalId}</td><td>${d.appName}</td><td>${statusBadge(d.decision)}</td>
+          <td>${d.category}</td><td>${shortDate(d.decidedAt)}</td></tr>`;
+      }
+      html += '</tbody></table></div>';
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="card" style="color:var(--red)">Error loading dashboard: ${e.message}</div>`;
+  }
+}
+
+function kpiCard(label, value, colorClass) {
+  return `<div class="kpi ${colorClass}"><div class="val">${value}</div><div class="lbl">${label}</div></div>`;
+}
+
+function scoreBarHTML(label, value, max, color) {
+  const pct = (parseFloat(value) / max * 100).toFixed(0);
+  return `<div class="score-bar-wrap">
+    <div class="score-bar-label"><span>${label}</span><span>${value}/${max}</span></div>
+    <div class="score-bar"><div class="score-bar-fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+}
+
+/* ── Proposal Detail Modal ── */
+async function openProposal(id) {
+  currentProposal = id;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const result = await api(`/submissions/${id}?include=values`);
+    const p = result.submission;
+    modalData.proposal = p;
+
+    const pid = v(p, 'Proposal ID');
+    document.getElementById('modal-title').textContent = `${pid} - ${v(p, 'App Name')}`;
+
+    // Load related data in parallel
+    const [commentsData, reviewsData, versionsData] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/comments/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Proposal ID]="${pid}"`)}`),
+      api(`/kapps/${KAPP}/forms/reviews/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Proposal ID]="${pid}"`)}`),
+      api(`/kapps/${KAPP}/forms/prompt-versions/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Proposal ID]="${pid}"`)}`),
+    ]);
+
+    modalData.comments = commentsData.submissions || [];
+    modalData.reviews = reviewsData.submissions || [];
+    modalData.versions = versionsData.submissions || [];
+
+    switchModalTab('details');
+  } catch(e) {
+    document.getElementById('modal-body').innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentProposal = null;
+}
+
+function switchModalTab(tab) {
+  document.querySelectorAll('.modal-tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.modal-tabs button').forEach(b => {
+    const map = { 'Details': 'details', 'Review': 'review-tab', 'Comments': 'comments-tab', 'Prompt': 'prompt-tab', 'Actions': 'actions-tab' };
+    if (map[b.textContent] === tab) b.classList.add('active');
+  });
+
+  const body = document.getElementById('modal-body');
+  const p = modalData.proposal;
+  if (!p) return;
+
+  if (tab === 'details') renderDetailsTab(body, p);
+  else if (tab === 'review-tab') renderReviewTab(body, p);
+  else if (tab === 'comments-tab') renderCommentsTab(body, p);
+  else if (tab === 'prompt-tab') renderPromptTab(body, p);
+  else if (tab === 'actions-tab') renderActionsTab(body, p);
+}
+
+function renderDetailsTab(el, p) {
+  const fields = [
+    ['Proposal ID', v(p, 'Proposal ID')], ['App Name', v(p, 'App Name')],
+    ['Status', statusBadge(v(p, 'Status'))], ['Category', v(p, 'Category')],
+    ['Submitter', v(p, 'Submitter Display Name') || v(p, 'Submitter')],
+    ['Complexity', v(p, 'Complexity') || '--'],
+    ['Assigned Reviewer', v(p, 'Assigned Reviewer') || '--'],
+    ['Submitted', shortDate(v(p, 'Submitted At'))],
+    ['Reviewed', shortDate(v(p, 'Reviewed At')) || '--'],
+    ['Decided', shortDate(v(p, 'Decided At')) || '--'],
+  ];
+
+  let html = '<div class="kv-grid">';
+  for (const [k, val] of fields) html += `<div class="k">${k}</div><div class="v">${val}</div>`;
+  html += '</div>';
+
+  html += '<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">';
+  html += `<div class="form-group"><label>Business Justification</label><div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:8px">${esc(v(p, 'Business Justification'))}</div></div>`;
+  html += `<div class="form-group"><label>Goals & Outcomes</label><div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:8px">${esc(v(p, 'Goals Outcomes'))}</div></div>`;
+  html += `<div class="form-group"><label>Target Users</label><div style="font-size:13px">${esc(v(p, 'Target Users'))}</div></div>`;
+  html += `<div class="form-group"><label>Expected Business Impact</label><div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:8px">${esc(v(p, 'Expected Business Impact'))}</div></div>`;
+  if (v(p, 'Known Alternatives')) {
+    html += `<div class="form-group"><label>Known Alternatives</label><div style="font-size:13px;white-space:pre-wrap">${esc(v(p, 'Known Alternatives'))}</div></div>`;
+  }
+  if (v(p, 'Decision')) {
+    html += '<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">';
+    html += `<div class="kv-grid">
+      <div class="k">Decision</div><div class="v">${statusBadge(v(p, 'Decision'))}</div>
+      <div class="k">Reason</div><div class="v">${esc(v(p, 'Decision Reason'))}</div>`;
+    if (v(p, 'Merge Target')) html += `<div class="k">Merge Target</div><div class="v">${esc(v(p, 'Merge Target'))}</div>`;
+    if (v(p, 'Redirect Target')) html += `<div class="k">Redirect Target</div><div class="v">${esc(v(p, 'Redirect Target'))}</div>`;
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderReviewTab(el, p) {
+  const reviews = modalData.reviews || [];
+  let html = '';
+
+  if (reviews.length > 0) {
+    for (const r of reviews) {
+      html += '<div class="card">';
+      html += `<h3>Review by ${v(r, 'Reviewer Display Name') || v(r, 'Reviewer')}</h3>`;
+      html += `<div style="font-size:12px;color:var(--gray);margin-bottom:12px">${shortDate(v(r, 'Reviewed At'))}</div>`;
+      html += scoreBarHTML('Innovation', v(r, 'Innovation Score') || 0, 10, 'var(--green)');
+      html += scoreBarHTML('Overlap Risk', v(r, 'Overlap Risk Score') || 0, 10, 'var(--red)');
+      html += scoreBarHTML('Strategic Alignment', v(r, 'Strategic Alignment Score') || 0, 10, 'var(--blue)');
+      html += '<div class="kv-grid" style="margin-top:12px">';
+      html += `<div class="k">Complexity</div><div class="v">${v(r, 'Complexity Assessment') || '--'}</div>`;
+      html += `<div class="k">Cost</div><div class="v">${v(r, 'Cost Estimate') || '--'}</div>`;
+      html += `<div class="k">Risk</div><div class="v">${v(r, 'Risk Assessment') || '--'}</div>`;
+      html += `<div class="k">Recommendation</div><div class="v">${statusBadge(v(r, 'Recommendation'))}</div>`;
+      html += '</div>';
+      if (v(r, 'Overlap Analysis')) html += `<div style="margin-top:8px;font-size:13px"><strong>Overlap Analysis:</strong> ${esc(v(r, 'Overlap Analysis'))}</div>`;
+      if (v(r, 'Similar Apps Found')) html += `<div style="margin-top:4px;font-size:13px"><strong>Similar Apps:</strong> ${esc(v(r, 'Similar Apps Found'))}</div>`;
+      if (v(r, 'Recommendation Notes')) html += `<div style="margin-top:4px;font-size:13px"><strong>Notes:</strong> ${esc(v(r, 'Recommendation Notes'))}</div>`;
+      html += '</div>';
+    }
+  } else {
+    html += '<div style="color:var(--gray);text-align:center;padding:20px">No reviews yet</div>';
+  }
+
+  // Review form
+  const status = v(p, 'Status');
+  if (status === 'Under Review' || status === 'Submitted') {
+    html += '<div class="card"><h3>Submit Review</h3>';
+    html += '<div class="form-row">';
+    html += formField('rv-innovation', 'Innovation Score (1-10)', 'number', '', 'min="1" max="10"');
+    html += formField('rv-overlap', 'Overlap Risk Score (1-10)', 'number', '', 'min="1" max="10"');
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += formField('rv-alignment', 'Strategic Alignment (1-10)', 'number', '', 'min="1" max="10"');
+    html += selectField('rv-complexity', 'Complexity', ['Low', 'Medium', 'High']);
+    html += '</div>';
+    html += '<div class="form-row">';
+    html += selectField('rv-cost', 'Cost Estimate', ['Low', 'Medium', 'High']);
+    html += selectField('rv-risk', 'Risk Assessment', ['Low', 'Medium', 'High']);
+    html += '</div>';
+    html += textareaField('rv-similar', 'Similar Apps Found', 3);
+    html += textareaField('rv-overlap-analysis', 'Overlap Analysis', 4);
+    html += selectField('rv-recommendation', 'Recommendation', ['Approve', 'Reject', 'Merge', 'Redirect', 'Needs Clarification']);
+    html += textareaField('rv-notes', 'Recommendation Notes', 4);
+    html += `<button class="btn btn-primary" onclick="submitReview()">Submit Review</button>`;
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderCommentsTab(el, p) {
+  const comments = (modalData.comments || []).sort((a, b) => (v(a, 'Timestamp') || '').localeCompare(v(b, 'Timestamp') || ''));
+  let html = '';
+
+  for (const c of comments) {
+    const type = v(c, 'Type').toLowerCase().replace(/\s+/g, '-');
+    html += `<div class="comment type-${type}">`;
+    html += `<div class="c-header"><strong>${v(c, 'Author Display Name') || v(c, 'Author')}</strong> &middot; ${v(c, 'Type')}</div>`;
+    html += `<div class="c-body">${esc(v(c, 'Content'))}</div>`;
+    const meta = [];
+    if (v(c, 'Timestamp')) meta.push(new Date(v(c, 'Timestamp')).toLocaleString());
+    if (v(c, 'Field Changed')) meta.push(`${v(c, 'Field Changed')}: ${v(c, 'Previous Value')} → ${v(c, 'New Value')}`);
+    if (v(c, 'Status') === 'Open') meta.push('<span style="color:var(--red)">Awaiting response</span>');
+    if (meta.length) html += `<div class="c-meta">${meta.join(' &middot; ')}</div>`;
+    html += '</div>';
+  }
+
+  if (!comments.length) html += '<div style="color:var(--gray);text-align:center;padding:20px">No comments yet</div>';
+
+  // Add comment form
+  html += '<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">';
+  html += '<div class="form-group"><label>Add Comment</label>';
+  html += `<select id="comment-type" style="margin-bottom:8px">
+    <option value="Comment">Comment</option>
+    <option value="Clarification Response">Clarification Response</option>
+  </select>`;
+  html += `<textarea id="comment-content" rows="3" placeholder="Write your comment..."></textarea></div>`;
+  html += `<button class="btn btn-primary btn-sm" onclick="addComment()">Post Comment</button>`;
+
+  el.innerHTML = html;
+}
+
+function renderPromptTab(el, p) {
+  const versions = (modalData.versions || []).sort((a, b) => parseInt(v(b, 'Version') || '0') - parseInt(v(a, 'Version') || '0'));
+  let html = '';
+
+  for (const pv of versions) {
+    const isApproved = v(pv, 'Is Approved') === 'true';
+    html += `<div class="prompt-ver ${isApproved ? 'approved' : ''}">`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
+    html += `<strong>Version ${v(pv, 'Version')}</strong>`;
+    if (isApproved) html += `<span class="badge badge-approved">Approved</span>`;
+    html += '</div>';
+    html += `<div style="font-size:12px;color:var(--gray);margin-top:4px">${v(pv, 'Author Display Name') || v(pv, 'Author')} &middot; ${shortDate(v(pv, 'Timestamp'))}</div>`;
+    if (v(pv, 'Change Notes')) html += `<div style="font-size:12px;color:var(--gray);margin-top:2px">${esc(v(pv, 'Change Notes'))}</div>`;
+    html += `<pre>${esc(v(pv, 'Prompt Content'))}</pre>`;
+    html += '</div>';
+  }
+
+  if (!versions.length) html += '<div style="color:var(--gray);text-align:center;padding:20px">No prompt versions</div>';
+
+  // Add new version (if not in terminal state)
+  const status = v(p, 'Status');
+  if (!['Rejected', 'Merged', 'Redirected', 'Ready for AI Build'].includes(status)) {
+    html += '<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">';
+    html += '<div class="card"><h3>Create New Version</h3>';
+    html += textareaField('pv-content', 'Prompt Content', 8);
+    html += textareaField('pv-notes', 'Change Notes', 2);
+    html += `<button class="btn btn-primary btn-sm" onclick="createPromptVersion()">Save Version</button>`;
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderActionsTab(el, p) {
+  const status = v(p, 'Status');
+  let html = '<div class="card"><h3>Available Actions</h3>';
+
+  if (status === 'Submitted') {
+    html += `<button class="btn btn-primary" style="margin:4px" onclick="doTransition('Under Review')">Begin Review</button>`;
+  }
+  if (status === 'Under Review') {
+    html += `<button class="btn btn-primary" style="margin:4px" onclick="doTransition('Needs Clarification')">Request Clarification</button>`;
+    html += `<br><div style="margin-top:16px"><h3 style="font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:8px">Make Decision</h3>`;
+    html += textareaField('dec-reason', 'Decision Reason', 3);
+    html += '<div class="form-row">';
+    html += formField('dec-merge', 'Merge Target (if merging)', 'text');
+    html += formField('dec-redirect', 'Redirect Target (if redirecting)', 'text');
+    html += '</div>';
+    html += `<div style="display:flex;gap:8px;flex-wrap:wrap">`;
+    html += `<button class="btn btn-success" onclick="doDecide('Approved')">Approve</button>`;
+    html += `<button class="btn btn-danger" onclick="doDecide('Rejected')">Reject</button>`;
+    html += `<button class="btn btn-secondary" onclick="doDecide('Merged')">Merge</button>`;
+    html += `<button class="btn btn-secondary" onclick="doDecide('Redirected')">Redirect</button>`;
+    html += `</div></div>`;
+  }
+  if (status === 'Needs Clarification') {
+    html += `<button class="btn btn-primary" style="margin:4px" onclick="doTransition('Under Review')">Return to Review</button>`;
+  }
+  if (status === 'Approved') {
+    html += `<button class="btn btn-success" style="margin:4px" onclick="doTransition('Ready for AI Build')">Mark Ready for AI Build</button>`;
+  }
+  if (status === 'Approved' || status === 'Ready for AI Build') {
+    html += `<button class="btn btn-secondary" style="margin:4px" onclick="downloadNewappMd()">Download newapp.md</button>`;
+  }
+
+  if (['Rejected', 'Merged', 'Redirected'].includes(status)) {
+    html += '<div style="color:var(--gray);padding:12px">This proposal is in a terminal state. No further actions available.</div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ── Actions ── */
+async function doTransition(newStatus) {
+  try {
+    await customApi(`/api/innovation/proposals/${currentProposal}/transition`, {
+      method: 'POST',
+      body: JSON.stringify({ newStatus, user: API.user, displayName: API.displayName })
+    });
+    showToast(`Status changed to ${newStatus}`);
+    await openProposal(currentProposal);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function doDecide(decision) {
+  const reason = document.getElementById('dec-reason')?.value || '';
+  const mergeTarget = document.getElementById('dec-merge')?.value || '';
+  const redirectTarget = document.getElementById('dec-redirect')?.value || '';
+
+  // Get scores from most recent review
+  const latestReview = (modalData.reviews || [])[0];
+  try {
+    await customApi(`/api/innovation/proposals/${currentProposal}/decide`, {
+      method: 'POST',
+      body: JSON.stringify({
+        decision, reason, mergeTarget, redirectTarget,
+        user: API.user, displayName: API.displayName,
+        innovationScore: latestReview ? v(latestReview, 'Innovation Score') : null,
+        overlapRiskScore: latestReview ? v(latestReview, 'Overlap Risk Score') : null,
+        alignmentScore: latestReview ? v(latestReview, 'Strategic Alignment Score') : null,
+        complexity: latestReview ? v(latestReview, 'Complexity Assessment') : null,
+      })
+    });
+    showToast(`Decision: ${decision}`);
+    await openProposal(currentProposal);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function submitReview() {
+  const p = modalData.proposal;
+  const pid = v(p, 'Proposal ID');
+  const innovation = document.getElementById('rv-innovation')?.value;
+  const overlap = document.getElementById('rv-overlap')?.value;
+  const alignment = document.getElementById('rv-alignment')?.value;
+
+  if (!innovation || !overlap || !alignment) { showToast('Please fill in all score fields'); return; }
+
+  try {
+    await api(`/kapps/${KAPP}/forms/reviews/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': pid,
+          'Reviewer': API.user,
+          'Reviewer Display Name': API.displayName,
+          'Innovation Score': innovation,
+          'Overlap Risk Score': overlap,
+          'Strategic Alignment Score': alignment,
+          'Complexity Assessment': document.getElementById('rv-complexity')?.value || '',
+          'Cost Estimate': document.getElementById('rv-cost')?.value || '',
+          'Risk Assessment': document.getElementById('rv-risk')?.value || '',
+          'Similar Apps Found': document.getElementById('rv-similar')?.value || '',
+          'Overlap Analysis': document.getElementById('rv-overlap-analysis')?.value || '',
+          'Recommendation': document.getElementById('rv-recommendation')?.value || '',
+          'Recommendation Notes': document.getElementById('rv-notes')?.value || '',
+          'Reviewed At': new Date().toISOString(),
+        }
+      })
+    });
+    showToast('Review submitted');
+    await openProposal(currentProposal);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function addComment() {
+  const p = modalData.proposal;
+  const pid = v(p, 'Proposal ID');
+  const type = document.getElementById('comment-type')?.value;
+  const content = document.getElementById('comment-content')?.value?.trim();
+  if (!content) { showToast('Please enter a comment'); return; }
+
+  try {
+    await api(`/kapps/${KAPP}/forms/comments/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': pid,
+          'Author': API.user,
+          'Author Display Name': API.displayName,
+          'Type': type,
+          'Content': content,
+          'Timestamp': new Date().toISOString(),
+        }
+      })
+    });
+    showToast('Comment posted');
+    // Reload comments
+    const commentsData = await api(`/kapps/${KAPP}/forms/comments/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Proposal ID]="${pid}"`)}`);
+    modalData.comments = commentsData.submissions || [];
+    switchModalTab('comments-tab');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function createPromptVersion() {
+  const p = modalData.proposal;
+  const pid = v(p, 'Proposal ID');
+  const content = document.getElementById('pv-content')?.value?.trim();
+  const notes = document.getElementById('pv-notes')?.value?.trim();
+  if (!content) { showToast('Please enter prompt content'); return; }
+
+  const currentMax = (modalData.versions || []).reduce((max, pv) => Math.max(max, parseInt(v(pv, 'Version') || '0')), 0);
+  const newVersion = String(currentMax + 1);
+
+  try {
+    await api(`/kapps/${KAPP}/forms/prompt-versions/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        values: {
+          'Proposal ID': pid,
+          'Version': newVersion,
+          'Prompt Content': content,
+          'Author': API.user,
+          'Author Display Name': API.displayName,
+          'Change Notes': notes || '',
+          'Timestamp': new Date().toISOString(),
+        }
+      })
+    });
+
+    // Update proposal prompt version
+    await fetch(`${API.url}/app/api/v1/submissions/${currentProposal}/values`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 'Custom AI Prompt': content, 'Prompt Version': newVersion })
+    });
+
+    showToast(`Prompt version ${newVersion} created`);
+    // Reload versions
+    const versionsData = await api(`/kapps/${KAPP}/forms/prompt-versions/submissions?include=values&limit=25&q=${encodeURIComponent(`values[Proposal ID]="${pid}"`)}`);
+    modalData.versions = versionsData.submissions || [];
+    switchModalTab('prompt-tab');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function downloadNewappMd() {
+  try {
+    const md = await customApi(`/api/innovation/proposals/${currentProposal}/newapp-md`);
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const pid = v(modalData.proposal, 'Proposal ID');
+    a.href = url; a.download = `${pid}-newapp.md`; a.click();
+    URL.revokeObjectURL(url);
+    showToast('newapp.md downloaded');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+/* ── Helpers ── */
+function esc(s) { const el = document.createElement('div'); el.textContent = s || ''; return el.innerHTML; }
+
+function formField(id, label, type, value, extra) {
+  return `<div class="form-group"><label>${label}</label><input id="${id}" type="${type || 'text'}" value="${value || ''}" ${extra || ''}></div>`;
+}
+function selectField(id, label, options) {
+  return `<div class="form-group"><label>${label}</label><select id="${id}">${options.map(o => `<option value="${o}">${o}</option>`).join('')}</select></div>`;
+}
+function textareaField(id, label, rows) {
+  return `<div class="form-group"><label>${label}</label><textarea id="${id}" rows="${rows}"></textarea></div>`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ESC to close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

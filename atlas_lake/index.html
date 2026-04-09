@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AtlasLake</title>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+  --deep-orange: #BF360C;
+  --accent: #283593;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: var(--bg);
+}
+.login-card {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg);
+  width: 400px; max-width: 95vw; overflow: hidden;
+}
+.login-accent { height: 4px; background: var(--accent); }
+.login-body { padding: 32px; }
+.login-body h1 { font-size: 22px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 14px; outline: none; transition: border-color .2s;
+}
+.login-body input:focus { border-color: var(--accent); }
+.login-btn {
+  width: 100%; padding: 11px; margin-top: 20px; background: var(--accent); color: var(--white);
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.login-btn:hover { background: #1A237E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: var(--blue); color: var(--white); display: flex; align-items: center;
+  padding: 0 20px; height: 52px; position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 28px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--orange); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.topbar-nav button {
+  background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 14px;
+  font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all .15s;
+}
+.topbar-nav button:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.topbar-nav button.active { background: var(--accent); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+}
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== SUBTABS ===== */
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.subtabs button {
+  background: var(--white); border: 1px solid var(--border); color: var(--gray); padding: 6px 16px;
+  font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 20px; transition: all .15s;
+}
+.subtabs button:hover { border-color: var(--accent); color: var(--accent); }
+.subtabs button.active { background: var(--accent); color: var(--white); border-color: var(--accent); }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
+
+/* ===== CARDS & GRIDS ===== */
+.card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+.card h3 { font-size: 15px; color: var(--blue); margin-bottom: 14px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 18px; position: relative;
+  border-left: 4px solid var(--gray); overflow: hidden;
+}
+.kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--blue); }
+.kpi-card .kpi-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.kpi-card .kpi-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+.kpi-card.green { border-left-color: var(--green); }
+.kpi-card.red { border-left-color: var(--red); }
+.kpi-card.yellow { border-left-color: var(--yellow); }
+.kpi-card.indigo { border-left-color: var(--accent); }
+.kpi-card.purple { border-left-color: var(--purple); }
+.kpi-card.teal { border-left-color: var(--teal); }
+.kpi-card.orange { border-left-color: var(--orange); }
+
+/* ===== TABLES ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 600; color: var(--gray); font-size: 11px; text-transform: uppercase; letter-spacing: .3px; padding: 10px 12px; border-bottom: 2px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: #F8F9FA; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-critical, .badge-Critical { background: #FFEBEE; color: #B71C1C; }
+.badge-high, .badge-High { background: #FFF3E0; color: #E65100; }
+.badge-medium, .badge-Medium { background: #FFF8E1; color: #F57F17; }
+.badge-low, .badge-Low { background: #E8F5E9; color: #2E7D32; }
+.badge-open, .badge-Open { background: #FFF3E0; color: #E65100; }
+.badge-pending, .badge-Pending { background: #FFF8E1; color: #F57F17; }
+.badge-approved, .badge-Approved { background: #E8F5E9; color: #2E7D32; }
+.badge-denied, .badge-Denied { background: #FFEBEE; color: #B71C1C; }
+.badge-expired, .badge-Expired { background: #F3E5F5; color: #7B1FA2; }
+.badge-revoked, .badge-Revoked { background: #FFEBEE; color: #B71C1C; }
+.badge-in-progress, .badge-In\ Progress { background: #E3F2FD; color: #1565C0; }
+.badge-resolved, .badge-Resolved { background: #E8F5E9; color: #2E7D32; }
+.badge-closed, .badge-Closed { background: #ECEFF1; color: #546E7A; }
+.badge-active, .badge-Active { background: #E8F5E9; color: #2E7D32; }
+.badge-restricted, .badge-Restricted { background: #FFEBEE; color: #B71C1C; }
+.badge-confidential, .badge-Confidential { background: #FFF3E0; color: #E65100; }
+.badge-internal, .badge-Internal { background: #FFF8E1; color: #F57F17; }
+.badge-public, .badge-Public { background: #E8F5E9; color: #2E7D32; }
+
+/* ===== HEATMAP ===== */
+.heatmap { border-collapse: collapse; }
+.heatmap th, .heatmap td { padding: 8px 14px; text-align: center; font-size: 12px; }
+.heat-0 { background: #F5F5F5; color: #999; }
+.heat-1 { background: #E8F5E9; color: #2E7D32; }
+.heat-2 { background: #FFF8E1; color: #F57F17; }
+.heat-3 { background: #FFF3E0; color: #E65100; }
+.heat-4 { background: #FFEBEE; color: #B71C1C; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { width: 80px; font-size: 12px; font-weight: 600; color: var(--gray); text-align: right; }
+.bar-track { flex: 1; height: 24px; background: #F5F5F5; border-radius: 4px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: white; min-width: 30px; transition: width .4s ease; }
+.bar-count { font-size: 12px; font-weight: 600; color: var(--gray); width: 30px; }
+
+/* ===== PLATFORM CARDS ===== */
+.platform-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.platform-card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 18px; border-top: 3px solid var(--accent); }
+.platform-card h4 { font-size: 14px; color: var(--blue); margin-bottom: 6px; }
+.platform-card .meta { font-size: 12px; color: var(--gray); line-height: 1.6; }
+.platform-card .meta strong { color: #444; }
+
+/* ===== ACTION BUTTONS ===== */
+.btn { padding: 4px 10px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-approve { background: #E8F5E9; color: #2E7D32; }
+.btn-approve:hover { background: #C8E6C9; }
+.btn-deny { background: #FFEBEE; color: #B71C1C; }
+.btn-deny:hover { background: #FFCDD2; }
+.btn-progress { background: #E3F2FD; color: #1565C0; }
+.btn-progress:hover { background: #BBDEFB; }
+.btn-resolve { background: #E8F5E9; color: #2E7D32; }
+.btn-resolve:hover { background: #C8E6C9; }
+.btn-close { background: #ECEFF1; color: #546E7A; }
+.btn-close:hover { background: #CFD8DC; }
+
+/* ===== LOADING ===== */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+.loading::before { content: ""; display: block; width: 32px; height: 32px; margin: 0 auto 12px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== FILTER ROW ===== */
+.filter-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-row select, .filter-row input {
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; outline: none;
+}
+.filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
+
+/* ===== GRID 2-COL ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>AtlasLake</h1>
+      <div class="subtitle">Enterprise Data Lake Governance</div>
+      <label>Server URL</label>
+      <input id="login-url" value="">
+      <label>Username</label>
+      <input id="login-user" value="">
+      <label>Password</label>
+      <input id="login-pass" type="password" value="">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Atlas<span class="accent">Lake</span></div>
+    <div class="topbar-nav" id="topbar-nav">
+      <button class="active" onclick="switchTab('dashboard')">Executive Dashboard</button>
+      <button onclick="switchTab('security')">Security Operations</button>
+      <button onclick="switchTab('steward')">Data Steward</button>
+      <button onclick="switchTab('architecture')">Architecture</button>
+      <button onclick="switchTab('compliance')">Compliance</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- ───── EXECUTIVE DASHBOARD ───── -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <div id="dashboard-loading" class="loading">Loading dashboard...</div>
+      <div id="dashboard-content" style="display:none">
+        <div class="kpi-grid" id="dashboard-kpis"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Risk Heatmap (Domain x Sensitivity)</h3>
+            <div class="table-wrap" id="risk-heatmap"></div>
+          </div>
+          <div class="card">
+            <h3>Regulatory Exposure</h3>
+            <div id="reg-chart"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Top 10 Critical Datasets</h3>
+          <div class="table-wrap" id="top10-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── SECURITY OPERATIONS ───── -->
+    <div class="tab-panel" id="tab-security">
+      <div class="subtabs" id="security-subtabs">
+        <button class="active" onclick="switchSubtab('security','findings')">Findings</button>
+        <button onclick="switchSubtab('security','grants')">Access Grants</button>
+        <button onclick="switchSubtab('security','encryption')">Encryption</button>
+      </div>
+      <div id="security-loading" class="loading">Loading security data...</div>
+      <div id="security-content" style="display:none">
+        <div class="subtab-panel active" id="security-findings">
+          <div class="kpi-grid" id="findings-kpis"></div>
+          <div class="card">
+            <h3>Open Findings</h3>
+            <div class="table-wrap" id="findings-table"></div>
+          </div>
+        </div>
+        <div class="subtab-panel" id="security-grants">
+          <div class="card">
+            <h3>High-Risk Access Grants</h3>
+            <div class="table-wrap" id="grants-table"></div>
+          </div>
+          <div class="card">
+            <h3>Stale Access (Expired but not Revoked)</h3>
+            <div class="table-wrap" id="stale-table"></div>
+          </div>
+        </div>
+        <div class="subtab-panel" id="security-encryption">
+          <div class="card">
+            <h3>Encryption Gaps</h3>
+            <div class="table-wrap" id="encryption-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── DATA STEWARD ───── -->
+    <div class="tab-panel" id="tab-steward">
+      <div class="subtabs" id="steward-subtabs">
+        <button class="active" onclick="switchSubtab('steward','alerts')">Alerts</button>
+        <button onclick="switchSubtab('steward','registry')">Registry</button>
+      </div>
+      <div id="steward-loading" class="loading">Loading steward data...</div>
+      <div id="steward-content" style="display:none">
+        <div class="subtab-panel active" id="steward-alerts">
+          <div class="kpi-grid" id="steward-kpis"></div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Quality Alerts (Score &lt; 85)</h3>
+              <div class="table-wrap" id="quality-table"></div>
+            </div>
+            <div class="card">
+              <h3>Unclassified Datasets</h3>
+              <div class="table-wrap" id="unclassified-table"></div>
+            </div>
+          </div>
+        </div>
+        <div class="subtab-panel" id="steward-registry">
+          <div class="filter-row">
+            <select id="reg-filter-domain" onchange="filterRegistry()"><option value="">All Domains</option></select>
+            <select id="reg-filter-platform" onchange="filterRegistry()"><option value="">All Platforms</option></select>
+            <select id="reg-filter-sensitivity" onchange="filterRegistry()"><option value="">All Sensitivity</option></select>
+            <input id="reg-filter-search" placeholder="Search datasets..." oninput="filterRegistry()">
+          </div>
+          <div class="card">
+            <h3>Full Dataset Registry</h3>
+            <div class="table-wrap" id="registry-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── ARCHITECTURE ───── -->
+    <div class="tab-panel" id="tab-architecture">
+      <div class="subtabs" id="arch-subtabs">
+        <button class="active" onclick="switchSubtab('arch','lineage')">Lineage</button>
+        <button onclick="switchSubtab('arch','platforms')">Platforms</button>
+      </div>
+      <div id="arch-loading" class="loading">Loading architecture data...</div>
+      <div id="arch-content" style="display:none">
+        <div class="subtab-panel active" id="arch-lineage">
+          <div class="card">
+            <h3>Data Lineage</h3>
+            <div class="table-wrap" id="lineage-table"></div>
+          </div>
+        </div>
+        <div class="subtab-panel" id="arch-platforms">
+          <div class="platform-grid" id="platform-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── COMPLIANCE ───── -->
+    <div class="tab-panel" id="tab-compliance">
+      <div class="subtabs" id="compliance-subtabs">
+        <button class="active" onclick="switchSubtab('compliance','matrix')">Regulatory Matrix</button>
+        <button onclick="switchSubtab('compliance','audit')">Audit Trail</button>
+      </div>
+      <div id="compliance-loading" class="loading">Loading compliance data...</div>
+      <div id="compliance-content" style="display:none">
+        <div class="subtab-panel active" id="compliance-matrix">
+          <div class="kpi-grid" id="compliance-kpis"></div>
+          <div id="compliance-cards"></div>
+        </div>
+        <div class="subtab-panel" id="compliance-audit">
+          <div class="card">
+            <h3>Access Request History</h3>
+            <div class="table-wrap" id="audit-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════ */
+/*  STATE & AUTH                               */
+/* ═══════════════════════════════════════════ */
+let API = '', AUTH = '', USERNAME = '', DISPLAY_NAME = '';
+let dashboardData = null, securityData = null, stewardData = null, archData = null, complianceData = null;
+let registryFull = [];
+
+/* ═══════════════════════════════════════════ */
+/*  SESSION                                    */
+/* ═══════════════════════════════════════════ */
+(function initSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.user || '';
+      DISPLAY_NAME = s.displayName || s.user || '';
+      enterApp();
+      return;
+    } catch {}
+  }
+  const stored = localStorage.getItem('atlas_lake_session');
+  if (stored) {
+    try {
+      const s = JSON.parse(stored);
+      API = s.url || '';
+      AUTH = s.auth || '';
+      USERNAME = s.user || '';
+      DISPLAY_NAME = s.displayName || s.user || '';
+      enterApp();
+      return;
+    } catch {}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  API = url;
+  AUTH = 'Basic ' + btoa(user + ':' + pass);
+
+  try {
+    const r = await apiFetch('/app/api/v1/me');
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.username || user;
+    DISPLAY_NAME = me.displayName || USERNAME;
+    localStorage.setItem('atlas_lake_session', JSON.stringify({ url: API, auth: AUTH, user: USERNAME, displayName: DISPLAY_NAME }));
+    enterApp();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('atlas_lake_session');
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = DISPLAY_NAME;
+  loadDashboard();
+}
+
+/* ═══════════════════════════════════════════ */
+/*  API HELPER                                 */
+/* ═══════════════════════════════════════════ */
+function apiFetch(path, opts = {}) {
+  const headers = { 'Authorization': AUTH, 'Content-Type': 'application/json', ...opts.headers };
+  return fetch(API + path, { ...opts, headers });
+}
+
+async function apiJSON(path) {
+  const r = await apiFetch(path);
+  if (!r.ok) throw new Error(`API ${r.status}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await apiFetch(path, { method: 'POST', body: JSON.stringify(body) });
+  return r.json();
+}
+
+/* ═══════════════════════════════════════════ */
+/*  TAB NAVIGATION                             */
+/* ═══════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.topbar-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const btns = document.querySelectorAll('.topbar-nav button');
+  const tabs = ['dashboard','security','steward','architecture','compliance'];
+  const idx = tabs.indexOf(name);
+  if (idx >= 0) btns[idx].classList.add('active');
+
+  if (name === 'dashboard' && !dashboardData) loadDashboard();
+  if (name === 'security' && !securityData) loadSecurity();
+  if (name === 'steward' && !stewardData) loadSteward();
+  if (name === 'architecture' && !archData) loadArchitecture();
+  if (name === 'compliance' && !complianceData) loadCompliance();
+}
+
+function switchSubtab(group, name) {
+  const container = {
+    security: 'tab-security',
+    steward: 'tab-steward',
+    arch: 'tab-architecture',
+    compliance: 'tab-compliance',
+  }[group];
+  const panel = document.getElementById(container);
+  panel.querySelectorAll('.subtab-panel').forEach(p => p.classList.remove('active'));
+  panel.querySelectorAll('.subtabs button').forEach(b => b.classList.remove('active'));
+  const prefix = { security: 'security', steward: 'steward', arch: 'arch', compliance: 'compliance' }[group];
+  document.getElementById(prefix + '-' + name).classList.add('active');
+  // Activate the clicked button
+  event.target.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════ */
+/*  RENDERING HELPERS                          */
+/* ═══════════════════════════════════════════ */
+function badge(val) {
+  if (!val) return '';
+  const cls = val.replace(/\s+/g, '-').toLowerCase();
+  return `<span class="badge badge-${cls} badge-${val}">${val}</span>`;
+}
+
+function riskBadge(score) {
+  const n = parseFloat(score) || 0;
+  if (n >= 60) return `<span class="badge badge-critical">${n}</span>`;
+  if (n >= 30) return `<span class="badge badge-high">${n}</span>`;
+  if (n >= 15) return `<span class="badge badge-medium">${n}</span>`;
+  return `<span class="badge badge-low">${n}</span>`;
+}
+
+function fmtNum(n) {
+  return Number(n).toLocaleString();
+}
+
+/* ═══════════════════════════════════════════ */
+/*  1. EXECUTIVE DASHBOARD                     */
+/* ═══════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    dashboardData = await apiJSON('/api/lake/dashboard');
+    const d = dashboardData;
+
+    // KPIs
+    document.getElementById('dashboard-kpis').innerHTML = `
+      <div class="kpi-card indigo"><div class="kpi-value">${d.totalDatasets}</div><div class="kpi-label">Total Datasets</div></div>
+      <div class="kpi-card teal"><div class="kpi-value">${d.totalPlatforms}</div><div class="kpi-label">Platforms</div></div>
+      <div class="kpi-card purple"><div class="kpi-value">${d.totalProducts}</div><div class="kpi-label">Data Products</div></div>
+      <div class="kpi-card ${d.openFindings > 0 ? 'red' : 'green'}"><div class="kpi-value">${d.openFindings}</div><div class="kpi-label">Open Findings</div><div class="kpi-sub">${d.criticalFindings} critical</div></div>
+      <div class="kpi-card ${d.pendingAccess > 0 ? 'yellow' : 'green'}"><div class="kpi-value">${d.pendingAccess}</div><div class="kpi-label">Pending Access Requests</div></div>
+      <div class="kpi-card ${d.avgQuality >= 90 ? 'green' : d.avgQuality >= 80 ? 'yellow' : 'red'}"><div class="kpi-value">${d.avgQuality}%</div><div class="kpi-label">Avg Quality Score</div></div>
+    `;
+
+    // Risk heatmap
+    const sensLevels = ['Public', 'Internal', 'Confidential', 'Restricted'];
+    const domainNames = Object.keys(d.riskHeatmap).sort();
+    let heatHtml = '<table class="heatmap"><tr><th></th>';
+    sensLevels.forEach(s => heatHtml += `<th>${s}</th>`);
+    heatHtml += '</tr>';
+    domainNames.forEach(dom => {
+      heatHtml += `<tr><th style="text-align:left">${dom}</th>`;
+      sensLevels.forEach(s => {
+        const cell = d.riskHeatmap[dom]?.[s];
+        if (cell) {
+          const avgRisk = cell.totalRisk / cell.count;
+          const heatLevel = avgRisk >= 60 ? 4 : avgRisk >= 30 ? 3 : avgRisk >= 15 ? 2 : 1;
+          heatHtml += `<td class="heat-${heatLevel}">${cell.count} (${avgRisk.toFixed(0)})</td>`;
+        } else {
+          heatHtml += '<td class="heat-0">-</td>';
+        }
+      });
+      heatHtml += '</tr>';
+    });
+    heatHtml += '</table>';
+    document.getElementById('risk-heatmap').innerHTML = heatHtml;
+
+    // Regulatory chart
+    const regEntries = Object.entries(d.regulatoryExposure).sort((a, b) => b[1] - a[1]);
+    const maxReg = regEntries.length > 0 ? regEntries[0][1] : 1;
+    const colors = ['#283593', '#1565C0', '#00695C', '#2E7D32', '#F57F17', '#E65100', '#B71C1C', '#7B1FA2'];
+    let chartHtml = '<div class="bar-chart">';
+    regEntries.forEach(([reg, count], i) => {
+      const pct = Math.round(count / maxReg * 100);
+      const color = colors[i % colors.length];
+      chartHtml += `<div class="bar-row"><div class="bar-label">${reg}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}">${count}</div></div></div>`;
+    });
+    chartHtml += '</div>';
+    document.getElementById('reg-chart').innerHTML = chartHtml;
+
+    // Top 10 table
+    let topHtml = '<table><tr><th>Dataset</th><th>Domain</th><th>Platform</th><th>Sensitivity</th><th>Risk Score</th><th>Quality</th><th>Regulations</th></tr>';
+    d.top10Critical.forEach(ds => {
+      topHtml += `<tr><td><strong>${ds.name}</strong></td><td>${ds.domain}</td><td>${ds.platform}</td><td>${badge(ds.sensitivity)}</td><td>${riskBadge(ds.riskScore)}</td><td>${ds.qualityScore}%</td><td>${(ds.regulatoryTags || '').split(',').filter(Boolean).map(t => `<span class="badge badge-active" style="margin:1px">${t.trim()}</span>`).join('')}</td></tr>`;
+    });
+    topHtml += '</table>';
+    document.getElementById('top10-table').innerHTML = topHtml;
+
+    document.getElementById('dashboard-loading').style.display = 'none';
+    document.getElementById('dashboard-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('dashboard-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+/* ═══════════════════════════════════════════ */
+/*  2. SECURITY OPERATIONS                     */
+/* ═══════════════════════════════════════════ */
+async function loadSecurity() {
+  try {
+    securityData = await apiJSON('/api/lake/security');
+    const s = securityData;
+
+    // Finding KPIs
+    const totalOpen = s.openFindings.length;
+    const critOpen = s.openFindings.filter(f => f.severity === 'Critical').length;
+    document.getElementById('findings-kpis').innerHTML = `
+      <div class="kpi-card red"><div class="kpi-value">${critOpen}</div><div class="kpi-label">Critical Findings</div></div>
+      <div class="kpi-card orange"><div class="kpi-value">${s.findingsBySeverity.High || 0}</div><div class="kpi-label">High Severity</div></div>
+      <div class="kpi-card yellow"><div class="kpi-value">${totalOpen}</div><div class="kpi-label">Total Open</div></div>
+      <div class="kpi-card indigo"><div class="kpi-value">${s.highRiskGrants.length}</div><div class="kpi-label">High-Risk Grants</div></div>
+    `;
+
+    // Findings table
+    let fHtml = '<table><tr><th>Title</th><th>Severity</th><th>Category</th><th>Dataset</th><th>Status</th><th>Assigned To</th><th>Due Date</th><th>Actions</th></tr>';
+    s.openFindings.forEach(f => {
+      const actions = [];
+      if (f.status === 'Open') actions.push(`<button class="btn btn-progress" onclick="transitionFinding('${f.id}','In Progress')">Start</button>`);
+      if (f.status === 'In Progress') actions.push(`<button class="btn btn-resolve" onclick="transitionFinding('${f.id}','Resolved')">Resolve</button>`);
+      fHtml += `<tr><td><strong>${f.title}</strong></td><td>${badge(f.severity)}</td><td>${f.category}</td><td>${f.affectedDataset}</td><td>${badge(f.status)}</td><td>${f.assignedTo}</td><td>${f.dueDate || '-'}</td><td>${actions.join(' ')}</td></tr>`;
+    });
+    fHtml += '</table>';
+    if (s.openFindings.length === 0) fHtml = '<p style="color:var(--gray);padding:20px">No open findings</p>';
+    document.getElementById('findings-table').innerHTML = fHtml;
+
+    // Grants table
+    let gHtml = '<table><tr><th>Requestor</th><th>Dataset</th><th>Access</th><th>Sensitivity</th><th>Risk</th><th>Expiry</th></tr>';
+    s.highRiskGrants.forEach(g => {
+      gHtml += `<tr><td>${g.requestor}</td><td>${g.dataset}</td><td>${g.accessType}</td><td>${badge(g.sensitivity)}</td><td>${badge(g.riskLevel)}</td><td>${g.expiryDate || '-'}</td></tr>`;
+    });
+    gHtml += '</table>';
+    if (s.highRiskGrants.length === 0) gHtml = '<p style="color:var(--gray);padding:20px">No high-risk grants</p>';
+    document.getElementById('grants-table').innerHTML = gHtml;
+
+    // Stale table
+    let stHtml = '<table><tr><th>Requestor</th><th>Dataset</th><th>Expiry Date</th></tr>';
+    s.staleAccess.forEach(a => {
+      stHtml += `<tr><td>${a.requestor}</td><td>${a.dataset}</td><td style="color:var(--red)">${a.expiryDate}</td></tr>`;
+    });
+    stHtml += '</table>';
+    if (s.staleAccess.length === 0) stHtml = '<p style="color:var(--gray);padding:20px">No stale access found</p>';
+    document.getElementById('stale-table').innerHTML = stHtml;
+
+    // Encryption table
+    let eHtml = '<table><tr><th>Dataset</th><th>Platform</th><th>Sensitivity</th><th>Encryption At Rest</th><th>Encryption In Transit</th></tr>';
+    s.encryptionGaps.forEach(e => {
+      eHtml += `<tr><td><strong>${e.name}</strong></td><td>${e.platform}</td><td>${badge(e.sensitivity)}</td><td>${e.encAtRest || '<span style="color:var(--red);font-weight:600">NONE</span>'}</td><td>${e.encInTransit || '<span style="color:var(--red);font-weight:600">NONE</span>'}</td></tr>`;
+    });
+    eHtml += '</table>';
+    if (s.encryptionGaps.length === 0) eHtml = '<p style="color:var(--green);padding:20px">All datasets encrypted</p>';
+    document.getElementById('encryption-table').innerHTML = eHtml;
+
+    document.getElementById('security-loading').style.display = 'none';
+    document.getElementById('security-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('security-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function transitionFinding(id, newStatus) {
+  try {
+    await apiPost(`/api/lake/security-findings/${id}/transition`, { newStatus, user: USERNAME });
+    securityData = null;
+    loadSecurity();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════ */
+/*  3. DATA STEWARD                            */
+/* ═══════════════════════════════════════════ */
+async function loadSteward() {
+  try {
+    stewardData = await apiJSON('/api/lake/steward');
+    const s = stewardData;
+    registryFull = s.registry || [];
+
+    // KPIs
+    document.getElementById('steward-kpis').innerHTML = `
+      <div class="kpi-card ${s.missingMetadata.length > 0 ? 'yellow' : 'green'}"><div class="kpi-value">${s.missingMetadata.length}</div><div class="kpi-label">Missing Metadata</div></div>
+      <div class="kpi-card ${s.unclassified.length > 0 ? 'red' : 'green'}"><div class="kpi-value">${s.unclassified.length}</div><div class="kpi-label">Unclassified</div></div>
+      <div class="kpi-card ${s.qualityAlerts.length > 0 ? 'orange' : 'green'}"><div class="kpi-value">${s.qualityAlerts.length}</div><div class="kpi-label">Quality Alerts</div></div>
+      <div class="kpi-card indigo"><div class="kpi-value">${registryFull.length}</div><div class="kpi-label">Total Datasets</div></div>
+    `;
+
+    // Quality alerts
+    let qHtml = '<table><tr><th>Dataset</th><th>Score</th><th>Completeness</th><th>Domain</th></tr>';
+    s.qualityAlerts.forEach(a => {
+      const color = a.qualityScore < 80 ? 'var(--red)' : 'var(--yellow)';
+      qHtml += `<tr><td>${a.name}</td><td style="color:${color};font-weight:700">${a.qualityScore}%</td><td>${a.completeness}%</td><td>${a.domain}</td></tr>`;
+    });
+    qHtml += '</table>';
+    if (s.qualityAlerts.length === 0) qHtml = '<p style="color:var(--green);padding:20px">All datasets above quality threshold</p>';
+    document.getElementById('quality-table').innerHTML = qHtml;
+
+    // Unclassified
+    let uHtml = '<table><tr><th>Dataset</th><th>Platform</th><th>Domain</th></tr>';
+    s.unclassified.forEach(u => {
+      uHtml += `<tr><td><strong>${u.name}</strong></td><td>${u.platform}</td><td>${u.domain || '-'}</td></tr>`;
+    });
+    uHtml += '</table>';
+    if (s.unclassified.length === 0) uHtml = '<p style="color:var(--green);padding:20px">All datasets classified</p>';
+    document.getElementById('unclassified-table').innerHTML = uHtml;
+
+    // Populate filter dropdowns
+    const domains = [...new Set(registryFull.map(d => d.domain).filter(Boolean))].sort();
+    const platforms = [...new Set(registryFull.map(d => d.platform).filter(Boolean))].sort();
+    const sensitivities = [...new Set(registryFull.map(d => d.sensitivity).filter(Boolean))].sort();
+
+    const domSel = document.getElementById('reg-filter-domain');
+    domSel.innerHTML = '<option value="">All Domains</option>' + domains.map(d => `<option>${d}</option>`).join('');
+    const platSel = document.getElementById('reg-filter-platform');
+    platSel.innerHTML = '<option value="">All Platforms</option>' + platforms.map(p => `<option>${p}</option>`).join('');
+    const sensSel = document.getElementById('reg-filter-sensitivity');
+    sensSel.innerHTML = '<option value="">All Sensitivity</option>' + sensitivities.map(s => `<option>${s}</option>`).join('');
+
+    filterRegistry();
+
+    document.getElementById('steward-loading').style.display = 'none';
+    document.getElementById('steward-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('steward-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+function filterRegistry() {
+  const domain = document.getElementById('reg-filter-domain').value;
+  const platform = document.getElementById('reg-filter-platform').value;
+  const sensitivity = document.getElementById('reg-filter-sensitivity').value;
+  const search = (document.getElementById('reg-filter-search').value || '').toLowerCase();
+
+  let filtered = registryFull;
+  if (domain) filtered = filtered.filter(d => d.domain === domain);
+  if (platform) filtered = filtered.filter(d => d.platform === platform);
+  if (sensitivity) filtered = filtered.filter(d => d.sensitivity === sensitivity);
+  if (search) filtered = filtered.filter(d => d.name.toLowerCase().includes(search) || (d.owner || '').toLowerCase().includes(search));
+
+  let html = '<table><tr><th>Dataset</th><th>Platform</th><th>Domain</th><th>Owner</th><th>Sensitivity</th><th>Quality</th><th>Risk</th><th>Records</th><th>Refresh</th></tr>';
+  filtered.forEach(d => {
+    html += `<tr><td><strong>${d.name}</strong></td><td>${d.platform}</td><td>${d.domain}</td><td>${d.owner}</td><td>${badge(d.sensitivity)}</td><td>${d.qualityScore}%</td><td>${riskBadge(d.riskScore)}</td><td>${fmtNum(d.recordCount)}</td><td>${d.refreshFrequency}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('registry-table').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════ */
+/*  4. ARCHITECTURE                            */
+/* ═══════════════════════════════════════════ */
+async function loadArchitecture() {
+  try {
+    archData = await apiJSON('/api/lake/lineage');
+    const a = archData;
+
+    // Lineage table
+    let lHtml = '<table><tr><th>Source</th><th>Target</th><th>Transform</th><th>Platform</th><th>Frequency</th><th>Status</th></tr>';
+    a.lineageGraph.forEach(l => {
+      lHtml += `<tr><td>${l.source}</td><td><strong>${l.target}</strong></td><td>${badge(l.transformType || 'ETL')}</td><td>${l.platform}</td><td>${l.frequency}</td><td>${badge(l.status)}</td></tr>`;
+    });
+    lHtml += '</table>';
+    document.getElementById('lineage-table').innerHTML = lHtml;
+
+    // Platform cards
+    let pHtml = '';
+    a.platformInventory.forEach(p => {
+      pHtml += `
+        <div class="platform-card">
+          <h4>${p.name}</h4>
+          <div class="meta">
+            <strong>Type:</strong> ${p.type}<br>
+            <strong>Vendor:</strong> ${p.vendor}<br>
+            <strong>Environment:</strong> ${p.environment}<br>
+            <strong>Region:</strong> ${p.region}<br>
+            <strong>Owner:</strong> ${p.owner}<br>
+            <strong>Status:</strong> ${badge(p.status)}<br>
+            <strong>Cost Center:</strong> ${p.costCenter}<br>
+            <div style="margin-top:6px;font-size:11px;color:var(--gray)">${p.description || ''}</div>
+          </div>
+        </div>`;
+    });
+    document.getElementById('platform-grid').innerHTML = pHtml;
+
+    document.getElementById('arch-loading').style.display = 'none';
+    document.getElementById('arch-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('arch-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+/* ═══════════════════════════════════════════ */
+/*  5. COMPLIANCE                              */
+/* ═══════════════════════════════════════════ */
+async function loadCompliance() {
+  try {
+    complianceData = await apiJSON('/api/lake/compliance');
+    const c = complianceData;
+
+    // KPIs per regulation
+    const regs = Object.keys(c.complianceSummary).sort();
+    let kpiHtml = '';
+    regs.forEach(reg => {
+      const s = c.complianceSummary[reg];
+      kpiHtml += `<div class="kpi-card indigo"><div class="kpi-value">${s.datasetCount}</div><div class="kpi-label">${reg} Datasets</div><div class="kpi-sub">${s.encryptedPct}% encrypted, ${s.maskedPct}% masked</div></div>`;
+    });
+    document.getElementById('compliance-kpis').innerHTML = kpiHtml;
+
+    // Regulatory matrix cards
+    let mHtml = '';
+    for (const [reg, dsList] of Object.entries(c.regulatoryMatrix)) {
+      mHtml += `<div class="card"><h3>${reg} (${dsList.length} datasets)</h3><div class="table-wrap"><table><tr><th>Dataset</th><th>Domain</th><th>Platform</th><th>Sensitivity</th><th>Encryption</th><th>Masking</th><th>Quality</th></tr>`;
+      dsList.forEach(d => {
+        mHtml += `<tr><td><strong>${d.name}</strong></td><td>${d.domain}</td><td>${d.platform}</td><td>${badge(d.sensitivity)}</td><td>${d.encryption || 'None'}</td><td>${d.masking || 'None'}</td><td>${d.qualityScore}%</td></tr>`;
+      });
+      mHtml += '</table></div></div>';
+    }
+    document.getElementById('compliance-cards').innerHTML = mHtml;
+
+    // Audit trail
+    let aHtml = '<table><tr><th>Requestor</th><th>Dataset</th><th>Access</th><th>State</th><th>Approver</th><th>Approved</th><th>Expiry</th><th>Risk</th><th>Actions</th></tr>';
+    c.auditTrail.forEach(a => {
+      const actions = [];
+      if (a.state === 'Pending') {
+        actions.push(`<button class="btn btn-approve" onclick="transitionAccess('${a.id}','Approved')">Approve</button>`);
+        actions.push(`<button class="btn btn-deny" onclick="transitionAccess('${a.id}','Denied')">Deny</button>`);
+      }
+      aHtml += `<tr><td>${a.requestor}</td><td>${a.dataset}</td><td>${a.accessType}</td><td>${badge(a.state)}</td><td>${a.approver || '-'}</td><td>${a.approvedDate || '-'}</td><td>${a.expiryDate || '-'}</td><td>${badge(a.riskLevel)}</td><td>${actions.join(' ')}</td></tr>`;
+    });
+    aHtml += '</table>';
+    document.getElementById('audit-table').innerHTML = aHtml;
+
+    document.getElementById('compliance-loading').style.display = 'none';
+    document.getElementById('compliance-content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('compliance-loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function transitionAccess(id, newStatus) {
+  try {
+    await apiPost(`/api/lake/access-requests/${id}/transition`, { newStatus, user: USERNAME });
+    complianceData = null;
+    loadCompliance();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+</script>
+</body>
+</html>

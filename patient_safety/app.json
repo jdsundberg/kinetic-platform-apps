@@ -1,0 +1,728 @@
+{
+  "name": "Patient Safety",
+  "slug": "patient-safety",
+  "description": "Patient safety and quality with incident reports, investigations, root cause analysis, and action plans.",
+  "forms": [
+    {
+      "slug": "departments",
+      "name": "Departments",
+      "fields": [
+        {
+          "name": "Department ID",
+          "required": true
+        },
+        {
+          "name": "Department Name",
+          "required": true
+        },
+        {
+          "name": "Department Type"
+        },
+        {
+          "name": "Unit Manager"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Bed Count"
+        },
+        {
+          "name": "Risk Category"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Hospital departments",
+      "submissionLabelExpression": "${values('Department Name')} (${values('Department ID')})"
+    },
+    {
+      "slug": "events",
+      "name": "Events",
+      "fields": [
+        {
+          "name": "Event ID",
+          "required": true
+        },
+        {
+          "name": "Event Title",
+          "required": true
+        },
+        {
+          "name": "Event Type"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Event Date"
+        },
+        {
+          "name": "Event Time"
+        },
+        {
+          "name": "Patient Age"
+        },
+        {
+          "name": "Patient Gender"
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Reporter Role"
+        },
+        {
+          "name": "Anonymous"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Likelihood"
+        },
+        {
+          "name": "SAC Score"
+        },
+        {
+          "name": "Harm Level"
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Immediate Actions Taken",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Safety event reports",
+      "submissionLabelExpression": "${values('Event ID')} - ${values('Event Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Event ID]",
+          "values[Event Type]",
+          "values[SAC Score]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Event Type]"
+          ],
+          [
+            "values[Status]",
+            "values[Category]"
+          ],
+          [
+            "values[Status]",
+            "values[SAC Score]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "investigations",
+      "name": "Investigations",
+      "fields": [
+        {
+          "name": "Investigation ID",
+          "required": true
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "Investigation Type"
+        },
+        {
+          "name": "Lead Investigator"
+        },
+        {
+          "name": "Team Members"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Target Completion"
+        },
+        {
+          "name": "Actual Completion"
+        },
+        {
+          "name": "Root Cause Category"
+        },
+        {
+          "name": "Root Cause Description",
+          "rows": 3
+        },
+        {
+          "name": "Contributing Factors",
+          "rows": 3
+        },
+        {
+          "name": "Findings Summary",
+          "rows": 3
+        },
+        {
+          "name": "Recommendations",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Root Cause Analysis investigations",
+      "submissionLabelExpression": "${values('Investigation ID')} - ${values('Event Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Event ID]",
+          "values[Investigation ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "capas",
+      "name": "CAPAs",
+      "fields": [
+        {
+          "name": "CAPA ID",
+          "required": true
+        },
+        {
+          "name": "Investigation ID"
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "CAPA Type"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Responsible Person"
+        },
+        {
+          "name": "Assigned Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Effectiveness Check Date"
+        },
+        {
+          "name": "Effectiveness Result"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Evidence",
+          "rows": 3
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Corrective and Preventive Actions",
+      "submissionLabelExpression": "${values('CAPA ID')} - ${values('Event Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[CAPA ID]",
+          "values[Event ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "regulatory-reports",
+      "name": "Regulatory Reports",
+      "fields": [
+        {
+          "name": "Report ID",
+          "required": true
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "Reporting Agency"
+        },
+        {
+          "name": "Report Type"
+        },
+        {
+          "name": "Regulation Reference"
+        },
+        {
+          "name": "Report Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Submitted Date"
+        },
+        {
+          "name": "Submitted By"
+        },
+        {
+          "name": "Acknowledgment Number"
+        },
+        {
+          "name": "Agency Response",
+          "rows": 3
+        },
+        {
+          "name": "Follow Up Required"
+        },
+        {
+          "name": "Follow Up Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "State/CMS/Joint Commission filings",
+      "submissionLabelExpression": "${values('Report ID')} - ${values('Reporting Agency')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Report ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "committee-reviews",
+      "name": "Committee Reviews",
+      "fields": [
+        {
+          "name": "Review ID",
+          "required": true
+        },
+        {
+          "name": "Committee Name"
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "Review Date"
+        },
+        {
+          "name": "Reviewers"
+        },
+        {
+          "name": "Discussion Summary",
+          "rows": 3
+        },
+        {
+          "name": "Recommendations",
+          "rows": 3
+        },
+        {
+          "name": "Follow Up Items",
+          "rows": 3
+        },
+        {
+          "name": "Next Review Date"
+        },
+        {
+          "name": "Decision"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Quality committee review records",
+      "submissionLabelExpression": "${values('Review ID')} - ${values('Committee Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "harm-scores",
+      "name": "Harm Scores",
+      "fields": [
+        {
+          "name": "Score ID",
+          "required": true
+        },
+        {
+          "name": "Severity Level"
+        },
+        {
+          "name": "Severity Label"
+        },
+        {
+          "name": "Likelihood Level"
+        },
+        {
+          "name": "Likelihood Label"
+        },
+        {
+          "name": "SAC Score"
+        },
+        {
+          "name": "Response Required"
+        },
+        {
+          "name": "Investigation Required"
+        },
+        {
+          "name": "Timeline Days"
+        },
+        {
+          "name": "Color Code"
+        }
+      ],
+      "description": "SAC Matrix configuration (reference data)",
+      "submissionLabelExpression": "SAC ${values('SAC Score')} - Sev ${values('Severity Level')} / Lik ${values('Likelihood Level')}"
+    },
+    {
+      "slug": "staff",
+      "name": "Staff",
+      "fields": [
+        {
+          "name": "Staff ID",
+          "required": true
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Certifications"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Staff directory for reporter/investigator lookup",
+      "submissionLabelExpression": "${values('Last Name')}, ${values('First Name')} (${values('Staff ID')})"
+    },
+    {
+      "slug": "contributing-factors",
+      "name": "Contributing Factors",
+      "fields": [
+        {
+          "name": "Factor ID",
+          "required": true
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "Factor Category"
+        },
+        {
+          "name": "Factor Description",
+          "rows": 3
+        },
+        {
+          "name": "Mitigation Potential"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Linked factors per event",
+      "submissionLabelExpression": "${values('Factor ID')} - ${values('Factor Category')} (${values('Event ID')})",
+      "indexes": {
+        "single": [
+          "values[Event ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "action-items",
+      "name": "Action Items",
+      "fields": [
+        {
+          "name": "Action ID",
+          "required": true
+        },
+        {
+          "name": "Parent Type"
+        },
+        {
+          "name": "Parent ID"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Granular tasks from investigations/CAPAs",
+      "submissionLabelExpression": "${values('Action ID')} - ${values('Description')}"
+    },
+    {
+      "slug": "event-notes",
+      "name": "Event Notes",
+      "fields": [
+        {
+          "name": "Note ID",
+          "required": true
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Event Title"
+        },
+        {
+          "name": "Author"
+        },
+        {
+          "name": "Note Type"
+        },
+        {
+          "name": "Content",
+          "rows": 4
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Visible To"
+        }
+      ],
+      "description": "Threaded notes/comments on events",
+      "submissionLabelExpression": "${values('Note ID')} - ${values('Note Type')} (${values('Event ID')})",
+      "indexes": {
+        "single": [
+          "values[Event ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "trending-data",
+      "name": "Trending Data",
+      "fields": [
+        {
+          "name": "Period ID",
+          "required": true
+        },
+        {
+          "name": "Period"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Event Type"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Event Count"
+        },
+        {
+          "name": "Near Miss Count"
+        },
+        {
+          "name": "Adverse Event Count"
+        },
+        {
+          "name": "Sentinel Count"
+        },
+        {
+          "name": "Avg SAC Score"
+        },
+        {
+          "name": "Top Contributing Factor"
+        },
+        {
+          "name": "CAPA Count"
+        },
+        {
+          "name": "Open CAPAs"
+        },
+        {
+          "name": "Overdue CAPAs"
+        },
+        {
+          "name": "Generated Date"
+        }
+      ],
+      "description": "Pre-aggregated monthly summary snapshots",
+      "submissionLabelExpression": "${values('Period')} - ${values('Department')} (${values('Event Type')})"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Healthcare"
+}

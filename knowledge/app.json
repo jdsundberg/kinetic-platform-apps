@@ -1,0 +1,108 @@
+{
+  "name": "Knowledge Base",
+  "slug": "knowledge",
+  "description": "Knowledge base for creating, organizing, and searching articles and documentation.",
+  "forms": [
+    {
+      "slug": "articles",
+      "name": "Articles",
+      "fields": [
+        {
+          "name": "Article Number"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Content",
+          "rows": 8
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Author"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Views"
+        },
+        {
+          "name": "Published Date"
+        },
+        {
+          "name": "Related Service"
+        }
+      ],
+      "description": "Knowledge base articles",
+      "submissionLabelExpression": "${values('Article Number')} - ${values('Title')}",
+      "indexes": {
+        "single": [
+          "values[Article Number]",
+          "values[Category]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Category]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "article-categories",
+      "name": "Article Categories",
+      "fields": [
+        { "name": "Category Name" },
+        { "name": "Description" },
+        { "name": "Icon" },
+        { "name": "Sort Order" }
+      ],
+      "indexes": {
+        "single": [],
+        "compound": []
+      }
+    },
+    {
+      "slug": "article-versions",
+      "name": "Article Versions",
+      "fields": [
+        { "name": "Version ID" },
+        { "name": "Article ID" },
+        { "name": "Article Title" },
+        { "name": "Version Number" },
+        { "name": "Content", "rows": 8 },
+        { "name": "Author" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Article ID]"],
+        "compound": []
+      }
+    },
+    {
+      "slug": "article-comments",
+      "name": "Article Comments",
+      "fields": [
+        { "name": "Comment ID" },
+        { "name": "Article ID" },
+        { "name": "Article Title" },
+        { "name": "Author" },
+        { "name": "Content", "rows": 3 },
+        { "name": "Status" },
+        { "name": "Category Name" }
+      ],
+      "indexes": {
+        "single": ["values[Article ID]"],
+        "compound": []
+      }
+    }
+  ],
+  "category": "Operations"
+}

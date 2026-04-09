@@ -1,0 +1,3148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Air</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; }
+
+/* ── Login ── */
+#login-screen {
+  display: flex; align-items: center; justify-content: center; min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.login-box {
+  background: white; border-radius: 16px; padding: 40px; width: 400px; box-shadow: var(--shadow-lg);
+}
+.login-box h1 { font-size: 24px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .accent-bar { width: 40px; height: 3px; background: var(--green); margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+.login-box button:hover { background: #2E9449; }
+.login-box .error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+
+/* ── App Shell ── */
+#app { display: none; height: 100vh; }
+.topbar {
+  background: var(--blue); color: white; display: flex; align-items: center;
+  padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 18px; font-weight: 700; }
+.logo span { color: var(--green); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.logout-btn:hover { background: var(--orange); color: white; border-color: var(--orange); }
+
+/* ── Main Layout ── */
+.main-layout { display: flex; height: calc(100vh - 56px); }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 240px; min-width: 240px; background: var(--blue); color: white;
+  display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,.1);
+}
+.sidebar-header {
+  padding: 16px; border-bottom: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sidebar-header h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.5); }
+.btn-new-table {
+  background: var(--green); color: white; border: none; padding: 4px 10px;
+  border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.btn-new-table:hover { background: #2E9449; }
+.table-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+.table-item {
+  padding: 8px 16px; font-size: 13px; cursor: pointer; display: flex;
+  align-items: center; justify-content: space-between; color: rgba(255,255,255,.7);
+  border-left: 3px solid transparent;
+}
+.table-item:hover { background: rgba(255,255,255,.05); color: white; }
+.table-item.active { background: rgba(255,255,255,.1); color: white; border-left-color: var(--green); font-weight: 600; }
+.table-item .table-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-item .table-menu {
+  opacity: 0; background: none; border: none; color: rgba(255,255,255,.5);
+  cursor: pointer; padding: 2px 4px; font-size: 16px; line-height: 1;
+}
+.table-item:hover .table-menu { opacity: 1; }
+.table-item .table-menu:hover { color: white; }
+.sidebar-empty { padding: 24px 16px; font-size: 13px; color: rgba(255,255,255,.4); text-align: center; line-height: 1.5; }
+
+/* ── Virtual Tables ── */
+.vtable-section-header { padding: 12px 16px 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.35); border-top: 1px solid rgba(255,255,255,.08); margin-top: 4px; }
+.table-item.virtual .table-name { font-style: italic; }
+.table-item.virtual .vtable-kapp { font-size: 10px; color: rgba(255,255,255,.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+.kapp-list, .form-list { max-height: 360px; overflow-y: auto; margin: 12px 0; border: 1px solid var(--border); border-radius: 8px; }
+.kapp-item, .form-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 13px; }
+.kapp-item:last-child, .form-item:last-child { border-bottom: none; }
+.kapp-item:hover, .form-item:hover { background: var(--light); }
+.kapp-item .kapp-slug, .form-item .form-slug { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+/* ── Grid Area ── */
+.grid-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.grid-toolbar {
+  display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+  background: white; border-bottom: 1px solid var(--border);
+}
+.grid-toolbar .table-title {
+  font-size: 16px; font-weight: 700; color: var(--blue);
+  background: none; border: none; padding: 4px 8px; border-radius: 6px;
+  cursor: text; min-width: 120px;
+}
+.grid-toolbar .table-title:hover { background: var(--light); }
+.grid-toolbar .table-title:focus { outline: none; border: 1px solid var(--orange); background: white; }
+.grid-toolbar .page-info { font-size: 12px; color: var(--gray); }
+.btn-icon {
+  background: none; border: 1px solid var(--border); padding: 6px 8px; border-radius: 6px;
+  cursor: pointer; color: var(--gray); font-size: 12px; display: flex; align-items: center; gap: 4px;
+}
+.btn-icon:hover { background: var(--light); color: var(--blue); }
+.btn-icon:disabled { opacity: .4; cursor: default; }
+.btn-icon:disabled:hover { background: none; color: var(--gray); }
+.btn-sm {
+  background: var(--green); color: white; border: none; padding: 6px 12px;
+  border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.btn-sm:hover { background: #2E9449; }
+.btn-sm.danger { background: var(--red); }
+.btn-sm.danger:hover { background: #D32F2F; }
+
+/* ── Spreadsheet Grid ── */
+.grid-container { flex: 1; overflow: auto; background: white; }
+.spreadsheet {
+  border-collapse: collapse; width: max-content; min-width: 100%;
+}
+.spreadsheet th, .spreadsheet td {
+  border: 1px solid var(--border); padding: 0; height: 34px; position: relative;
+}
+.spreadsheet thead { position: sticky; top: 0; z-index: 10; }
+.spreadsheet th {
+  background: var(--light); font-size: 11px; font-weight: 600; color: var(--gray);
+  text-transform: uppercase; letter-spacing: .3px; padding: 0 12px; white-space: nowrap;
+  text-align: left; user-select: none; min-width: 140px;
+}
+.spreadsheet th.col-checkbox { width: 40px; min-width: 40px; text-align: center; }
+.spreadsheet th.col-add {
+  width: 40px; min-width: 40px; text-align: center; cursor: pointer;
+  color: var(--green); font-size: 18px; font-weight: 400;
+}
+.spreadsheet th.col-add:hover { background: #E8F5E9; }
+.spreadsheet th .col-header {
+  display: flex; align-items: center; gap: 6px; cursor: default;
+}
+.spreadsheet th .col-type-icon { font-size: 10px; opacity: .6; }
+.spreadsheet th .col-menu-btn {
+  opacity: 0; margin-left: auto; background: none; border: none;
+  color: var(--gray); cursor: pointer; padding: 2px; font-size: 14px;
+}
+.spreadsheet th:hover .col-menu-btn { opacity: 1; }
+
+.spreadsheet td { font-size: 13px; }
+.spreadsheet td .cell-display {
+  padding: 0 12px; height: 33px; line-height: 33px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; cursor: cell;
+}
+.spreadsheet td .cell-display.empty { color: var(--gray); opacity: .4; }
+.spreadsheet td .cell-edit {
+  width: 100%; height: 100%; border: none; padding: 0 12px; font-size: 13px;
+  font-family: inherit; outline: none; background: #FFF8E1;
+}
+.spreadsheet td .cell-edit-area {
+  width: 100%; border: none; padding: 6px 12px; font-size: 13px;
+  font-family: inherit; outline: none; background: #FFF8E1; resize: none;
+}
+.spreadsheet td .cell-edit-select {
+  width: 100%; height: 100%; border: none; padding: 0 8px; font-size: 13px;
+  font-family: inherit; outline: none; background: #FFF8E1;
+}
+.spreadsheet td .cell-edit-date {
+  width: 100%; height: 100%; border: none; padding: 0 8px; font-size: 13px;
+  font-family: inherit; outline: none; background: #FFF8E1;
+}
+.spreadsheet td.cb-cell { text-align: center; }
+.spreadsheet td.cb-cell input[type="checkbox"] { cursor: pointer; }
+.spreadsheet tr:hover td { background: #FAFAFA; }
+.spreadsheet tr.row-add td {
+  background: var(--light); cursor: pointer; color: var(--green);
+  font-weight: 600; font-size: 12px;
+}
+.spreadsheet tr.row-add:hover td { background: #E8F5E9; }
+
+/* ── Empty / Welcome State ── */
+.empty-state {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px; color: var(--gray);
+}
+.empty-state svg { width: 64px; height: 64px; opacity: .3; }
+.empty-state h2 { font-size: 18px; color: var(--blue); }
+.empty-state p { font-size: 13px; }
+
+/* ── Context Menu ── */
+.ctx-menu {
+  position: fixed; background: white; border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: var(--shadow-lg); padding: 4px 0;
+  z-index: 300; min-width: 160px;
+}
+.ctx-menu .ctx-item {
+  padding: 8px 16px; font-size: 13px; cursor: pointer; display: flex;
+  align-items: center; gap: 8px;
+}
+.ctx-menu .ctx-item:hover { background: var(--light); }
+.ctx-menu .ctx-item.danger { color: var(--red); }
+.ctx-menu .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ── Modal ── */
+#modal {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 200; align-items: center; justify-content: center;
+}
+#modal.show { display: flex; }
+.modal-card {
+  background: white; border-radius: 16px; padding: 28px; width: 420px;
+  max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+}
+.modal-card h3 { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 16px; }
+.modal-card label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 12px; }
+.modal-card input, .modal-card select, .modal-card textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-family: inherit;
+}
+.modal-card input:focus, .modal-card select:focus, .modal-card textarea:focus {
+  outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1);
+}
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.modal-actions .btn-cancel {
+  background: var(--light); color: var(--blue); border: 1px solid var(--border);
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.modal-actions .btn-cancel:hover { background: var(--border); }
+.modal-actions .btn-primary {
+  background: var(--orange); color: white; border: none; padding: 8px 16px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.modal-actions .btn-primary:hover { background: var(--orange-light); }
+.modal-actions .btn-danger {
+  background: var(--red); color: white; border: none; padding: 8px 16px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.choices-list { margin-top: 8px; }
+.choices-list .choice-row { display: flex; gap: 6px; margin-bottom: 4px; align-items: center; }
+.choices-list .choice-row input { flex: 1; padding: 6px 8px; font-size: 13px; }
+.choices-list .choice-row button {
+  background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; padding: 0 4px;
+}
+.choices-list .btn-add-choice {
+  background: none; border: none; color: var(--green); cursor: pointer;
+  font-size: 12px; font-weight: 600; margin-top: 4px;
+}
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: white; padding: 12px 24px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; z-index: 300; transition: bottom .3s;
+  box-shadow: var(--shadow-lg);
+}
+#toast.show { bottom: 24px; }
+
+/* ── Saving indicator ── */
+.saving-dot {
+  display: inline-block; width: 8px; height: 8px; background: var(--yellow);
+  border-radius: 50%; margin-left: 8px; animation: pulse .8s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* ── Dropdown pills ── */
+.cell-pill {
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap;
+}
+.cell-check { font-size: 16px; }
+.cell-check.on { color: var(--green); }
+.cell-check.off { color: var(--border); }
+
+/* ── Cell validation ── */
+.cell-edit.invalid, .cell-edit-area.invalid { background: #FFF0F0; box-shadow: inset 0 0 0 1px var(--red); }
+.cell-edit.valid { background: #F0FFF0; }
+.cell-hint { position: absolute; bottom: -20px; left: 0; font-size: 10px; color: var(--red); white-space: nowrap; z-index: 5; pointer-events: none; }
+
+/* ── Pattern section in modal ── */
+.pattern-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.pattern-preset {
+  background: var(--light); border: 1px solid var(--border); padding: 3px 8px;
+  border-radius: 12px; font-size: 11px; cursor: pointer; color: var(--gray);
+}
+.pattern-preset:hover { background: var(--border); color: var(--blue); }
+.pattern-preset.active { background: var(--green); color: white; border-color: var(--green); }
+.pattern-test { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.pattern-test input { flex: 1; }
+.pattern-test .result { font-size: 11px; font-weight: 600; min-width: 40px; }
+.pattern-test .result.pass { color: var(--green); }
+.pattern-test .result.fail { color: var(--red); }
+
+/* ── View Switcher ── */
+.view-switcher { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.view-btn { padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+            background: white; border: none; border-right: 1px solid var(--border); color: var(--gray); }
+.view-btn:last-child { border-right: none; }
+.view-btn.active { background: var(--green); color: white; }
+.view-btn:hover:not(.active):not(:disabled) { background: var(--light); }
+.view-btn:disabled { opacity: .35; cursor: default; }
+
+/* ── Calendar View ── */
+.cal-header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: white; border-bottom: 1px solid var(--border); }
+.cal-header .cal-title { font-size: 16px; font-weight: 700; color: var(--blue); }
+.cal-nav { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px;
+           cursor: pointer; font-size: 14px; color: var(--gray); }
+.cal-nav:hover { background: var(--light); color: var(--blue); }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--light);
+                border-bottom: 1px solid var(--border); }
+.cal-weekday { padding: 6px; text-align: center; font-size: 11px; font-weight: 600; color: var(--gray);
+               text-transform: uppercase; letter-spacing: .3px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); flex: 1; overflow-y: auto; }
+.cal-cell { background: white; min-height: 100px; padding: 4px; }
+.cal-cell.today { background: #FFFDE7; }
+.cal-cell.outside { opacity: .4; }
+.cal-day-num { font-size: 11px; font-weight: 600; color: var(--gray); margin-bottom: 4px; }
+.cal-card { font-size: 11px; padding: 3px 6px; border-radius: 4px; margin-bottom: 2px;
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            background: var(--light); border-left: 3px solid var(--green); }
+.cal-card:hover { background: var(--border); }
+
+/* ── Kanban View ── */
+.kanban-container { display: flex; gap: 12px; padding: 16px; overflow-x: auto; flex: 1; align-items: flex-start; }
+.kanban-col { min-width: 260px; max-width: 300px; background: var(--light); border-radius: 10px;
+              display: flex; flex-direction: column; max-height: calc(100vh - 180px); }
+.kanban-col-header { padding: 12px; font-size: 13px; font-weight: 700;
+                     border-bottom: 2px solid; display: flex; align-items: center; gap: 8px; }
+.kanban-col-body { flex: 1; overflow-y: auto; padding: 8px; }
+.kanban-card { background: white; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+               box-shadow: var(--shadow); cursor: grab; font-size: 13px; transition: opacity .15s, transform .15s; }
+.kanban-card:hover { box-shadow: var(--shadow-lg); }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.dragging { opacity: .4; transform: scale(.97); }
+.kanban-card .card-title { font-weight: 600; margin-bottom: 4px; }
+.kanban-card .card-sub { font-size: 11px; color: var(--gray); }
+.kanban-count { background: rgba(0,0,0,.1); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+.kanban-col.drag-over .kanban-col-body { background: rgba(52,168,83,.08); }
+.kanban-col.drag-over .kanban-col-header { opacity: 1; }
+.kanban-drop-indicator { height: 3px; background: var(--green); border-radius: 2px; margin: 4px 0; transition: opacity .1s; }
+
+/* ── Gantt View ── */
+.gantt-wrapper { flex: 1; overflow: auto; background: white; }
+.gantt-table { border-collapse: collapse; width: max-content; min-width: 100%; }
+.gantt-table th, .gantt-table td { border: 1px solid var(--border); padding: 0; height: 32px; }
+.gantt-table thead { position: sticky; top: 0; z-index: 10; }
+.gantt-table th { background: var(--light); font-size: 10px; font-weight: 600; color: var(--gray);
+                  text-align: center; letter-spacing: .3px; white-space: nowrap; padding: 0 2px; }
+.gantt-table th.gantt-month { background: var(--blue); color: white; font-size: 11px; text-transform: uppercase; }
+.gantt-table th.gantt-label-hdr { text-align: left; padding: 0 12px; min-width: 200px; position: sticky; left: 0;
+                                   background: var(--light); z-index: 11; }
+.gantt-label-cell { padding: 0 12px; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden;
+                    text-overflow: ellipsis; max-width: 200px; cursor: pointer; position: sticky; left: 0;
+                    background: white; z-index: 1; }
+.gantt-label-cell:hover { color: var(--orange); }
+.gantt-day { min-width: 28px; width: 28px; position: relative; }
+.gantt-day.weekend { background: #FAFAFA; }
+.gantt-day.today-col { background: #FFFDE7; }
+.gantt-bar { position: absolute; top: 5px; height: 22px; border-radius: 4px; min-width: 6px;
+             cursor: pointer; z-index: 2; display: flex; align-items: center; padding: 0 6px;
+             font-size: 10px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; }
+.gantt-bar:hover { filter: brightness(1.1); box-shadow: var(--shadow); }
+.gantt-milestone { position: absolute; top: 8px; width: 16px; height: 16px; transform: rotate(45deg);
+                   cursor: pointer; z-index: 2; }
+.gantt-milestone:hover { filter: brightness(1.1); box-shadow: var(--shadow); }
+.gantt-today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); z-index: 3;
+                    pointer-events: none; }
+.gantt-header-row th { padding: 4px 0; }
+.gantt-field-selectors { display: flex; align-items: center; gap: 6px; }
+.gantt-field-selectors label { font-size: 11px; color: var(--gray); font-weight: 600; }
+
+/* ── Field selector in toolbar ── */
+.field-selector { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+                  background: white; cursor: pointer; color: var(--gray); }
+.field-selector:focus { outline: none; border-color: var(--orange); }
+
+/* ── Template Picker ── */
+.tmpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px;
+             max-height: 340px; overflow-y: auto; padding: 2px; }
+.tmpl-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; cursor: pointer;
+             text-align: center; transition: border-color .15s, box-shadow .15s; }
+.tmpl-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.tmpl-card .tmpl-icon { font-size: 24px; margin-bottom: 6px; }
+.tmpl-card .tmpl-name { font-size: 12px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+.tmpl-card .tmpl-desc { font-size: 10px; color: var(--gray); line-height: 1.3; }
+</style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Kinetic Air</h1>
+    <p class="sub">Spreadsheet-style data tables</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" type="text" value="http://localhost:3021">
+    <label>Username</label>
+    <input id="login-user" type="text" value="">
+    <label>Password</label>
+    <input id="login-pass" type="password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Kinetic <span>Air</span></div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h3>Tables</h3>
+        <button class="btn-new-table" onclick="promptNewTable()">+ New</button>
+      </div>
+      <div class="table-list" id="table-list"></div>
+    </div>
+
+    <!-- Grid Area -->
+    <div class="grid-area" id="grid-area">
+      <div class="empty-state" id="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        <h2>No table selected</h2>
+        <p>Create a table or select one from the sidebar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal ── -->
+<div id="modal"><div class="modal-card" id="modal-card"></div></div>
+
+<!-- ── Context Menu ── -->
+<div class="ctx-menu" id="ctx-menu" style="display:none"></div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   Kinetic Air — Airtable-like Data Manager
+   ════════════════════════════════════════════════════ */
+
+const KAPP = 'kinetic-air';
+const PAGE_SIZE = 25;
+
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+let tables = [];           // [{slug, name, fields:[{name, type, choices}]}]
+let activeTable = null;    // slug
+let rows = [];             // submissions
+let pageKeys = [null];     // keyset pagination: pageKeys[0] = null (first page), pageKeys[N] = createdAt for page N+1
+let currentPage = 0;
+let hasNextPage = false;
+let selectedRows = new Set();
+let currentView = 'grid';       // 'grid' | 'calendar' | 'kanban' | 'gantt'
+let calendarMonth = new Date();  // visible month (year+month only)
+let calendarDateField = null;    // name of Date field for calendar
+let kanbanField = null;          // name of Dropdown field for kanban
+let ganttStartField = null;      // name of Date field for gantt start
+let ganttEndField = null;        // name of Date field for gantt end (optional)
+
+/* ── Virtual Tables ── */
+let virtualTables = [];         // [{slug, name, kappSlug, kappName, fields:[]}]
+let activeKappOverride = null;  // non-null when a virtual table is active
+
+function activeKapp() { return activeKappOverride || KAPP; }
+function isVirtual(slug) { return virtualTables.some(t => t.slug === (slug || activeTable)); }
+function findTable(slug) { slug = slug || activeTable; if (activeKappOverride) { return virtualTables.find(t => t.slug === slug) || tables.find(t => t.slug === slug); } return tables.find(t => t.slug === slug) || virtualTables.find(t => t.slug === slug); }
+
+/* ── Helpers ── */
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// Attribute-safe escaper (esc() doesn't encode " which breaks HTML attributes)
+function escAttr(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function v(sub, field) {
+  if (field === 'Created At') return sub.createdAt || '';
+  if (field === 'Updated At') return sub.updatedAt || '';
+  return sub.values?.[field] || '';
+}
+
+function hexKey() { return Array.from({length: 12}, () => Math.floor(Math.random()*16).toString(16)).join(''); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── API ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Basic ${API.auth}`,
+      'Content-Type': 'application/json',
+      ...opts.headers
+    }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${res.status}: ${text}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Login / Logout ── */
+function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+
+  fetch(`${API.url}/app/api/v1/me`, {
+    headers: { 'Authorization': `Basic ${API.auth}` }
+  })
+  .then(r => { if (!r.ok) throw new Error('Invalid credentials'); return r.json(); })
+  .then(data => {
+    API.displayName = data.displayName || data.username || user;
+    API.user = data.username || user;
+    enterApp();
+  })
+  .catch(e => {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  });
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  document.getElementById('user-display').textContent = API.displayName;
+  loadVirtualTables();
+  loadTables();
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  activeTable = null;
+  activeKappOverride = null;
+  tables = [];
+  virtualTables = [];
+  rows = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  sessionStorage.removeItem('kinetic_session');
+}
+
+/* ── Session restore ── */
+(function checkSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || '';
+      API.displayName = s.displayName || s.user || '';
+      API.spaceSlug = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+/* ════════════════════════════════════════════════════
+   TABLE CRUD
+   ════════════════════════════════════════════════════ */
+
+async function loadTables() {
+  try {
+    const data = await api(`/kapps/${KAPP}/forms`);
+    const forms = data.forms || [];
+    tables = forms.map(f => {
+      // Preserve existing fields if we already loaded them
+      const existing = tables.find(t => t.slug === f.slug);
+      return {
+        slug: f.slug,
+        name: f.name,
+        fields: existing ? existing.fields : [],
+      };
+    });
+    renderSidebar();
+    if (activeTable) {
+      const found = tables.find(t => t.slug === activeTable);
+      if (found) selectTable(found.slug);
+      else if (!isVirtual(activeTable)) showEmpty();
+    }
+  } catch (e) {
+    console.error('loadTables:', e);
+    toast('Error loading tables');
+  }
+}
+
+function extractFields(form) {
+  const fields = [];
+  if (!form.pages) return fields;
+  function walk(els) {
+    for (const el of (els || [])) {
+      if (el.type === 'field' && el.name) {
+        const f = { name: el.name, type: guessAirType(el), choices: [], pattern: el.renderAttributes?.airPattern || '' };
+        if (el.choices && el.choices.length > 0) {
+          f.choices = el.choices.map(c => c.label || c.value || c);
+        }
+        fields.push(f);
+      }
+      if (el.elements) walk(el.elements);
+    }
+  }
+  for (const page of form.pages) walk(page.elements);
+  return fields;
+}
+
+function guessAirType(el) {
+  if (el.renderType === 'checkbox') return 'Checkbox';
+  if (el.renderType === 'dropdown') return 'Dropdown';
+  if (el.choices && el.choices.length > 0) return 'Dropdown';
+  if (el.dataType === 'date') return 'Date';
+  if (el.renderType === 'date') return 'Date';
+  if (el.rows && el.rows > 1) return 'Long Text';
+  // Name-based heuristics for external forms
+  const name = (el.name || '').toLowerCase();
+  if (name.includes('date') || name.endsWith(' on') || name.endsWith(' at')) return 'Date';
+  return 'Text';
+}
+
+function inferFieldTypes(table, sampleRows) {
+  if (!table || !sampleRows.length) return;
+  for (const f of table.fields) {
+    if (f.type !== 'Text' || f.choices.length > 0) continue;
+    // Collect distinct non-empty values
+    const vals = new Set();
+    let tooMany = false;
+    for (const row of sampleRows) {
+      const raw = row.values?.[f.name];
+      if (raw == null || typeof raw !== 'string') continue;
+      const val = raw.trim();
+      if (!val) continue;
+      vals.add(val);
+      if (vals.size > 12) { tooMany = true; break; }
+    }
+    if (tooMany || vals.size === 0) continue;
+    // Only promote to Dropdown if distinct values are much fewer than filled rows
+    const fillCount = sampleRows.filter(r => { const v = r.values?.[f.name]; return typeof v === 'string' && v.trim(); }).length;
+    if (vals.size <= 8 && fillCount >= 5 && vals.size <= fillCount / 2) {
+      f.type = 'Dropdown';
+      f.choices = [...vals].sort();
+    }
+    // Check for date-like values (YYYY-MM-DD)
+    if (f.type === 'Text' && vals.size > 0) {
+      const dateRe = /^\d{4}-\d{2}-\d{2}/;
+      const allDates = [...vals].every(v => dateRe.test(v));
+      if (allDates) f.type = 'Date';
+    }
+  }
+}
+
+function renderSidebar() {
+  const list = document.getElementById('table-list');
+  if (tables.length === 0 && virtualTables.length === 0) {
+    list.innerHTML = '<div class="sidebar-empty">No tables yet.<br>Click "+ New" to create one.</div>';
+    return;
+  }
+  let html = tables.map(t => `
+    <div class="table-item ${t.slug === activeTable && !activeKappOverride ? 'active' : ''}" onclick="selectTable('${esc(t.slug)}')">
+      <span class="table-name">${esc(t.name)}</span>
+      <button class="table-menu" onclick="event.stopPropagation(); showTableMenu(event, '${esc(t.slug)}')" title="Options">&hellip;</button>
+    </div>
+  `).join('');
+  if (virtualTables.length > 0) {
+    html += '<div class="vtable-section-header">Virtual Tables</div>';
+    html += virtualTables.map(vt => `
+      <div class="table-item virtual ${vt.slug === activeTable && activeKappOverride ? 'active' : ''}" onclick="selectVirtualTable('${esc(vt.slug)}')">
+        <span class="table-name">${esc(vt.name)}<br><span class="vtable-kapp">${esc(vt.kappName)}</span></span>
+        <button class="table-menu" onclick="event.stopPropagation(); showVirtualTableMenu(event, '${esc(vt.slug)}')" title="Options">&hellip;</button>
+      </div>
+    `).join('');
+  }
+  list.innerHTML = html;
+}
+
+/* ── Table Templates ── */
+const TABLE_TEMPLATES = [
+  { id:'contacts', icon:'&#x1f464;', name:'Contacts', desc:'People and contact directory',
+    fields:[
+      {name:'First Name',type:'Text'},{name:'Last Name',type:'Text'},{name:'Email',type:'Text'},
+      {name:'Phone',type:'Text'},{name:'Organization',type:'Text'},{name:'Title',type:'Text'},
+      {name:'Department',type:'Dropdown',choices:['Engineering','Finance','HR','IT','Legal','Marketing','Operations','Sales','Support']},
+      {name:'Status',type:'Dropdown',choices:['Active','Inactive','Pending']},
+      {name:'Notes',type:'Long Text'},
+    ]},
+  { id:'projects', icon:'&#x1f4ca;', name:'Projects', desc:'Track projects with dates and status',
+    fields:[
+      {name:'Project Name',type:'Text'},{name:'Description',type:'Long Text'},
+      {name:'Status',type:'Dropdown',choices:['Planning','Active','On Hold','Completed','Cancelled']},
+      {name:'Priority',type:'Dropdown',choices:['High','Medium','Low']},
+      {name:'Project Lead',type:'Text'},{name:'Department',type:'Dropdown',choices:['Engineering','Marketing','Operations','Finance','HR','IT']},
+      {name:'Start Date',type:'Date'},{name:'Target End Date',type:'Date'},
+      {name:'Budget',type:'Text'},{name:'Notes',type:'Long Text'},
+    ]},
+  { id:'tasks', icon:'&#x2705;', name:'Tasks', desc:'Work items and assignments',
+    fields:[
+      {name:'Task Name',type:'Text'},{name:'Description',type:'Long Text'},
+      {name:'Status',type:'Dropdown',choices:['To Do','In Progress','Blocked','Done']},
+      {name:'Priority',type:'Dropdown',choices:['High','Medium','Low']},
+      {name:'Assigned To',type:'Text'},{name:'Due Date',type:'Date'},
+      {name:'Category',type:'Dropdown',choices:['Development','Testing','Documentation','Review','Deployment']},
+      {name:'Effort',type:'Dropdown',choices:['Small','Medium','Large','Extra Large']},
+      {name:'Notes',type:'Long Text'},
+    ]},
+  { id:'incidents', icon:'&#x1f6a8;', name:'Incidents', desc:'Track and resolve incidents',
+    fields:[
+      {name:'Title',type:'Text'},{name:'Description',type:'Long Text'},
+      {name:'Priority',type:'Dropdown',choices:['Critical','High','Medium','Low']},
+      {name:'Status',type:'Dropdown',choices:['New','In Progress','Pending','Resolved','Closed']},
+      {name:'Category',type:'Dropdown',choices:['Hardware','Software','Network','Security','Other']},
+      {name:'Assigned To',type:'Text'},{name:'Reported By',type:'Text'},
+      {name:'Impact',type:'Dropdown',choices:['Widespread','Significant','Moderate','Minor']},
+      {name:'Resolution',type:'Long Text'},{name:'Resolved Date',type:'Date'},
+    ]},
+  { id:'assets', icon:'&#x1f4bb;', name:'Assets', desc:'IT and physical asset inventory',
+    fields:[
+      {name:'Asset Name',type:'Text'},{name:'Asset Tag',type:'Text'},{name:'Serial Number',type:'Text'},
+      {name:'Category',type:'Dropdown',choices:['Laptop','Desktop','Monitor','Server','Network','Mobile','Printer','Other']},
+      {name:'Status',type:'Dropdown',choices:['In Use','Available','In Repair','Retired','Disposed']},
+      {name:'Assigned To',type:'Text'},{name:'Location',type:'Text'},
+      {name:'Manufacturer',type:'Text'},{name:'Model',type:'Text'},
+      {name:'Purchase Date',type:'Date'},{name:'Warranty Expiry',type:'Date'},
+      {name:'Notes',type:'Long Text'},
+    ]},
+  { id:'cases', icon:'&#x1f4c1;', name:'Cases', desc:'Customer support and case management',
+    fields:[
+      {name:'Case Title',type:'Text'},{name:'Description',type:'Long Text'},
+      {name:'Customer',type:'Text'},{name:'Contact Email',type:'Text'},
+      {name:'Priority',type:'Dropdown',choices:['Critical','High','Medium','Low']},
+      {name:'Status',type:'Dropdown',choices:['New','Open','Waiting on Customer','Escalated','Resolved','Closed']},
+      {name:'Category',type:'Dropdown',choices:['Billing','Technical','General','Complaint','Feature Request']},
+      {name:'Assigned To',type:'Text'},{name:'Resolution',type:'Long Text'},{name:'Closed Date',type:'Date'},
+    ]},
+  { id:'employees', icon:'&#x1f3e2;', name:'Employees', desc:'Employee directory and HR records',
+    fields:[
+      {name:'First Name',type:'Text'},{name:'Last Name',type:'Text'},{name:'Email',type:'Text'},
+      {name:'Employee ID',type:'Text'},
+      {name:'Department',type:'Dropdown',choices:['Engineering','Finance','HR','IT','Legal','Marketing','Operations','Sales','Support','Executive']},
+      {name:'Job Title',type:'Text'},{name:'Manager',type:'Text'},{name:'Location',type:'Text'},
+      {name:'Start Date',type:'Date'},
+      {name:'Status',type:'Dropdown',choices:['Active','On Leave','Terminated']},
+      {name:'Phone',type:'Text'},
+    ]},
+  { id:'vendors', icon:'&#x1f91d;', name:'Vendors', desc:'Vendor and supplier management',
+    fields:[
+      {name:'Vendor Name',type:'Text'},{name:'Contact Name',type:'Text'},
+      {name:'Email',type:'Text'},{name:'Phone',type:'Text'},
+      {name:'Category',type:'Dropdown',choices:['Software','Hardware','Services','Consulting','Facilities','Telecom']},
+      {name:'Status',type:'Dropdown',choices:['Active','Inactive','Pending Review','Suspended']},
+      {name:'Contract Number',type:'Text'},{name:'Contract Expiry',type:'Date'},
+      {name:'Address',type:'Long Text'},{name:'Notes',type:'Long Text'},
+    ]},
+  { id:'feedback', icon:'&#x1f4ac;', name:'Feedback', desc:'Collect feedback and survey responses',
+    fields:[
+      {name:'Respondent',type:'Text'},{name:'Email',type:'Text'},
+      {name:'Category',type:'Dropdown',choices:['Product','Service','Support','General']},
+      {name:'Rating',type:'Dropdown',choices:['5 - Excellent','4 - Good','3 - Average','2 - Poor','1 - Very Poor']},
+      {name:'Feedback',type:'Long Text'},
+      {name:'Status',type:'Dropdown',choices:['New','Reviewed','Actioned','Closed']},
+      {name:'Follow-Up Required',type:'Checkbox'},
+    ]},
+  { id:'lookup', icon:'&#x1f50e;', name:'Lookup Table', desc:'Reference data for dropdowns',
+    fields:[
+      {name:'Key',type:'Text'},{name:'Value',type:'Text'},{name:'Category',type:'Text'},
+      {name:'Display Order',type:'Text'},
+      {name:'Status',type:'Dropdown',choices:['Active','Inactive']},
+    ]},
+];
+
+let selectedTemplate = null; // null = blank
+let pendingFields = [];      // working copy of template fields for editing before creation
+
+function promptNewTable() {
+  selectedTemplate = null;
+  showModal(`
+    <h3>New Table</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:4px;">Start with a template or create a blank table.</p>
+    <div class="tmpl-grid">
+      <div class="tmpl-card" onclick="pickTemplate(null)" style="border-color:var(--green)">
+        <div class="tmpl-icon">&#x1f4c4;</div>
+        <div class="tmpl-name">Blank Table</div>
+        <div class="tmpl-desc">Start empty, add columns later</div>
+      </div>
+      ${TABLE_TEMPLATES.map(t => `
+        <div class="tmpl-card" onclick="pickTemplate('${t.id}')">
+          <div class="tmpl-icon">${t.icon}</div>
+          <div class="tmpl-name">${t.name}</div>
+          <div class="tmpl-desc">${t.desc}</div>
+        </div>
+      `).join('')}
+      <div class="tmpl-card" onclick="closeModal(); startVirtualTableFlow()" style="border-color:var(--orange)">
+        <div class="tmpl-icon">&#x1f517;</div>
+        <div class="tmpl-name">Virtual Table</div>
+        <div class="tmpl-desc">Browse a form from another kapp</div>
+      </div>
+    </div>
+  `);
+}
+
+function pickTemplate(id) {
+  selectedTemplate = id ? TABLE_TEMPLATES.find(t => t.id === id) : null;
+  pendingFields = selectedTemplate ? selectedTemplate.fields.map(f => ({...f, choices: f.choices ? [...f.choices] : undefined})) : [];
+  renderPickTemplate();
+}
+
+function renderPickTemplate() {
+  const defaultName = selectedTemplate ? selectedTemplate.name : '';
+  const nameVal = document.getElementById('new-table-name')?.value || defaultName;
+  showModal(`
+    <h3>New Table${selectedTemplate ? ' — ' + selectedTemplate.name : ''}</h3>
+    <label>Table Name</label>
+    <input id="new-table-name" type="text" value="${escAttr(nameVal)}" placeholder="e.g. Contacts, Projects..." autofocus>
+    ${pendingFields.length > 0 ? `
+      <div style="margin-top:12px;">
+        <label style="margin-top:0;">Columns (${pendingFields.length})</label>
+        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            ${pendingFields.map((f, i) => `
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:4px 6px;width:40%;"><input type="text" value="${escAttr(f.name)}" data-idx="${i}" class="pending-col-name" style="border:1px solid transparent;border-radius:4px;padding:2px 6px;font-size:12px;font-weight:600;width:100%;background:transparent;" onfocus="this.style.borderColor='var(--border)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'; pendingFields[${i}].name=this.value.trim()||'${escAttr(f.name)}'"></td>
+                <td style="padding:4px 6px;color:var(--gray);">${esc(f.type)}</td>
+                <td style="padding:4px 6px;color:var(--gray);font-size:11px;">${f.choices && f.choices.length > 0
+                  ? `<input type="text" value="${escAttr(f.choices.join(', '))}" data-idx="${i}" class="pending-col-choices" style="border:1px solid transparent;border-radius:4px;padding:2px 6px;font-size:11px;width:100%;background:transparent;color:var(--gray);" onfocus="this.style.borderColor='var(--border)';this.style.background='white';this.style.color='#202124'" onblur="this.style.borderColor='transparent';this.style.background='transparent';this.style.color='var(--gray)'; pendingFields[${i}].choices=this.value.split(',').map(s=>s.trim()).filter(Boolean)" title="Comma-separated choices">`
+                  : f.type === 'Checkbox' ? 'Yes / No' : ''}</td>
+                <td style="padding:4px 4px;width:28px;"><button onclick="pendingFields.splice(${i},1); renderPickTemplate()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 4px;opacity:.5;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5" title="Remove column">&times;</button></td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      </div>
+    ` : '<p style="font-size:12px;color:var(--gray);margin-top:8px;">An empty table with no columns. Add columns after creation.</p>'}
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="promptNewTable()">&#x2190; Back</button>
+      <button class="btn-primary" onclick="createTable()">Create Table</button>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('new-table-name'); el?.focus(); el?.select(); }, 100);
+}
+
+async function createTable() {
+  const name = document.getElementById('new-table-name').value.trim();
+  if (!name) return;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (!slug) { toast('Invalid table name'); return; }
+
+  // Sync any in-progress edits from the DOM
+  document.querySelectorAll('.pending-col-name').forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    if (pendingFields[idx] && el.value.trim()) pendingFields[idx].name = el.value.trim();
+  });
+  document.querySelectorAll('.pending-col-choices').forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    if (pendingFields[idx]) pendingFields[idx].choices = el.value.split(',').map(s => s.trim()).filter(Boolean);
+  });
+
+  closeModal();
+  try {
+    // Build pages with pending fields (user may have renamed/removed)
+    const body = { name, slug, status: 'Active' };
+    if (pendingFields.length > 0) {
+      const elements = pendingFields.map(f => {
+        const choices = f.type === 'Dropdown' && f.choices ? f.choices : [];
+        return buildFieldElement(f.name, f.type, choices, '');
+      });
+      body.pages = [{ name: 'Page 1', elements, type: 'page', renderType: 'submittable', events: [] }];
+    }
+
+    await api(`/kapps/${KAPP}/forms`, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+
+    // Add search indexes for fields
+    if (pendingFields.length > 0) {
+      for (const f of pendingFields) {
+        await addFieldIndex(slug, f.name);
+      }
+    }
+
+    toast(`Table "${name}" created`);
+    selectedTemplate = null;
+    await loadTables();
+    selectTable(slug);
+  } catch (e) {
+    if (e.message.includes('uniqueness_violation')) {
+      toast('A table with that name already exists');
+    } else {
+      toast('Error creating table');
+      console.error('createTable:', e);
+    }
+  }
+}
+
+async function deleteTable(slug) {
+  const t = tables.find(t => t.slug === slug);
+  if (!t) return;
+  showModal(`
+    <h3>Delete Table</h3>
+    <p style="margin-top:8px;font-size:14px;">Are you sure you want to delete <strong>${esc(t.name)}</strong>?<br>
+    <span style="color:var(--red);font-size:12px;">This cannot be undone. All data in this table will be lost.</span></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDeleteTable('${esc(slug)}')">Delete</button>
+    </div>
+  `);
+}
+
+async function confirmDeleteTable(slug) {
+  closeModal();
+  try {
+    await api(`/kapps/${KAPP}/forms/${slug}`, { method: 'DELETE' });
+    toast('Table deleted');
+    if (activeTable === slug) { activeTable = null; showEmpty(); }
+    await loadTables();
+  } catch (e) {
+    toast('Error deleting table');
+    console.error(e);
+  }
+}
+
+async function renameTable(slug) {
+  const t = tables.find(t => t.slug === slug);
+  if (!t) return;
+  showModal(`
+    <h3>Rename Table</h3>
+    <label>New Name</label>
+    <input id="rename-table-name" type="text" value="${esc(t.name)}">
+    <p style="font-size:11px;color:var(--gray);margin-top:6px;">Note: The table slug (${esc(slug)}) will not change.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRenameTable('${esc(slug)}')">Rename</button>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('rename-table-name'); el?.focus(); el?.select(); }, 100);
+}
+
+async function confirmRenameTable(slug) {
+  const name = document.getElementById('rename-table-name').value.trim();
+  if (!name) return;
+  closeModal();
+  try {
+    await api(`/kapps/${KAPP}/forms/${slug}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    });
+    toast('Table renamed');
+    const t = tables.find(t => t.slug === slug);
+    if (t) t.name = name;
+    renderSidebar();
+    if (activeTable === slug) renderToolbar();
+  } catch (e) {
+    toast('Error renaming table');
+    console.error(e);
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   TABLE SELECTION & GRID
+   ════════════════════════════════════════════════════ */
+
+async function selectTable(slug) {
+  activeKappOverride = null;
+  activeTable = slug;
+  selectedRows.clear();
+  currentPage = 0;
+  pageKeys = [null];
+  hasNextPage = false;
+  renderSidebar();
+
+  // Load full form definition (with pages) for field info
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${slug}?include=details,attributes,pages`);
+    const form = data.form;
+    const t = tables.find(t => t.slug === slug);
+    if (t && form) {
+      t.name = form.name;
+      t.fields = extractFields(form);
+    }
+  } catch (e) {
+    console.error('loadForm:', e);
+  }
+
+  await loadRows();
+}
+
+async function loadRows() {
+  const t = findTable();
+  if (!t) { showEmpty(); return; }
+
+  try {
+    const lastCreatedAt = pageKeys[currentPage];
+    let kql = lastCreatedAt ? `createdAt < "${lastCreatedAt}"` : '';
+    let url = `/kapps/${activeKapp()}/forms/${activeTable}/submissions?include=values,details&limit=${PAGE_SIZE}`;
+    if (kql) url += `&q=${encodeURIComponent(kql)}`;
+    const data = await api(url);
+    rows = data.submissions || [];
+    // Store createdAt key for next page
+    hasNextPage = !!data.nextPageToken;
+    if (hasNextPage && rows.length) {
+      pageKeys[currentPage + 1] = rows[rows.length - 1].createdAt;
+    }
+    // Infer field types from data for virtual tables (external forms may lack metadata)
+    if (isVirtual() && rows.length > 0) inferFieldTypes(findTable(), rows);
+    renderView();
+  } catch (e) {
+    console.error('loadRows:', e);
+    toast('Error loading rows');
+    showEmpty();
+  }
+}
+
+function showEmpty() {
+  const ga = document.getElementById('grid-area');
+  ga.innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      <h2>No table selected</h2>
+      <p>Create a table or select one from the sidebar</p>
+    </div>
+  `;
+}
+
+function renderView() {
+  switch (currentView) {
+    case 'calendar': renderCalendarView(); break;
+    case 'kanban':   renderKanbanView(); break;
+    case 'gantt':    renderGanttView(); break;
+    default:         renderGridView(); break;
+  }
+}
+
+function getFieldsByType(type) {
+  const t = findTable();
+  if (!t) return [];
+  const result = t.fields.filter(f => f.type === type);
+  if (type === 'Date') {
+    result.push({ name: 'Created At', type: 'Date', choices: [] });
+    result.push({ name: 'Updated At', type: 'Date', choices: [] });
+  }
+  return result;
+}
+
+function switchView(view) {
+  const t = findTable();
+  if (!t) return;
+  if (view === 'calendar') {
+    const dateFields = getFieldsByType('Date');
+    if (dateFields.length === 0) return;
+    if (!calendarDateField || !dateFields.find(f => f.name === calendarDateField)) {
+      calendarDateField = dateFields[0].name;
+    }
+  }
+  if (view === 'kanban') {
+    const ddFields = getFieldsByType('Dropdown');
+    if (ddFields.length === 0) return;
+    if (!kanbanField || !ddFields.find(f => f.name === kanbanField)) {
+      kanbanField = ddFields[0].name;
+    }
+  }
+  if (view === 'gantt') {
+    const dateFields = getFieldsByType('Date');
+    if (dateFields.length === 0) return;
+    if (!ganttStartField || !dateFields.find(f => f.name === ganttStartField)) {
+      ganttStartField = dateFields[0].name;
+    }
+    // Auto-pick end field if there's a second date field
+    if (!ganttEndField && dateFields.length > 1) {
+      ganttEndField = dateFields[1].name;
+    }
+    // Clear end field if it matches start or doesn't exist
+    if (ganttEndField === ganttStartField) ganttEndField = null;
+    if (ganttEndField && !dateFields.find(f => f.name === ganttEndField)) ganttEndField = null;
+  }
+  currentView = view;
+  renderView();
+}
+
+function buildViewToolbar(t) {
+  const hasNext = hasNextPage;
+  const hasPrev = currentPage > 0;
+  const dateFields = getFieldsByType('Date');
+  const ddFields = getFieldsByType('Dropdown');
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'grid-toolbar';
+
+  let fieldSelector = '';
+  if (currentView === 'calendar' && dateFields.length > 1) {
+    fieldSelector = `<select class="field-selector" onchange="calendarDateField=this.value; renderView()">
+      ${dateFields.map(f => `<option value="${escAttr(f.name)}" ${f.name === calendarDateField ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}
+    </select>`;
+  }
+  if (currentView === 'kanban' && ddFields.length > 1) {
+    fieldSelector = `<select class="field-selector" onchange="kanbanField=this.value; renderView()">
+      ${ddFields.map(f => `<option value="${escAttr(f.name)}" ${f.name === kanbanField ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}
+    </select>`;
+  }
+  if (currentView === 'gantt') {
+    fieldSelector = `<div class="gantt-field-selectors">
+      <label>Start:</label>
+      <select class="field-selector" onchange="ganttStartField=this.value; if(ganttEndField===this.value)ganttEndField=null; renderView()">
+        ${dateFields.map(f => `<option value="${escAttr(f.name)}" ${f.name === ganttStartField ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}
+      </select>
+      <label>End:</label>
+      <select class="field-selector" onchange="ganttEndField=this.value||null; renderView()">
+        <option value="" ${!ganttEndField ? 'selected' : ''}>None</option>
+        ${dateFields.filter(f => f.name !== ganttStartField).map(f => `<option value="${escAttr(f.name)}" ${f.name === ganttEndField ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}
+      </select>
+    </div>`;
+  }
+
+  toolbar.innerHTML = `
+    <input class="table-title" id="toolbar-title" value="${esc(t.name)}" onblur="onTitleBlur()" onkeydown="if(event.key==='Enter')this.blur()">
+    <div class="view-switcher">
+      <button class="view-btn ${currentView === 'grid' ? 'active' : ''}" onclick="switchView('grid')">Grid</button>
+      <button class="view-btn ${currentView === 'calendar' ? 'active' : ''}" onclick="switchView('calendar')" ${dateFields.length === 0 ? 'disabled title="No Date fields"' : ''}>Calendar</button>
+      <button class="view-btn ${currentView === 'kanban' ? 'active' : ''}" onclick="switchView('kanban')" ${ddFields.length === 0 ? 'disabled title="No Dropdown fields"' : ''}>Kanban</button>
+      <button class="view-btn ${currentView === 'gantt' ? 'active' : ''}" onclick="switchView('gantt')" ${dateFields.length === 0 ? 'disabled title="No Date fields"' : ''}>Gantt</button>
+    </div>
+    ${fieldSelector}
+    <div class="spacer"></div>
+    <span class="page-info">Page ${currentPage + 1}</span>
+    <button class="btn-icon" onclick="prevPage()" ${hasPrev ? '' : 'disabled'}>&laquo; Prev</button>
+    <button class="btn-icon" onclick="nextPage()" ${hasNext ? '' : 'disabled'}>Next &raquo;</button>
+    <button class="btn-icon" onclick="refreshGrid()" title="Refresh">&#x21bb;</button>
+    ${currentView === 'grid' && selectedRows.size > 0 ? `<button class="btn-sm danger" onclick="deleteSelectedRows()">Delete (${selectedRows.size})</button>` : ''}
+  `;
+  return toolbar;
+}
+
+function renderGridView() {
+  const t = findTable();
+  if (!t) return;
+  const fields = t.fields;
+
+  const ga = document.getElementById('grid-area');
+  ga.innerHTML = '';
+
+  // Toolbar
+  const toolbar = buildViewToolbar(t);
+  ga.appendChild(toolbar);
+
+  // Grid
+  const container = document.createElement('div');
+  container.className = 'grid-container';
+  let html = '<table class="spreadsheet"><thead><tr>';
+  // Checkbox header
+  html += '<th class="col-checkbox"><input type="checkbox" onchange="toggleAllRows(this.checked)" title="Select all"></th>';
+  // Field headers
+  const virt = isVirtual();
+  for (const f of fields) {
+    const patternBadge = f.pattern ? `<span style="font-size:9px;opacity:.5;margin-left:2px" title="Pattern: ${escAttr(f.pattern)}">.*</span>` : '';
+    html += `<th>
+      <div class="col-header">
+        <span class="col-type-icon">${typeIcon(f.type)}</span>
+        ${esc(f.name)}${patternBadge}
+        ${virt ? '' : `<button class="col-menu-btn" onclick="event.stopPropagation(); showColMenu(event, '${esc(f.name)}')" title="Column options">&hellip;</button>`}
+      </div>
+    </th>`;
+  }
+  // Add column (hidden for virtual tables)
+  if (!virt) html += '<th class="col-add" onclick="promptNewColumn()" title="Add column">+</th>';
+  else html += '<th></th>';
+  html += '</tr></thead><tbody>';
+
+  // Data rows
+  for (const row of rows) {
+    const rid = row.id;
+    const checked = selectedRows.has(rid) ? 'checked' : '';
+    html += `<tr data-id="${esc(rid)}">`;
+    html += `<td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleRow('${esc(rid)}', this.checked)"></td>`;
+    for (const f of fields) {
+      const val = v(row, f.name);
+      html += renderCell(rid, f, val);
+    }
+    html += '<td></td></tr>';
+  }
+
+  // Add row
+  html += `<tr class="row-add" onclick="addRow()"><td colspan="${fields.length + 2}" style="padding:8px 12px;">+ New Row</td></tr>`;
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+  ga.appendChild(container);
+}
+
+const PILL_COLORS = [
+  { bg: '#E3F2FD', fg: '#1565C0' },  // blue
+  { bg: '#E8F5E9', fg: '#2E7D32' },  // green
+  { bg: '#FFF3E0', fg: '#E65100' },  // orange
+  { bg: '#F3E5F5', fg: '#7B1FA2' },  // purple
+  { bg: '#FFF8E1', fg: '#F9A825' },  // yellow
+  { bg: '#E0F7FA', fg: '#00695C' },  // teal
+  { bg: '#FDECEA', fg: '#C62828' },  // red
+  { bg: '#E8EAF6', fg: '#283593' },  // indigo
+  { bg: '#ECEFF1', fg: '#37474F' },  // gray
+  { bg: '#FCE4EC', fg: '#AD1457' },  // pink
+];
+
+function pillColor(val) {
+  let hash = 0;
+  for (let i = 0; i < val.length; i++) hash = ((hash << 5) - hash + val.charCodeAt(i)) | 0;
+  return PILL_COLORS[Math.abs(hash) % PILL_COLORS.length];
+}
+
+function renderCell(rowId, field, val) {
+  let displayVal;
+  let emptyClass = val ? '' : ' empty';
+
+  if (field.type === 'Checkbox') {
+    const on = val === 'true';
+    displayVal = `<span class="cell-check ${on ? 'on' : 'off'}">${on ? '&#x2611;' : '&#x2610;'}</span>`;
+    emptyClass = '';
+  } else if (field.type === 'Dropdown' && val) {
+    const c = pillColor(val);
+    displayVal = `<span class="cell-pill" style="background:${c.bg};color:${c.fg}">${esc(val)}</span>`;
+  } else {
+    displayVal = val ? esc(val) : '';
+  }
+
+  return `<td data-choices="${escAttr(JSON.stringify(field.choices || []))}" data-pattern="${escAttr(field.pattern || '')}" onclick="editCell(this, '${escAttr(rowId)}', '${escAttr(field.name)}', '${escAttr(field.type)}')">
+    <div class="cell-display${emptyClass}">${displayVal || '&nbsp;'}</div>
+  </td>`;
+}
+
+function typeIcon(type) {
+  const icons = {
+    'Text': 'Aa',
+    'Long Text': '&#x2261;',
+    'Number': '#',
+    'Date': '&#x1f4c5;',
+    'Dropdown': '&#x25be;',
+    'Checkbox': '&#x2611;',
+  };
+  return icons[type] || 'Aa';
+}
+
+function renderToolbar() {
+  const t = findTable();
+  if (!t) return;
+  const title = document.getElementById('toolbar-title');
+  if (title) title.value = t.name;
+}
+
+async function onTitleBlur() {
+  const title = document.getElementById('toolbar-title');
+  if (!title || !activeTable) return;
+  const newName = title.value.trim();
+  const t = findTable();
+  if (!t || newName === t.name || !newName) {
+    if (t) title.value = t.name;
+    return;
+  }
+  if (isVirtual()) { title.value = t.name; return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/${activeTable}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name: newName })
+    });
+    t.name = newName;
+    renderSidebar();
+    toast('Table renamed');
+  } catch (e) {
+    title.value = t.name;
+    toast('Error renaming');
+    console.error(e);
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   INLINE CELL EDITING
+   ════════════════════════════════════════════════════ */
+
+function editCell(td, rowId, fieldName, fieldType) {
+  // Don't re-edit if already editing
+  if (td.querySelector('input, textarea, select')) return;
+
+  const row = rows.find(r => r.id === rowId);
+  const currentVal = row ? v(row, fieldName) : '';
+  let choices = [];
+  try { choices = JSON.parse(td.dataset.choices || '[]'); } catch {}
+
+  if (fieldType === 'Checkbox') {
+    // Toggle immediately
+    const newVal = currentVal === 'true' ? 'false' : 'true';
+    saveCell(rowId, fieldName, newVal, td, fieldType, choices);
+    return;
+  }
+
+  if (fieldType === 'Long Text') {
+    td.innerHTML = `<textarea class="cell-edit-area" rows="3">${esc(currentVal)}</textarea>`;
+    const input = td.querySelector('textarea');
+    input.focus();
+    input.addEventListener('blur', () => {
+      saveCell(rowId, fieldName, input.value, td, fieldType, choices);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { restoreCell(td, rowId, fieldName, fieldType, choices); }
+    });
+    return;
+  }
+
+  if (fieldType === 'Dropdown') {
+    let html = '<select class="cell-edit-select">';
+    html += '<option value="">—</option>';
+    for (const c of choices) {
+      html += `<option value="${esc(c)}" ${c === currentVal ? 'selected' : ''}>${esc(c)}</option>`;
+    }
+    html += '</select>';
+    td.innerHTML = html;
+    const sel = td.querySelector('select');
+    sel.focus();
+    sel.addEventListener('change', () => {
+      saveCell(rowId, fieldName, sel.value, td, fieldType, choices);
+    });
+    sel.addEventListener('blur', () => {
+      saveCell(rowId, fieldName, sel.value, td, fieldType, choices);
+    });
+    sel.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') restoreCell(td, rowId, fieldName, fieldType, choices);
+    });
+    return;
+  }
+
+  if (fieldType === 'Date') {
+    td.innerHTML = `<input type="date" class="cell-edit-date" value="${esc(currentVal)}">`;
+    const input = td.querySelector('input');
+    input.focus();
+    input.addEventListener('change', () => {
+      saveCell(rowId, fieldName, input.value, td, fieldType, choices);
+    });
+    input.addEventListener('blur', () => {
+      saveCell(rowId, fieldName, input.value, td, fieldType, choices);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') restoreCell(td, rowId, fieldName, fieldType, choices);
+    });
+    return;
+  }
+
+  // Text / Number
+  const inputType = fieldType === 'Number' ? 'number' : 'text';
+  const pattern = td.dataset.pattern || '';
+  td.innerHTML = `<input type="${inputType}" class="cell-edit" value="${esc(currentVal)}">` +
+    (pattern ? `<span class="cell-hint" id="cell-hint"></span>` : '');
+  const input = td.querySelector('input');
+  const hintEl = td.querySelector('#cell-hint');
+  input.focus();
+  input.select();
+
+  // Live pattern validation for text fields
+  let patternRe = null;
+  if (pattern && fieldType === 'Text') {
+    try { patternRe = new RegExp(pattern); } catch {}
+  }
+  function validateInput() {
+    if (!patternRe || !input.value) {
+      input.classList.remove('invalid', 'valid');
+      if (hintEl) hintEl.textContent = '';
+      return;
+    }
+    if (patternRe.test(input.value)) {
+      input.classList.remove('invalid');
+      input.classList.add('valid');
+      if (hintEl) hintEl.textContent = '';
+    } else {
+      input.classList.remove('valid');
+      input.classList.add('invalid');
+      if (hintEl) hintEl.textContent = 'Does not match pattern';
+    }
+  }
+  if (patternRe) {
+    input.addEventListener('input', validateInput);
+    validateInput();
+  }
+
+  input.addEventListener('blur', () => {
+    // Warn but still save — pattern is advisory, not blocking
+    saveCell(rowId, fieldName, input.value, td, fieldType, choices);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') restoreCell(td, rowId, fieldName, fieldType, choices);
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      input.blur();
+      // Move to next cell
+      const nextTd = td.nextElementSibling;
+      if (nextTd && nextTd.onclick) nextTd.click();
+    }
+  });
+}
+
+async function saveCell(rowId, fieldName, newVal, td, fieldType, choices) {
+  const row = rows.find(r => r.id === rowId);
+  const oldVal = row ? v(row, fieldName) : '';
+  if (newVal === oldVal) {
+    restoreCell(td, rowId, fieldName, fieldType, choices);
+    return;
+  }
+
+  try {
+    await api(`/submissions/${rowId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values: { [fieldName]: newVal } })
+    });
+    // Update local state
+    if (row) {
+      if (!row.values) row.values = {};
+      row.values[fieldName] = newVal;
+    }
+  } catch (e) {
+    console.error('saveCell:', e);
+    toast('Error saving');
+  }
+  restoreCell(td, rowId, fieldName, fieldType, choices);
+}
+
+function restoreCell(td, rowId, fieldName, fieldType, choices) {
+  const row = rows.find(r => r.id === rowId);
+  const val = row ? v(row, fieldName) : '';
+  let displayVal;
+  let emptyClass = val ? '' : ' empty';
+
+  if (fieldType === 'Checkbox') {
+    const on = val === 'true';
+    displayVal = `<span class="cell-check ${on ? 'on' : 'off'}">${on ? '&#x2611;' : '&#x2610;'}</span>`;
+    emptyClass = '';
+  } else if (fieldType === 'Dropdown' && val) {
+    const c = pillColor(val);
+    displayVal = `<span class="cell-pill" style="background:${c.bg};color:${c.fg}">${esc(val)}</span>`;
+  } else {
+    displayVal = val ? esc(val) : '';
+  }
+
+  td.innerHTML = `<div class="cell-display${emptyClass}">${displayVal || '&nbsp;'}</div>`;
+}
+
+/* ════════════════════════════════════════════════════
+   ROW CRUD
+   ════════════════════════════════════════════════════ */
+
+async function addRow() {
+  if (!activeTable) return;
+  const t = findTable();
+  if (!t) return;
+
+  // Create empty submission as Submitted
+  const vals = {};
+  for (const f of t.fields) vals[f.name] = '';
+
+  try {
+    const data = await api(`/kapps/${activeKapp()}/forms/${activeTable}/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({ values: vals, coreState: 'Submitted' })
+    });
+    toast('Row added');
+    await loadRows();
+  } catch (e) {
+    console.error('addRow:', e);
+    toast('Error adding row');
+  }
+}
+
+function toggleRow(id, checked) {
+  if (checked) selectedRows.add(id);
+  else selectedRows.delete(id);
+  renderView();
+}
+
+function toggleAllRows(checked) {
+  if (checked) rows.forEach(r => selectedRows.add(r.id));
+  else selectedRows.clear();
+  renderView();
+}
+
+async function deleteSelectedRows() {
+  if (selectedRows.size === 0) return;
+  const count = selectedRows.size;
+  showModal(`
+    <h3>Delete Rows</h3>
+    <p style="margin-top:8px;font-size:14px;">Delete <strong>${count}</strong> selected row${count > 1 ? 's' : ''}?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDeleteRows()">Delete</button>
+    </div>
+  `);
+}
+
+async function confirmDeleteRows() {
+  closeModal();
+  const ids = [...selectedRows];
+  try {
+    // Delete in batches of 10
+    for (let i = 0; i < ids.length; i += 10) {
+      const batch = ids.slice(i, i + 10);
+      await Promise.all(batch.map(id =>
+        api(`/submissions/${id}`, { method: 'DELETE' })
+      ));
+    }
+    selectedRows.clear();
+    toast(`${ids.length} row${ids.length > 1 ? 's' : ''} deleted`);
+    await loadRows();
+  } catch (e) {
+    console.error('deleteRows:', e);
+    toast('Error deleting rows');
+    await loadRows();
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   COLUMN CRUD
+   ════════════════════════════════════════════════════ */
+
+const PATTERN_PRESETS = [
+  { label: 'Email',       regex: '^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$',              sample: 'jane@example.com' },
+  { label: 'Phone (US)',  regex: '^\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$',    sample: '(555) 123-4567' },
+  { label: 'URL',         regex: '^https?://[\\w.-]+\\.[a-zA-Z]{2,}(/\\S*)?$',       sample: 'https://example.com/page' },
+  { label: 'ZIP Code',    regex: '^\\d{5}(-\\d{4})?$',                                sample: '90210' },
+  { label: 'IP Address',  regex: '^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$',      sample: '192.168.1.1' },
+  { label: 'SSN',         regex: '^\\d{3}-\\d{2}-\\d{4}$',                            sample: '123-45-6789' },
+  { label: 'Hex Color',   regex: '^#[0-9A-Fa-f]{6}$',                                 sample: '#FF5733' },
+  { label: 'Slug',        regex: '^[a-z0-9]+(-[a-z0-9]+)*$',                          sample: 'my-page-slug' },
+  { label: 'UUID',        regex: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', sample: '550e8400-e29b-41d4-a716-446655440000' },
+];
+
+function promptNewColumn() {
+  if (isVirtual()) { toast('Cannot modify columns on a virtual table'); return; }
+  showModal(`
+    <h3>Add Column</h3>
+    <label>Column Name</label>
+    <input id="col-name" type="text" placeholder="e.g. Email, Status, Due Date..." autofocus>
+    <label>Type</label>
+    <select id="col-type" onchange="onColTypeChange()">
+      <option value="Text">Text</option>
+      <option value="Long Text">Long Text</option>
+      <option value="Number">Number</option>
+      <option value="Date">Date</option>
+      <option value="Dropdown">Dropdown</option>
+      <option value="Checkbox">Checkbox</option>
+    </select>
+    <div id="col-pattern-section">
+      <label>Validation Pattern <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional regex)</span></label>
+      <div class="pattern-presets" id="pattern-presets"></div>
+      <input id="col-pattern" type="text" placeholder="e.g. ^[A-Z]{2}\\d{4}$" style="margin-top:8px;font-family:monospace;font-size:13px;" oninput="testPattern()">
+      <div class="pattern-test">
+        <input id="col-pattern-sample" type="text" placeholder="Type sample text to test..." oninput="testPattern()">
+        <span class="result" id="col-pattern-result"></span>
+      </div>
+    </div>
+    <div id="col-choices-section" style="display:none;">
+      <label>Choices</label>
+      <div class="choices-list" id="col-choices-list">
+        <div class="choice-row"><input type="text" placeholder="Choice 1"><button onclick="this.parentElement.remove()">&times;</button></div>
+        <div class="choice-row"><input type="text" placeholder="Choice 2"><button onclick="this.parentElement.remove()">&times;</button></div>
+      </div>
+      <button class="btn-add-choice" onclick="addChoiceRow()">+ Add choice</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="createColumn()">Add Column</button>
+    </div>
+  `);
+  renderPatternPresets();
+  setTimeout(() => document.getElementById('col-name')?.focus(), 100);
+}
+
+function renderPatternPresets() {
+  const container = document.getElementById('pattern-presets');
+  if (!container) return;
+  container.innerHTML = PATTERN_PRESETS.map((p, i) =>
+    `<span class="pattern-preset" onclick="selectPatternPreset(${i})">${esc(p.label)}</span>`
+  ).join('');
+}
+
+function selectPatternPreset(idx) {
+  const p = PATTERN_PRESETS[idx];
+  if (!p) return;
+  document.getElementById('col-pattern').value = p.regex;
+  document.getElementById('col-pattern-sample').value = p.sample;
+  // Highlight active preset
+  document.querySelectorAll('.pattern-preset').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+  testPattern();
+}
+
+function testPattern() {
+  const patternStr = document.getElementById('col-pattern').value;
+  const sample = document.getElementById('col-pattern-sample').value;
+  const resultEl = document.getElementById('col-pattern-result');
+  if (!resultEl) return;
+
+  // Clear active preset if user manually edited the pattern
+  const matchesPreset = PATTERN_PRESETS.some(p => p.regex === patternStr);
+  if (!matchesPreset) {
+    document.querySelectorAll('.pattern-preset').forEach(el => el.classList.remove('active'));
+  }
+
+  if (!patternStr || !sample) {
+    resultEl.textContent = '';
+    resultEl.className = 'result';
+    return;
+  }
+  try {
+    const re = new RegExp(patternStr);
+    if (re.test(sample)) {
+      resultEl.textContent = 'Match';
+      resultEl.className = 'result pass';
+    } else {
+      resultEl.textContent = 'No match';
+      resultEl.className = 'result fail';
+    }
+  } catch (e) {
+    resultEl.textContent = 'Bad regex';
+    resultEl.className = 'result fail';
+  }
+}
+
+function onColTypeChange() {
+  const type = document.getElementById('col-type').value;
+  document.getElementById('col-choices-section').style.display = type === 'Dropdown' ? 'block' : 'none';
+  document.getElementById('col-pattern-section').style.display = type === 'Text' ? 'block' : 'none';
+}
+
+function addChoiceRow() {
+  const list = document.getElementById('col-choices-list');
+  const row = document.createElement('div');
+  row.className = 'choice-row';
+  row.innerHTML = `<input type="text" placeholder="Choice ${list.children.length + 1}"><button onclick="this.parentElement.remove()">&times;</button>`;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+async function createColumn() {
+  const name = document.getElementById('col-name').value.trim();
+  const type = document.getElementById('col-type').value;
+  if (!name) { toast('Column name required'); return; }
+
+  // Get choices for dropdown
+  let choices = [];
+  if (type === 'Dropdown') {
+    const inputs = document.querySelectorAll('#col-choices-list input');
+    inputs.forEach(inp => {
+      const v = inp.value.trim();
+      if (v) choices.push(v);
+    });
+    if (choices.length === 0) { toast('Add at least one choice'); return; }
+  }
+
+  // Get pattern for text fields
+  let pattern = '';
+  if (type === 'Text') {
+    pattern = (document.getElementById('col-pattern')?.value || '').trim();
+    if (pattern) {
+      try { new RegExp(pattern); } catch {
+        toast('Invalid regex pattern');
+        return;
+      }
+    }
+  }
+
+  closeModal();
+
+  try {
+    // Get current form with pages
+    const data = await api(`/kapps/${KAPP}/forms/${activeTable}?include=pages`);
+    const form = data.form;
+
+    // Build new field element
+    const el = buildFieldElement(name, type, choices, pattern);
+
+    // Get or create page
+    let pages = form.pages || [];
+    if (pages.length === 0) {
+      pages = [{ name: 'Page 1', elements: [], type: 'page', renderType: 'submittable', events: [] }];
+    }
+    pages[0].elements.push(el);
+
+    // Update form
+    await api(`/kapps/${KAPP}/forms/${activeTable}`, {
+      method: 'PUT',
+      body: JSON.stringify({ pages })
+    });
+
+    // Add search index for the new field
+    await addFieldIndex(activeTable, name);
+
+    toast(`Column "${name}" added`);
+    await selectTable(activeTable);
+  } catch (e) {
+    console.error('createColumn:', e);
+    toast('Error adding column: ' + (e.message || e));
+  }
+}
+
+function buildFieldElement(name, type, choices, pattern) {
+  const key = hexKey();
+  // Base properties required by Kinetic for all field types
+  const el = {
+    type: 'field',
+    name: name,
+    key: key,
+    label: name,
+    required: false,
+    enabled: true,
+    visible: true,
+    defaultValue: '',
+    defaultResourceName: '',
+    requiredMessage: '',
+    omitWhenHidden: false,
+    pattern: '',
+    constraints: [],
+    events: [],
+    renderAttributes: {},
+  };
+
+  switch (type) {
+    case 'Text':
+      el.dataType = 'string';
+      el.renderType = 'text';
+      el.rows = 1;
+      if (pattern) el.renderAttributes.airPattern = pattern;
+      break;
+    case 'Long Text':
+      el.dataType = 'string';
+      el.renderType = 'text';
+      el.rows = 3;
+      break;
+    case 'Number':
+      el.dataType = 'string';
+      el.renderType = 'text';
+      el.rows = 1;
+      break;
+    case 'Date':
+      el.dataType = 'date';
+      el.renderType = 'date';
+      break;
+    case 'Dropdown':
+      el.dataType = 'string';
+      el.renderType = 'dropdown';
+      el.choices = choices.map(c => ({ label: c, value: c }));
+      el.choicesResourceName = '';
+      el.choicesRunIf = '';
+      break;
+    case 'Checkbox':
+      el.dataType = 'string';
+      el.renderType = 'checkbox';
+      el.choices = [];
+      el.choicesResourceName = '';
+      el.choicesRunIf = '';
+      break;
+  }
+  return el;
+}
+
+async function addFieldIndex(formSlug, fieldName) {
+  try {
+    // Get existing indexes
+    const data = await api(`/kapps/${KAPP}/forms/${formSlug}?include=indexDefinitions`);
+    const form = data.form;
+    const existing = form.indexDefinitions || [];
+
+    // Check if index already exists
+    const indexPart = `values[${fieldName}]`;
+    const alreadyExists = existing.some(idx =>
+      idx.parts && idx.parts.length === 1 && idx.parts[0] === indexPart
+    );
+    if (alreadyExists) return;
+
+    // Add new index
+    const newIndex = { status: 'New', parts: [indexPart] };
+    const allIndexes = [...existing, newIndex];
+
+    await api(`/kapps/${KAPP}/forms/${formSlug}`, {
+      method: 'PUT',
+      body: JSON.stringify({ indexDefinitions: allIndexes })
+    });
+
+    // Build the index
+    await api(`/kapps/${KAPP}/forms/${formSlug}/backgroundJobs`, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'Build Index', content: { indexes: [indexPart] } })
+    });
+  } catch (e) {
+    console.warn('addFieldIndex:', e.message);
+  }
+}
+
+async function deleteColumn(fieldName) {
+  if (isVirtual()) { toast('Cannot modify columns on a virtual table'); return; }
+  const t = findTable();
+  if (!t) return;
+
+  showModal(`
+    <h3>Delete Column</h3>
+    <p style="margin-top:8px;font-size:14px;">Delete column <strong>${esc(fieldName)}</strong>?<br>
+    <span style="font-size:12px;color:var(--gray);">Existing values in this column will no longer be visible.</span></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDeleteColumn('${esc(fieldName)}')">Delete</button>
+    </div>
+  `);
+}
+
+async function confirmDeleteColumn(fieldName) {
+  closeModal();
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${activeTable}?include=pages`);
+    const form = data.form;
+    let pages = form.pages || [];
+
+    // Remove field from page elements
+    for (const page of pages) {
+      page.elements = (page.elements || []).filter(el => el.name !== fieldName);
+    }
+
+    await api(`/kapps/${KAPP}/forms/${activeTable}`, {
+      method: 'PUT',
+      body: JSON.stringify({ pages })
+    });
+
+    toast(`Column "${fieldName}" deleted`);
+    await selectTable(activeTable);
+  } catch (e) {
+    console.error('deleteColumn:', e);
+    toast('Error deleting column');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   COLUMN EDIT / MODIFY
+   ════════════════════════════════════════════════════ */
+
+async function editColumn(fieldName) {
+  if (!activeTable) return;
+  if (isVirtual()) { toast('Cannot modify columns on a virtual table'); return; }
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${activeTable}?include=pages`);
+    const form = data.form;
+    const pages = form.pages || [];
+    let el = null;
+    for (const page of pages) {
+      el = (page.elements || []).find(e => e.type === 'field' && e.name === fieldName);
+      if (el) break;
+    }
+    if (!el) { toast('Field not found'); return; }
+
+    const airType = guessAirType(el);
+    const choices = (el.choices || []).map(c => c.label || c.value || c);
+    const pattern = el.renderAttributes?.airPattern || '';
+
+    const choiceRows = airType === 'Dropdown' && choices.length > 0
+      ? choices.map((c, i) => `<div class="choice-row"><input type="text" value="${escAttr(c)}" placeholder="Choice ${i+1}"><button onclick="this.parentElement.remove()">&times;</button></div>`).join('')
+      : `<div class="choice-row"><input type="text" placeholder="Choice 1"><button onclick="this.parentElement.remove()">&times;</button></div>
+         <div class="choice-row"><input type="text" placeholder="Choice 2"><button onclick="this.parentElement.remove()">&times;</button></div>`;
+
+    showModal(`
+      <h3>Edit Column</h3>
+      <label>Column Name</label>
+      <input id="col-name" type="text" value="${escAttr(fieldName)}" readonly style="background:#f5f5f5;color:var(--gray);cursor:not-allowed;" title="Column names cannot be changed (would break existing data)">
+      <label>Type</label>
+      <select id="col-type" onchange="onColTypeChange()">
+        <option value="Text" ${airType === 'Text' ? 'selected' : ''}>Text</option>
+        <option value="Long Text" ${airType === 'Long Text' ? 'selected' : ''}>Long Text</option>
+        <option value="Number" ${airType === 'Number' ? 'selected' : ''}>Number</option>
+        <option value="Date" ${airType === 'Date' ? 'selected' : ''}>Date</option>
+        <option value="Dropdown" ${airType === 'Dropdown' ? 'selected' : ''}>Dropdown</option>
+        <option value="Checkbox" ${airType === 'Checkbox' ? 'selected' : ''}>Checkbox</option>
+      </select>
+      <p style="font-size:11px;color:var(--gray);margin-top:4px;">Changing type does not convert existing cell values.</p>
+      <div id="col-pattern-section" ${airType === 'Text' ? '' : 'style="display:none;"'}>
+        <label>Validation Pattern <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional regex)</span></label>
+        <div class="pattern-presets" id="pattern-presets"></div>
+        <input id="col-pattern" type="text" value="${escAttr(pattern)}" placeholder="e.g. ^[A-Z]{2}\\d{4}$" style="margin-top:8px;font-family:monospace;font-size:13px;" oninput="testPattern()">
+        <div class="pattern-test">
+          <input id="col-pattern-sample" type="text" placeholder="Type sample text to test..." oninput="testPattern()">
+          <span class="result" id="col-pattern-result"></span>
+        </div>
+      </div>
+      <div id="col-choices-section" ${airType === 'Dropdown' ? '' : 'style="display:none;"'}>
+        <label>Choices</label>
+        <div class="choices-list" id="col-choices-list">${choiceRows}</div>
+        <button class="btn-add-choice" onclick="addChoiceRow()">+ Add choice</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-danger" style="margin-right:auto;" onclick="closeModal(); deleteColumn('${escAttr(fieldName)}')">Delete</button>
+        <button class="btn-primary" onclick="saveColumnEdits('${escAttr(fieldName)}')">Save Changes</button>
+      </div>
+    `);
+    renderPatternPresets();
+    // Highlight active preset if pattern matches
+    if (pattern) {
+      const idx = PATTERN_PRESETS.findIndex(p => p.regex === pattern);
+      if (idx >= 0) {
+        document.querySelectorAll('.pattern-preset').forEach((el, i) => el.classList.toggle('active', i === idx));
+      }
+    }
+  } catch (e) {
+    console.error('editColumn:', e);
+    toast('Error loading column details');
+  }
+}
+
+async function saveColumnEdits(originalName) {
+  const newType = document.getElementById('col-type').value;
+
+  let choices = [];
+  if (newType === 'Dropdown') {
+    const inputs = document.querySelectorAll('#col-choices-list input');
+    inputs.forEach(inp => {
+      const val = inp.value.trim();
+      if (val) choices.push(val);
+    });
+    if (choices.length === 0) { toast('Add at least one choice'); return; }
+  }
+
+  let pattern = '';
+  if (newType === 'Text') {
+    pattern = (document.getElementById('col-pattern')?.value || '').trim();
+    if (pattern) {
+      try { new RegExp(pattern); } catch {
+        toast('Invalid regex pattern');
+        return;
+      }
+    }
+  }
+
+  closeModal();
+
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/${activeTable}?include=pages`);
+    const form = data.form;
+    const pages = form.pages || [];
+
+    // Find and update the field element in-place
+    for (const page of pages) {
+      const idx = (page.elements || []).findIndex(e => e.type === 'field' && e.name === originalName);
+      if (idx === -1) continue;
+
+      const el = page.elements[idx];
+
+      // Update type-related properties
+      switch (newType) {
+        case 'Text':
+          el.dataType = 'string'; el.renderType = 'text'; el.rows = 1;
+          if (pattern) { el.renderAttributes = el.renderAttributes || {}; el.renderAttributes.airPattern = pattern; }
+          else { if (el.renderAttributes) delete el.renderAttributes.airPattern; }
+          delete el.choices; delete el.choicesResourceName; delete el.choicesRunIf;
+          break;
+        case 'Long Text':
+          el.dataType = 'string'; el.renderType = 'text'; el.rows = 3;
+          if (el.renderAttributes) delete el.renderAttributes.airPattern;
+          delete el.choices; delete el.choicesResourceName; delete el.choicesRunIf;
+          break;
+        case 'Number':
+          el.dataType = 'string'; el.renderType = 'text'; el.rows = 1;
+          if (el.renderAttributes) delete el.renderAttributes.airPattern;
+          delete el.choices; delete el.choicesResourceName; delete el.choicesRunIf;
+          break;
+        case 'Date':
+          el.dataType = 'date'; el.renderType = 'date'; delete el.rows;
+          if (el.renderAttributes) delete el.renderAttributes.airPattern;
+          delete el.choices; delete el.choicesResourceName; delete el.choicesRunIf;
+          break;
+        case 'Dropdown':
+          el.dataType = 'string'; el.renderType = 'dropdown';
+          el.choices = choices.map(c => ({ label: c, value: c }));
+          el.choicesResourceName = ''; el.choicesRunIf = ''; delete el.rows;
+          if (el.renderAttributes) delete el.renderAttributes.airPattern;
+          break;
+        case 'Checkbox':
+          el.dataType = 'string'; el.renderType = 'checkbox';
+          el.choices = []; el.choicesResourceName = ''; el.choicesRunIf = ''; delete el.rows;
+          if (el.renderAttributes) delete el.renderAttributes.airPattern;
+          break;
+      }
+      el.pattern = '';
+      break;
+    }
+
+    await api(`/kapps/${KAPP}/forms/${activeTable}`, {
+      method: 'PUT',
+      body: JSON.stringify({ pages })
+    });
+
+    toast(`Column "${originalName}" updated`);
+    await selectTable(activeTable);
+  } catch (e) {
+    console.error('saveColumnEdits:', e);
+    toast('Error saving column changes');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   CALENDAR VIEW
+   ════════════════════════════════════════════════════ */
+
+function renderCalendarView() {
+  const t = findTable();
+  if (!t) return;
+
+  const ga = document.getElementById('grid-area');
+  ga.innerHTML = '';
+
+  // Toolbar
+  ga.appendChild(buildViewToolbar(t));
+
+  // Calendar header with month navigation
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const calHeader = document.createElement('div');
+  calHeader.className = 'cal-header';
+  calHeader.innerHTML = `
+    <button class="cal-nav" onclick="setCalendarMonth(-1)">&laquo;</button>
+    <span class="cal-title">${monthNames[month]} ${year}</span>
+    <button class="cal-nav" onclick="setCalendarMonth(1)">&raquo;</button>
+  `;
+  ga.appendChild(calHeader);
+
+  // Day-of-week headers
+  const weekdays = document.createElement('div');
+  weekdays.className = 'cal-weekdays';
+  weekdays.innerHTML = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d =>
+    `<div class="cal-weekday">${d}</div>`
+  ).join('');
+  ga.appendChild(weekdays);
+
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDow = firstDay.getDay(); // 0=Sun
+  const daysInMonth = lastDay.getDate();
+
+  // Previous month days to fill start
+  const prevMonthLast = new Date(year, month, 0).getDate();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Index rows by date
+  const dateField = calendarDateField;
+  const rowsByDate = {};
+  for (const row of rows) {
+    const dateVal = v(row, dateField);
+    if (dateVal) {
+      const key = dateVal.substring(0, 10); // YYYY-MM-DD
+      if (!rowsByDate[key]) rowsByDate[key] = [];
+      rowsByDate[key].push(row);
+    }
+  }
+
+  // Find first text field for card labels
+  const labelField = t.fields.find(f => f.type === 'Text') || t.fields[0];
+  // Find first dropdown field for card colors
+  const colorField = t.fields.find(f => f.type === 'Dropdown');
+
+  const grid = document.createElement('div');
+  grid.className = 'cal-grid';
+
+  // Total cells: 6 rows x 7 cols = 42
+  const totalCells = 42;
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - startDow + 1;
+    let dateStr, displayNum, isOutside;
+
+    if (dayNum < 1) {
+      // Previous month
+      displayNum = prevMonthLast + dayNum;
+      const pm = month === 0 ? 11 : month - 1;
+      const py = month === 0 ? year - 1 : year;
+      dateStr = `${py}-${String(pm+1).padStart(2,'0')}-${String(displayNum).padStart(2,'0')}`;
+      isOutside = true;
+    } else if (dayNum > daysInMonth) {
+      // Next month
+      displayNum = dayNum - daysInMonth;
+      const nm = month === 11 ? 0 : month + 1;
+      const ny = month === 11 ? year + 1 : year;
+      dateStr = `${ny}-${String(nm+1).padStart(2,'0')}-${String(displayNum).padStart(2,'0')}`;
+      isOutside = true;
+    } else {
+      displayNum = dayNum;
+      dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      isOutside = false;
+    }
+
+    const isToday = dateStr === todayStr;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (isOutside ? ' outside' : '') + (isToday ? ' today' : '');
+
+    let cellHtml = `<div class="cal-day-num">${displayNum}</div>`;
+    const dayRows = rowsByDate[dateStr] || [];
+    for (const row of dayRows) {
+      const label = labelField ? v(row, labelField.name) : row.id.substring(0, 8);
+      let borderColor = 'var(--green)';
+      if (colorField) {
+        const ddVal = v(row, colorField.name);
+        if (ddVal) {
+          const pc = pillColor(ddVal);
+          borderColor = pc.fg;
+        }
+      }
+      cellHtml += `<div class="cal-card" style="border-left-color:${borderColor}" onclick="showRecordDetail('${escAttr(row.id)}')" title="${escAttr(label)}">${esc(label) || '&nbsp;'}</div>`;
+    }
+
+    cell.innerHTML = cellHtml;
+    grid.appendChild(cell);
+  }
+
+  ga.appendChild(grid);
+}
+
+function setCalendarMonth(delta) {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + delta, 1);
+  renderView();
+}
+
+/* ════════════════════════════════════════════════════
+   KANBAN VIEW
+   ════════════════════════════════════════════════════ */
+
+function renderKanbanView() {
+  const t = findTable();
+  if (!t) return;
+
+  const ga = document.getElementById('grid-area');
+  ga.innerHTML = '';
+
+  // Toolbar
+  ga.appendChild(buildViewToolbar(t));
+
+  const field = t.fields.find(f => f.name === kanbanField);
+  if (!field) return;
+
+  // Get column values from field choices + "No Value"
+  const columns = field.choices && field.choices.length > 0 ? [...field.choices] : [];
+  // Group rows by kanban field value
+  const grouped = { '': [] };
+  for (const choice of columns) grouped[choice] = [];
+
+  for (const row of rows) {
+    const val = v(row, kanbanField);
+    if (grouped[val] !== undefined) {
+      grouped[val].push(row);
+    } else {
+      grouped[''].push(row);
+    }
+  }
+
+  // Find label field (first text field) and subtitle fields
+  const labelField = t.fields.find(f => f.type === 'Text') || t.fields[0];
+  const subFields = t.fields.filter(f => f.name !== kanbanField && f !== labelField).slice(0, 2);
+  // Find other dropdown fields for badges
+  const badgeField = t.fields.find(f => f.type === 'Dropdown' && f.name !== kanbanField);
+
+  const container = document.createElement('div');
+  container.className = 'kanban-container';
+
+  // "No Value" column first if it has items
+  const allCols = grouped[''].length > 0 ? ['', ...columns] : [...columns];
+
+  for (const colVal of allCols) {
+    const colRows = grouped[colVal] || [];
+    const colLabel = colVal || 'No Value';
+    const pc = colVal ? pillColor(colVal) : { bg: '#ECEFF1', fg: '#37474F' };
+
+    const col = document.createElement('div');
+    col.className = 'kanban-col';
+    col.dataset.col = colVal;
+    col.innerHTML = `
+      <div class="kanban-col-header" style="border-bottom-color:${pc.fg}; color:${pc.fg}">
+        ${esc(colLabel)}
+        <span class="kanban-count">${colRows.length}</span>
+      </div>
+      <div class="kanban-col-body">
+        ${colRows.map(row => {
+          const title = labelField ? v(row, labelField.name) : row.id.substring(0, 8);
+          const subs = subFields.map(f => {
+            const sv = v(row, f.name);
+            return sv ? `<div class="card-sub">${esc(f.name)}: ${esc(sv)}</div>` : '';
+          }).join('');
+          let badge = '';
+          if (badgeField) {
+            const bv = v(row, badgeField.name);
+            if (bv) {
+              const bc = pillColor(bv);
+              badge = `<span class="cell-pill" style="background:${bc.bg};color:${bc.fg};font-size:10px;margin-top:4px;display:inline-block;">${esc(bv)}</span>`;
+            }
+          }
+
+          return `<div class="kanban-card" draggable="true" data-row-id="${escAttr(row.id)}" onclick="showRecordDetail('${escAttr(row.id)}')">
+            <div class="card-title">${esc(title) || '&nbsp;'}</div>
+            ${subs}${badge}
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+
+    // Drop handlers on column body
+    const body = col.querySelector('.kanban-col-body');
+    col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', (e) => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const rowId = e.dataTransfer.getData('text/plain');
+      if (rowId) kanbanMove(rowId, colVal);
+    });
+
+    container.appendChild(col);
+  }
+
+  // Drag start/end handlers on cards (delegated on container)
+  container.addEventListener('dragstart', (e) => {
+    const card = e.target.closest('.kanban-card');
+    if (!card) return;
+    e.dataTransfer.setData('text/plain', card.dataset.rowId);
+    e.dataTransfer.effectAllowed = 'move';
+    requestAnimationFrame(() => card.classList.add('dragging'));
+  });
+  container.addEventListener('dragend', (e) => {
+    const card = e.target.closest('.kanban-card');
+    if (card) card.classList.remove('dragging');
+    container.querySelectorAll('.kanban-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+  });
+
+  ga.appendChild(container);
+}
+
+async function kanbanMove(rowId, newVal) {
+  if (newVal == null) return;
+  // Check if value is actually changing
+  const existing = rows.find(r => r.id === rowId);
+  if (existing && v(existing, kanbanField) === newVal) return;
+  try {
+    await api(`/submissions/${rowId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values: { [kanbanField]: newVal } })
+    });
+    if (existing) {
+      if (!existing.values) existing.values = {};
+      existing.values[kanbanField] = newVal;
+    }
+    renderView();
+    toast('Moved');
+  } catch (e) {
+    console.error('kanbanMove:', e);
+    toast('Error moving card');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   GANTT VIEW
+   ════════════════════════════════════════════════════ */
+
+function renderGanttView() {
+  const t = findTable();
+  if (!t) return;
+
+  const ga = document.getElementById('grid-area');
+  ga.innerHTML = '';
+  ga.appendChild(buildViewToolbar(t));
+
+  // Sort rows by start date
+  const sorted = [...rows].filter(r => v(r, ganttStartField)).sort((a, b) => {
+    const da = v(a, ganttStartField) || '';
+    const db = v(b, ganttStartField) || '';
+    return da.localeCompare(db);
+  });
+  // Include rows with no start date at the end
+  const noDate = rows.filter(r => !v(r, ganttStartField));
+
+  // Determine date range from data
+  let minDate, maxDate;
+  const allDates = [];
+  for (const row of rows) {
+    const sd = v(row, ganttStartField);
+    if (sd) allDates.push(sd.substring(0, 10));
+    if (ganttEndField) {
+      const ed = v(row, ganttEndField);
+      if (ed) allDates.push(ed.substring(0, 10));
+    }
+  }
+  if (allDates.length === 0) {
+    // No dates — show a month around today
+    const now = new Date();
+    minDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    maxDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  } else {
+    allDates.sort();
+    minDate = parseLocalDate(allDates[0]);
+    maxDate = parseLocalDate(allDates[allDates.length - 1]);
+  }
+
+  // Pad range: 7 days before first, 14 days after last
+  minDate = new Date(minDate.getTime() - 7 * 86400000);
+  maxDate = new Date(maxDate.getTime() + 14 * 86400000);
+
+  // Build array of days in range
+  const days = [];
+  const d = new Date(minDate);
+  while (d <= maxDate) {
+    days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Find label field
+  const labelField = t.fields.find(f => f.type === 'Text') || t.fields[0];
+  // Find color field (first dropdown)
+  const colorField = t.fields.find(f => f.type === 'Dropdown');
+
+  // Group days by month for header
+  const months = [];
+  let curMonth = null;
+  for (let i = 0; i < days.length; i++) {
+    const key = `${days[i].getFullYear()}-${days[i].getMonth()}`;
+    if (!curMonth || curMonth.key !== key) {
+      curMonth = { key, label: `${monthNames[days[i].getMonth()]} ${days[i].getFullYear()}`, span: 0 };
+      months.push(curMonth);
+    }
+    curMonth.span++;
+  }
+
+  // Build table
+  const wrapper = document.createElement('div');
+  wrapper.className = 'gantt-wrapper';
+
+  let html = '<table class="gantt-table"><thead>';
+  // Month row
+  html += '<tr class="gantt-header-row"><th class="gantt-label-hdr"></th>';
+  for (const m of months) {
+    html += `<th class="gantt-month" colspan="${m.span}">${esc(m.label)}</th>`;
+  }
+  html += '</tr>';
+  // Day numbers row
+  html += '<tr class="gantt-header-row"><th class="gantt-label-hdr">Record</th>';
+  for (const day of days) {
+    const dow = day.getDay();
+    const ds = dayStr(day);
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday = ds === todayStr;
+    html += `<th class="gantt-day${isWeekend ? ' weekend' : ''}${isToday ? ' today-col' : ''}">${day.getDate()}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  // Data rows
+  const allRows = [...sorted, ...noDate];
+  for (const row of allRows) {
+    const label = labelField ? v(row, labelField.name) : row.id.substring(0, 8);
+    html += `<tr>`;
+    html += `<td class="gantt-label-cell" onclick="showRecordDetail('${escAttr(row.id)}')" title="${escAttr(label)}">${esc(label) || '&mdash;'}</td>`;
+
+    const startVal = v(row, ganttStartField);
+    const endVal = ganttEndField ? v(row, ganttEndField) : '';
+    const startDs = startVal ? startVal.substring(0, 10) : '';
+    const endDs = endVal ? endVal.substring(0, 10) : '';
+
+    // Find start/end column indexes
+    const startIdx = startDs ? days.findIndex(d => dayStr(d) === startDs) : -1;
+    const endIdx = endDs ? days.findIndex(d => dayStr(d) === endDs) : -1;
+
+    // Pick bar color
+    let barColor = 'var(--green)';
+    if (colorField) {
+      const cv = v(row, colorField.name);
+      if (cv) barColor = pillColor(cv).fg;
+    }
+
+    for (let i = 0; i < days.length; i++) {
+      const dow = days[i].getDay();
+      const ds = dayStr(days[i]);
+      const isWeekend = dow === 0 || dow === 6;
+      const isToday = ds === todayStr;
+      let cls = 'gantt-day' + (isWeekend ? ' weekend' : '') + (isToday ? ' today-col' : '');
+      html += `<td class="${cls}" style="position:relative;">`;
+
+      // Render bar starting at startIdx
+      if (i === startIdx) {
+        if (endIdx > startIdx) {
+          // Duration bar spanning multiple cells
+          const span = endIdx - startIdx + 1;
+          const widthPx = span * 28 - 4; // 28px per cell minus padding
+          html += `<div class="gantt-bar" style="background:${barColor}; width:${widthPx}px;" onclick="event.stopPropagation(); showRecordDetail('${escAttr(row.id)}')" title="${escAttr(label)}: ${esc(startDs)} → ${esc(endDs)}">${esc(label)}</div>`;
+        } else {
+          // Single-day milestone (no end date or same day)
+          html += `<div class="gantt-milestone" style="background:${barColor}; left:6px;" onclick="event.stopPropagation(); showRecordDetail('${escAttr(row.id)}')" title="${escAttr(label)}: ${esc(startDs)}"></div>`;
+        }
+      }
+
+      // Today marker
+      if (isToday) {
+        html += '<div class="gantt-today-line" style="left:14px;"></div>';
+      }
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  wrapper.innerHTML = html;
+  ga.appendChild(wrapper);
+}
+
+function parseLocalDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function dayStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ════════════════════════════════════════════════════
+   RECORD DETAIL MODAL
+   ════════════════════════════════════════════════════ */
+
+function showRecordDetail(rowId) {
+  event.stopPropagation();
+  const t = findTable();
+  if (!t) return;
+  const row = rows.find(r => r.id === rowId);
+  if (!row) return;
+
+  let html = '<h3>Record Detail</h3>';
+  for (const f of t.fields) {
+    const val = v(row, f.name);
+    html += `<label>${esc(f.name)}</label>`;
+    if (f.type === 'Checkbox') {
+      html += `<div style="margin-top:4px;"><input type="checkbox" class="detail-field" data-field="${escAttr(f.name)}" data-type="Checkbox" ${val === 'true' ? 'checked' : ''}></div>`;
+    } else if (f.type === 'Dropdown') {
+      html += `<select class="detail-field" data-field="${escAttr(f.name)}" data-type="Dropdown">
+        <option value="">—</option>
+        ${(f.choices || []).map(c => `<option value="${escAttr(c)}" ${c === val ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+      </select>`;
+    } else if (f.type === 'Date') {
+      html += `<input type="date" class="detail-field" data-field="${escAttr(f.name)}" data-type="Date" value="${escAttr(val)}">`;
+    } else if (f.type === 'Long Text') {
+      html += `<textarea class="detail-field" data-field="${escAttr(f.name)}" data-type="Long Text" rows="3">${esc(val)}</textarea>`;
+    } else {
+      html += `<input type="text" class="detail-field" data-field="${escAttr(f.name)}" data-type="Text" value="${escAttr(val)}">`;
+    }
+  }
+  html += `
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="confirmDeleteRecord('${escAttr(rowId)}')">Delete</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveRecordDetail('${escAttr(rowId)}')">Save</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+async function saveRecordDetail(rowId) {
+  const fields = document.querySelectorAll('.detail-field');
+  const values = {};
+  for (const el of fields) {
+    const name = el.dataset.field;
+    const type = el.dataset.type;
+    if (type === 'Checkbox') {
+      values[name] = el.checked ? 'true' : 'false';
+    } else {
+      values[name] = el.value;
+    }
+  }
+
+  closeModal();
+  try {
+    await api(`/submissions/${rowId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values })
+    });
+    // Update local state
+    const row = rows.find(r => r.id === rowId);
+    if (row) {
+      if (!row.values) row.values = {};
+      Object.assign(row.values, values);
+    }
+    renderView();
+    toast('Record saved');
+  } catch (e) {
+    console.error('saveRecordDetail:', e);
+    toast('Error saving record');
+  }
+}
+
+async function confirmDeleteRecord(rowId) {
+  closeModal();
+  showModal(`
+    <h3>Delete Record</h3>
+    <p style="margin-top:8px;font-size:14px;">Are you sure you want to delete this record?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="doDeleteRecord('${escAttr(rowId)}')">Delete</button>
+    </div>
+  `);
+}
+
+async function doDeleteRecord(rowId) {
+  closeModal();
+  try {
+    await api(`/submissions/${rowId}`, { method: 'DELETE' });
+    toast('Record deleted');
+    await loadRows();
+  } catch (e) {
+    console.error('doDeleteRecord:', e);
+    toast('Error deleting record');
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   PURGE & MOCK DATA
+   ════════════════════════════════════════════════════ */
+
+function purgeTable(slug) {
+  const t = findTable(slug);
+  if (!t) return;
+  const warn = isVirtual(slug) ? '<br><span style="color:var(--orange);font-size:12px;font-weight:600;">Warning: This will delete real records from the source form!</span>' : '';
+  showModal(`
+    <h3>Purge Records</h3>
+    <p style="margin-top:8px;font-size:14px;">Delete <strong>all records</strong> from <strong>${esc(t.name)}</strong>?<br>
+    <span style="color:var(--red);font-size:12px;">This cannot be undone. The table structure (columns) will be kept.</span>${warn}</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmPurge('${esc(slug)}')">Purge All</button>
+    </div>
+  `);
+}
+
+async function confirmPurge(slug) {
+  closeModal();
+  toast('Purging records...');
+  let deleted = 0;
+  try {
+    // Re-fetch page 1 and delete in batches until empty
+    for (let pass = 0; pass < 100; pass++) { // safety limit
+      let url = `/kapps/${activeKapp()}/forms/${slug}/submissions?limit=25&include=values`;
+      const data = await api(url);
+      const subs = data.submissions || [];
+      if (subs.length === 0) break;
+
+      // Delete in batches of 10
+      for (let i = 0; i < subs.length; i += 10) {
+        const batch = subs.slice(i, i + 10);
+        await Promise.all(batch.map(s => api(`/submissions/${s.id}`, { method: 'DELETE' })));
+        deleted += batch.length;
+      }
+    }
+    toast(`Purged ${deleted} record${deleted !== 1 ? 's' : ''}`);
+    if (activeTable === slug) {
+      currentPage = 0;
+      pageKeys = [null];
+      hasNextPage = false;
+      selectedRows.clear();
+      await loadRows();
+    }
+  } catch (e) {
+    console.error('purge:', e);
+    toast(`Purged ${deleted} — error: ${e.message}`);
+    if (activeTable === slug) await loadRows();
+  }
+}
+
+/* ── Mock Data Generator ── */
+const MOCK_FIRST = ['James','Mary','John','Patricia','Robert','Jennifer','Michael','Linda','David','Elizabeth',
+  'William','Barbara','Richard','Susan','Joseph','Jessica','Thomas','Sarah','Charles','Karen',
+  'Daniel','Lisa','Matthew','Nancy','Anthony','Betty'];
+const MOCK_LAST = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez',
+  'Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin',
+  'Lee','Perez','Thompson','White','Harris','Clark'];
+const MOCK_COMPANY = ['Acme Corp','Globex','Initech','Umbrella Inc','Soylent','Cyberdyne','Stark Industries',
+  'Wayne Enterprises','Wonka Industries','Tyrell Corp','Nakatomi Trading','Oscorp','Massive Dynamic'];
+const MOCK_CITY = ['New York','Los Angeles','Chicago','Houston','Phoenix','Philadelphia','San Antonio',
+  'San Diego','Dallas','Austin','Portland','Denver','Seattle','Boston','Miami'];
+const MOCK_WORDS = ['alpha','beta','gamma','delta','epsilon','core','prime','nova','apex','nexus',
+  'quantum','fusion','matrix','pulse','orbit','zenith','vertex','cipher','titan','echo'];
+const MOCK_LOREM = ['Lorem ipsum dolor sit amet','Consectetur adipiscing elit','Sed do eiusmod tempor',
+  'Ut enim ad minim veniam','Quis nostrud exercitation','Duis aute irure dolor','Excepteur sint occaecat',
+  'Nemo enim ipsam voluptatem','Neque porro quisquam est','Ut aliquip ex ea commodo'];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randDate(startYear, endYear) {
+  const y = randInt(startYear, endYear);
+  const m = randInt(1, 12);
+  const d = randInt(1, 28);
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+// Generate a value for a known pattern regex
+function mockForPattern(pattern) {
+  const p = pattern.replace(/^\^/, '').replace(/\$$/, ''); // strip anchors for matching
+  // Email
+  if (p.includes('[\\w.+-]+@')) return pick(MOCK_FIRST).toLowerCase() + '.' + pick(MOCK_LAST).toLowerCase() + '@example.com';
+  // Phone US — (555) 123-4567
+  if (p.includes('\\d{3}') && p.includes('\\d{4}')) return `(${randInt(200,999)}) ${randInt(200,999)}-${randInt(1000,9999)}`;
+  // URL
+  if (p.includes('https?://')) return 'https://www.' + pick(MOCK_WORDS) + '.com/' + pick(MOCK_WORDS);
+  // ZIP code
+  if (p === '\\d{5}(-\\d{4})?' || p.includes('\\d{5}')) return String(randInt(10000, 99999));
+  // IP address
+  if (p.includes('\\d{1,3}\\.\\d{1,3}')) return `${randInt(10,192)}.${randInt(0,255)}.${randInt(0,255)}.${randInt(1,254)}`;
+  // SSN
+  if (p.includes('\\d{3}-\\d{2}-\\d{4}')) return `${randInt(100,999)}-${randInt(10,99)}-${randInt(1000,9999)}`;
+  // Hex color
+  if (p.includes('[0-9A-Fa-f]{6}')) return '#' + Array.from({length:6}, () => '0123456789ABCDEF'[randInt(0,15)]).join('');
+  // Slug
+  if (p.includes('[a-z0-9]+(-[a-z0-9]+)')) return pick(MOCK_WORDS) + '-' + pick(MOCK_WORDS) + '-' + randInt(1,99);
+  // UUID
+  if (p.includes('[0-9a-f]{8}-')) {
+    const h = (n) => Array.from({length:n}, () => '0123456789abcdef'[randInt(0,15)]).join('');
+    return `${h(8)}-${h(4)}-${h(4)}-${h(4)}-${h(12)}`;
+  }
+  // Pure digits ^\d{N}$ — e.g. year, ID number
+  const digitsMatch = p.match(/^\\d\{(\d+)\}$/);
+  if (digitsMatch) {
+    const len = parseInt(digitsMatch[1]);
+    if (len === 4) return String(randInt(1960, 2010)); // likely a year
+    const min = Math.pow(10, len - 1);
+    const max = Math.pow(10, len) - 1;
+    return String(randInt(min, max));
+  }
+  // Digits range ^\d{M,N}$
+  const digitsRange = p.match(/^\\d\{(\d+),(\d+)\}$/);
+  if (digitsRange) {
+    const len = randInt(parseInt(digitsRange[1]), parseInt(digitsRange[2]));
+    const min = Math.pow(10, len - 1);
+    const max = Math.pow(10, len) - 1;
+    return String(randInt(min, max));
+  }
+  return null; // unknown pattern
+}
+
+function mockValue(field) {
+  const name = field.name.toLowerCase();
+  const pattern = field.pattern || '';
+
+  // Dropdown — pick a random choice
+  if (field.type === 'Dropdown' && field.choices && field.choices.length > 0) {
+    return pick(field.choices);
+  }
+  // Checkbox
+  if (field.type === 'Checkbox') {
+    return Math.random() > 0.5 ? 'true' : 'false';
+  }
+  // Date
+  if (field.type === 'Date') {
+    if (name.includes('expir') || name.includes('end') || name.includes('target') || name.includes('due') || name.includes('warranty') || name.includes('close')) {
+      return randDate(2026, 2028);
+    }
+    if (name.includes('start') || name.includes('purchase') || name.includes('hire') || name.includes('created') || name.includes('resolved')) {
+      return randDate(2023, 2026);
+    }
+    return randDate(2024, 2027);
+  }
+  // Long Text
+  if (field.type === 'Long Text') {
+    const count = randInt(2, 4);
+    return Array.from({length: count}, () => pick(MOCK_LOREM)).join('. ') + '.';
+  }
+
+  // If field has a pattern, generate matching data first
+  if (pattern) {
+    const patternVal = mockForPattern(pattern);
+    if (patternVal) return patternVal;
+    // Pattern exists but we don't recognize it — still try name heuristic below,
+    // then validate at the end
+  }
+
+  // Text — heuristic on field name for realistic data
+  let val = mockByName(name);
+
+  // Validate against pattern; if it fails, try pattern generator or leave empty
+  if (pattern && val) {
+    try {
+      const re = new RegExp(pattern);
+      if (!re.test(val)) {
+        const patternVal = mockForPattern(pattern);
+        return patternVal || '';
+      }
+    } catch {}
+  }
+
+  return val;
+}
+
+function mockByName(name) {
+  if (name.includes('first name') || name === 'first') return pick(MOCK_FIRST);
+  if (name.includes('last name') || name === 'last') return pick(MOCK_LAST);
+  if (name.includes('name') && (name.includes('vendor') || name.includes('company') || name.includes('org'))) return pick(MOCK_COMPANY);
+  if (name.includes('name') && (name.includes('project') || name.includes('asset') || name.includes('task'))) {
+    return pick(['Project','Initiative','Campaign','Phase','Sprint']) + ' ' + pick(MOCK_WORDS).charAt(0).toUpperCase() + pick(MOCK_WORDS).slice(1);
+  }
+  if (name === 'name' || name.includes('full name') || name.includes('respondent') || name.includes('contact name')) {
+    return pick(MOCK_FIRST) + ' ' + pick(MOCK_LAST);
+  }
+  if (name.includes('email') || name.includes('e-mail')) {
+    return pick(MOCK_FIRST).toLowerCase() + '.' + pick(MOCK_LAST).toLowerCase() + '@' + pick(['example.com','test.org','company.net','acme.io']);
+  }
+  if (name.includes('phone')) {
+    return `(${randInt(200,999)}) ${randInt(200,999)}-${randInt(1000,9999)}`;
+  }
+  if (name.includes('address')) return `${randInt(100,9999)} ${pick(['Main','Oak','Pine','Elm','Cedar','Maple'])} ${pick(['St','Ave','Blvd','Dr','Ln'])}`;
+  if (name.includes('city')) return pick(MOCK_CITY);
+  if (name.includes('state')) return pick(['CA','TX','NY','FL','IL','PA','OH','GA','NC','MI','WA','AZ','MA','CO','OR']);
+  if (name.includes('country')) return pick(['United States','Canada','United Kingdom','Australia','Germany']);
+  if (name.includes('zip') || name.includes('postal')) return String(randInt(10000, 99999));
+  if (name.includes('title') || name.includes('subject') || name.includes('case title') || name.includes('request title') || name.includes('change title')) {
+    return pick(['Update','Fix','Review','Implement','Configure','Deploy','Migrate','Investigate','Optimize','Upgrade']) + ' ' +
+           pick(MOCK_WORDS) + ' ' + pick(['module','service','system','component','integration','process','workflow','feature']);
+  }
+  if (name.includes('job title') || name.includes('role')) {
+    return pick(['Senior','Lead','Staff','Principal','Junior']) + ' ' + pick(['Engineer','Analyst','Manager','Designer','Developer','Consultant','Architect']);
+  }
+  if (name.includes('tag') || name.includes('asset tag')) return 'AT-' + randInt(10000, 99999);
+  if (name.includes('serial')) return 'SN-' + Array.from({length:8}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[randInt(0,35)]).join('');
+  if (name.includes('contract') && name.includes('number')) return 'CTR-' + randInt(1000, 9999);
+  if (name.includes('employee id') || name.includes('emp id')) return 'EMP-' + randInt(1000, 9999);
+  if (name.includes('budget')) return '$' + randInt(10, 500) + ',000';
+  if (name.includes('effort')) return pick(['2h','4h','1d','2d','3d','1w','2w']);
+  if (name.includes('keyword')) return Array.from({length: randInt(2,4)}, () => pick(MOCK_WORDS)).join(', ');
+  if (name.includes('key')) return pick(MOCK_WORDS).toUpperCase() + '_' + pick(MOCK_WORDS).toUpperCase();
+  if (name.includes('value') || name.includes('display order')) return String(randInt(1, 100));
+  if (name.includes('location') || name.includes('site')) return pick(MOCK_CITY) + ' ' + pick(['HQ','Office','Branch','Site','Campus','Lab']);
+  if (name.includes('manufacturer') || name.includes('make')) return pick(['Dell','HP','Lenovo','Apple','Cisco','Samsung','Microsoft','Asus']);
+  if (name.includes('model')) return pick(['Pro','Elite','ThinkPad','Latitude','Precision','Surface','MacBook']) + ' ' + randInt(100,9999);
+  if (name.includes('manager') || name.includes('lead') || name.includes('assigned') || name.includes('reported') || name.includes('requested') || name.includes('approver') || name.includes('author')) {
+    return pick(MOCK_FIRST) + ' ' + pick(MOCK_LAST);
+  }
+  if (name.includes('impact') || name.includes('risk')) return pick(['High','Medium','Low']);
+  if (name.includes('year') || name.includes('birth')) return String(randInt(1960, 2010));
+  if (name.includes('age')) return String(randInt(18, 75));
+  if (name.includes('score') || name.includes('rating') || name.includes('grade')) return String(randInt(1, 100));
+  if (name.includes('count') || name.includes('quantity') || name.includes('qty') || name.includes('number') || name.includes('num') || name.includes('#')) return String(randInt(1, 500));
+  if (name.includes('percent') || name.includes('%')) return String(randInt(0, 100)) + '%';
+  if (name.includes('url') || name.includes('website') || name.includes('link')) return 'https://www.' + pick(MOCK_WORDS) + '.com';
+  if (name.includes('position')) return pick(['Point Guard','Shooting Guard','Small Forward','Power Forward','Center','Quarterback','Pitcher','Midfielder','Goalie','Striker']);
+  // Fallback
+  return pick(MOCK_WORDS).charAt(0).toUpperCase() + pick(MOCK_WORDS).slice(1) + ' ' + randInt(1, 999);
+}
+
+function generateMockData(slug) {
+  const t = findTable(slug);
+  if (!t) return;
+  if (t.fields.length === 0) {
+    toast('Add columns first');
+    return;
+  }
+  showModal(`
+    <h3>Generate Mock Data</h3>
+    <p style="margin-top:8px;font-size:14px;">Create <strong>25 sample rows</strong> for <strong>${esc(t.name)}</strong> with realistic random data?</p>
+    <p style="font-size:12px;color:var(--gray);margin-top:8px;">${t.fields.length} columns: ${t.fields.map(f => esc(f.name)).join(', ')}</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmGenerateMock('${esc(slug)}')">Generate 25 Rows</button>
+    </div>
+  `);
+}
+
+async function confirmGenerateMock(slug) {
+  closeModal();
+  const t = findTable(slug);
+  if (!t || t.fields.length === 0) return;
+
+  toast('Generating mock data...');
+  let created = 0;
+  try {
+    // Build 25 rows of mock values
+    const mockRows = [];
+    for (let i = 0; i < 25; i++) {
+      const vals = {};
+      for (const f of t.fields) {
+        vals[f.name] = mockValue(f);
+      }
+      mockRows.push(vals);
+    }
+
+    // Create in batches of 5 concurrent
+    for (let i = 0; i < mockRows.length; i += 5) {
+      const batch = mockRows.slice(i, i + 5);
+      await Promise.all(batch.map(vals =>
+        api(`/kapps/${activeKapp()}/forms/${slug}/submissions`, {
+          method: 'POST',
+          body: JSON.stringify({ values: vals, coreState: 'Submitted' })
+        })
+      ));
+      created += batch.length;
+    }
+
+    toast(`Created ${created} mock rows`);
+    if (activeTable === slug) {
+      currentPage = 0;
+      pageKeys = [null];
+      hasNextPage = false;
+      await loadRows();
+    }
+  } catch (e) {
+    console.error('generateMock:', e);
+    toast(`Created ${created} — error: ${e.message}`);
+    if (activeTable === slug) await loadRows();
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   VIRTUAL TABLES
+   ════════════════════════════════════════════════════ */
+
+function saveVirtualTables() {
+  const data = virtualTables.map(vt => ({ slug: vt.slug, name: vt.name, kappSlug: vt.kappSlug, kappName: vt.kappName }));
+  localStorage.setItem('kinetic_air_vtables', JSON.stringify(data));
+}
+
+function loadVirtualTables() {
+  try {
+    const raw = localStorage.getItem('kinetic_air_vtables');
+    if (raw) virtualTables = JSON.parse(raw).map(vt => ({ ...vt, fields: [] }));
+  } catch { virtualTables = []; }
+}
+
+async function startVirtualTableFlow() {
+  showModal(`
+    <h3>Add Virtual Table</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:8px;">Select a kapp to browse its forms.</p>
+    <div class="kapp-list"><div style="padding:20px;text-align:center;color:var(--gray);">Loading kapps...</div></div>
+  `);
+  try {
+    const data = await api('/kapps');
+    const kapps = (data.kapps || []).filter(k => k.slug !== KAPP);
+    if (kapps.length === 0) {
+      showModal(`<h3>Add Virtual Table</h3><p style="margin-top:8px;">No other kapps found on this space.</p>
+        <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Close</button></div>`);
+      return;
+    }
+    showModal(`
+      <h3>Add Virtual Table</h3>
+      <p style="font-size:12px;color:var(--gray);margin-bottom:8px;">Select a kapp to browse its forms.</p>
+      <div class="kapp-list">
+        ${kapps.map(k => `
+          <div class="kapp-item" onclick="pickVirtualKapp('${escAttr(k.slug)}', '${escAttr(k.name)}')">
+            <div style="font-weight:600;">${esc(k.name)}</div>
+            <div class="kapp-slug">${esc(k.slug)}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button></div>
+    `);
+  } catch (e) {
+    console.error('startVirtualTableFlow:', e);
+    toast('Error loading kapps');
+    closeModal();
+  }
+}
+
+async function pickVirtualKapp(kappSlug, kappName) {
+  showModal(`
+    <h3>Add Virtual Table</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:8px;">Select a form from <strong>${esc(kappName)}</strong>.</p>
+    <div class="form-list"><div style="padding:20px;text-align:center;color:var(--gray);">Loading forms...</div></div>
+  `);
+  try {
+    const data = await api(`/kapps/${kappSlug}/forms`);
+    const forms = data.forms || [];
+    if (forms.length === 0) {
+      showModal(`<h3>Add Virtual Table</h3><p style="margin-top:8px;">No forms in <strong>${esc(kappName)}</strong>.</p>
+        <div class="modal-actions"><button class="btn-cancel" onclick="startVirtualTableFlow()">&#x2190; Back</button></div>`);
+      return;
+    }
+    showModal(`
+      <h3>Add Virtual Table</h3>
+      <p style="font-size:12px;color:var(--gray);margin-bottom:8px;">Select a form from <strong>${esc(kappName)}</strong>.</p>
+      <div class="form-list">
+        ${forms.map(f => `
+          <div class="form-item" onclick="addVirtualTable('${escAttr(kappSlug)}', '${escAttr(kappName)}', '${escAttr(f.slug)}', '${escAttr(f.name)}')">
+            <div style="font-weight:600;">${esc(f.name)}</div>
+            <div class="form-slug">${esc(f.slug)}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="startVirtualTableFlow()">&#x2190; Back</button></div>
+    `);
+  } catch (e) {
+    console.error('pickVirtualKapp:', e);
+    toast('Error loading forms');
+    closeModal();
+  }
+}
+
+function addVirtualTable(kappSlug, kappName, formSlug, formName) {
+  // Check for duplicate
+  if (virtualTables.some(vt => vt.slug === formSlug && vt.kappSlug === kappSlug)) {
+    toast('This form is already added');
+    closeModal();
+    selectVirtualTable(formSlug);
+    return;
+  }
+  virtualTables.push({ slug: formSlug, name: formName, kappSlug, kappName, fields: [] });
+  saveVirtualTables();
+  closeModal();
+  toast(`Virtual table "${formName}" added`);
+  selectVirtualTable(formSlug);
+}
+
+async function selectVirtualTable(slug) {
+  const vt = virtualTables.find(t => t.slug === slug);
+  if (!vt) return;
+  activeKappOverride = vt.kappSlug;
+  activeTable = slug;
+  selectedRows.clear();
+  currentPage = 0;
+  pageKeys = [null];
+  hasNextPage = false;
+  renderSidebar();
+
+  // Load form details from the source kapp
+  try {
+    const data = await api(`/kapps/${vt.kappSlug}/forms/${slug}?include=details,attributes,pages`);
+    const form = data.form;
+    if (form) {
+      vt.fields = extractFields(form);
+    }
+  } catch (e) {
+    console.error('selectVirtualTable loadForm:', e);
+  }
+  await loadRows();
+}
+
+function showVirtualTableMenu(event, slug) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="hideCtxMenu(); renameVirtualTable('${esc(slug)}')">Rename (local)</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="hideCtxMenu(); generateMockData('${esc(slug)}')">Generate Mock Data</div>
+    <div class="ctx-item danger" onclick="hideCtxMenu(); purgeTable('${esc(slug)}')">Purge Records</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item danger" onclick="hideCtxMenu(); removeVirtualTable('${esc(slug)}')">Remove Virtual Table</div>
+  `;
+  positionMenu(menu, event);
+}
+
+function renameVirtualTable(slug) {
+  const vt = virtualTables.find(t => t.slug === slug);
+  if (!vt) return;
+  showModal(`
+    <h3>Rename Virtual Table</h3>
+    <label>Display Name</label>
+    <input id="vtable-rename" type="text" value="${escAttr(vt.name)}">
+    <p style="font-size:11px;color:var(--gray);margin-top:6px;">This only changes the local display name. The source form is not modified.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmRenameVirtualTable('${esc(slug)}')">Rename</button>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('vtable-rename'); el?.focus(); el?.select(); }, 100);
+}
+
+function confirmRenameVirtualTable(slug) {
+  const name = document.getElementById('vtable-rename').value.trim();
+  if (!name) return;
+  const vt = virtualTables.find(t => t.slug === slug);
+  if (vt) { vt.name = name; saveVirtualTables(); }
+  closeModal();
+  renderSidebar();
+  if (activeTable === slug) renderToolbar();
+  toast('Virtual table renamed');
+}
+
+function removeVirtualTable(slug) {
+  const vt = virtualTables.find(t => t.slug === slug);
+  if (!vt) return;
+  showModal(`
+    <h3>Remove Virtual Table</h3>
+    <p style="margin-top:8px;font-size:14px;">Remove <strong>${esc(vt.name)}</strong> from your sidebar?<br>
+    <span style="font-size:12px;color:var(--gray);">The source form in <strong>${esc(vt.kappName)}</strong> will not be affected.</span></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmRemoveVirtualTable('${esc(slug)}')">Remove</button>
+    </div>
+  `);
+}
+
+function confirmRemoveVirtualTable(slug) {
+  virtualTables = virtualTables.filter(t => t.slug !== slug);
+  saveVirtualTables();
+  closeModal();
+  toast('Virtual table removed');
+  if (activeTable === slug) { activeTable = null; activeKappOverride = null; showEmpty(); }
+  renderSidebar();
+}
+
+/* ════════════════════════════════════════════════════
+   PAGINATION
+   ════════════════════════════════════════════════════ */
+
+function nextPage() {
+  if (hasNextPage) {
+    currentPage++;
+    loadRows();
+  }
+}
+
+function prevPage() {
+  if (currentPage > 0) {
+    currentPage--;
+    loadRows();
+  }
+}
+
+function refreshGrid() {
+  if (activeTable) {
+    currentPage = 0;
+    pageKeys = [null];
+    hasNextPage = false;
+    selectedRows.clear();
+    loadRows();
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   CONTEXT MENUS
+   ════════════════════════════════════════════════════ */
+
+function showTableMenu(event, slug) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="hideCtxMenu(); renameTable('${esc(slug)}')">Rename</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="hideCtxMenu(); generateMockData('${esc(slug)}')">Generate Mock Data</div>
+    <div class="ctx-item danger" onclick="hideCtxMenu(); purgeTable('${esc(slug)}')">Purge Records</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item danger" onclick="hideCtxMenu(); deleteTable('${esc(slug)}')">Delete Table</div>
+  `;
+  positionMenu(menu, event);
+}
+
+function showColMenu(event, fieldName) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="hideCtxMenu(); editColumn('${escAttr(fieldName)}')">Edit Column</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item danger" onclick="hideCtxMenu(); deleteColumn('${escAttr(fieldName)}')">Delete Column</div>
+  `;
+  positionMenu(menu, event);
+}
+
+function positionMenu(menu, event) {
+  menu.style.display = 'block';
+  menu.style.left = Math.min(event.clientX, window.innerWidth - 180) + 'px';
+  menu.style.top = Math.min(event.clientY, window.innerHeight - 120) + 'px';
+  event.stopPropagation();
+  setTimeout(() => {
+    document.addEventListener('click', hideCtxMenu, { once: true });
+  }, 0);
+}
+
+function hideCtxMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+}
+
+/* ════════════════════════════════════════════════════
+   MODAL
+   ════════════════════════════════════════════════════ */
+
+function showModal(html) {
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-card').innerHTML = html;
+  modal.classList.add('show');
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+/* ════════════════════════════════════════════════════
+   GLOBAL CLICK HANDLER
+   ════════════════════════════════════════════════════ */
+document.addEventListener('click', () => {
+  const menu = document.getElementById('ctx-menu');
+  if (menu.style.display === 'block') menu.style.display = 'none';
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal();
+    hideCtxMenu();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Platform</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --deep-orange: #BF360C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* Login */
+#login-screen { align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+#login-screen, #app { display:none; }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; font-size:14px; font-family:inherit; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; transition: background .15s; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* App shell */
+#app { display:none; }
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar .spacer { flex:1; }
+.user-menu { position:relative; }
+.user-menu-btn { background:none; border:1px solid rgba(255,255,255,.25); color:white; padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s; font-family:inherit; }
+.user-menu-btn:hover { border-color:var(--orange); background:rgba(255,255,255,.08); }
+.user-menu-btn svg { opacity:.7; transition:transform .2s; }
+.user-menu.open .user-menu-btn svg { transform:rotate(180deg); }
+.user-menu-drop { display:none; position:absolute; right:0; top:calc(100% + 6px); background:var(--white); border-radius:10px; box-shadow:var(--shadow-lg); min-width:160px; overflow:hidden; z-index:200; }
+.user-menu.open .user-menu-drop { display:block; }
+.user-menu-drop .um-header { padding:12px 16px; border-bottom:1px solid var(--border); }
+.user-menu-drop .um-header .um-name { font-size:13px; font-weight:700; color:#202124; }
+.user-menu-drop .um-header .um-sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.user-menu-drop .um-item { display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:13px; color:#202124; cursor:pointer; transition:background .1s; border:none; background:none; width:100%; font-family:inherit; text-align:left; }
+.user-menu-drop .um-item:hover { background:var(--bg); }
+.user-menu-drop .um-item svg { width:16px; height:16px; opacity:.6; }
+.user-menu-drop .um-divider { height:1px; background:var(--border); }
+
+/* Main */
+.main { padding:24px; max-width:1200px; margin:0 auto; }
+.page-header { margin-bottom:24px; }
+.page-header h2 { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-header .page-sub { font-size:13px; color:var(--gray); }
+
+/* App grid */
+.section-label { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; margin-bottom:12px; }
+.app-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:32px; }
+
+/* App card */
+.app-card { background:white; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; transition: transform .15s, box-shadow .15s; cursor:pointer; display:block; }
+.app-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+.app-card .accent { height:4px; }
+.app-card .card-body { padding:20px; display:flex; gap:16px; align-items:flex-start; }
+.app-card .icon-wrap { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.app-card .icon-wrap svg { width:24px; height:24px; }
+.app-card .card-info { flex:1; min-width:0; }
+.app-card .card-info h3 { font-size:15px; font-weight:700; color:var(--blue); margin-bottom:2px; }
+.app-card .card-info .desc { font-size:12px; color:var(--gray); line-height:1.4; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:300; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Kapp Picker Modal */
+.picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; align-items:center; justify-content:center; }
+.picker-overlay.open { display:flex; }
+.picker-card { background:var(--white); border-radius:16px; width:480px; max-height:70vh; box-shadow:var(--shadow-lg); overflow:hidden; display:flex; flex-direction:column; }
+.picker-header { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.picker-header h3 { font-size:17px; font-weight:700; color:var(--blue); flex:1; }
+.picker-close { background:none; border:none; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--gray); transition:background .1s; }
+.picker-close:hover { background:var(--bg); }
+.picker-body { overflow-y:auto; padding:8px 0; flex:1; }
+.picker-loading { padding:32px; text-align:center; color:var(--gray); font-size:13px; }
+.picker-row { display:flex; align-items:center; gap:12px; padding:12px 24px; cursor:pointer; transition:background .1s; }
+.picker-row:hover { background:var(--bg); }
+.picker-row .pr-name { font-size:14px; font-weight:600; color:#202124; }
+.picker-row .pr-slug { font-size:12px; color:var(--gray); margin-left:6px; font-weight:400; }
+.picker-row .pr-desc { font-size:12px; color:var(--gray); line-height:1.3; margin-top:2px; }
+.picker-group { padding:10px 24px 4px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); border-top:1px solid var(--border); }
+.picker-group:first-child { border-top:none; }
+
+@media(max-width:600px) {
+  .main { padding:16px; }
+  .app-grid { grid-template-columns:1fr; }
+  .picker-card { width:calc(100vw - 32px); }
+}
+</style>
+</head>
+<body>
+
+<script>
+// Synchronous: decide which screen to show before first paint
+if (sessionStorage.getItem('base_session') || localStorage.getItem('base_session')) {
+  document.write('<style id="boot-style">#app{display:block!important}#login-screen{display:none!important}</style>');
+} else {
+  document.write('<style id="boot-style">#login-screen{display:flex!important}#app{display:none!important}</style>');
+}
+</script>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Kinetic Platform</h1>
+    <div class="sub">Unified Application Console</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <div style="position:relative">
+      <input id="login-url" value="" placeholder="https://myspace.kinops.io" list="server-history" autocomplete="off">
+      <datalist id="server-history"></datalist>
+    </div>
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Kinetic <span>Platform</span></div>
+    <div class="spacer"></div>
+    <div class="user-menu" id="user-menu">
+      <button class="user-menu-btn" onclick="toggleUserMenu()">
+        <span id="user-display"></span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="user-menu-drop">
+        <div class="um-header">
+          <div class="um-name" id="user-menu-name"></div>
+          <div class="um-sub">Kinetic Platform</div>
+        </div>
+        <button class="um-item" onclick="doLogout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h2>Application Launcher</h2>
+      <div class="page-sub">Select an application to open</div>
+    </div>
+
+    <div class="section-label">Applications</div>
+    <div id="app-grid" class="app-grid"></div>
+    <div class="section-label" style="margin-top:24px">School Management</div>
+    <div id="school-grid" class="app-grid"></div>
+    <div class="section-label" style="margin-top:24px">Industry</div>
+    <div id="industry-grid" class="app-grid"></div>
+    <div class="section-label" style="margin-top:24px">Healthcare</div>
+    <div id="healthcare-grid" class="app-grid"></div>
+    <div class="section-label" style="margin-top:24px">Department of Defense</div>
+    <div id="dod-grid" class="app-grid"></div>
+    <div class="section-label" style="margin-top:24px">Miscellaneous</div>
+    <div id="misc-grid" class="app-grid"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Kapp Picker Modal -->
+<div class="picker-overlay" id="kapp-picker" onclick="if(event.target===this)closeKappPicker()">
+  <div class="picker-card">
+    <div class="picker-header">
+      <h3 id="picker-title">Select a Kapp</h3>
+      <button class="picker-close" onclick="closeKappPicker()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="picker-body" id="picker-body">
+      <div class="picker-loading">Loading kapps...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── App Registry ─────────────────────────────────────────────── */
+
+const APPS = [
+  { slug: 'itsm',             name: 'ITSM Console',      desc: 'Incident, Problem, Change & Service Request management',  icon: 'alert-triangle', color: '#EA4335', bg: '#FDECEA' },
+  { slug: 'crm',              name: 'CRM Console',        desc: 'Sales pipeline, leads, opportunities & activities',       icon: 'handshake',      color: '#E65100', bg: '#FFF3E0' },
+  { slug: 'knowledge',        name: 'Knowledge Portal',   desc: 'Knowledge base articles, categories & search',           icon: 'book',           color: '#283593', bg: '#E8EAF6' },
+  { slug: 'atlas',            name: 'Data Atlas',          desc: 'Data dictionary, catalog & consistency intelligence',     icon: 'database',       color: '#00695C', bg: '#E0F2F1' },
+  { slug: 'sec-ops',          name: 'Security Ops',        desc: 'SOC alerts, incidents, vulnerabilities & playbooks',      icon: 'shield',         color: '#B71C1C', bg: '#FFEBEE' },
+  { slug: 'asset-management', name: 'Asset Management',    desc: 'IT asset lifecycle, financials & warranty tracking',      icon: 'server',         color: '#00695C', bg: '#E0F2F1' },
+  { slug: 'case',             name: 'Case Management',     desc: 'Ticket tracking & case resolution',                        icon: 'alert-triangle', color: '#2563eb', bg: '#dbeafe' },
+  { slug: 'innovation',       name: 'Innovation Intake',   desc: 'Application proposal intake, review & AI build pipeline',   icon: 'lightbulb',     color: '#F36C24', bg: '#FFF3E0' },
+  { slug: 'agent-hub',        name: 'AgentHub',             desc: 'AI agent administration, prompt generation & forensic run history', icon: 'cpu', color: '#0097A7', bg: '#E0F7FA' },
+  { slug: 'kinetic-air',     name: 'Kinetic Air',         desc: 'Spreadsheet-style data tables',                                                            icon: 'grid',           color: '#34A853', bg: '#E8F5E9' },
+  { slug: 'school-mgmt',     name: 'School Management',   desc: 'K-12 school suite: students, teachers, classes, grades, buses, lunch & allergy tracking', icon: 'graduation-cap', color: '#1565C0', bg: '#E3F2FD', school: true },
+  { slug: 'sis',             name: 'Student Info System', desc: 'Student records, guardians, enrollments, transcripts & demographics', icon: 'users', color: '#1565C0', bg: '#E3F2FD', school: true },
+  { slug: 'lms',             name: 'Learning Management', desc: 'Courses, assignments, grades, resources & announcements', icon: 'book', color: '#2E7D32', bg: '#E8F5E9', school: true },
+  { slug: 'attendance',      name: 'Attendance & Behavior', desc: 'Daily attendance, behavior incidents, interventions & tardies', icon: 'clipboard', color: '#E65100', bg: '#FFF3E0', school: true },
+  { slug: 'communication',   name: 'Parent Communication', desc: 'Messages, announcements, conferences & notifications', icon: 'bell', color: '#7B1FA2', bg: '#F3E5F5', school: true },
+  { slug: 'scheduling',      name: 'Scheduling & Courses', desc: 'Course catalog, sections, rooms, teachers & bell schedules', icon: 'calendar', color: '#00695C', bg: '#E0F2F1', school: true },
+  { slug: 'school-for-good', name: 'SchoolForGood',       desc: 'School management with sites, members, trainers & classes', icon: 'book',           color: '#2E7D32', bg: '#E8F5E9', industry: true },
+  { slug: 'mining-ops',      name: 'Mining Ops',          desc: 'Mining compliance, operations, environmental monitoring',    icon: 'hard-hat',      color: '#BF360C', bg: '#FBE9E7', industry: true },
+  { slug: 'og-compliance',   name: 'Oil & Gas Compliance', desc: 'Compliance, CAPA, audits & ESG sustainability for O&G',    icon: 'droplet',       color: '#0D6E3F', bg: '#ECFDF5', industry: true },
+  { slug: 'hotel-mgmt',      name: 'Hotel Management',     desc: 'Room inventory, guest profiles, reservations, front desk & housekeeping', icon: 'hotel', color: '#1565C0', bg: '#E3F2FD', industry: true },
+  { slug: 'hotel-guru',      name: 'HotelGuru',             desc: 'Global Hospitality Command — enterprise multi-tenant hotel management across brands & regions', icon: 'globe-hotel', color: '#0D47A1', bg: '#E3F2FD', industry: true },
+  { slug: 'dod-forms',      name: 'DoD Forms',            desc: 'Department of Defense standardized forms library & DD-93',  icon: 'shield',        color: '#1B3A5C', bg: '#E3EBF3', dod: true },
+  { slug: 'atlas-lake',      name: 'AtlasLake',            desc: 'Data lake governance, risk scoring, lineage & compliance',   icon: 'database',      color: '#283593', bg: '#E8EAF6' },
+  { slug: 'credentials',    name: 'Credentials Mgr',     desc: 'Healthcare provider credentialing, privileging & compliance', icon: 'clipboard',     color: '#00838F', bg: '#E0F7FA', healthcare: true },
+  { slug: 'compliance-reg', name: 'Compliance & Reg',    desc: 'Joint Commission, CMS, OSHA compliance tracking & readiness', icon: 'shield-check',  color: '#1B5E20', bg: '#E8F5E9', healthcare: true },
+  { slug: 'vendor-cred',   name: 'Vendor Credentialing', desc: 'Vendor rep credentialing, facility access & visit tracking',     icon: 'badge',         color: '#0097A7', bg: '#E0F7FA', healthcare: true },
+  { slug: 'clinical-equipment', name: 'Clinical Equipment', desc: 'Biomedical device tracking, maintenance, FDA recalls & lifecycle management', icon: 'stethoscope', color: '#1565C0', bg: '#E3F2FD', healthcare: true },
+  { slug: 'patient-safety', name: 'Patient Safety', desc: 'Near-miss & adverse event reporting, RCA, CAPA tracking & regulatory disclosure', icon: 'heart-pulse', color: '#C62828', bg: '#FFEBEE', healthcare: true },
+  { slug: 'contract-lifecycle', name: 'Contract Lifecycle', desc: 'Payer contract management, fee schedules, amendments & compliance', icon: 'file-text', color: '#283593', bg: '#E8EAF6', healthcare: true },
+  { slug: 'supply-chain', name: 'Supply Chain', desc: 'Supply chain resilience, inventory, disruptions & vendor management', icon: 'truck', color: '#00695C', bg: '#E0F2F1', healthcare: true },
+  { slug: 'third-party-risk', name: 'Third-Party Risk', desc: 'Vendor cyber risk assessments, certifications & remediation tracking', icon: 'shield-alert', color: '#B71C1C', bg: '#FFEBEE', healthcare: true },
+  { slug: 'clinical-research', name: 'Clinical Research', desc: 'Clinical trial operations, enrollment, adverse events & regulatory', icon: 'microscope', color: '#4A148C', bg: '#F3E5F5', healthcare: true },
+  { slug: 'data-governance', name: 'Data Governance', desc: 'Enterprise data assets, quality rules, policies & access governance', icon: 'lock', color: '#1A237E', bg: '#E8EAF6', healthcare: true },
+  { slug: 'workforce-optimization', name: 'Workforce Optimization', desc: 'Staffing analytics, scheduling, vacancies & productivity', icon: 'users', color: '#004D40', bg: '#E0F2F1', healthcare: true },
+  { slug: 'physician-performance', name: 'Physician Performance', desc: 'wRVU tracking, quality metrics, compensation & benchmarks', icon: 'trending-up', color: '#E65100', bg: '#FFF3E0', healthcare: true },
+  { slug: 'grants-funding', name: 'Grants & Funding', desc: 'Research grants, applications, awards, budgets & compliance', icon: 'dollar-sign', color: '#1B5E20', bg: '#E8F5E9', healthcare: true },
+  { slug: 'capital-assets', name: 'Capital Assets', desc: 'Facilities lifecycle, work orders, inspections & capital projects', icon: 'building', color: '#37474F', bg: '#ECEFF1', healthcare: true },
+  { slug: 'address-std', name: 'Address Standardizer', desc: 'Parse, standardize & deduplicate postal addresses', icon: 'map-pin', color: '#1565C0', bg: '#E3F2FD', misc: true },
+  { slug: 'restaurant', name: 'Restaurant Man', desc: 'Inventory, menus, reservations & P&L', icon: 'restaurant', color: '#E65100', bg: '#FFF3E0', industry: true },
+  { slug: 'golf-shop', name: 'Golf Shop', desc: 'Inventory, employees & 3-bay driving range scheduling', icon: 'golf', color: '#2E7D32', bg: '#E8F5E9', industry: true },
+  { slug: 'bookstore', name: 'Bookstore', desc: 'Book inventory, employees & book loaner program', icon: 'book', color: '#6A1B9A', bg: '#F3E5F5', industry: true },
+  { slug: 'ai-training', name: 'AI Training', desc: 'One-day AI-powered enterprise development training course & presentation', icon: 'play-circle', color: '#7B1FA2', bg: '#F3E5F5', misc: true },
+  { slug: 'api-manager', name: 'API Manager', desc: 'Enterprise API registry, reuse intelligence & governance', icon: 'grid', color: '#00695C', bg: '#E0F2F1' },
+  { slug: 'racecar-manager', name: 'Racecar Manager', desc: 'Car parts, race schedule, results & fan/sponsor contact management', icon: 'flag', color: '#D32F2F', bg: '#FFEBEE', industry: true },
+  { slug: 'sandwich-shop', name: 'Sandwich & Soup Shop', desc: 'Family recipes, employees & customer feedback', icon: 'sandwich', color: '#D84315', bg: '#FBE9E7', industry: true },
+  { slug: 'music-store', name: 'Music Store', desc: 'Instrument inventory, staff & customer management', icon: 'music', color: '#283593', bg: '#E8EAF6', industry: true },
+  { slug: 'surf-shop', name: 'Surf Shop', desc: 'Tide reports, inventory, schedules & customer feedback', icon: 'waves', color: '#1B4965', bg: '#E0F7FA', industry: true },
+  { slug: 'camp-registry', name: 'Camp Registry', desc: '20 campgrounds, reservations, feedback & camp store', icon: 'tent', color: '#1B4332', bg: '#E8F5E9', industry: true },
+];
+
+/* ── SVG Icons ────────────────────────────────────────────────── */
+
+function svgIcon(name, color) {
+  const icons = {
+    'alert-triangle': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    'book': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+    'database': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+    'handshake': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 00-7.65 0l-.77.78-.77-.78a5.4 5.4 0 00-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>`,
+    'shield': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    'server': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`,
+    'grid': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+    'activity': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    'settings': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+    'lightbulb': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/></svg>`,
+    'git-branch': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>`,
+    'hard-hat': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18a1 1 0 001 1h18a1 1 0 001-1v-2a1 1 0 00-1-1H3a1 1 0 00-1 1v2z"/><path d="M10 15V6a2 2 0 012-2v0a2 2 0 012 2v9"/><path d="M4 15v-3a8 8 0 0116 0v3"/></svg>`,
+    'droplet': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>`,
+    'git-merge': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 009 9"/></svg>`,
+    'cpu': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>`,
+    'package': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+    'clipboard': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>`,
+    'shield-check': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
+    'badge': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><line x1="9" y1="16" x2="15" y2="16"/><line x1="10" y1="19" x2="14" y2="19"/></svg>`,
+    'stethoscope': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 105 2H4a2 2 0 00-2 2v5a6 6 0 0012 0V4a2 2 0 00-2-2h-1a.2.2 0 10.3.3"/><path d="M8 15v1a6 6 0 006 6 6 6 0 006-6v-4"/><circle cx="20" cy="10" r="2"/></svg>`,
+    'heart-pulse': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12.572l-7.5 7.428l-7.5-7.428A5 5 0 1112 6.006a5 5 0 017.5 6.572"/><path d="M3 12h4l2-4 4 8 2-4h6"/></svg>`,
+    'file-text': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    'truck': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+    'shield-alert': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    'microscope': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 100-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 01-2-2V6h6v4a2 2 0 01-2 2z"/><path d="M12 6V3a1 1 0 00-1-1H9a1 1 0 00-1 1v3"/></svg>`,
+    'lock': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
+    'users': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+    'trending-up': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    'dollar-sign': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+    'building': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>`,
+    'hotel': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2z"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M12 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><line x1="12" y1="2" x2="12" y2="4"/></svg>`,
+    'globe-hotel': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`,
+    'graduation-cap': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>`,
+    'play-circle': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>`,
+    'map-pin': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    'bell': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
+    'calendar': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    'restaurant': `<svg viewBox="0 0 24 24" fill="${color}" stroke="none"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`,
+    'golf': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><path d="M12 2v13"/><path d="M12 2l7 4-7 4"/></svg>`,
+    'flag': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+    'sandwich': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18c0-4.97-4.03-9-9-9s-9 4.03-9 9z"/><path d="M3 14h18"/><path d="M3 14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2"/><path d="M5 16l-1 4h16l-1-4"/><circle cx="7.5" cy="11" r=".5" fill="${color}"/><circle cx="12" cy="11" r=".5" fill="${color}"/><circle cx="16.5" cy="11" r=".5" fill="${color}"/></svg>`,
+    'music': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+    'tent': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 2v20"/><path d="M8 22l4-8 4 8"/></svg>`,
+  };
+  return icons[name] || icons['grid'];
+}
+
+/* ── State ─────────────────────────────────────────────────────── */
+
+let API = { url: '', auth: '', user: '', displayName: '' };
+
+// Wrapper that adds X-Kinetic-Server header for per-tab proxy routing
+function proxyFetch(url, opts) {
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  if (API.url && typeof opts.headers === 'object' && !Array.isArray(opts.headers)) {
+    if (!opts.headers['X-Kinetic-Server']) opts.headers['X-Kinetic-Server'] = API.url;
+  }
+  return fetch(url, opts);
+}
+
+/* ── User Menu ────────────────────────────────────────────────── */
+
+function toggleUserMenu() {
+  document.getElementById('user-menu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const m = document.getElementById('user-menu');
+  if (m && !m.contains(e.target)) m.classList.remove('open');
+});
+
+function setUserDisplay(name, spaceSlug) {
+  var label = spaceSlug ? name + ' · ' + spaceSlug : name;
+  document.getElementById('user-display').textContent = label;
+  document.getElementById('user-menu-name').textContent = label;
+}
+
+/* ── Server History ────────────────────────────────────────────── */
+
+function getServerHistory() {
+  try { return JSON.parse(localStorage.getItem('kinetic_servers') || '[]'); } catch { return []; }
+}
+
+function saveServerToHistory(url) {
+  if (!url) return;
+  let servers = getServerHistory().filter(s => s !== url);
+  servers.unshift(url);
+  if (servers.length > 10) servers = servers.slice(0, 10);
+  localStorage.setItem('kinetic_servers', JSON.stringify(servers));
+  populateServerHistory();
+}
+
+function populateServerHistory() {
+  const dl = document.getElementById('server-history');
+  if (!dl) return;
+  dl.innerHTML = '';
+  getServerHistory().forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    dl.appendChild(opt);
+  });
+}
+
+/* ── Login / Logout ────────────────────────────────────────────── */
+
+async function doLogin() {
+  let serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  // Auto-add https:// if a hostname was entered without protocol
+  if (serverUrl && !serverUrl.match(/^https?:\/\//)) serverUrl = 'https://' + serverUrl;
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  if (!user || !pass) {
+    err.textContent = 'Username and password are required.';
+    err.style.display = 'block';
+    return;
+  }
+
+  try {
+    // Set proxy target as fallback (also used by tabs that don't send header)
+    if (serverUrl) {
+      const tr = await fetch('/api/base/target', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: serverUrl })
+      });
+      if (!tr.ok) throw new Error('Failed to set server target');
+    }
+
+    API = { url: serverUrl, auth: btoa(user + ':' + pass), user: user, displayName: '' };
+
+    // Build headers with per-tab server routing
+    const proxyHeaders = { 'Authorization': 'Basic ' + API.auth };
+    if (serverUrl) proxyHeaders['X-Kinetic-Server'] = serverUrl;
+
+    const res = await fetch('/app/api/v1/me', { headers: proxyHeaders });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const d = await res.json();
+    API.displayName = d.displayName || d.user?.displayName || user;
+
+    // Fetch space slug for display
+    try {
+      const sr = await fetch('/app/api/v1/space', { headers: proxyHeaders });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+
+    // Store session in sessionStorage (per-tab) + localStorage (cross-tab for shift-click)
+    sessionStorage.setItem('base_session', JSON.stringify(API));
+    localStorage.setItem('base_session', JSON.stringify(API));
+    saveServerToHistory(serverUrl);
+
+    var bs = document.getElementById('boot-style'); if (bs) bs.remove();
+    setUserDisplay(API.displayName, API.spaceSlug);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    renderGrid();
+  } catch(e) {
+    err.textContent = e.message.includes('Failed to fetch')
+      ? 'Cannot reach server.'
+      : 'Login failed: ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  var bs = document.getElementById('boot-style'); if (bs) bs.remove();
+  sessionStorage.removeItem('base_session');
+  sessionStorage.removeItem('kinetic_session');
+  sessionStorage.removeItem('atlas_session');
+  localStorage.removeItem('base_session');
+  API = { url: '', auth: '', user: '', displayName: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  populateServerHistory();
+}
+
+async function restoreSession() {
+  var saved = sessionStorage.getItem('base_session');
+  // Fall back to localStorage for shift-click new tabs
+  if (!saved) {
+    saved = localStorage.getItem('base_session');
+    if (saved) sessionStorage.setItem('base_session', saved);
+  }
+  if (!saved) return;
+  try {
+    API = JSON.parse(saved);
+    // Fix stored URLs missing protocol
+    if (API.url && !API.url.match(/^https?:\/\//)) API.url = 'https://' + API.url;
+
+    // Restore proxy target as fallback
+    if (API.url) {
+      await fetch('/api/base/target', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: API.url })
+      });
+    }
+
+    // Build headers with per-tab server routing
+    const proxyHeaders = { 'Authorization': 'Basic ' + API.auth };
+    if (API.url) proxyHeaders['X-Kinetic-Server'] = API.url;
+
+    const res = await fetch('/app/api/v1/me', { headers: proxyHeaders });
+    if (!res.ok) throw new Error('expired');
+    const d = await res.json();
+    API.displayName = d.displayName || d.user?.displayName || API.user;
+
+    // Refresh space slug if missing
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch('/app/api/v1/space', { headers: proxyHeaders });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('base_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+
+    // Pre-fill URL field for reference
+    if (API.url) document.getElementById('login-url').value = API.url;
+
+    setUserDisplay(API.displayName, API.spaceSlug);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    // Keep localStorage in sync for future shift-click tabs
+    localStorage.setItem('base_session', JSON.stringify(API));
+
+    renderGrid();
+  } catch(e) {
+    var bs = document.getElementById('boot-style'); if (bs) bs.remove();
+    sessionStorage.removeItem('base_session');
+    localStorage.removeItem('base_session');
+    API = { url: '', auth: '', user: '', displayName: '' };
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    populateServerHistory();
+  }
+}
+populateServerHistory();
+restoreSession();
+
+/* ── Grid Rendering ───────────────────────────────────────────── */
+
+function renderGrid() {
+  const appApps = APPS.filter(a => !a.industry && !a.healthcare && !a.dod && !a.school && !a.misc);
+  const schoolApps = APPS.filter(a => a.school);
+  const industryApps = APPS.filter(a => a.industry);
+  const healthcareApps = APPS.filter(a => a.healthcare);
+  const dodApps = APPS.filter(a => a.dod);
+  const miscApps = APPS.filter(a => a.misc);
+  document.getElementById('app-grid').innerHTML = renderCards(appApps);
+  document.getElementById('school-grid').innerHTML = renderCards(schoolApps);
+  document.getElementById('industry-grid').innerHTML = renderCards(industryApps);
+  document.getElementById('healthcare-grid').innerHTML = renderCards(healthcareApps);
+  document.getElementById('dod-grid').innerHTML = renderCards(dodApps);
+  document.getElementById('misc-grid').innerHTML = renderCards(miscApps);
+}
+
+function renderCards(apps) {
+  return apps.map(app => {
+    const tag = app.picker ? 'div' : 'a';
+    const action = app.picker
+      ? `onclick="openKappPicker('${app.slug}','${app.name}')"`
+      : `href="/${app.slug}/"`;
+    return `
+    <${tag} class="app-card" ${action}>
+      <div class="accent" style="background:${app.color}"></div>
+      <div class="card-body">
+        <div class="icon-wrap" style="background:${app.bg}">
+          ${svgIcon(app.icon, app.color)}
+        </div>
+        <div class="card-info">
+          <h3>${app.name}</h3>
+          <div class="desc">${app.desc}</div>
+        </div>
+      </div>
+    </${tag}>`;
+  }).join('');
+}
+
+/* ── Kapp Picker ──────────────────────────────────────────────── */
+
+let pickerAppSlug = '';
+
+function openKappPicker(appSlug, appName) {
+  pickerAppSlug = appSlug;
+  document.getElementById('picker-title').textContent = appName + ' — Select Scope';
+  document.getElementById('picker-body').innerHTML = '<div class="picker-loading">Loading kapps...</div>';
+  document.getElementById('kapp-picker').classList.add('open');
+  loadKappsForPicker();
+}
+
+function closeKappPicker() {
+  document.getElementById('kapp-picker').classList.remove('open');
+  pickerAppSlug = '';
+}
+
+async function loadKappsForPicker() {
+  const body = document.getElementById('picker-body');
+  try {
+    const res = await proxyFetch('/app/api/v1/kapps', {
+      headers: { 'Authorization': 'Basic ' + API.auth }
+    });
+    if (!res.ok) throw new Error('Failed to load kapps');
+    const data = await res.json();
+    const kapps = data.kapps || [];
+    if (!kapps.length) {
+      body.innerHTML = '<div class="picker-loading">No kapps found.</div>';
+      return;
+    }
+    let html = '';
+    // Add Space option for workflow apps
+    if (pickerAppSlug === 'workflow-builder' || pickerAppSlug === 'workflow-debugger' || pickerAppSlug === 'test-runner') {
+      html += `<div class="picker-row" onclick="window.location.href='/${pickerAppSlug}/?kapp=__space__'" style="border-bottom:1px solid var(--border)">
+        <div>
+          <div class="pr-name">Space (Global)</div>
+          <div class="pr-desc">Space-level routines and workflows</div>
+        </div>
+      </div>`;
+    }
+    html += kapps.map(k => `
+      <div class="picker-row" onclick="window.location.href='/${pickerAppSlug}/?kapp=${encodeURIComponent(k.slug)}'">
+        <div>
+          <div class="pr-name">${k.name}<span class="pr-slug">${k.slug}</span></div>
+          ${k.description ? `<div class="pr-desc">${k.description}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div class="picker-loading">Error loading kapps.</div>';
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('kapp-picker').classList.contains('open')) {
+    closeKappPicker();
+  }
+});
+
+/* ── Toast ─────────────────────────────────────────────────────── */
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

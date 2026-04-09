@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Manager</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:#202124; font-size:14px; }
+
+/* ── Login ─────────────────────────────────────────────────── */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); }
+.login-box { background:var(--white); padding:40px; border-radius:16px; box-shadow:var(--shadow-lg); width:380px; }
+.login-box h1 { font-size:24px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.login-box .sub { color:var(--gray); font-size:13px; margin-bottom:16px; }
+.login-box .orange-bar { height:3px; background:var(--orange); width:40px; margin-bottom:24px; border-radius:2px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; margin-top:12px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; }
+.login-box input:focus { border-color:var(--orange); }
+.login-box button { width:100%; padding:10px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; margin-top:20px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* ── Topbar ────────────────────────────────────────────────── */
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:2px; margin-left:24px; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.7); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; transition:all .15s; }
+.topbar nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar nav button.active { background:var(--orange); color:white; }
+.topbar .spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+/* ── Layout ────────────────────────────────────────────────── */
+#app { display:none; }
+.console { max-width:1400px; margin:0 auto; padding:24px; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ── KPI Cards ─────────────────────────────────────────────── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:var(--white); border-radius:12px; padding:16px; box-shadow:var(--shadow); text-align:center; }
+.kpi .value { font-size:26px; font-weight:700; }
+.kpi .label { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.card { background:var(--white); border-radius:12px; padding:20px; box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media (max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+
+/* ── Tables ────────────────────────────────────────────────── */
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; padding:8px 10px; border-bottom:2px solid var(--border); background:var(--light); }
+td { padding:8px 10px; border-bottom:1px solid var(--border); font-size:13px; }
+tr:hover td { background:#F8F9FA; }
+tr.clickable { cursor:pointer; }
+tr.clickable:hover td { background:#EEF1F5; }
+
+/* ── Badges ────────────────────────────────────────────────── */
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge-active { background:#E8F5E9; color:#2E7D32; }
+.badge-deprecated { background:#FDECEA; color:#C62828; }
+.badge-proposed { background:#E3F2FD; color:#1565C0; }
+.badge-review,.badge-in-review { background:#FFF8E1; color:#F9A825; }
+.badge-approved { background:#E8F5E9; color:#2E7D32; }
+.badge-restricted { background:#FFF3E0; color:#E65100; }
+.badge-retired { background:#F1F3F4; color:#5F6368; }
+.badge-critical { background:#FDECEA; color:#C62828; }
+.badge-high { background:#FFF3E0; color:#E65100; }
+.badge-medium { background:#FFF8E1; color:#F9A825; }
+.badge-low { background:#E8F5E9; color:#2E7D32; }
+.badge-yes { background:#E8F5E9; color:#2E7D32; }
+.badge-no { background:#FDECEA; color:#C62828; }
+.badge-rest { background:#E3F2FD; color:#1565C0; }
+.badge-graphql { background:#F3E5F5; color:#7B1FA2; }
+.badge-grpc { background:#E0F2F1; color:#00695C; }
+.badge-soap { background:#FFF8E1; color:#F9A825; }
+.badge-event-driven { background:#EDE7F6; color:#283593; }
+.badge-internal { background:#E3F2FD; color:#1565C0; }
+.badge-partner { background:#E0F2F1; color:#00695C; }
+.badge-external { background:#FFF3E0; color:#E65100; }
+.badge-public { background:#E8F5E9; color:#2E7D32; }
+.badge-vendor-provided { background:#F3E5F5; color:#7B1FA2; }
+.badge-new { background:#E3F2FD; color:#1565C0; }
+.badge-matched { background:#E0F2F1; color:#00695C; }
+.badge-decided { background:#E8F5E9; color:#2E7D32; }
+.badge-under-review { background:#FFF8E1; color:#F9A825; }
+.badge-implementing { background:#E3F2FD; color:#1565C0; }
+.badge-complete { background:#E8F5E9; color:#2E7D32; }
+.badge-draft { background:#F1F3F4; color:#5F6368; }
+.badge-rejected { background:#FDECEA; color:#C62828; }
+.badge-pending { background:#FFF8E1; color:#F9A825; }
+.badge-n-a { background:#F1F3F4; color:#5F6368; }
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+.toolbar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input[type="text"] { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; min-width:250px; outline:none; }
+.toolbar input[type="text"]:focus { border-color:var(--orange); }
+.toolbar select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--white); cursor:pointer; outline:none; }
+.toolbar select:focus { border-color:var(--orange); }
+.btn { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--gray); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--border); }
+.btn-sm { padding:4px 10px; font-size:12px; border-radius:6px; }
+
+/* ── Charts (CSS-only) ─────────────────────────────────────── */
+.bar-chart { display:flex; flex-direction:column; gap:6px; }
+.bar-row { display:flex; align-items:center; gap:8px; }
+.bar-label { font-size:12px; color:var(--gray); min-width:90px; text-align:right; }
+.bar-track { flex:1; background:#ECEFF1; border-radius:4px; height:22px; position:relative; overflow:hidden; }
+.bar-fill { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:8px; font-size:11px; font-weight:600; color:white; min-width:24px; transition:width .4s ease; }
+.bar-count { font-size:12px; color:var(--gray); min-width:28px; text-align:right; }
+
+/* ── Detail Modal ──────────────────────────────────────────── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:200; overflow-y:auto; padding:24px; }
+.modal-overlay.open { display:block; }
+.modal { background:var(--white); border-radius:16px; max-width:1000px; margin:0 auto; box-shadow:var(--shadow-lg); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); }
+.modal-header h2 { font-size:18px; font-weight:700; color:var(--blue); }
+.modal-header .close-btn { background:none; border:none; font-size:24px; cursor:pointer; color:var(--gray); padding:4px 8px; border-radius:6px; }
+.modal-header .close-btn:hover { background:var(--light); }
+.modal-tabs { display:flex; gap:2px; padding:0 24px; border-bottom:1px solid var(--border); background:var(--light); }
+.modal-tabs button { background:none; border:none; padding:10px 16px; font-size:13px; font-weight:500; color:var(--gray); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.modal-tabs button:hover { color:var(--blue); }
+.modal-tabs button.active { color:var(--orange); border-bottom-color:var(--orange); font-weight:600; }
+.modal-body { padding:24px; }
+.modal-panel { display:none; }
+.modal-panel.active { display:block; }
+
+/* ── Detail Fields ─────────────────────────────────────────── */
+.field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; }
+.field-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.field { margin-bottom:0; }
+.field .fl { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
+.field .fv { font-size:13px; color:#202124; word-break:break-word; }
+.field .fv.empty { color:#CCC; font-style:italic; }
+.field.full { grid-column:1/-1; }
+.section-title { font-size:12px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:.5px; margin:20px 0 10px; padding-bottom:6px; border-bottom:2px solid var(--orange); }
+.section-title:first-child { margin-top:0; }
+
+/* ── AI Readiness Card ─────────────────────────────────────── */
+.ai-card { border:2px solid; border-radius:12px; padding:16px; }
+.ai-card.ai-yes { border-color:var(--green); background:#F0FFF4; }
+.ai-card.ai-restricted { border-color:var(--yellow); background:#FFFDE7; }
+.ai-card.ai-no { border-color:var(--red); background:#FFF5F5; }
+.ai-status { font-size:18px; font-weight:700; margin-bottom:8px; }
+.ai-card.ai-yes .ai-status { color:var(--green); }
+.ai-card.ai-restricted .ai-status { color:#E65100; }
+.ai-card.ai-no .ai-status { color:var(--red); }
+
+/* ── Owner Cards ───────────────────────────────────────────── */
+.owner-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.owner-card { background:var(--light); border-radius:10px; padding:14px; border:1px solid var(--border); }
+.owner-card .role { font-size:10px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.owner-card .name { font-size:14px; font-weight:600; color:var(--blue); }
+
+/* ── Pagination ────────────────────────────────────────────── */
+.pagination { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:12px; }
+.pagination .page-info { font-size:12px; color:var(--gray); }
+
+/* ── Misc ──────────────────────────────────────────────────── */
+.loading { text-align:center; padding:40px; color:var(--gray); font-size:14px; }
+.empty { text-align:center; padding:30px; color:var(--gray); font-size:13px; }
+.tag { display:inline-block; padding:2px 6px; background:var(--light); border:1px solid var(--border); border-radius:4px; font-size:11px; margin:2px; }
+.governance-alert { background:#FFF3E0; border:1px solid #FFE0B2; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:13px; color:#E65100; }
+</style>
+</head>
+<body>
+
+<!-- ══ Login ══════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>API Manager</h1>
+    <div class="sub">Enterprise API Registry & Reuse Intelligence</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://myspace.kinops.io">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ══ App ════════════════════════════════════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">API <span>Manager</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('catalog')">Catalog</button>
+      <button onclick="switchTab('governance')">Governance</button>
+      <button onclick="switchTab('contracts')">Contracts</button>
+      <button onclick="switchTab('reuse')">Reuse</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+
+    <!-- ── Dashboard ─────────────────────────────────────── -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div id="dash-loading" class="loading">Loading dashboard...</div>
+      <div id="dash-content" style="display:none">
+        <div class="kpi-row" id="dash-kpis"></div>
+        <div class="grid-2">
+          <div class="card"><h3>By Lifecycle Status</h3><div id="chart-lifecycle" class="bar-chart"></div></div>
+          <div class="card"><h3>By API Type</h3><div id="chart-types" class="bar-chart"></div></div>
+        </div>
+        <div class="grid-2" style="margin-top:0">
+          <div class="card"><h3>By Exposure Type</h3><div id="chart-exposure" class="bar-chart"></div></div>
+          <div class="card"><h3>By Business Domain</h3><div id="chart-domains" class="bar-chart"></div></div>
+        </div>
+        <div class="grid-2" style="margin-top:0">
+          <div class="card"><h3>Top Consumed APIs</h3><div id="dash-top-consumed"></div></div>
+          <div class="card"><h3>AI Usability</h3><div id="chart-ai" class="bar-chart"></div></div>
+        </div>
+        <div class="grid-2" style="margin-top:0">
+          <div class="card" id="dash-renewals-card"><h3>Upcoming Contract Renewals (90 days)</h3><div id="dash-renewals"></div></div>
+          <div class="card" id="dash-deprecated-card"><h3>Deprecated APIs with Active Consumers</h3><div id="dash-deprecated"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Catalog ───────────────────────────────────────── -->
+    <div id="tab-catalog" class="tab-content">
+      <div class="toolbar" id="catalog-toolbar">
+        <input type="text" id="catalog-search" placeholder="Search APIs by name, description, capability..." oninput="filterCatalog()">
+        <select id="filter-type" onchange="filterCatalog()"><option value="">All Types</option></select>
+        <select id="filter-exposure" onchange="filterCatalog()"><option value="">All Exposure</option></select>
+        <select id="filter-lifecycle" onchange="filterCatalog()"><option value="">All Lifecycle</option></select>
+        <select id="filter-domain" onchange="filterCatalog()"><option value="">All Domains</option></select>
+        <select id="filter-ai" onchange="filterCatalog()"><option value="">AI Usable</option><option value="Yes">Yes</option><option value="Restricted">Restricted</option><option value="No">No</option></select>
+      </div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table id="catalog-table">
+          <thead><tr>
+            <th>ID</th><th>Name</th><th>Type</th><th>Exposure</th><th>Lifecycle</th>
+            <th>Criticality</th><th>Domain</th><th>AI</th><th>Consumers</th>
+          </tr></thead>
+          <tbody id="catalog-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="catalog-pagination"></div>
+    </div>
+
+    <!-- ── Governance ────────────────────────────────────── -->
+    <div id="tab-governance" class="tab-content">
+      <div id="gov-loading" class="loading">Loading governance data...</div>
+      <div id="gov-content" style="display:none">
+        <div class="kpi-row" id="gov-kpis"></div>
+        <div class="grid-2">
+          <div class="card"><h3>APIs Overdue for Review</h3><div id="gov-overdue"></div></div>
+          <div class="card"><h3>Change Requests by Status</h3><div id="gov-changes" class="bar-chart"></div></div>
+        </div>
+        <div class="card"><h3>Active Change Requests</h3>
+          <table><thead><tr><th>ID</th><th>API</th><th>Type</th><th>Impact</th><th>Arch Review</th><th>Sec Review</th><th>Status</th></tr></thead>
+          <tbody id="gov-change-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Contracts ─────────────────────────────────────── -->
+    <div id="tab-contracts" class="tab-content">
+      <div id="contracts-loading" class="loading">Loading contracts...</div>
+      <div id="contracts-content" style="display:none">
+        <div class="kpi-row" id="contracts-kpis"></div>
+        <div class="card"><h3>Vendor API Contracts</h3>
+          <table><thead><tr><th>ID</th><th>API</th><th>Vendor</th><th>Owner</th><th>Annual Cost</th><th>Renewal</th><th>Legal</th><th>Status</th></tr></thead>
+          <tbody id="contracts-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Reuse ─────────────────────────────────────────── -->
+    <div id="tab-reuse" class="tab-content">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h3>Search for Existing APIs</h3>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input type="text" id="reuse-search" placeholder="Describe the capability you need..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" onkeydown="if(event.key==='Enter')searchReuse()">
+              <button class="btn btn-primary" onclick="searchReuse()">Search</button>
+            </div>
+            <div id="reuse-results"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card"><h3>Reuse Request Queue</h3>
+            <div id="reuse-loading" class="loading">Loading...</div>
+            <div id="reuse-queue" style="display:none"></div>
+          </div>
+          <div class="card" style="margin-top:16px"><h3>Reuse Recommendations</h3><div id="chart-reuse" class="bar-chart"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /console -->
+</div><!-- /app -->
+
+<!-- ══ Detail Modal ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detail-title">API Detail</h2>
+      <button class="close-btn" onclick="closeDetail()">&times;</button>
+    </div>
+    <div class="modal-tabs" id="detail-tabs">
+      <button class="active" onclick="switchDetailTab('overview')">Overview</button>
+      <button onclick="switchDetailTab('ownership')">Ownership</button>
+      <button onclick="switchDetailTab('consumers')">Consumers</button>
+      <button onclick="switchDetailTab('environments')">Environments</button>
+      <button onclick="switchDetailTab('ai')">AI Profile</button>
+      <button onclick="switchDetailTab('endpoints')">Endpoints</button>
+      <button onclick="switchDetailTab('changes')">Changes</button>
+    </div>
+    <div class="modal-body">
+      <div id="detail-loading" class="loading">Loading...</div>
+      <div id="detail-panels" style="display:none">
+        <div id="panel-overview" class="modal-panel active"></div>
+        <div id="panel-ownership" class="modal-panel"></div>
+        <div id="panel-consumers" class="modal-panel"></div>
+        <div id="panel-environments" class="modal-panel"></div>
+        <div id="panel-endpoints" class="modal-panel"></div>
+        <div id="panel-ai" class="modal-panel"></div>
+        <div id="panel-changes" class="modal-panel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// State
+// ══════════════════════════════════════════════════════════════
+let API = { url:'', auth:'', user:'', displayName:'' };
+let allApis = [];
+let filteredApis = [];
+let catalogPage = 0;
+const PAGE_SIZE = 25;
+let dashData = null;
+
+// ══════════════════════════════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════════════════════════════
+function esc(s) { if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function v(sub,field) { return sub.values?.[field]||''; }
+
+function badge(value, customClass) {
+  if (!value) return '';
+  const cls = customClass || value.toLowerCase().replace(/[\s/]+/g,'-');
+  return `<span class="badge badge-${esc(cls)}">${esc(value)}</span>`;
+}
+
+function fieldHtml(label, value) {
+  const cls = value ? '' : ' empty';
+  return `<div class="field"><div class="fl">${esc(label)}</div><div class="fv${cls}">${value ? esc(value) : '—'}</div></div>`;
+}
+
+function fieldBadge(label, value, badgeClass) {
+  return `<div class="field"><div class="fl">${esc(label)}</div><div class="fv">${value ? badge(value, badgeClass) : '<span class="empty">—</span>'}</div></div>`;
+}
+
+async function api(path, opts={}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization':'Basic '+API.auth, 'Content-Type':'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function customApi(path) {
+  const res = await fetch(`${API.url}${path}`, {
+    headers: { 'Authorization':'Basic '+API.auth }
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Auth
+// ══════════════════════════════════════════════════════════════
+async function doLogin() {
+  const serverUrl = document.getElementById('login-url').value.trim();
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  if (!user||!pass) { err.textContent='Username and password required.'; err.style.display='block'; return; }
+  try {
+    API = { url: serverUrl, auth: btoa(user+':'+pass), user, displayName:'' };
+    const res = await fetch(`${API.url}/app/api/v1/me`, { headers:{'Authorization':'Basic '+API.auth} });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const d = await res.json();
+    API.displayName = d.displayName||d.username||user;
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-display').textContent=API.displayName;
+    initApp();
+  } catch(e) { err.textContent=e.message; err.style.display='block'; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url:'', auth:'', user:'', displayName:'' };
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-pass').value='';
+}
+
+// ══════════════════════════════════════════════════════════════
+// Tab Navigation
+// ══════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const btns = document.querySelectorAll('#main-nav button');
+  const tabs = ['dashboard','catalog','governance','contracts','reuse'];
+  const idx = tabs.indexOf(tab);
+  if (idx>=0) btns[idx].classList.add('active');
+
+  if (tab==='catalog' && allApis.length===0) loadCatalog();
+  if (tab==='governance') loadGovernance();
+  if (tab==='contracts') loadContracts();
+  if (tab==='reuse') loadReuse();
+}
+
+// ══════════════════════════════════════════════════════════════
+// Bar Chart
+// ══════════════════════════════════════════════════════════════
+const CHART_COLORS = ['#F36C24','#242F4D','#34A853','#EA4335','#FBBC04','#7B1FA2','#00695C','#283593','#BF360C','#5F6368','#1565C0','#2E7D32'];
+
+function renderBarChart(containerId, data, maxVal) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const entries = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  if (entries.length===0) { el.innerHTML='<div class="empty">No data</div>'; return; }
+  const max = maxVal || Math.max(...entries.map(e=>e[1]),1);
+  el.innerHTML = entries.map(([label,count],i)=>{
+    const pct = Math.max((count/max)*100, 4);
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    return `<div class="bar-row">
+      <div class="bar-label">${esc(label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}">${count}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// Dashboard
+// ══════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  document.getElementById('dash-loading').style.display='block';
+  document.getElementById('dash-content').style.display='none';
+  try {
+    dashData = await customApi('/api/apimgr/stats');
+    const d = dashData;
+
+    // KPIs
+    const active = d.lifecycle['Active']||0;
+    const deprecated = d.lifecycle['Deprecated']||0;
+    const aiYes = (d.aiUsable['Yes']||0)+(d.aiUsable['Restricted']||0);
+    document.getElementById('dash-kpis').innerHTML = [
+      kpi(d.total, 'Total APIs', '--blue'),
+      kpi(active, 'Active', '--green'),
+      kpi(deprecated, 'Deprecated', '--red'),
+      kpi(d.lifecycle['Proposed']||0, 'Proposed', '--indigo'),
+      kpi(aiYes, 'AI-Enabled', '--teal'),
+      kpi(d.needsReview, 'Need Review', '--yellow'),
+      kpi(d.totalConsumers, 'Consumers', '--purple'),
+      kpi(d.totalContracts, 'Contracts', '--orange'),
+    ].join('');
+
+    renderBarChart('chart-lifecycle', d.lifecycle);
+    renderBarChart('chart-types', d.types);
+    renderBarChart('chart-exposure', d.exposure);
+    renderBarChart('chart-domains', d.domains);
+    renderBarChart('chart-ai', d.aiUsable);
+
+    // Top consumed
+    if (d.topConsumed.length) {
+      document.getElementById('dash-top-consumed').innerHTML = `<table><thead><tr><th>API</th><th style="text-align:right">Consumers</th></tr></thead><tbody>${
+        d.topConsumed.map(t=>`<tr class="clickable" onclick="openDetail('${esc(t.apiId)}')"><td>${esc(t.name)}</td><td style="text-align:right"><strong>${t.consumers}</strong></td></tr>`).join('')
+      }</tbody></table>`;
+    } else {
+      document.getElementById('dash-top-consumed').innerHTML = '<div class="empty">No consumer data</div>';
+    }
+
+    // Renewals
+    if (d.upcomingRenewals.length) {
+      document.getElementById('dash-renewals').innerHTML = `<table><thead><tr><th>API</th><th>Vendor</th><th>Cost</th><th>Renewal</th></tr></thead><tbody>${
+        d.upcomingRenewals.map(r=>`<tr><td>${esc(r.apiName)}</td><td>${esc(r.vendor)}</td><td>${esc(r.annualCost)}</td><td>${esc(r.renewalDate)}</td></tr>`).join('')
+      }</tbody></table>`;
+    } else {
+      document.getElementById('dash-renewals').innerHTML = '<div class="empty">No renewals in next 90 days</div>';
+    }
+
+    // Deprecated with consumers
+    if (d.deprecatedWithConsumers.length) {
+      document.getElementById('dash-deprecated').innerHTML = d.deprecatedWithConsumers.map(a=>
+        `<div class="governance-alert" style="cursor:pointer" onclick="openDetail('${esc(a.apiId)}')">
+          <strong>${esc(a.name)}</strong> (${esc(a.apiId)}) — <strong>${a.consumers}</strong> active consumer${a.consumers!==1?'s':''} still depend on this deprecated API
+        </div>`
+      ).join('');
+    } else {
+      document.getElementById('dash-deprecated').innerHTML = '<div class="empty">No deprecated APIs with active consumers</div>';
+    }
+
+    document.getElementById('dash-loading').style.display='none';
+    document.getElementById('dash-content').style.display='block';
+  } catch(e) {
+    document.getElementById('dash-loading').textContent='Error loading dashboard: '+e.message;
+  }
+}
+
+function kpi(val, label, colorVar) {
+  return `<div class="kpi"><div class="value" style="color:var(${colorVar})">${val}</div><div class="label">${label}</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Catalog
+// ══════════════════════════════════════════════════════════════
+async function loadCatalog() {
+  try {
+    const KAPP = 'api-manager';
+    let url = `/kapps/${KAPP}/forms/apis/submissions?include=values&limit=25`;
+    let all = [];
+    let lastCreatedAt = null;
+    for (let i=0;i<8;i++) {
+      let fetchUrl = url;
+      if (lastCreatedAt) fetchUrl += `&q=${encodeURIComponent(`createdAt < "${lastCreatedAt}"`)}`;
+      const data = await api(fetchUrl);
+      const subs = data.submissions||[];
+      all.push(...subs);
+      if (subs.length>0) lastCreatedAt = subs[subs.length-1].createdAt;
+      if (!data.nextPageToken||subs.length<25) break;
+    }
+    allApis = all;
+    populateFilters();
+    filterCatalog();
+  } catch(e) {
+    document.getElementById('catalog-body').innerHTML=`<tr><td colspan="9" class="empty">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function populateFilters() {
+  const sets = { type:new Set(), exposure:new Set(), lifecycle:new Set(), domain:new Set() };
+  for (const a of allApis) {
+    if(v(a,'API Type')) sets.type.add(v(a,'API Type'));
+    if(v(a,'Exposure Type')) sets.exposure.add(v(a,'Exposure Type'));
+    if(v(a,'Lifecycle Status')) sets.lifecycle.add(v(a,'Lifecycle Status'));
+    if(v(a,'Domain')) sets.domain.add(v(a,'Domain'));
+  }
+  populateSelect('filter-type', sets.type, 'All Types');
+  populateSelect('filter-exposure', sets.exposure, 'All Exposure');
+  populateSelect('filter-lifecycle', sets.lifecycle, 'All Lifecycle');
+  populateSelect('filter-domain', sets.domain, 'All Domains');
+}
+
+function populateSelect(id, valueSet, placeholder) {
+  const el = document.getElementById(id);
+  const current = el.value;
+  el.innerHTML = `<option value="">${placeholder}</option>` +
+    [...valueSet].sort().map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  el.value = current;
+}
+
+function filterCatalog() {
+  const search = document.getElementById('catalog-search').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  const exposure = document.getElementById('filter-exposure').value;
+  const lifecycle = document.getElementById('filter-lifecycle').value;
+  const domain = document.getElementById('filter-domain').value;
+  const ai = document.getElementById('filter-ai').value;
+
+  filteredApis = allApis.filter(a=>{
+    if (type && v(a,'API Type')!==type) return false;
+    if (exposure && v(a,'Exposure Type')!==exposure) return false;
+    if (lifecycle && v(a,'Lifecycle Status')!==lifecycle) return false;
+    if (domain && v(a,'Domain')!==domain) return false;
+    if (ai && v(a,'AI Usable')!==ai) return false;
+    if (search) {
+      const text = [v(a,'Name'),v(a,'Short Description'),v(a,'Business Capability'),v(a,'Domain'),v(a,'API ID')].join(' ').toLowerCase();
+      if (!text.includes(search)) return false;
+    }
+    return true;
+  });
+
+  catalogPage = 0;
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const start = catalogPage * PAGE_SIZE;
+  const page = filteredApis.slice(start, start+PAGE_SIZE);
+  const consumerCounts = dashData?.consumerCounts || {};
+
+  document.getElementById('catalog-body').innerHTML = page.length ? page.map(a=>{
+    const apiId = v(a,'API ID');
+    return `<tr class="clickable" onclick="openDetail('${esc(apiId)}')">
+      <td><strong>${esc(apiId)}</strong></td>
+      <td>${esc(v(a,'Name'))}</td>
+      <td>${badge(v(a,'API Type'))}</td>
+      <td>${badge(v(a,'Exposure Type'))}</td>
+      <td>${badge(v(a,'Lifecycle Status'))}</td>
+      <td>${badge(v(a,'Criticality'))}</td>
+      <td>${esc(v(a,'Domain'))}</td>
+      <td>${badge(v(a,'AI Usable'))}</td>
+      <td style="text-align:center">${consumerCounts[apiId]||0}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="9" class="empty">No APIs match your filters</td></tr>';
+
+  const totalPages = Math.ceil(filteredApis.length / PAGE_SIZE);
+  document.getElementById('catalog-pagination').innerHTML = filteredApis.length ?
+    `<span class="page-info">${filteredApis.length} API${filteredApis.length!==1?'s':''} — Page ${catalogPage+1} of ${totalPages}</span>
+     <button class="btn btn-sm btn-secondary" onclick="catalogPage=Math.max(0,catalogPage-1);renderCatalog()" ${catalogPage===0?'disabled':''}>Prev</button>
+     <button class="btn btn-sm btn-secondary" onclick="catalogPage=Math.min(${totalPages-1},catalogPage+1);renderCatalog()" ${catalogPage>=totalPages-1?'disabled':''}>Next</button>` : '';
+}
+
+// ══════════════════════════════════════════════════════════════
+// API Detail Modal
+// ══════════════════════════════════════════════════════════════
+async function openDetail(apiId) {
+  const modal = document.getElementById('detail-modal');
+  modal.classList.add('open');
+  document.getElementById('detail-loading').style.display='block';
+  document.getElementById('detail-panels').style.display='none';
+  switchDetailTab('overview');
+
+  try {
+    const detail = await customApi(`/api/apimgr/apis/${encodeURIComponent(apiId)}/detail`);
+    const a = detail.api;
+    document.getElementById('detail-title').innerHTML =
+      `${esc(v(a,'Name'))} <span style="font-size:13px;color:var(--gray);font-weight:400;margin-left:8px">${esc(v(a,'API ID'))}</span> ${badge(v(a,'Lifecycle Status'))}`;
+
+    // ── Overview Panel
+    document.getElementById('panel-overview').innerHTML = `
+      <div class="section-title">Identity</div>
+      <div class="field-grid">
+        ${fieldHtml('API ID', v(a,'API ID'))}
+        ${fieldHtml('Name', v(a,'Name'))}
+        ${fieldHtml('Business Capability', v(a,'Business Capability'))}
+        ${fieldHtml('Domain', v(a,'Domain'))}
+      </div>
+      <div class="field full" style="margin-top:10px">
+        <div class="fl">Short Description</div>
+        <div class="fv">${esc(v(a,'Short Description'))||'<span class="empty">—</span>'}</div>
+      </div>
+      <div class="field full" style="margin-top:10px">
+        <div class="fl">Detailed Description</div>
+        <div class="fv">${esc(v(a,'Detailed Description'))||'<span class="empty">—</span>'}</div>
+      </div>
+
+      <div class="section-title">Classification</div>
+      <div class="field-grid cols-3">
+        ${fieldBadge('API Type', v(a,'API Type'))}
+        ${fieldBadge('Exposure Type', v(a,'Exposure Type'))}
+        ${fieldHtml('Hosting Model', v(a,'Hosting Model'))}
+        ${fieldBadge('Lifecycle Status', v(a,'Lifecycle Status'))}
+        ${fieldBadge('Criticality', v(a,'Criticality'))}
+        ${fieldHtml('Data Classification', v(a,'Data Classification'))}
+      </div>
+
+      <div class="section-title">Technical</div>
+      <div class="field-grid">
+        ${fieldHtml('Auth Method', v(a,'Auth Method'))}
+        ${fieldHtml('Protocol', v(a,'Protocol'))}
+        ${fieldHtml('Current Version', v(a,'Current Version'))}
+        ${fieldHtml('Rate Limit', v(a,'Rate Limit'))}
+        ${fieldHtml('Base URL', v(a,'Base URL'))}
+        ${fieldHtml('SLA Summary', v(a,'SLA Summary'))}
+        ${fieldHtml('Documentation URL', v(a,'Documentation URL'))}
+        ${fieldHtml('OpenAPI URL', v(a,'OpenAPI URL'))}
+      </div>
+
+      <div class="section-title">Lifecycle & Compliance</div>
+      <div class="field-grid cols-3">
+        ${fieldHtml('Last Reviewed', v(a,'Last Reviewed'))}
+        ${fieldHtml('Next Review Date', v(a,'Next Review Date'))}
+        ${fieldHtml('Retirement Date', v(a,'Retirement Date'))}
+        ${fieldHtml('Deprecation Policy', v(a,'Deprecation Policy'))}
+      </div>
+      ${v(a,'Compliance Tags') ? `<div style="margin-top:10px"><div class="fl">Compliance Tags</div><div style="margin-top:4px">${v(a,'Compliance Tags').split(',').map(t=>`<span class="tag">${esc(t.trim())}</span>`).join('')}</div></div>` : ''}
+    `;
+
+    // ── Ownership Panel
+    const owners = [
+      {role:'Business Owner', name:v(a,'Business Owner')},
+      {role:'Technical Owner', name:v(a,'Technical Owner')},
+      {role:'Support Team', name:v(a,'Support Team')},
+      {role:'Architect', name:v(a,'Architect')},
+      {role:'Security Contact', name:v(a,'Security Contact')},
+    ].filter(o=>o.name);
+
+    document.getElementById('panel-ownership').innerHTML = owners.length ?
+      `<div class="owner-grid">${owners.map(o=>`<div class="owner-card"><div class="role">${esc(o.role)}</div><div class="name">${esc(o.name)}</div></div>`).join('')}</div>` :
+      '<div class="empty">No ownership data</div>';
+
+    // ── Consumers Panel
+    const cons = detail.consumers;
+    document.getElementById('panel-consumers').innerHTML = cons.length ?
+      `<p style="margin-bottom:12px;color:var(--gray);font-size:13px"><strong>${cons.length}</strong> system${cons.length!==1?'s':''} depend on this API</p>
+      <table><thead><tr><th>Application</th><th>Team</th><th>Purpose</th><th>Env</th><th>Criticality</th><th>Pattern</th><th>Volume</th></tr></thead><tbody>${
+        cons.map(c=>`<tr>
+          <td><strong>${esc(v(c,'Application Name'))}</strong></td>
+          <td>${esc(v(c,'Team'))}</td>
+          <td style="max-width:200px">${esc(v(c,'Purpose'))}</td>
+          <td>${esc(v(c,'Environment'))}</td>
+          <td>${badge(v(c,'Dependency Criticality'))}</td>
+          <td>${esc(v(c,'Usage Pattern'))}</td>
+          <td>${esc(v(c,'Volume Estimate'))}</td>
+        </tr>`).join('')
+      }</tbody></table>` :
+      '<div class="empty">No known consumers</div>';
+
+    // ── Environments Panel
+    const envs = detail.environments;
+    document.getElementById('panel-environments').innerHTML = envs.length ?
+      `<table><thead><tr><th>Environment</th><th>Endpoint URL</th><th>Auth</th><th>Region</th><th>Status</th><th>Cert Expiry</th></tr></thead><tbody>${
+        envs.map(e=>`<tr>
+          <td><strong>${esc(v(e,'Environment'))}</strong></td>
+          <td style="font-family:monospace;font-size:12px">${esc(v(e,'Endpoint URL'))}</td>
+          <td>${esc(v(e,'Auth Method'))}</td>
+          <td>${esc(v(e,'Region'))}</td>
+          <td>${badge(v(e,'Status'))}</td>
+          <td>${esc(v(e,'Certificate Expiry'))}</td>
+        </tr>`).join('')
+      }</tbody></table>` :
+      '<div class="empty">No environment data</div>';
+
+    // ── AI Profile Panel
+    const aiUsable = v(a,'AI Usable');
+    const aiClass = aiUsable==='Yes'?'ai-yes' : aiUsable==='Restricted'?'ai-restricted' : 'ai-no';
+    const aiIcon = aiUsable==='Yes'?'Ready for AI':'Restricted'?'Conditionally Available':'Not Available for AI';
+    document.getElementById('panel-ai').innerHTML = `
+      <div class="ai-card ${aiClass}">
+        <div class="ai-status">${aiUsable==='Yes'?'Ready for AI Agents' : aiUsable==='Restricted'?'Conditionally Available for AI' : 'Not Available for AI Agents'}</div>
+        <div class="field-grid" style="margin-top:12px">
+          ${fieldBadge('AI Usable', aiUsable)}
+          ${fieldHtml('Reliability Rating', v(a,'AI Reliability Rating'))}
+        </div>
+      </div>
+      ${v(a,'AI Usage Notes') ? `<div class="section-title">Usage Notes</div><p style="font-size:13px;line-height:1.5">${esc(v(a,'AI Usage Notes'))}</p>` : ''}
+      ${v(a,'AI Recommended Use Cases') ? `<div class="section-title">Recommended Use Cases</div><p style="font-size:13px;line-height:1.5;color:var(--green)">${esc(v(a,'AI Recommended Use Cases'))}</p>` : ''}
+      ${v(a,'AI Prohibited Use Cases') ? `<div class="section-title">Prohibited / Cautionary Use Cases</div><p style="font-size:13px;line-height:1.5;color:var(--red)">${esc(v(a,'AI Prohibited Use Cases'))}</p>` : ''}
+
+      <div class="section-title">AI Readiness Summary</div>
+      <div class="field-grid">
+        ${fieldHtml('Data Sensitivity', v(a,'Data Classification'))}
+        ${fieldHtml('Auth Method', v(a,'Auth Method'))}
+        ${fieldBadge('Criticality', v(a,'Criticality'))}
+        ${fieldBadge('Lifecycle Status', v(a,'Lifecycle Status'))}
+        ${fieldHtml('SLA Summary', v(a,'SLA Summary'))}
+        ${fieldHtml('Rate Limit', v(a,'Rate Limit'))}
+      </div>
+    `;
+
+    // ── Endpoints Panel
+    const eps = detail.endpoints || [];
+    document.getElementById('panel-endpoints').innerHTML = eps.length ?
+      `<p style="margin-bottom:12px;color:var(--gray);font-size:13px"><strong>${eps.length}</strong> documented endpoint${eps.length!==1?'s':''}</p>` +
+      eps.map(ep=>{
+        const method = v(ep,'Method');
+        const methodColors = {GET:'#2E7D32',POST:'#1565C0',PUT:'#E65100',DELETE:'#C62828',PATCH:'#7B1FA2'};
+        const mc = methodColors[method] || 'var(--gray)';
+        return `<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden">
+          <div style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="this.parentElement.querySelector('.ep-detail').style.display=this.parentElement.querySelector('.ep-detail').style.display==='none'?'block':'none'">
+            <span style="background:${mc};color:white;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;font-family:monospace;min-width:55px;text-align:center">${esc(method)}</span>
+            <code style="font-size:13px;color:var(--blue);font-weight:600">${esc(v(ep,'Path'))}</code>
+            <span style="color:var(--gray);font-size:13px;flex:1">${esc(v(ep,'Summary'))}</span>
+            <span style="color:var(--gray);font-size:11px">▼</span>
+          </div>
+          <div class="ep-detail" style="display:none;padding:0 16px 16px;border-top:1px solid var(--border)">
+            ${v(ep,'Description') ? `<div style="margin-top:12px"><div class="fl">Description</div><p style="font-size:13px;line-height:1.5;margin-top:4px">${esc(v(ep,'Description'))}</p></div>` : ''}
+            ${v(ep,'Path Parameters') ? `<div style="margin-top:12px"><div class="fl">Path Parameters</div><pre style="background:var(--light);padding:10px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Path Parameters'))}</pre></div>` : ''}
+            ${v(ep,'Query Parameters') ? `<div style="margin-top:12px"><div class="fl">Query Parameters</div><pre style="background:var(--light);padding:10px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Query Parameters'))}</pre></div>` : ''}
+            ${v(ep,'Request Headers') ? `<div style="margin-top:12px"><div class="fl">Request Headers</div><pre style="background:var(--light);padding:10px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Request Headers'))}</pre></div>` : ''}
+            ${v(ep,'Request Body') ? `<div style="margin-top:12px"><div class="fl">Request Body</div><pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Request Body'))}</pre></div>` : ''}
+            ${v(ep,'Response Body') ? `<div style="margin-top:12px"><div class="fl">Response Body</div><pre style="background:#1a1a2e;color:#e0e0e0;padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Response Body'))}</pre></div>` : ''}
+            ${v(ep,'Sample Curl') ? `<div style="margin-top:12px"><div class="fl">Sample Curl</div><pre style="background:#0d1117;color:#c9d1d9;padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Sample Curl'))}</pre></div>` : ''}
+            ${v(ep,'Sample Response') ? `<div style="margin-top:12px"><div class="fl">Sample Response</div><pre style="background:#0d1117;color:#c9d1d9;padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;margin-top:4px">${esc(v(ep,'Sample Response'))}</pre></div>` : ''}
+            ${v(ep,'Status Codes') ? `<div style="margin-top:12px"><div class="fl">Status Codes</div><div style="margin-top:4px">${v(ep,'Status Codes').split(',').map(s=>`<span class="tag">${esc(s.trim())}</span>`).join(' ')}</div></div>` : ''}
+            ${v(ep,'Notes') ? `<div style="margin-top:12px"><div class="fl">Notes</div><p style="font-size:13px;color:var(--gray);margin-top:4px;font-style:italic">${esc(v(ep,'Notes'))}</p></div>` : ''}
+          </div>
+        </div>`;
+      }).join('') :
+      '<div class="empty">No documented endpoints. Click + to add one.</div>';
+
+    // ── Changes Panel
+    const chgs = detail.changes;
+    document.getElementById('panel-changes').innerHTML = chgs.length ?
+      `<table><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Impact</th><th>Status</th><th>Review Date</th></tr></thead><tbody>${
+        chgs.map(c=>`<tr>
+          <td><strong>${esc(v(c,'Change ID'))}</strong></td>
+          <td>${badge(v(c,'Change Type'))}</td>
+          <td style="max-width:300px">${esc(v(c,'Description'))}</td>
+          <td>${badge(v(c,'Impact Level'))}</td>
+          <td>${badge(v(c,'Status'))}</td>
+          <td>${esc(v(c,'Review Date'))}</td>
+        </tr>`).join('')
+      }</tbody></table>` :
+      '<div class="empty">No change records</div>';
+
+    document.getElementById('detail-loading').style.display='none';
+    document.getElementById('detail-panels').style.display='block';
+  } catch(e) {
+    document.getElementById('detail-loading').textContent='Error: '+e.message;
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detail-modal').classList.remove('open');
+}
+
+function switchDetailTab(tab) {
+  document.querySelectorAll('.modal-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#detail-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  const tabs = ['overview','ownership','consumers','environments','endpoints','ai','changes'];
+  const idx = tabs.indexOf(tab);
+  if (idx>=0) document.querySelectorAll('#detail-tabs button')[idx].classList.add('active');
+}
+
+// Close modal on overlay click
+document.getElementById('detail-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'detail-modal') closeDetail();
+});
+
+// ══════════════════════════════════════════════════════════════
+// Governance
+// ══════════════════════════════════════════════════════════════
+async function loadGovernance() {
+  const loading = document.getElementById('gov-loading');
+  const content = document.getElementById('gov-content');
+  loading.style.display='block'; content.style.display='none';
+
+  try {
+    if (!dashData) dashData = await customApi('/api/apimgr/stats');
+    const d = dashData;
+
+    // KPIs
+    const totalChanges = d.totalChanges;
+    const pendingReview = (d.changesByStatus['In Review']||0)+(d.changesByStatus['Draft']||0);
+    document.getElementById('gov-kpis').innerHTML = [
+      kpi(d.needsReview, 'Overdue Review', '--red'),
+      kpi(totalChanges, 'Change Requests', '--blue'),
+      kpi(pendingReview, 'Pending Review', '--yellow'),
+      kpi(d.changesByStatus['Complete']||0, 'Completed', '--green'),
+      kpi(d.deprecatedWithConsumers.length, 'Deprecated At Risk', '--orange'),
+    ].join('');
+
+    // Overdue review
+    const overdue = allApis.filter(a=>{
+      const nr = v(a,'Next Review Date');
+      return nr && new Date(nr)<=new Date();
+    });
+    if (overdue.length) {
+      document.getElementById('gov-overdue').innerHTML = overdue.map(a=>
+        `<div class="governance-alert" style="cursor:pointer" onclick="openDetail('${esc(v(a,'API ID'))}')">
+          <strong>${esc(v(a,'Name'))}</strong> (${esc(v(a,'API ID'))}) — review was due ${esc(v(a,'Next Review Date'))}
+        </div>`
+      ).join('');
+    } else {
+      document.getElementById('gov-overdue').innerHTML = '<div class="empty">All APIs are current on reviews</div>';
+    }
+
+    // Changes chart
+    renderBarChart('gov-changes', d.changesByStatus);
+
+    // Active changes table
+    const KAPP = 'api-manager';
+    const changesData = await api(`/kapps/${KAPP}/forms/changes/submissions?include=values&limit=25`);
+    const changes = (changesData.submissions||[]).filter(c=> v(c,'Status')!=='Complete');
+    document.getElementById('gov-change-table').innerHTML = changes.length ? changes.map(c=>`<tr>
+      <td><strong>${esc(v(c,'Change ID'))}</strong></td>
+      <td style="cursor:pointer;color:var(--orange)" onclick="openDetail('${esc(v(c,'API ID'))}')">${esc(v(c,'API Name'))}</td>
+      <td>${badge(v(c,'Change Type'))}</td>
+      <td>${badge(v(c,'Impact Level'))}</td>
+      <td>${badge(v(c,'Architecture Review'))}</td>
+      <td>${badge(v(c,'Security Review'))}</td>
+      <td>${badge(v(c,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">No active changes</td></tr>';
+
+    loading.style.display='none'; content.style.display='block';
+  } catch(e) { loading.textContent='Error: '+e.message; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Contracts
+// ══════════════════════════════════════════════════════════════
+async function loadContracts() {
+  const loading = document.getElementById('contracts-loading');
+  const content = document.getElementById('contracts-content');
+  loading.style.display='block'; content.style.display='none';
+
+  try {
+    const KAPP = 'api-manager';
+    const data = await api(`/kapps/${KAPP}/forms/contracts/submissions?include=values&limit=25`);
+    const contracts = data.submissions||[];
+
+    // KPIs
+    let totalCost = 0;
+    let expiringSoon = 0;
+    const now = new Date();
+    for (const c of contracts) {
+      const cost = v(c,'Annual Cost').replace(/[^0-9.]/g,'');
+      if (cost) totalCost += parseFloat(cost);
+      const rd = v(c,'Renewal Date');
+      if (rd) { const diff=(new Date(rd)-now)/86400000; if(diff>0&&diff<=90) expiringSoon++; }
+    }
+
+    document.getElementById('contracts-kpis').innerHTML = [
+      kpi(contracts.length, 'Total Contracts', '--blue'),
+      kpi('$'+Math.round(totalCost/1000)+'K', 'Annual Spend', '--orange'),
+      kpi(expiringSoon, 'Expiring in 90 Days', '--red'),
+      kpi(contracts.filter(c=>v(c,'Legal Review')==='Approved').length, 'Legal Approved', '--green'),
+    ].join('');
+
+    document.getElementById('contracts-table').innerHTML = contracts.length ? contracts.map(c=>{
+      const rd = v(c,'Renewal Date');
+      let rdClass = '';
+      if (rd) { const diff=(new Date(rd)-now)/86400000; if(diff<=30) rdClass='color:var(--red);font-weight:600'; else if(diff<=90) rdClass='color:var(--orange);font-weight:600'; }
+      return `<tr>
+        <td><strong>${esc(v(c,'Contract ID'))}</strong></td>
+        <td style="cursor:pointer;color:var(--orange)" onclick="openDetail('${esc(v(c,'API ID'))}')">${esc(v(c,'API Name'))}</td>
+        <td>${esc(v(c,'Vendor Name'))}</td>
+        <td>${esc(v(c,'Contract Owner'))}</td>
+        <td><strong>${esc(v(c,'Annual Cost'))}</strong></td>
+        <td style="${rdClass}">${esc(rd)}</td>
+        <td>${badge(v(c,'Legal Review'))}</td>
+        <td>${badge(v(c,'Procurement Status'))}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="8" class="empty">No contracts</td></tr>';
+
+    loading.style.display='none'; content.style.display='block';
+  } catch(e) { loading.textContent='Error: '+e.message; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Reuse
+// ══════════════════════════════════════════════════════════════
+async function loadReuse() {
+  const loading = document.getElementById('reuse-loading');
+  const queue = document.getElementById('reuse-queue');
+  loading.style.display='block'; queue.style.display='none';
+
+  try {
+    const KAPP = 'api-manager';
+    const data = await api(`/kapps/${KAPP}/forms/reuse-requests/submissions?include=values&limit=25`);
+    const requests = data.submissions||[];
+
+    if (requests.length) {
+      queue.innerHTML = requests.map(r=>{
+        const status = v(r,'Status');
+        const score = v(r,'Match Score');
+        return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <strong>${esc(v(r,'Request ID'))}</strong>
+            <div>${badge(status)} ${v(r,'Recommendation')?badge(v(r,'Recommendation')):''}${score?` <span style="font-size:11px;color:var(--gray)">Score: ${esc(score)}</span>`:''}</div>
+          </div>
+          <div style="font-size:13px;margin-bottom:4px"><strong>Capability:</strong> ${esc(v(r,'Requested Capability'))}</div>
+          <div style="font-size:12px;color:var(--gray)">Team: ${esc(v(r,'Requesting Team'))} ${v(r,'Matched API Name')?` | Match: <span style="color:var(--orange);cursor:pointer" onclick="openDetail('${esc(v(r,'Matched API ID'))}')">${esc(v(r,'Matched API Name'))}</span>`:''}</div>
+          ${v(r,'Gap Analysis')?`<div style="font-size:12px;color:var(--gray);margin-top:4px"><em>Gap: ${esc(v(r,'Gap Analysis').substring(0,150))}${v(r,'Gap Analysis').length>150?'...':''}</em></div>`:''}
+        </div>`;
+      }).join('');
+    } else {
+      queue.innerHTML = '<div class="empty">No reuse requests</div>';
+    }
+
+    // Reuse chart
+    if (dashData?.reuseByRec) {
+      renderBarChart('chart-reuse', dashData.reuseByRec);
+    }
+
+    loading.style.display='none'; queue.style.display='block';
+  } catch(e) { loading.textContent='Error: '+e.message; }
+}
+
+async function searchReuse() {
+  const q = document.getElementById('reuse-search').value.trim();
+  if (!q) return;
+  const resultsEl = document.getElementById('reuse-results');
+  resultsEl.innerHTML = '<div class="loading">Searching...</div>';
+
+  try {
+    const data = await customApi(`/api/apimgr/reuse/search?q=${encodeURIComponent(q)}`);
+    if (data.results.length) {
+      resultsEl.innerHTML = `<p style="font-size:12px;color:var(--gray);margin-bottom:10px">Found ${data.results.length} potential match${data.results.length!==1?'es':''} in ${data.totalCatalog} APIs</p>` +
+        data.results.map(r=>`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="openDetail('${esc(r.apiId)}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>${esc(r.name)}</strong>
+            <div>${badge(r.lifecycle)} ${badge(r.aiUsable)}</div>
+          </div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px">${esc(r.description)}</div>
+          <div style="font-size:11px;margin-top:4px">
+            <span class="tag">${esc(r.type)}</span>
+            <span class="tag">${esc(r.exposure)}</span>
+            <span class="tag">${esc(r.capability)}</span>
+            <span style="float:right;color:var(--orange);font-weight:600">Match Score: ${r.score}</span>
+          </div>
+        </div>`).join('');
+    } else {
+      resultsEl.innerHTML = '<div class="empty">No matching APIs found. Consider submitting a reuse request for architecture review.</div>';
+    }
+  } catch(e) { resultsEl.innerHTML = `<div class="empty">Error: ${esc(e.message)}</div>`; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════════════════════
+async function initApp() {
+  await loadDashboard();
+  loadCatalog();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      API = JSON.parse(sess);
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('user-display').textContent=API.displayName;
+      initApp();
+    } catch(e) {}
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Chain Resilience</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00695C;
+  --teal-light: #00897B;
+  --critical: #C62828;
+  --high: #E65100;
+  --medium: #F9A825;
+  --low: #2E7D32;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: var(--teal-light); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--teal-light); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); cursor: default; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-delivered, .badge-in-stock, .badge-resolved, .badge-approved, .badge-equivalent { background: #E8F5E9; color: #2E7D32; }
+.badge-draft, .badge-proposed, .badge-monitoring, .badge-in-transit, .badge-near-equivalent { background: #E3F2FD; color: #1565C0; }
+.badge-submitted, .badge-confirmed, .badge-shipped, .badge-mitigated, .badge-acknowledged { background: #F3E5F5; color: #6A1B9A; }
+.badge-on-hold, .badge-under-review, .badge-low-stock, .badge-delayed, .badge-backordered, .badge-alternative { background: #FFF3E0; color: #E65100; }
+.badge-inactive, .badge-cancelled, .badge-out-of-stock, .badge-expired, .badge-lost, .badge-returned, .badge-rejected, .badge-quarantined, .badge-recalled, .badge-discontinued { background: #FFEBEE; color: #C62828; }
+.badge-routine, .badge-standard { background: #F5F5F5; color: #616161; }
+.badge-dismissed { background: #ECEFF1; color: #546E7A; }
+.badge-under-maintenance { background: #FFF8E1; color: #F57F17; }
+
+/* Impact badges */
+.impact-critical { color: var(--critical); font-weight: 700; }
+.impact-high { color: var(--high); font-weight: 600; }
+.impact-medium { color: var(--medium); font-weight: 600; }
+.impact-low { color: var(--green); }
+
+/* Priority badges */
+.priority-emergency { color: var(--critical); font-weight: 700; }
+.priority-urgent { color: var(--orange); font-weight: 600; }
+.priority-standard { color: var(--gray); }
+.priority-routine { color: var(--green); }
+
+/* Risk badges */
+.risk-high { background: #FFEBEE; color: #C62828; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.risk-medium { background: #FFF3E0; color: #E65100; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.risk-low { background: #E8F5E9; color: #2E7D32; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+/* Severity */
+.sev-critical { background: var(--critical); color: var(--white); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.sev-high { background: var(--high); color: var(--white); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.sev-medium { background: var(--medium); color: #333; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.sev-low { background: var(--low); color: var(--white); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+/* Stock indicators */
+.stock-ok { color: var(--green); font-weight: 600; }
+.stock-low { color: var(--orange); font-weight: 700; }
+.stock-out { color: var(--red); font-weight: 700; }
+.stock-expired { color: #AD1457; font-weight: 700; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 900px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--teal); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-teal { background: var(--teal); color: var(--white); }
+.act-btn-teal:hover { background: var(--teal-light); }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Supply Chain Resilience</h1>
+      <p class="subtitle">Healthcare Supply Chain Visibility & Disruption Management</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Supply <span class="accent">Chain</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="suppliers">Suppliers</button>
+      <button class="tab-btn" data-tab="products">Products</button>
+      <button class="tab-btn" data-tab="orders">Orders</button>
+      <button class="tab-btn" data-tab="inventory">Inventory</button>
+      <button class="tab-btn" data-tab="disruptions">Disruptions</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Supply Chain Dashboard</div>
+      <div class="page-sub">Real-time supply chain visibility and key performance indicators</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Recent Orders</h3><div id="dash-orders"></div></div>
+        <div class="card"><h3>Active Disruptions</h3><div id="dash-disruptions"></div></div>
+      </div>
+    </div>
+
+    <!-- SUPPLIERS -->
+    <div class="tab-panel" id="panel-suppliers">
+      <div class="page-title">Suppliers</div>
+      <div class="page-sub">Vendor and supplier management</div>
+      <div class="filter-bar" id="sup-filters">
+        <select id="sup-f-status"><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>On Hold</option><option>Under Review</option></select>
+        <select id="sup-f-type"><option value="">All Types</option><option>Manufacturer</option><option>Distributor</option><option>GPO</option><option>Direct</option><option>Specialty</option></select>
+        <select id="sup-f-risk"><option value="">All Risk Levels</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <input id="sup-f-search" type="text" placeholder="Search suppliers...">
+      </div>
+      <div id="sup-table"></div>
+      <div id="sup-pag" class="pagination"></div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="tab-panel" id="panel-products">
+      <div class="page-title">Products</div>
+      <div class="page-sub">Medical products and supplies catalog</div>
+      <div class="filter-bar" id="prd-filters">
+        <select id="prd-f-cat"><option value="">All Categories</option><option>Pharmaceuticals</option><option>Medical Devices</option><option>PPE</option><option>Surgical Supplies</option><option>Lab Supplies</option><option>Implants</option><option>IV Solutions</option><option>Nutritional</option></select>
+        <select id="prd-f-status"><option value="">All Statuses</option><option>Active</option><option>Discontinued</option><option>Backordered</option><option>Recalled</option></select>
+        <select id="prd-f-crit"><option value="">All Items</option><option value="Yes">Critical Only</option><option value="No">Non-Critical</option></select>
+        <input id="prd-f-search" type="text" placeholder="Search products...">
+      </div>
+      <div id="prd-table"></div>
+      <div id="prd-pag" class="pagination"></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="tab-panel" id="panel-orders">
+      <div class="page-title">Orders</div>
+      <div class="page-sub">Purchase order tracking and management</div>
+      <div class="filter-bar" id="ord-filters">
+        <select id="ord-f-status"><option value="">All Statuses</option><option>Draft</option><option>Submitted</option><option>Confirmed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select>
+        <select id="ord-f-priority"><option value="">All Priorities</option><option>Emergency</option><option>Urgent</option><option>Standard</option><option>Routine</option></select>
+        <input id="ord-f-search" type="text" placeholder="Search orders...">
+      </div>
+      <div id="ord-table"></div>
+      <div id="ord-pag" class="pagination"></div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="tab-panel" id="panel-inventory">
+      <div class="page-title">Inventory</div>
+      <div class="page-sub">Stock levels, expiration tracking, and par level compliance</div>
+      <div class="filter-bar" id="inv-filters">
+        <select id="inv-f-status"><option value="">All Statuses</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option><option>Expired</option><option>Quarantined</option></select>
+        <select id="inv-f-location"><option value="">All Locations</option><option>Central Warehouse</option><option>Pharmacy</option><option>OR Supply Room</option><option>Emergency Store</option><option>ICU Supply</option><option>Satellite A</option><option>Satellite B</option><option>Department Closet</option></select>
+        <input id="inv-f-search" type="text" placeholder="Search inventory...">
+      </div>
+      <div id="inv-table"></div>
+      <div id="inv-pag" class="pagination"></div>
+    </div>
+
+    <!-- DISRUPTIONS -->
+    <div class="tab-panel" id="panel-disruptions">
+      <div class="page-title">Disruptions</div>
+      <div class="page-sub">Supply chain disruption events and mitigation tracking</div>
+      <div class="filter-bar" id="dis-filters">
+        <select id="dis-f-status"><option value="">All Statuses</option><option>Active</option><option>Monitoring</option><option>Mitigated</option><option>Resolved</option></select>
+        <select id="dis-f-impact"><option value="">All Impact Levels</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="dis-f-type"><option value="">All Types</option><option>Shortage</option><option>Recall</option><option>Natural Disaster</option><option>Quality Issue</option><option>Logistics Delay</option><option>Regulatory</option><option>Manufacturing</option><option>Pandemic</option></select>
+        <input id="dis-f-search" type="text" placeholder="Search disruptions...">
+      </div>
+      <div id="dis-table"></div>
+      <div id="dis-pag" class="pagination"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPLIER DETAIL MODAL -->
+<div class="modal-overlay" id="supplier-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="sup-modal-title">Supplier Detail</h2>
+      <button class="modal-close" onclick="closeModal('supplier-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="sup-modal-body"></div>
+  </div>
+</div>
+
+<!-- DISRUPTION DETAIL MODAL -->
+<div class="modal-overlay" id="disruption-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="dis-modal-title">Disruption Detail</h2>
+      <button class="modal-close" onclick="closeModal('disruption-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="dis-modal-body"></div>
+  </div>
+</div>
+
+<!-- RECORD DETAIL MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ======= STATE & AUTH ======= */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'supply-chain';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* ======= API HELPERS ======= */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* ======= BADGES ======= */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return '<span class="badge badge-' + cls + '">' + (val || '') + '</span>';
+}
+
+function riskBadge(val) {
+  const cls = (val || '').toLowerCase();
+  return '<span class="risk-' + cls + '">' + (val || '') + '</span>';
+}
+
+function sevBadge(val) {
+  const cls = (val || '').toLowerCase();
+  return '<span class="sev-' + cls + '">' + (val || '') + '</span>';
+}
+
+function impactSpan(val) {
+  const cls = (val || '').toLowerCase();
+  return '<span class="impact-' + cls + '">' + (val || '') + '</span>';
+}
+
+function prioritySpan(val) {
+  const cls = (val || '').toLowerCase();
+  return '<span class="priority-' + cls + '">' + (val || '') + '</span>';
+}
+
+function stockIndicator(status) {
+  if (status === 'In Stock') return '<span class="stock-ok">In Stock</span>';
+  if (status === 'Low Stock') return '<span class="stock-low">Low Stock</span>';
+  if (status === 'Out of Stock') return '<span class="stock-out">OUT</span>';
+  if (status === 'Expired') return '<span class="stock-expired">EXPIRED</span>';
+  return badge(status);
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return '<span class="stock-expired">' + Math.abs(days) + 'd ago</span>';
+  if (days <= 30) return '<span class="stock-low">' + days + 'd</span>';
+  return '<span class="stock-ok">' + days + 'd</span>';
+}
+
+/* ======= PAGINATION ======= */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '<button ' + (page <= 1 ? 'disabled' : '') + ' onclick="' + onPrev + '">&#9664; Prev</button>' +
+    '<span>Page ' + page + '</span>' +
+    '<button ' + (!hasNext ? 'disabled' : '') + ' onclick="' + onNext + '">Next &#9654;</button>';
+}
+
+/* ======= TAB NAVIGATION ======= */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    var tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'suppliers') loadSuppliers();
+    else if (tab === 'products') loadProducts();
+    else if (tab === 'orders') loadOrders();
+    else if (tab === 'inventory') loadInventory();
+    else if (tab === 'disruptions') loadDisruptions();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* ======= MODAL ======= */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(function(ov) {
+  ov.addEventListener('click', function(e) { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+/* ======= DASHBOARD ======= */
+async function loadDashboard() {
+  try {
+    var d = await apiFetch('/api/scr/dashboard');
+    document.getElementById('dash-kpis').innerHTML =
+      '<div class="kpi-card kpi-teal"><div class="kpi-value">' + d.activeSuppliers + '</div><div class="kpi-label">Active Suppliers</div></div>' +
+      '<div class="kpi-card kpi-blue"><div class="kpi-value">' + d.openOrders + '</div><div class="kpi-label">Open Orders</div></div>' +
+      '<div class="kpi-card kpi-red"><div class="kpi-value">' + d.criticalShortages + '</div><div class="kpi-label">Critical Shortages</div></div>' +
+      '<div class="kpi-card kpi-orange"><div class="kpi-value">' + d.lowStockItems + '</div><div class="kpi-label">Low Stock Items</div></div>' +
+      '<div class="kpi-card kpi-red"><div class="kpi-value">' + d.activeDisruptions + '</div><div class="kpi-label">Active Disruptions</div></div>' +
+      '<div class="kpi-card kpi-green"><div class="kpi-value">' + d.fillRate + '%</div><div class="kpi-label">Fill Rate</div></div>';
+
+    // Recent orders
+    document.getElementById('dash-orders').innerHTML = d.recentOrders.length === 0
+      ? '<div class="loading">No recent orders</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Supplier</th><th>Amount</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+        d.recentOrders.map(function(o) {
+          return '<tr><td>' + o.orderId + '</td><td>' + o.supplier + '</td><td>$' + o.total + '</td><td>' + prioritySpan(o.priority) + '</td><td>' + badge(o.status) + '</td><td>' + o.date + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    // Active disruptions
+    document.getElementById('dash-disruptions').innerHTML = d.activeDisruptionList.length === 0
+      ? '<div class="loading">No active disruptions</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Impact</th><th>Status</th><th>Start</th></tr></thead><tbody>' +
+        d.activeDisruptionList.map(function(dis) {
+          return '<tr onclick="openDisruptionDetail(\'' + dis.disruptionId + '\')"><td>' + dis.disruptionId + '</td><td>' + dis.title + '</td><td>' + impactSpan(dis.impact) + '</td><td>' + badge(dis.status) + '</td><td>' + dis.startDate + '</td></tr>';
+        }).join('') + '</tbody></table>';
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+
+/* ======= SUPPLIERS TAB ======= */
+var supPage = 1, supPageKeys = [null], supHasNext = false;
+
+['sup-f-status', 'sup-f-type', 'sup-f-risk'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { supPage = 1; supPageKeys = [null]; supHasNext = false; loadSuppliers(); });
+});
+document.getElementById('sup-f-search').addEventListener('input', debounce(function() { supPage = 1; supPageKeys = [null]; supHasNext = false; loadSuppliers(); }, 300));
+
+async function loadSuppliers() {
+  var status = document.getElementById('sup-f-status').value;
+  var stype = document.getElementById('sup-f-type').value;
+  var risk = document.getElementById('sup-f-risk').value;
+  var search = document.getElementById('sup-f-search').value.trim().toLowerCase();
+
+  var kql = status ? 'values[Status] = "' + status + '"' : null;
+
+  try {
+    var data = await kqlFetch('suppliers', kql, 25, supPageKeys[supPage - 1]);
+    var subs = data.submissions || [];
+
+    if (stype) subs = subs.filter(function(s) { return vf(s, 'Supplier Type') === stype; });
+    if (risk) subs = subs.filter(function(s) { return vf(s, 'Risk Level') === risk; });
+    if (search) subs = subs.filter(function(s) { return (vf(s, 'Supplier ID') + ' ' + vf(s, 'Supplier Name') + ' ' + vf(s, 'Primary Contact')).toLowerCase().indexOf(search) >= 0; });
+
+    document.getElementById('sup-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No suppliers found</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Contact</th><th>Lead Time</th><th>Reliability</th><th>Risk</th><th>Status</th></tr></thead><tbody>' +
+        subs.map(function(s) {
+          return '<tr onclick="openSupplierDetail(\'' + vf(s, 'Supplier ID') + '\')">' +
+            '<td>' + vf(s, 'Supplier ID') + '</td><td>' + vf(s, 'Supplier Name') + '</td><td>' + vf(s, 'Supplier Type') + '</td>' +
+            '<td>' + vf(s, 'Primary Contact') + '</td><td>' + vf(s, 'Lead Time Days') + 'd</td>' +
+            '<td>' + vf(s, 'Reliability Score') + '%</td><td>' + riskBadge(vf(s, 'Risk Level')) + '</td>' +
+            '<td>' + badge(vf(s, 'Status')) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    supHasNext = !!data.nextPageToken;
+    if (supHasNext && subs.length) supPageKeys[supPage] = subs[subs.length - 1].createdAt;
+    renderPag('sup-pag', supPage, supHasNext, 'supPrev()', 'supNext()');
+  } catch (e) {
+    document.getElementById('sup-table').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+function supNext() { if (!supHasNext) return; supPage++; loadSuppliers(); }
+function supPrev() { if (supPage <= 1) return; supPage--; loadSuppliers(); }
+
+/* Supplier Detail Modal */
+async function openSupplierDetail(supplierId) {
+  openModal('supplier-modal');
+  document.getElementById('sup-modal-title').textContent = 'Loading...';
+  document.getElementById('sup-modal-body').innerHTML = '<div class="loading">Loading supplier details...</div>';
+  try {
+    var d = await apiFetch('/api/scr/supplier/' + encodeURIComponent(supplierId) + '/summary');
+    var s = d.supplier;
+    document.getElementById('sup-modal-title').textContent = s['Supplier Name'] + ' (' + s['Supplier ID'] + ')';
+    document.getElementById('sup-modal-body').innerHTML =
+      '<div style="margin-bottom:16px">' + badge(s.Status) + ' ' + riskBadge(s['Risk Level']) + '</div>' +
+      '<div class="detail-grid">' +
+        '<div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">' + s['Supplier Type'] + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Contact</span><span class="detail-value">' + s['Primary Contact'] + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">' + s.Phone + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">' + s.Email + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">' + s.City + ', ' + s.State + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Contract</span><span class="detail-value">' + s['Contract Number'] + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Lead Time</span><span class="detail-value">' + s['Lead Time Days'] + ' days</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Reliability</span><span class="detail-value">' + s['Reliability Score'] + '%</span></div>' +
+      '</div>' +
+      '<div class="kpi-grid" style="margin-top:16px">' +
+        '<div class="kpi-card kpi-teal"><div class="kpi-value">' + d.stats.totalOrders + '</div><div class="kpi-label">Total Orders</div></div>' +
+        '<div class="kpi-card kpi-green"><div class="kpi-value">' + d.stats.deliveredOrders + '</div><div class="kpi-label">Delivered</div></div>' +
+        '<div class="kpi-card kpi-blue"><div class="kpi-value">$' + d.stats.totalSpend + '</div><div class="kpi-label">Total Spend</div></div>' +
+        '<div class="kpi-card kpi-green"><div class="kpi-value">' + d.stats.onTimeRate + '%</div><div class="kpi-label">Delivery Rate</div></div>' +
+      '</div>' +
+      (d.products.length > 0 ? '<div class="card" style="margin-top:16px"><h3>Products Supplied</h3><table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Cost</th><th>Status</th></tr></thead><tbody>' +
+        d.products.map(function(p) { return '<tr><td>' + p.productId + '</td><td>' + p.name + '</td><td>' + p.category + '</td><td>$' + p.cost + '</td><td>' + badge(p.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>' : '') +
+      (d.orders.length > 0 ? '<div class="card" style="margin-top:16px"><h3>Recent Orders</h3><table class="data-table"><thead><tr><th>ID</th><th>Date</th><th>Amount</th><th>Priority</th><th>Status</th></tr></thead><tbody>' +
+        d.orders.slice(0, 10).map(function(o) { return '<tr><td>' + o.orderId + '</td><td>' + o.date + '</td><td>$' + o.total + '</td><td>' + prioritySpan(o.priority) + '</td><td>' + badge(o.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>' : '');
+  } catch (e) {
+    document.getElementById('sup-modal-body').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+
+/* ======= RECORD DETAIL (generic) ======= */
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  var body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    var d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    var s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    var v = s.values || {};
+    var h = '<div class="detail-grid">';
+    for (var k in v) {
+      if (v[k]) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(v[k]).length > 100 ? '<div style="white-space:pre-wrap">' + esc(v[k]) + '</div>' : esc(v[k])) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* ======= PRODUCTS TAB ======= */
+var prdPage = 1, prdPageKeys = [null], prdHasNext = false;
+
+['prd-f-cat', 'prd-f-status', 'prd-f-crit'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { prdPage = 1; prdPageKeys = [null]; prdHasNext = false; loadProducts(); });
+});
+document.getElementById('prd-f-search').addEventListener('input', debounce(function() { prdPage = 1; prdPageKeys = [null]; prdHasNext = false; loadProducts(); }, 300));
+
+async function loadProducts() {
+  var cat = document.getElementById('prd-f-cat').value;
+  var status = document.getElementById('prd-f-status').value;
+  var crit = document.getElementById('prd-f-crit').value;
+  var search = document.getElementById('prd-f-search').value.trim().toLowerCase();
+
+  var kql = null;
+  if (status) kql = 'values[Status] = "' + status + '"';
+  else if (cat) kql = 'values[Category] = "' + cat + '"';
+  else if (crit) kql = 'values[Critical Item] = "' + crit + '"';
+
+  try {
+    var data = await kqlFetch('products', kql, 25, prdPageKeys[prdPage - 1]);
+    var subs = data.submissions || [];
+
+    // Client-side filter for multi-field
+    if (kql && cat && status) subs = subs.filter(function(s) { return vf(s, 'Category') === cat; });
+    if (!kql && cat) subs = subs.filter(function(s) { return vf(s, 'Category') === cat; });
+    if (!kql && status) subs = subs.filter(function(s) { return vf(s, 'Status') === status; });
+    if (crit && kql && !kql.includes('Critical')) subs = subs.filter(function(s) { return vf(s, 'Critical Item') === crit; });
+    if (search) subs = subs.filter(function(s) { return (vf(s, 'Product ID') + ' ' + vf(s, 'Product Name') + ' ' + vf(s, 'Manufacturer')).toLowerCase().indexOf(search) >= 0; });
+
+    document.getElementById('prd-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No products found</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Manufacturer</th><th>Cost</th><th>Par</th><th>Critical</th><th>Status</th></tr></thead><tbody>' +
+        subs.map(function(s) {
+          var critVal = vf(s, 'Critical Item');
+          return '<tr onclick="showRecord(\'products\',\'Product ID\',\'' + vf(s, 'Product ID') + '\',\'Product Details\')"><td>' + vf(s, 'Product ID') + '</td><td>' + vf(s, 'Product Name') + '</td><td>' + vf(s, 'Category') + '</td>' +
+            '<td>' + vf(s, 'Manufacturer') + '</td><td>$' + vf(s, 'Unit Cost') + '</td><td>' + vf(s, 'Par Level') + '</td>' +
+            '<td>' + (critVal === 'Yes' ? '<span class="stock-low">YES</span>' : 'No') + '</td><td>' + badge(vf(s, 'Status')) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    prdHasNext = !!data.nextPageToken;
+    if (prdHasNext && subs.length) prdPageKeys[prdPage] = subs[subs.length - 1].createdAt;
+    renderPag('prd-pag', prdPage, prdHasNext, 'prdPrev()', 'prdNext()');
+  } catch (e) {
+    document.getElementById('prd-table').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+function prdNext() { if (!prdHasNext) return; prdPage++; loadProducts(); }
+function prdPrev() { if (prdPage <= 1) return; prdPage--; loadProducts(); }
+
+/* ======= ORDERS TAB ======= */
+var ordPage = 1, ordPageKeys = [null], ordHasNext = false;
+
+['ord-f-status', 'ord-f-priority'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { ordPage = 1; ordPageKeys = [null]; ordHasNext = false; loadOrders(); });
+});
+document.getElementById('ord-f-search').addEventListener('input', debounce(function() { ordPage = 1; ordPageKeys = [null]; ordHasNext = false; loadOrders(); }, 300));
+
+async function loadOrders() {
+  var status = document.getElementById('ord-f-status').value;
+  var priority = document.getElementById('ord-f-priority').value;
+  var search = document.getElementById('ord-f-search').value.trim().toLowerCase();
+
+  var kql = status ? 'values[Status] = "' + status + '"' : null;
+
+  try {
+    var data = await kqlFetch('orders', kql, 25, ordPageKeys[ordPage - 1]);
+    var subs = data.submissions || [];
+
+    if (priority) subs = subs.filter(function(s) { return vf(s, 'Priority') === priority; });
+    if (search) subs = subs.filter(function(s) { return (vf(s, 'Order ID') + ' ' + vf(s, 'Supplier Name') + ' ' + vf(s, 'Department')).toLowerCase().indexOf(search) >= 0; });
+
+    document.getElementById('ord-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No orders found</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Supplier</th><th>Date</th><th>Amount</th><th>Priority</th><th>Dept</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+        subs.map(function(s) {
+          var st = vf(s, 'Status');
+          var oid = vf(s, 'Order ID');
+          var actions = '';
+          if (st === 'Draft') actions = '<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionOrder(\'' + oid + '\',\'Submitted\')">Submit</button>';
+          else if (st === 'Submitted') actions = '<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionOrder(\'' + oid + '\',\'Confirmed\')">Confirm</button> <button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionOrder(\'' + oid + '\',\'Cancelled\')">Cancel</button>';
+          else if (st === 'Confirmed') actions = '<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionOrder(\'' + oid + '\',\'Shipped\')">Ship</button>';
+          else if (st === 'Shipped') actions = '<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionOrder(\'' + oid + '\',\'Delivered\')">Deliver</button>';
+          return '<tr onclick="showRecord(\'orders\',\'Order ID\',\'' + oid + '\',\'Order Details\')"><td>' + oid + '</td><td>' + vf(s, 'Supplier Name') + '</td><td>' + vf(s, 'Order Date') + '</td><td>$' + vf(s, 'Total Amount') + '</td>' +
+            '<td>' + prioritySpan(vf(s, 'Priority')) + '</td><td>' + vf(s, 'Department') + '</td><td>' + badge(st) + '</td><td>' + actions + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    ordHasNext = !!data.nextPageToken;
+    if (ordHasNext && subs.length) ordPageKeys[ordPage] = subs[subs.length - 1].createdAt;
+    renderPag('ord-pag', ordPage, ordHasNext, 'ordPrev()', 'ordNext()');
+  } catch (e) {
+    document.getElementById('ord-table').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+function ordNext() { if (!ordHasNext) return; ordPage++; loadOrders(); }
+function ordPrev() { if (ordPage <= 1) return; ordPage--; loadOrders(); }
+
+async function transitionOrder(orderId, newStatus) {
+  try {
+    await apiPost('/api/scr/orders/' + encodeURIComponent(orderId) + '/transition', { status: newStatus, performer: USERNAME });
+    loadOrders();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ======= INVENTORY TAB ======= */
+var invPage = 1, invPageKeys = [null], invHasNext = false;
+
+['inv-f-status', 'inv-f-location'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { invPage = 1; invPageKeys = [null]; invHasNext = false; loadInventory(); });
+});
+document.getElementById('inv-f-search').addEventListener('input', debounce(function() { invPage = 1; invPageKeys = [null]; invHasNext = false; loadInventory(); }, 300));
+
+async function loadInventory() {
+  var status = document.getElementById('inv-f-status').value;
+  var location = document.getElementById('inv-f-location').value;
+  var search = document.getElementById('inv-f-search').value.trim().toLowerCase();
+
+  var kql = status ? 'values[Status] = "' + status + '"' : null;
+
+  try {
+    var data = await kqlFetch('inventory', kql, 25, invPageKeys[invPage - 1]);
+    var subs = data.submissions || [];
+
+    if (location) subs = subs.filter(function(s) { return vf(s, 'Location') === location; });
+    if (search) subs = subs.filter(function(s) { return (vf(s, 'Inventory ID') + ' ' + vf(s, 'Product Name') + ' ' + vf(s, 'Lot Number')).toLowerCase().indexOf(search) >= 0; });
+
+    document.getElementById('inv-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No inventory items found</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Product</th><th>Location</th><th>QOH</th><th>Par</th><th>Reorder</th><th>Expiration</th><th>Status</th></tr></thead><tbody>' +
+        subs.map(function(s) {
+          var qoh = parseInt(vf(s, 'Quantity On Hand')) || 0;
+          var par = parseInt(vf(s, 'Par Level')) || 0;
+          var qohCls = qoh === 0 ? 'stock-out' : (qoh < par ? 'stock-low' : 'stock-ok');
+          return '<tr onclick="showRecord(\'inventory\',\'Item ID\',\'' + vf(s, 'Item ID') + '\',\'Inventory Details\')"><td>' + vf(s, 'Inventory ID') + '</td><td>' + vf(s, 'Product Name') + '</td><td>' + vf(s, 'Location') + '</td>' +
+            '<td><span class="' + qohCls + '">' + qoh + '</span></td><td>' + par + '</td><td>' + vf(s, 'Reorder Point') + '</td>' +
+            '<td>' + daysUntil(vf(s, 'Expiration Date')) + '</td><td>' + stockIndicator(vf(s, 'Status')) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    invHasNext = !!data.nextPageToken;
+    if (invHasNext && subs.length) invPageKeys[invPage] = subs[subs.length - 1].createdAt;
+    renderPag('inv-pag', invPage, invHasNext, 'invPrev()', 'invNext()');
+  } catch (e) {
+    document.getElementById('inv-table').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+function invNext() { if (!invHasNext) return; invPage++; loadInventory(); }
+function invPrev() { if (invPage <= 1) return; invPage--; loadInventory(); }
+
+/* ======= DISRUPTIONS TAB ======= */
+var disPage = 1, disPageKeys = [null], disHasNext = false;
+
+['dis-f-status', 'dis-f-impact', 'dis-f-type'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { disPage = 1; disPageKeys = [null]; disHasNext = false; loadDisruptions(); });
+});
+document.getElementById('dis-f-search').addEventListener('input', debounce(function() { disPage = 1; disPageKeys = [null]; disHasNext = false; loadDisruptions(); }, 300));
+
+async function loadDisruptions() {
+  var status = document.getElementById('dis-f-status').value;
+  var impact = document.getElementById('dis-f-impact').value;
+  var dtype = document.getElementById('dis-f-type').value;
+  var search = document.getElementById('dis-f-search').value.trim().toLowerCase();
+
+  var kql = status ? 'values[Status] = "' + status + '"' : null;
+
+  try {
+    var data = await kqlFetch('disruptions', kql, 25, disPageKeys[disPage - 1]);
+    var subs = data.submissions || [];
+
+    if (impact) subs = subs.filter(function(s) { return vf(s, 'Impact Level') === impact; });
+    if (dtype) subs = subs.filter(function(s) { return vf(s, 'Disruption Type') === dtype; });
+    if (search) subs = subs.filter(function(s) { return (vf(s, 'Disruption ID') + ' ' + vf(s, 'Title') + ' ' + vf(s, 'Affected Products')).toLowerCase().indexOf(search) >= 0; });
+
+    document.getElementById('dis-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No disruptions found</div>'
+      : '<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Impact</th><th>Start</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+        subs.map(function(s) {
+          var st = vf(s, 'Status');
+          var did = vf(s, 'Disruption ID');
+          var actions = '';
+          var transitions = { 'Active': ['Monitoring', 'Mitigated'], 'Monitoring': ['Mitigated', 'Resolved'], 'Mitigated': ['Resolved'] };
+          var allowed = transitions[st] || [];
+          actions = allowed.map(function(a) {
+            var cls = a === 'Resolved' ? 'act-btn-green' : 'act-btn-teal';
+            return '<button class="act-btn ' + cls + '" onclick="event.stopPropagation(); transitionDisruption(\'' + did + '\',\'' + a + '\')">' + a + '</button>';
+          }).join(' ');
+          return '<tr onclick="openDisruptionDetail(\'' + did + '\')">' +
+            '<td>' + did + '</td><td>' + vf(s, 'Title') + '</td><td>' + vf(s, 'Disruption Type') + '</td>' +
+            '<td>' + impactSpan(vf(s, 'Impact Level')) + '</td><td>' + vf(s, 'Start Date') + '</td>' +
+            '<td>' + badge(st) + '</td><td>' + actions + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    disHasNext = !!data.nextPageToken;
+    if (disHasNext && subs.length) disPageKeys[disPage] = subs[subs.length - 1].createdAt;
+    renderPag('dis-pag', disPage, disHasNext, 'disPrev()', 'disNext()');
+  } catch (e) {
+    document.getElementById('dis-table').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+function disNext() { if (!disHasNext) return; disPage++; loadDisruptions(); }
+function disPrev() { if (disPage <= 1) return; disPage--; loadDisruptions(); }
+
+async function transitionDisruption(disruptionId, newStatus) {
+  try {
+    await apiPost('/api/scr/disruptions/' + encodeURIComponent(disruptionId) + '/transition', { status: newStatus, performer: USERNAME });
+    loadDisruptions();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* Disruption Detail Modal */
+async function openDisruptionDetail(disruptionId) {
+  openModal('disruption-modal');
+  document.getElementById('dis-modal-title').textContent = 'Loading...';
+  document.getElementById('dis-modal-body').innerHTML = '<div class="loading">Loading disruption details...</div>';
+  try {
+    var data = await kqlFetch('disruptions', 'values[Disruption ID] = "' + disruptionId + '"', 1);
+    var subs = data.submissions || [];
+    if (subs.length === 0) { document.getElementById('dis-modal-body').innerHTML = '<div class="loading">Disruption not found</div>'; return; }
+    var d = subs[0];
+    document.getElementById('dis-modal-title').textContent = vf(d, 'Disruption ID') + ' - ' + vf(d, 'Title');
+
+    var transitions = { 'Active': ['Monitoring', 'Mitigated'], 'Monitoring': ['Active', 'Mitigated', 'Resolved'], 'Mitigated': ['Resolved', 'Active'], 'Resolved': [] };
+    var allowed = transitions[vf(d, 'Status')] || [];
+    var btns = allowed.map(function(a) {
+      return '<button class="act-btn act-btn-teal" onclick="transitionDisruption(\'' + disruptionId + '\',\'' + a + '\'); closeModal(\'disruption-modal\');">' + a + '</button>';
+    }).join(' ');
+
+    document.getElementById('dis-modal-body').innerHTML =
+      '<div style="margin-bottom:16px">' + badge(vf(d, 'Status')) + ' ' + impactSpan(vf(d, 'Impact Level')) + ' ' + btns + '</div>' +
+      '<div class="detail-grid">' +
+        '<div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">' + vf(d, 'Disruption Type') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Impact Level</span><span class="detail-value">' + vf(d, 'Impact Level') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Start Date</span><span class="detail-value">' + vf(d, 'Start Date') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Resolution Date</span><span class="detail-value">' + (vf(d, 'Resolution Date') || '-') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Affected Products</span><span class="detail-value">' + vf(d, 'Affected Products') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Affected Suppliers</span><span class="detail-value">' + vf(d, 'Affected Suppliers') + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Affected Depts</span><span class="detail-value">' + vf(d, 'Affected Departments') + '</span></div>' +
+      '</div>' +
+      (vf(d, 'Mitigation Plan') ? '<div class="card" style="margin-top:16px"><h3>Mitigation Plan</h3><p style="font-size:13px; line-height:1.6">' + vf(d, 'Mitigation Plan') + '</p></div>' : '');
+  } catch (e) {
+    document.getElementById('dis-modal-body').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+
+/* ======= ANALYTICS TAB ======= */
+var REPORT_TYPES = [
+  { id: 'inventory', name: 'Inventory Report', desc: 'Current stock levels, par compliance, and location distribution' },
+  { id: 'supplier-performance', name: 'Supplier Performance', desc: 'Supplier reliability scores, order volumes, and delivery rates' },
+  { id: 'disruption', name: 'Disruption Report', desc: 'Active and resolved disruptions with impact analysis and timelines' },
+  { id: 'order-summary', name: 'Order Summary', desc: 'Purchase order history with priority, department, and status breakdown' },
+  { id: 'cost-analysis', name: 'Cost Analysis', desc: 'Spending by category and department with average cost metrics' },
+  { id: 'expiration', name: 'Expiration Report', desc: 'Products approaching expiration sorted by urgency' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(function(r) {
+    return '<div class="report-card" onclick="generateReport(\'' + r.id + '\')"><h4>' + r.name + '</h4><p>' + r.desc + '</p></div>';
+  }).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  var result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    var d = await apiFetch('/api/scr/report/' + type);
+
+    if (type === 'inventory') {
+      var csvRows = [['Inventory ID', 'Product', 'Location', 'QOH', 'Par', 'Reorder', 'Expiration', 'Status']];
+      d.items.forEach(function(i) { csvRows.push([i.inventoryId, i.productName, i.location, i.qoh, i.par, i.reorder, i.expiration, i.status]); });
+      result.innerHTML = '<div class="card"><h3>' + d.report + ' (' + d.items.length + ' items)</h3>' +
+        '<button class="act-btn act-btn-teal" onclick="downloadCSV(' + JSON.stringify(JSON.stringify(csvRows)) + ', \'inventory-report.csv\')" style="margin-bottom:12px">Export CSV</button>' +
+        '<table class="data-table"><thead><tr><th>ID</th><th>Product</th><th>Location</th><th>QOH</th><th>Par</th><th>Expiration</th><th>Status</th></tr></thead><tbody>' +
+        d.items.slice(0, 50).map(function(i) { return '<tr><td>' + i.inventoryId + '</td><td>' + i.productName + '</td><td>' + i.location + '</td><td>' + i.qoh + '</td><td>' + i.par + '</td><td>' + i.expiration + '</td><td>' + stockIndicator(i.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+
+    } else if (type === 'supplier-performance') {
+      var sups = d.suppliers.sort(function(a, b) { return parseInt(b.reliability) - parseInt(a.reliability); });
+      var maxOrders = Math.max.apply(null, sups.map(function(s) { return s.orders; }).concat([1]));
+      result.innerHTML = '<div class="card"><h3>' + d.report + '</h3>' +
+        '<table class="data-table"><thead><tr><th>Supplier</th><th>Type</th><th>Reliability</th><th>Risk</th><th>Orders</th><th>Delivered</th><th>Spend</th><th>Status</th></tr></thead><tbody>' +
+        sups.map(function(s) { return '<tr><td>' + s.name + '</td><td>' + s.type + '</td><td>' + s.reliability + '%</td><td>' + riskBadge(s.risk) + '</td><td>' + s.orders + '</td><td>' + s.delivered + '</td><td>$' + s.totalSpend + '</td><td>' + badge(s.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+
+    } else if (type === 'disruption') {
+      result.innerHTML = '<div class="card"><h3>' + d.report + ' (' + d.items.length + ' disruptions)</h3>' +
+        '<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Impact</th><th>Start</th><th>Resolution</th><th>Status</th></tr></thead><tbody>' +
+        d.items.map(function(i) { return '<tr><td>' + i.disruptionId + '</td><td>' + i.title + '</td><td>' + i.type + '</td><td>' + impactSpan(i.impact) + '</td><td>' + i.startDate + '</td><td>' + (i.resolutionDate || '-') + '</td><td>' + badge(i.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+
+    } else if (type === 'order-summary') {
+      var csvRows2 = [['Order ID', 'Supplier', 'Date', 'Amount', 'Priority', 'Department', 'Status']];
+      d.items.forEach(function(i) { csvRows2.push([i.orderId, i.supplier, i.date, i.total, i.priority, i.dept, i.status]); });
+      result.innerHTML = '<div class="card"><h3>' + d.report + ' (' + d.items.length + ' orders)</h3>' +
+        '<button class="act-btn act-btn-teal" onclick="downloadCSV(' + JSON.stringify(JSON.stringify(csvRows2)) + ', \'order-summary.csv\')" style="margin-bottom:12px">Export CSV</button>' +
+        '<table class="data-table"><thead><tr><th>ID</th><th>Supplier</th><th>Date</th><th>Amount</th><th>Priority</th><th>Dept</th><th>Status</th></tr></thead><tbody>' +
+        d.items.slice(0, 50).map(function(i) { return '<tr><td>' + i.orderId + '</td><td>' + i.supplier + '</td><td>' + i.date + '</td><td>$' + i.total + '</td><td>' + prioritySpan(i.priority) + '</td><td>' + i.dept + '</td><td>' + badge(i.status) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+
+    } else if (type === 'cost-analysis') {
+      result.innerHTML = '<div class="card"><h3>' + d.report + '</h3>' +
+        '<h4 style="margin:16px 0 8px">By Product Category</h4>' +
+        '<table class="data-table"><thead><tr><th>Category</th><th>Products</th><th>Avg Unit Cost</th></tr></thead><tbody>' +
+        d.byCategory.sort(function(a, b) { return parseFloat(b.avgCost) - parseFloat(a.avgCost); }).map(function(c) { return '<tr><td>' + c.category + '</td><td>' + c.products + '</td><td>$' + c.avgCost + '</td></tr>'; }).join('') +
+        '</tbody></table>' +
+        '<h4 style="margin:16px 0 8px">By Department</h4>' +
+        '<table class="data-table"><thead><tr><th>Department</th><th>Orders</th><th>Total Spend</th></tr></thead><tbody>' +
+        d.byDepartment.sort(function(a, b) { return parseFloat(b.totalSpend) - parseFloat(a.totalSpend); }).map(function(dd) { return '<tr><td>' + dd.department + '</td><td>' + dd.orders + '</td><td>$' + dd.totalSpend + '</td></tr>'; }).join('') +
+        '</tbody></table></div>';
+
+    } else if (type === 'expiration') {
+      var csvRows3 = [['Product', 'Location', 'Lot', 'Expiration', 'Days Left', 'QOH', 'Status']];
+      d.items.forEach(function(i) { csvRows3.push([i.productName, i.location, i.lotNumber, i.expirationDate, i.daysLeft, i.qoh, i.status]); });
+      result.innerHTML = '<div class="card"><h3>' + d.report + ' (' + d.items.length + ' items)</h3>' +
+        '<button class="act-btn act-btn-teal" onclick="downloadCSV(' + JSON.stringify(JSON.stringify(csvRows3)) + ', \'expiration-report.csv\')" style="margin-bottom:12px">Export CSV</button>' +
+        '<table class="data-table"><thead><tr><th>Product</th><th>Location</th><th>Lot</th><th>Expiration</th><th>Days Left</th><th>QOH</th><th>Status</th></tr></thead><tbody>' +
+        d.items.slice(0, 50).map(function(i) {
+          var dlCls = i.daysLeft <= 0 ? 'stock-expired' : (i.daysLeft <= 30 ? 'stock-low' : 'stock-ok');
+          return '<tr><td>' + i.productName + '</td><td>' + i.location + '</td><td>' + i.lotNumber + '</td><td>' + i.expirationDate + '</td><td><span class="' + dlCls + '">' + i.daysLeft + '</span></td><td>' + i.qoh + '</td><td>' + stockIndicator(i.status) + '</td></tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
+  } catch (e) {
+    result.innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  var rows = JSON.parse(jsonStr);
+  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c || '').replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* ======= UTILITY ======= */
+function debounce(fn, ms) {
+  var t;
+  return function() { var args = arguments; var ctx = this; clearTimeout(t); t = setTimeout(function() { fn.apply(ctx, args); }, ms); };
+}
+</script>
+</body>
+</html>

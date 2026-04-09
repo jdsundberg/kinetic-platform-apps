@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance & Behavior Tracking</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.login-box { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--orange); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; text-transform: uppercase; letter-spacing: .3px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--orange); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: var(--orange-light); }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== TOPBAR ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.logo .accent { color: var(--orange); }
+.topbar nav { display: flex; gap: 2px; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 14px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--orange); color: var(--white); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.panel { display: none; }
+.panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== KPI ===== */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi .label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi.green .val { color: var(--green); }
+.kpi.red .val { color: var(--red); }
+.kpi.orange .val { color: var(--orange); }
+.kpi.yellow .val { color: var(--yellow); }
+
+/* ===== CARDS ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; background: var(--light); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: #FAFAFA; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: #F0F7FF; }
+.empty-row td { text-align: center; padding: 30px; color: var(--gray); font-style: italic; }
+
+/* ===== BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-present, .badge-active, .badge-resolved, .badge-improving, .badge-met-goal { background: #E8F5E9; color: #2E7D32; }
+.badge-absent, .badge-critical, .badge-major { background: #FDECEA; color: #C62828; }
+.badge-tardy, .badge-moderate, .badge-escalated, .badge-in-progress { background: #FFF8E1; color: #F9A825; }
+.badge-excused, .badge-early-dismissal, .badge-minor { background: #E3F2FD; color: #1565C0; }
+.badge-open, .badge-not-started { background: #F3E5F5; color: #7B1FA2; }
+.badge-completed, .badge-discontinued, .badge-paused { background: #F1F3F4; color: #5F6368; }
+
+/* ===== FILTERS ===== */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.toolbar select, .toolbar input[type="date"], .toolbar input[type="text"] { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.toolbar select:focus, .toolbar input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; justify-content: flex-end; }
+.pagination .page-info { font-size: 12px; color: var(--gray); }
+
+/* ===== MODAL ===== */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-content { background: var(--white); border-radius: 16px; padding: 28px; max-width: 700px; width: 95vw; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-content h2 { font-size: 18px; color: var(--blue); margin-bottom: 16px; }
+.modal-content label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: .3px; }
+.modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+.modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+
+/* ===== TOAST ===== */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: var(--white); padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+
+/* ===== SEVERITY DOTS ===== */
+.sev-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.sev-minor { background: var(--green); }
+.sev-moderate { background: var(--yellow); }
+.sev-major { background: var(--orange); }
+.sev-critical { background: var(--red); }
+
+/* ===== BULK ENTRY ===== */
+.bulk-row { display: grid; grid-template-columns: 1fr 1fr 120px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.bulk-row:last-child { border-bottom: none; }
+.bulk-row .student-name { font-size: 13px; font-weight: 500; }
+.bulk-row .student-id { font-size: 11px; color: var(--gray); }
+.bulk-toggle { display: flex; gap: 4px; }
+.bulk-toggle button { padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; cursor: pointer; background: var(--white); color: var(--gray); }
+.bulk-toggle button.selected { background: var(--green); color: var(--white); border-color: var(--green); }
+.bulk-toggle button.absent-sel { background: var(--red); color: var(--white); border-color: var(--red); }
+.bulk-toggle button.tardy-sel { background: var(--yellow); color: #333; border-color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Attendance & Behavior</h1>
+      <div class="subtitle">Student attendance and behavior incident tracking</div>
+      <label>Server URL</label>
+      <input id="login-url" value="https://fifth.tutorial.kineticdata.com">
+      <label>Username</label>
+      <input id="login-user" value="">
+      <label>Password</label>
+      <input id="login-pass" type="password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Attendance <span class="accent">Tracker</span></div>
+    <nav>
+      <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" onclick="switchTab('attendance')">Attendance</button>
+      <button class="tab-btn" onclick="switchTab('behavior')">Behavior</button>
+      <button class="tab-btn" onclick="switchTab('interventions')">Interventions</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- ===== DASHBOARD ===== -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Today's attendance and behavior overview</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Attendance Trend (Last 10 Days)</h3>
+          <div id="dash-trend" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+        <div class="card">
+          <h3>Recent Incidents</h3>
+          <div id="dash-incidents" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ATTENDANCE ===== -->
+    <div class="panel" id="panel-attendance">
+      <div class="page-title">Attendance Records</div>
+      <div class="page-sub">View and manage student attendance</div>
+      <div class="toolbar">
+        <input type="date" id="att-date" onchange="loadAttendance()">
+        <select id="att-status" onchange="loadAttendance()">
+          <option value="">All Statuses</option>
+          <option>Present</option><option>Absent</option><option>Tardy</option><option>Excused</option><option>Early Dismissal</option>
+        </select>
+        <input type="text" id="att-search" placeholder="Search student..." oninput="loadAttendance()" style="width:180px;">
+        <button class="btn btn-primary" onclick="openBulkEntry()">Bulk Entry</button>
+      </div>
+      <div class="card">
+        <div id="att-table"></div>
+        <div class="pagination" id="att-pag"></div>
+      </div>
+    </div>
+
+    <!-- ===== BEHAVIOR ===== -->
+    <div class="panel" id="panel-behavior">
+      <div class="page-title">Behavior Incidents</div>
+      <div class="page-sub">Track and manage student behavior incidents</div>
+      <div class="toolbar">
+        <select id="beh-type" onchange="loadBehavior()">
+          <option value="">All Types</option>
+          <option>Disruption</option><option>Bullying</option><option>Fighting</option><option>Vandalism</option><option>Insubordination</option><option>Dress Code</option><option>Technology Misuse</option><option>Truancy</option><option>Other</option>
+        </select>
+        <select id="beh-severity" onchange="loadBehavior()">
+          <option value="">All Severity</option>
+          <option>Minor</option><option>Moderate</option><option>Major</option><option>Critical</option>
+        </select>
+        <select id="beh-status" onchange="loadBehavior()">
+          <option value="">All Statuses</option>
+          <option>Open</option><option>Resolved</option><option>Escalated</option>
+        </select>
+        <button class="btn btn-primary" onclick="openNewIncident()">New Incident</button>
+      </div>
+      <div class="card">
+        <div id="beh-table"></div>
+        <div class="pagination" id="beh-pag"></div>
+      </div>
+    </div>
+
+    <!-- ===== INTERVENTIONS ===== -->
+    <div class="panel" id="panel-interventions">
+      <div class="page-title">Interventions</div>
+      <div class="page-sub">Student intervention plans and progress tracking</div>
+      <div class="toolbar">
+        <select id="int-type" onchange="loadInterventions()">
+          <option value="">All Types</option>
+          <option>Academic</option><option>Behavioral</option><option>Attendance</option><option>Social-Emotional</option>
+        </select>
+        <select id="int-status" onchange="loadInterventions()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Completed</option><option>Paused</option>
+        </select>
+        <select id="int-progress" onchange="loadInterventions()">
+          <option value="">All Progress</option>
+          <option>Not Started</option><option>In Progress</option><option>Improving</option><option>Met Goal</option><option>Discontinued</option>
+        </select>
+        <button class="btn btn-primary" onclick="openNewIntervention()">New Intervention</button>
+      </div>
+      <div class="card">
+        <div id="int-table"></div>
+        <div class="pagination" id="int-pag"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Globals
+// ---------------------------------------------------------------------------
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'attendance';
+let currentTab = 'dashboard';
+
+// Pagination state
+const PAGE = { att: { pageKeys: [null], page: 1, hasNext: false }, beh: { pageKeys: [null], page: 1, hasNext: false }, int: { pageKeys: [null], page: 1, hasNext: false } };
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+function badge(val) {
+  if (!val) return '';
+  const cls = 'badge-' + val.toLowerCase().replace(/[\s\/]+/g, '-');
+  return `<span class="badge ${cls}">${esc(val)}</span>`;
+}
+
+function sevDot(severity) {
+  const cls = 'sev-' + (severity || 'minor').toLowerCase();
+  return `<span class="sev-dot ${cls}"></span>${esc(severity)}`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ---------------------------------------------------------------------------
+// API
+// ---------------------------------------------------------------------------
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Basic ${API.auth}`,
+      'Content-Type': 'application/json',
+      ...opts.headers,
+    },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function fetchSubs(form, kql, limit, lastCreatedAt) {
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values,details&limit=${limit || 25}`;
+  if (lastCreatedAt) {
+    kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+  }
+  if (kql) path += `&q=${encodeURIComponent(kql)}`;
+  return api(path);
+}
+
+async function createSub(form, values) {
+  return api(`/kapps/${KAPP}/forms/${form}/submissions`, {
+    method: 'POST',
+    body: JSON.stringify({ values }),
+  });
+}
+
+async function updateSub(id, values) {
+  return api(`/submissions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ values }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  if (!url || !user || !pass) { errEl.textContent = 'All fields required'; return; }
+
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+
+  fetch(`${API.url}/app/api/v1/me`, {
+    headers: { 'Authorization': `Basic ${API.auth}` },
+  }).then(r => {
+    if (!r.ok) throw new Error('Invalid credentials');
+    return r.json();
+  }).then(data => {
+    API.displayName = data.displayName || data.username || user;
+    document.getElementById('user-display').textContent = API.displayName;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  }).catch(e => {
+    errEl.textContent = e.message || 'Login failed';
+  });
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+// Session check
+(function checkSession() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || '';
+      API.displayName = s.displayName || s.user || '';
+      document.getElementById('user-display').textContent = API.displayName;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadDashboard();
+    } catch(e) {}
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Tab switching
+// ---------------------------------------------------------------------------
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => { if (b.textContent.toLowerCase().replace(/\s/g,'') === tab.replace(/\s/g,'')) b.classList.add('active'); });
+
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'attendance') loadAttendance();
+  else if (tab === 'behavior') loadBehavior();
+  else if (tab === 'interventions') loadInterventions();
+}
+
+// ---------------------------------------------------------------------------
+// DASHBOARD
+// ---------------------------------------------------------------------------
+async function loadDashboard() {
+  try {
+    // Fetch daily summaries, recent incidents, and active interventions
+    const [summRes, incRes, intRes] = await Promise.all([
+      fetchSubs('daily-summaries', '', 25),
+      fetchSubs('behavior-incidents', 'values[Status]="Open"', 10),
+      fetchSubs('interventions', 'values[Status]="Active"', 25),
+    ]);
+
+    const summaries = (summRes.submissions || []).sort((a, b) => v(b, 'Date').localeCompare(v(a, 'Date')));
+    const incidents = incRes.submissions || [];
+    const activeInts = intRes.submissions || [];
+
+    // Find today's or most recent summary
+    const todayStr = today();
+    let todaySummary = summaries.find(s => v(s, 'Date') === todayStr) || summaries[0];
+
+    const rate = todaySummary ? v(todaySummary, 'Attendance Rate') : '--';
+    const absent = todaySummary ? v(todaySummary, 'Absent') : '--';
+    const tardy = todaySummary ? v(todaySummary, 'Tardy') : '--';
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi green"><div class="val">${esc(rate)}</div><div class="label">Attendance Rate</div></div>
+      <div class="kpi red"><div class="val">${esc(absent)}</div><div class="label">Absent Today</div></div>
+      <div class="kpi yellow"><div class="val">${esc(tardy)}</div><div class="label">Tardy Today</div></div>
+      <div class="kpi orange"><div class="val">${incidents.length}</div><div class="label">Open Incidents</div></div>
+      <div class="kpi"><div class="val">${activeInts.length}</div><div class="label">Active Interventions</div></div>
+    `;
+
+    // Attendance trend table
+    let trendHtml = '<table><thead><tr><th>Date</th><th>Enrolled</th><th>Present</th><th>Absent</th><th>Tardy</th><th>Rate</th></tr></thead><tbody>';
+    if (summaries.length === 0) {
+      trendHtml += '<tr class="empty-row"><td colspan="6">No data available</td></tr>';
+    } else {
+      for (const s of summaries.slice(0, 10)) {
+        trendHtml += `<tr>
+          <td>${esc(v(s, 'Date'))}</td>
+          <td>${esc(v(s, 'Total Enrolled'))}</td>
+          <td>${esc(v(s, 'Present'))}</td>
+          <td>${esc(v(s, 'Absent'))}</td>
+          <td>${esc(v(s, 'Tardy'))}</td>
+          <td><strong>${esc(v(s, 'Attendance Rate'))}</strong></td>
+        </tr>`;
+      }
+    }
+    trendHtml += '</tbody></table>';
+    document.getElementById('dash-trend').innerHTML = trendHtml;
+
+    // Recent incidents
+    let incHtml = '<table><thead><tr><th>Date</th><th>Student</th><th>Type</th><th>Severity</th><th>Status</th></tr></thead><tbody>';
+    if (incidents.length === 0) {
+      incHtml += '<tr class="empty-row"><td colspan="5">No open incidents</td></tr>';
+    } else {
+      for (const inc of incidents.slice(0, 10)) {
+        incHtml += `<tr>
+          <td>${esc(v(inc, 'Date'))}</td>
+          <td>${esc(v(inc, 'Student Name'))}</td>
+          <td>${esc(v(inc, 'Type'))}</td>
+          <td>${sevDot(v(inc, 'Severity'))}</td>
+          <td>${badge(v(inc, 'Status'))}</td>
+        </tr>`;
+      }
+    }
+    incHtml += '</tbody></table>';
+    document.getElementById('dash-incidents').innerHTML = incHtml;
+
+  } catch (e) {
+    console.error('Dashboard error:', e);
+    document.getElementById('dash-kpis').innerHTML = '<div class="card" style="grid-column:1/-1;color:var(--red);">Failed to load dashboard data</div>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ATTENDANCE
+// ---------------------------------------------------------------------------
+async function loadAttendance(isPageNav) {
+  const dateVal = document.getElementById('att-date').value;
+  const statusVal = document.getElementById('att-status').value;
+  const search = document.getElementById('att-search').value.trim().toLowerCase();
+
+  let kql = '';
+  const parts = [];
+  if (dateVal) parts.push(`values[Date]="${dateVal}"`);
+  if (statusVal) parts.push(`values[Status]="${statusVal}"`);
+  if (dateVal && statusVal) kql = parts.join(' AND ');
+  else if (parts.length) kql = parts[0];
+
+  if (!isPageNav) { PAGE.att = { pageKeys: [null], page: 1, hasNext: false }; }
+
+  try {
+    const res = await fetchSubs('attendance-records', kql, 25, PAGE.att.pageKeys[PAGE.att.page - 1]);
+    const subs = (res.submissions || []).filter(s => {
+      if (!search) return true;
+      return v(s, 'Student Name').toLowerCase().includes(search) || v(s, 'Student ID').toLowerCase().includes(search);
+    });
+    PAGE.att.hasNext = !!res.nextPageToken;
+    if (PAGE.att.hasNext && subs.length) PAGE.att.pageKeys[PAGE.att.page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table><thead><tr><th>Date</th><th>Student</th><th>ID</th><th>Period</th><th>Status</th><th>Teacher</th><th>Course</th><th>Reason</th></tr></thead><tbody>';
+    if (subs.length === 0) {
+      html += '<tr class="empty-row"><td colspan="8">No records found</td></tr>';
+    } else {
+      for (const s of subs) {
+        html += `<tr class="clickable" onclick="openAttendanceDetail('${s.id}')">
+          <td>${esc(v(s, 'Date'))}</td>
+          <td>${esc(v(s, 'Student Name'))}</td>
+          <td>${esc(v(s, 'Student ID'))}</td>
+          <td>${esc(v(s, 'Period'))}</td>
+          <td>${badge(v(s, 'Status'))}</td>
+          <td>${esc(v(s, 'Teacher'))}</td>
+          <td>${esc(v(s, 'Course'))}</td>
+          <td>${esc(v(s, 'Reason'))}</td>
+        </tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    document.getElementById('att-table').innerHTML = html;
+
+    renderPagination('att', PAGE.att);
+  } catch (e) {
+    console.error('Attendance error:', e);
+    document.getElementById('att-table').innerHTML = '<p style="color:var(--red)">Failed to load attendance records</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BEHAVIOR
+// ---------------------------------------------------------------------------
+async function loadBehavior(isPageNav) {
+  const typeVal = document.getElementById('beh-type').value;
+  const sevVal = document.getElementById('beh-severity').value;
+  const statusVal = document.getElementById('beh-status').value;
+
+  // Build KQL - can only do single-field equality without compound index issues
+  let kql = '';
+  if (statusVal) kql = `values[Status]="${statusVal}"`;
+  else if (typeVal) kql = `values[Type]="${typeVal}"`;
+  else if (sevVal) kql = `values[Severity]="${sevVal}"`;
+
+  if (!isPageNav) { PAGE.beh = { pageKeys: [null], page: 1, hasNext: false }; }
+
+  try {
+    const res = await fetchSubs('behavior-incidents', kql, 25, PAGE.beh.pageKeys[PAGE.beh.page - 1]);
+    let subs = res.submissions || [];
+
+    // Client-side filter for multi-field
+    if (typeVal && kql !== `values[Type]="${typeVal}"`) subs = subs.filter(s => v(s, 'Type') === typeVal);
+    if (sevVal && kql !== `values[Severity]="${sevVal}"`) subs = subs.filter(s => v(s, 'Severity') === sevVal);
+    if (statusVal && kql !== `values[Status]="${statusVal}"`) subs = subs.filter(s => v(s, 'Status') === statusVal);
+
+    PAGE.beh.hasNext = !!res.nextPageToken;
+    if (PAGE.beh.hasNext && subs.length) PAGE.beh.pageKeys[PAGE.beh.page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table><thead><tr><th>Date</th><th>Student</th><th>Type</th><th>Severity</th><th>Location</th><th>Action</th><th>Status</th></tr></thead><tbody>';
+    if (subs.length === 0) {
+      html += '<tr class="empty-row"><td colspan="7">No incidents found</td></tr>';
+    } else {
+      for (const s of subs) {
+        html += `<tr class="clickable" onclick="openIncidentDetail('${s.id}')">
+          <td>${esc(v(s, 'Date'))}</td>
+          <td>${esc(v(s, 'Student Name'))}</td>
+          <td>${esc(v(s, 'Type'))}</td>
+          <td>${sevDot(v(s, 'Severity'))}</td>
+          <td>${esc(v(s, 'Location'))}</td>
+          <td>${esc(v(s, 'Action Taken'))}</td>
+          <td>${badge(v(s, 'Status'))}</td>
+        </tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    document.getElementById('beh-table').innerHTML = html;
+
+    renderPagination('beh', PAGE.beh);
+  } catch (e) {
+    console.error('Behavior error:', e);
+    document.getElementById('beh-table').innerHTML = '<p style="color:var(--red)">Failed to load behavior incidents</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// INTERVENTIONS
+// ---------------------------------------------------------------------------
+async function loadInterventions(isPageNav) {
+  const typeVal = document.getElementById('int-type').value;
+  const statusVal = document.getElementById('int-status').value;
+  const progVal = document.getElementById('int-progress').value;
+
+  let kql = '';
+  if (statusVal) kql = `values[Status]="${statusVal}"`;
+  else if (typeVal) kql = `values[Type]="${typeVal}"`;
+
+  if (!isPageNav) { PAGE.int = { pageKeys: [null], page: 1, hasNext: false }; }
+
+  try {
+    const res = await fetchSubs('interventions', kql, 25, PAGE.int.pageKeys[PAGE.int.page - 1]);
+    let subs = res.submissions || [];
+
+    if (typeVal && kql !== `values[Type]="${typeVal}"`) subs = subs.filter(s => v(s, 'Type') === typeVal);
+    if (statusVal && kql !== `values[Status]="${statusVal}"`) subs = subs.filter(s => v(s, 'Status') === statusVal);
+    if (progVal) subs = subs.filter(s => v(s, 'Progress') === progVal);
+
+    PAGE.int.hasNext = !!res.nextPageToken;
+    if (PAGE.int.hasNext && subs.length) PAGE.int.pageKeys[PAGE.int.page] = subs[subs.length - 1].createdAt;
+
+    let html = '<table><thead><tr><th>Student</th><th>Type</th><th>Strategy</th><th>Frequency</th><th>Progress</th><th>Assigned To</th><th>Status</th></tr></thead><tbody>';
+    if (subs.length === 0) {
+      html += '<tr class="empty-row"><td colspan="7">No interventions found</td></tr>';
+    } else {
+      for (const s of subs) {
+        html += `<tr class="clickable" onclick="openInterventionDetail('${s.id}')">
+          <td>${esc(v(s, 'Student Name'))}</td>
+          <td>${esc(v(s, 'Type'))}</td>
+          <td>${esc(v(s, 'Strategy'))}</td>
+          <td>${esc(v(s, 'Frequency'))}</td>
+          <td>${badge(v(s, 'Progress'))}</td>
+          <td>${esc(v(s, 'Assigned To'))}</td>
+          <td>${badge(v(s, 'Status'))}</td>
+        </tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    document.getElementById('int-table').innerHTML = html;
+
+    renderPagination('int', PAGE.int);
+  } catch (e) {
+    console.error('Interventions error:', e);
+    document.getElementById('int-table').innerHTML = '<p style="color:var(--red)">Failed to load interventions</p>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PAGINATION
+// ---------------------------------------------------------------------------
+function renderPagination(key, state) {
+  const el = document.getElementById(key + '-pag');
+  const prevDisabled = state.page <= 1 ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+  const nextDisabled = !state.hasNext ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+  el.innerHTML = `
+    <span class="page-info">Page ${state.page}</span>
+    <button class="btn btn-secondary btn-sm" ${prevDisabled} onclick="pagePrev('${key}')">Prev</button>
+    <button class="btn btn-secondary btn-sm" ${nextDisabled} onclick="pageNext('${key}')">Next</button>
+  `;
+}
+
+function pageNext(key) {
+  const state = PAGE[key];
+  if (!state.hasNext) return;
+  state.page++;
+  if (key === 'att') loadAttendance(true);
+  else if (key === 'beh') loadBehavior(true);
+  else if (key === 'int') loadInterventions(true);
+}
+
+function pagePrev(key) {
+  const state = PAGE[key];
+  if (state.page <= 1) return;
+  state.page--;
+  if (key === 'att') loadAttendance(true);
+  else if (key === 'beh') loadBehavior(true);
+  else if (key === 'int') loadInterventions(true);
+}
+
+// ---------------------------------------------------------------------------
+// MODAL
+// ---------------------------------------------------------------------------
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ---------------------------------------------------------------------------
+// ATTENDANCE DETAIL
+// ---------------------------------------------------------------------------
+async function openAttendanceDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    const s = data.submission;
+    openModal(`
+      <h2>Attendance Record</h2>
+      <label>Student</label><input value="${esc(v(s, 'Student Name'))}" readonly>
+      <label>Student ID</label><input value="${esc(v(s, 'Student ID'))}" readonly>
+      <label>Date</label><input value="${esc(v(s, 'Date'))}" readonly>
+      <label>Period</label><input value="${esc(v(s, 'Period'))}" readonly>
+      <label>Status</label>
+      <select id="edit-att-status">
+        ${['Present','Absent','Tardy','Excused','Early Dismissal'].map(o => `<option ${v(s,'Status')===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+      <label>Reason</label><input id="edit-att-reason" value="${esc(v(s, 'Reason'))}">
+      <label>Teacher</label><input value="${esc(v(s, 'Teacher'))}" readonly>
+      <label>Course</label><input value="${esc(v(s, 'Course'))}" readonly>
+      <label>Notes</label><textarea id="edit-att-notes" rows="3">${esc(v(s, 'Notes'))}</textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAttendance('${s.id}')">Save</button>
+      </div>
+    `);
+  } catch (e) {
+    toast('Failed to load record');
+  }
+}
+
+async function saveAttendance(id) {
+  try {
+    await updateSub(id, {
+      'Status': document.getElementById('edit-att-status').value,
+      'Reason': document.getElementById('edit-att-reason').value,
+      'Notes': document.getElementById('edit-att-notes').value,
+    });
+    closeModal();
+    toast('Attendance record updated');
+    loadAttendance();
+  } catch (e) {
+    toast('Failed to save: ' + e.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BULK ENTRY
+// ---------------------------------------------------------------------------
+function openBulkEntry() {
+  const dateStr = document.getElementById('att-date').value || today();
+  const period = '1';
+  // Show quick-entry for 10 students at a time
+  const studentList = [
+    { id: 'STU-1001', name: 'Emma Smith' }, { id: 'STU-1002', name: 'Liam Johnson' },
+    { id: 'STU-1003', name: 'Olivia Williams' }, { id: 'STU-1004', name: 'Noah Brown' },
+    { id: 'STU-1005', name: 'Ava Jones' }, { id: 'STU-1006', name: 'Ethan Garcia' },
+    { id: 'STU-1007', name: 'Sophia Miller' }, { id: 'STU-1008', name: 'Mason Davis' },
+    { id: 'STU-1009', name: 'Isabella Rodriguez' }, { id: 'STU-1010', name: 'William Martinez' },
+  ];
+
+  let rows = '';
+  for (const st of studentList) {
+    rows += `<div class="bulk-row" data-id="${st.id}" data-name="${esc(st.name)}">
+      <div><div class="student-name">${esc(st.name)}</div><div class="student-id">${esc(st.id)}</div></div>
+      <div class="bulk-toggle">
+        <button class="selected" onclick="bulkToggle(this,'Present')">P</button>
+        <button onclick="bulkToggle(this,'Absent')">A</button>
+        <button onclick="bulkToggle(this,'Tardy')">T</button>
+      </div>
+    </div>`;
+  }
+
+  openModal(`
+    <h2>Bulk Attendance Entry</h2>
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div><label>Date</label><input type="date" id="bulk-date" value="${dateStr}"></div>
+      <div><label>Period</label><select id="bulk-period">${[1,2,3,4,5,6,7,8].map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Teacher</label><input id="bulk-teacher" value="" placeholder="Teacher name"></div>
+      <div><label>Course</label><input id="bulk-course" value="" placeholder="Course name"></div>
+    </div>
+    <div id="bulk-list">${rows}</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitBulkEntry()">Submit All</button>
+    </div>
+  `);
+}
+
+function bulkToggle(btn, status) {
+  const row = btn.closest('.bulk-toggle');
+  row.querySelectorAll('button').forEach(b => {
+    b.classList.remove('selected', 'absent-sel', 'tardy-sel');
+  });
+  if (status === 'Absent') btn.classList.add('absent-sel');
+  else if (status === 'Tardy') btn.classList.add('tardy-sel');
+  else btn.classList.add('selected');
+  btn.dataset.status = status;
+}
+
+async function submitBulkEntry() {
+  const date = document.getElementById('bulk-date').value;
+  const period = document.getElementById('bulk-period').value;
+  const teacher = document.getElementById('bulk-teacher').value;
+  const course = document.getElementById('bulk-course').value;
+
+  const rows = document.querySelectorAll('#bulk-list .bulk-row');
+  const entries = [];
+  for (const row of rows) {
+    const selectedBtn = row.querySelector('.bulk-toggle .selected, .bulk-toggle .absent-sel, .bulk-toggle .tardy-sel');
+    const status = selectedBtn ? (selectedBtn.classList.contains('absent-sel') ? 'Absent' : selectedBtn.classList.contains('tardy-sel') ? 'Tardy' : 'Present') : 'Present';
+    entries.push({
+      'Student ID': row.dataset.id,
+      'Student Name': row.dataset.name,
+      'Date': date,
+      'Period': period,
+      'Status': status,
+      'Teacher': teacher,
+      'Course': course,
+      'Reason': '',
+      'Notes': '',
+    });
+  }
+
+  try {
+    await Promise.all(entries.map(e => createSub('attendance-records', e)));
+    closeModal();
+    toast(`${entries.length} attendance records created`);
+    loadAttendance();
+  } catch (e) {
+    toast('Some entries may have failed: ' + e.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// INCIDENT DETAIL / NEW
+// ---------------------------------------------------------------------------
+function incidentFormHtml(s, isNew) {
+  const id = isNew ? '' : s.id;
+  const val = (f) => isNew ? '' : v(s, f);
+  const types = ['Disruption','Bullying','Fighting','Vandalism','Insubordination','Dress Code','Technology Misuse','Truancy','Other'];
+  const sevs = ['Minor','Moderate','Major','Critical'];
+  const locs = ['Classroom','Hallway','Cafeteria','Playground','Bus','Gym','Restroom','Other'];
+  const actions = ['Verbal Warning','Written Warning','Detention','Suspension','Parent Contact','Counselor Referral','Other'];
+  const statuses = ['Open','Resolved','Escalated'];
+
+  return `
+    <h2>${isNew ? 'New Behavior Incident' : 'Incident Detail'}</h2>
+    ${isNew ? '<label>Incident ID</label><input id="inc-id" value="INC-' + String(Date.now()).slice(-4) + '" readonly>' : ''}
+    <label>Student ID</label><input id="inc-sid" value="${esc(val('Student ID'))}">
+    <label>Student Name</label><input id="inc-sname" value="${esc(val('Student Name'))}">
+    <label>Date</label><input type="date" id="inc-date" value="${esc(val('Date')) || today()}">
+    <label>Time</label><input id="inc-time" value="${esc(val('Time'))}">
+    <label>Location</label><select id="inc-loc">${locs.map(o => `<option ${val('Location')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Type</label><select id="inc-type">${types.map(o => `<option ${val('Type')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Severity</label><select id="inc-sev">${sevs.map(o => `<option ${val('Severity')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Reporter</label><input id="inc-reporter" value="${esc(val('Reporter'))}">
+    <label>Description</label><textarea id="inc-desc" rows="3">${esc(val('Description'))}</textarea>
+    <label>Action Taken</label><select id="inc-action">${actions.map(o => `<option ${val('Action Taken')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Status</label><select id="inc-status">${statuses.map(o => `<option ${val('Status')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Resolution Notes</label><textarea id="inc-resnotes" rows="3">${esc(val('Resolution Notes'))}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="${isNew ? 'saveNewIncident()' : `saveIncident('${id}')`}">${isNew ? 'Create' : 'Save'}</button>
+    </div>
+  `;
+}
+
+async function openIncidentDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    openModal(incidentFormHtml(data.submission, false));
+  } catch (e) { toast('Failed to load incident'); }
+}
+
+function openNewIncident() {
+  openModal(incidentFormHtml({}, true));
+}
+
+function gatherIncidentValues() {
+  return {
+    'Student ID': document.getElementById('inc-sid').value,
+    'Student Name': document.getElementById('inc-sname').value,
+    'Date': document.getElementById('inc-date').value,
+    'Time': document.getElementById('inc-time').value,
+    'Location': document.getElementById('inc-loc').value,
+    'Type': document.getElementById('inc-type').value,
+    'Severity': document.getElementById('inc-sev').value,
+    'Reporter': document.getElementById('inc-reporter').value,
+    'Description': document.getElementById('inc-desc').value,
+    'Action Taken': document.getElementById('inc-action').value,
+    'Status': document.getElementById('inc-status').value,
+    'Resolution Notes': document.getElementById('inc-resnotes').value,
+  };
+}
+
+async function saveNewIncident() {
+  try {
+    const vals = gatherIncidentValues();
+    vals['Incident ID'] = document.getElementById('inc-id').value;
+    await createSub('behavior-incidents', vals);
+    closeModal();
+    toast('Incident created');
+    loadBehavior();
+  } catch (e) { toast('Failed to create: ' + e.message); }
+}
+
+async function saveIncident(id) {
+  try {
+    await updateSub(id, gatherIncidentValues());
+    closeModal();
+    toast('Incident updated');
+    loadBehavior();
+  } catch (e) { toast('Failed to save: ' + e.message); }
+}
+
+// ---------------------------------------------------------------------------
+// INTERVENTION DETAIL / NEW
+// ---------------------------------------------------------------------------
+function interventionFormHtml(s, isNew) {
+  const id = isNew ? '' : s.id;
+  const val = (f) => isNew ? '' : v(s, f);
+  const types = ['Academic','Behavioral','Attendance','Social-Emotional'];
+  const freqs = ['Daily','Weekly','Bi-Weekly','Monthly'];
+  const progs = ['Not Started','In Progress','Improving','Met Goal','Discontinued'];
+  const statuses = ['Active','Completed','Paused'];
+
+  return `
+    <h2>${isNew ? 'New Intervention' : 'Intervention Detail'}</h2>
+    <label>Student ID</label><input id="inv-sid" value="${esc(val('Student ID'))}">
+    <label>Student Name</label><input id="inv-sname" value="${esc(val('Student Name'))}">
+    <label>Type</label><select id="inv-type">${types.map(o => `<option ${val('Type')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Start Date</label><input type="date" id="inv-start" value="${esc(val('Start Date')) || today()}">
+    <label>End Date</label><input type="date" id="inv-end" value="${esc(val('End Date'))}">
+    <label>Assigned To</label><input id="inv-assigned" value="${esc(val('Assigned To'))}">
+    <label>Strategy</label><input id="inv-strategy" value="${esc(val('Strategy'))}">
+    <label>Frequency</label><select id="inv-freq">${freqs.map(o => `<option ${val('Frequency')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Goal</label><textarea id="inv-goal" rows="3">${esc(val('Goal'))}</textarea>
+    <label>Progress</label><select id="inv-progress">${progs.map(o => `<option ${val('Progress')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Status</label><select id="inv-status">${statuses.map(o => `<option ${val('Status')===o?'selected':''}>${o}</option>`).join('')}</select>
+    <label>Notes</label><textarea id="inv-notes" rows="3">${esc(val('Notes'))}</textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="${isNew ? 'saveNewIntervention()' : `saveIntervention('${id}')`}">${isNew ? 'Create' : 'Save'}</button>
+    </div>
+  `;
+}
+
+async function openInterventionDetail(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    openModal(interventionFormHtml(data.submission, false));
+  } catch (e) { toast('Failed to load intervention'); }
+}
+
+function openNewIntervention() {
+  openModal(interventionFormHtml({}, true));
+}
+
+function gatherInterventionValues() {
+  return {
+    'Student ID': document.getElementById('inv-sid').value,
+    'Student Name': document.getElementById('inv-sname').value,
+    'Type': document.getElementById('inv-type').value,
+    'Start Date': document.getElementById('inv-start').value,
+    'End Date': document.getElementById('inv-end').value,
+    'Assigned To': document.getElementById('inv-assigned').value,
+    'Strategy': document.getElementById('inv-strategy').value,
+    'Frequency': document.getElementById('inv-freq').value,
+    'Goal': document.getElementById('inv-goal').value,
+    'Progress': document.getElementById('inv-progress').value,
+    'Status': document.getElementById('inv-status').value,
+    'Notes': document.getElementById('inv-notes').value,
+  };
+}
+
+async function saveNewIntervention() {
+  try {
+    await createSub('interventions', gatherInterventionValues());
+    closeModal();
+    toast('Intervention created');
+    loadInterventions();
+  } catch (e) { toast('Failed to create: ' + e.message); }
+}
+
+async function saveIntervention(id) {
+  try {
+    await updateSub(id, gatherInterventionValues());
+    closeModal();
+    toast('Intervention updated');
+    loadInterventions();
+  } catch (e) { toast('Failed to save: ' + e.message); }
+}
+</script>
+</body>
+</html>

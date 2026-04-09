@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Console</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2; --teal: #00695C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; font-size: 14px; }
+
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, var(--blue) 0%, #1a2240 100%); }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:380px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+#app { display:none; }
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; margin-right:32px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:4px; flex:1; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.6); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition: all .2s; }
+.topbar nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar nav button.active { color:white; background:var(--orange); }
+.topbar .user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.topbar .user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+.console { display:none; padding:24px; max-width:1400px; margin:0 auto; }
+.console.active { display:block; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); margin-top:2px; }
+.kpi .sub { font-size:11px; color:var(--gray); }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.yellow .val { color:#E8A000; }
+.kpi.purple .val { color:var(--purple); }
+.kpi.teal .val { color:var(--teal); }
+
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:8px 10px; background:var(--light); color:var(--gray); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:.3px; border-bottom:2px solid var(--border); position:sticky; top:0; }
+td { padding:8px 10px; border-bottom:1px solid var(--border); }
+tr:hover td { background:#FAFAFA; }
+tr { cursor:pointer; }
+
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-new { background:#E3F2FD; color:#1565C0; }
+.badge-contacted { background:#FFF3E0; color:#E65100; }
+.badge-qualified { background:#F3E5F5; color:#7B1FA2; }
+.badge-proposal { background:#E8EAF6; color:#283593; }
+.badge-converted { background:#E8F5E9; color:#2E7D32; }
+.badge-lost { background:#FDECEA; color:#C62828; }
+.badge-prospecting { background:#E3F2FD; color:#1565C0; }
+.badge-discovery { background:#FFF3E0; color:#E65100; }
+.badge-negotiation { background:#FFF8E1; color:#F9A825; }
+.badge-won { background:#E8F5E9; color:#2E7D32; }
+.badge-closed-lost { background:#FDECEA; color:#C62828; }
+.badge-high { background:#FFF3E0; color:#E65100; }
+.badge-medium { background:#FFF8E1; color:#F9A825; }
+.badge-low { background:#E8F5E9; color:#2E7D32; }
+.badge-west { background:#E3F2FD; color:#1565C0; }
+.badge-east { background:#F3E5F5; color:#7B1FA2; }
+.badge-central { background:#FFF3E0; color:#E65100; }
+.badge-southeast { background:#E0F2F1; color:#00695C; }
+.badge-northeast { background:#E8EAF6; color:#283593; }
+.badge-active { background:#E8F5E9; color:#2E7D32; }
+
+.btn { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { background:#E8EAED; }
+.btn-danger { background:var(--red); color:white; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+
+.toolbar { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input, .toolbar select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; }
+.toolbar input { width:220px; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:white; border-radius:16px; padding:28px; width:650px; max-width:90vw; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal h2 { font-size:18px; color:var(--blue); margin-bottom:16px; }
+.modal .form-row { margin-bottom:12px; }
+.modal .form-row label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:3px; }
+.modal .form-row input, .modal .form-row select, .modal .form-row textarea { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; }
+.modal .form-row textarea { resize:vertical; min-height:80px; }
+.modal .form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+.modal .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+
+.subtabs { display:flex; gap:4px; margin-bottom:16px; background:white; border-radius:10px; padding:4px; border:1px solid var(--border); width:fit-content; }
+.subtabs button { background:none; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; color:var(--gray); }
+.subtabs button.active { background:var(--blue); color:white; }
+.subtab-panel { display:none; }
+.subtab-panel.active { display:block; }
+
+.loading { text-align:center; padding:40px; color:var(--gray); }
+.spinner { display:inline-block; width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.toast { position:fixed; bottom:24px; right:24px; background:var(--blue); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); z-index:300; transform:translateY(80px); opacity:0; transition:all .3s; }
+.toast.show { transform:translateY(0); opacity:1; }
+
+.h-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.h-bar-label { width:110px; font-size:12px; font-weight:600; color:var(--gray); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.h-bar-track { flex:1; height:24px; background:#F1F3F4; border-radius:6px; overflow:hidden; }
+.h-bar-fill { height:100%; border-radius:6px; display:flex; align-items:center; padding:0 8px; font-size:11px; font-weight:700; color:white; min-width:fit-content; transition:width .4s; }
+.h-bar-val { width:50px; font-size:12px; font-weight:700; color:var(--blue); text-align:right; }
+
+/* Pipeline funnel */
+.funnel { display:flex; flex-direction:column; gap:4px; }
+.funnel-stage { display:flex; align-items:center; gap:12px; }
+.funnel-bar { height:32px; border-radius:6px; display:flex; align-items:center; padding:0 12px; font-size:12px; font-weight:700; color:white; transition:width .4s; min-width:60px; }
+.funnel-info { font-size:12px; color:var(--gray); white-space:nowrap; }
+.funnel-info strong { color:var(--blue); }
+
+/* Nag banners for owner */
+.nag-banner { background:linear-gradient(90deg,#FDECEA,#FFF3E0); border:1px solid #FFCDD2; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:13px; color:#C62828; display:flex; align-items:center; gap:8px; }
+.nag-banner .nag-icon { font-size:20px; }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+
+/* Shame board */
+.shame-rank { display:flex; align-items:center; gap:8px; padding:6px 0; }
+.shame-rank .rank-num { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; }
+.shame-rank .rank-1 { background:var(--red); }
+.shame-rank .rank-2 { background:var(--orange); }
+.shame-rank .rank-3 { background:var(--yellow); color:#333; }
+.shame-rank .rank-ok { background:#CFD8DC; }
+
+/* Score card */
+.score-card { text-align:center; padding:16px; }
+.score-card .score { font-size:36px; font-weight:800; }
+.score-card .score-label { font-size:11px; color:var(--gray); text-transform:uppercase; }
+
+/* Deal card for pipeline */
+.deal-card { background:white; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:6px; cursor:pointer; transition:all .15s; }
+.deal-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+.deal-card .deal-name { font-weight:600; font-size:13px; margin-bottom:2px; }
+.deal-card .deal-meta { font-size:11px; color:var(--gray); display:flex; gap:8px; }
+.deal-card .deal-amount { font-weight:700; color:var(--green); }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>CRM Console</h1>
+    <div class="sub">Sales Pipeline &amp; Revenue Management</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" type="text" value="http://localhost:3002" placeholder="http://localhost:3002">
+    <label>Username</label>
+    <input id="login-user" type="text" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password">
+    <button onclick="doLogin()">Connect</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">CRM<span>Console</span></div>
+    <nav>
+      <button class="active" data-console="sales" onclick="switchConsole('sales')">&#128176; Sales</button>
+      <button data-console="manager" onclick="switchConsole('manager')">&#127919; Manager</button>
+      <button data-console="owner" onclick="switchConsole('owner')">&#128064; Owner</button>
+    </nav>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SALES CONSOLE ═══════════ -->
+  <div id="console-sales" class="console active">
+    <div class="page-title">Sales Console</div>
+    <div class="page-sub">Your pipeline, leads &amp; activities at a glance</div>
+
+    <div class="subtabs">
+      <button class="active" onclick="salesTab('pipeline')">My Pipeline</button>
+      <button onclick="salesTab('leads')">My Leads</button>
+      <button onclick="salesTab('activities')">Activities</button>
+      <button onclick="salesTab('products')">Products</button>
+    </div>
+
+    <!-- My Pipeline -->
+    <div id="sales-pipeline" class="subtab-panel active">
+      <div id="sales-kpis" class="kpi-row"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Pipeline Funnel</h3>
+          <div id="sales-funnel"></div>
+        </div>
+        <div class="card">
+          <h3>Upcoming Closes (Next 30 Days)</h3>
+          <div id="sales-upcoming"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>All My Opportunities</h3>
+        <div class="toolbar">
+          <select id="sp-stage" onchange="renderSalesOpps()">
+            <option value="">All Stages</option>
+            <option>Prospecting</option><option>Discovery</option><option>Proposal</option>
+            <option>Negotiation</option><option>Closed Won</option><option>Closed Lost</option>
+          </select>
+          <button class="btn btn-primary" onclick="openNewOpp()">+ New Opportunity</button>
+        </div>
+        <div style="overflow:auto;max-height:400px;">
+          <table><thead><tr><th>Opp</th><th>Account</th><th>Stage</th><th>Amount</th><th>Close Date</th><th>Probability</th><th>Product</th></tr></thead>
+          <tbody id="sp-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Leads -->
+    <div id="sales-leads" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="sl-search" placeholder="Search leads..." oninput="renderSalesLeads()">
+        <select id="sl-status" onchange="renderSalesLeads()">
+          <option value="">All Statuses</option>
+          <option>New</option><option>Contacted</option><option>Qualified</option>
+          <option>Proposal</option><option>Converted</option><option>Lost</option>
+        </select>
+        <button class="btn btn-primary" onclick="openNewLead()">+ New Lead</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;max-height:500px;">
+        <table><thead><tr><th>Lead</th><th>Name</th><th>Company</th><th>Source</th><th>Status</th><th>Score</th><th>Last Contact</th><th>Actions</th></tr></thead>
+        <tbody id="sl-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Activities -->
+    <div id="sales-activities" class="subtab-panel">
+      <div class="toolbar">
+        <select id="sa-type" onchange="renderSalesActivities()">
+          <option value="">All Types</option>
+          <option>Call</option><option>Email</option><option>Meeting</option>
+          <option>Demo</option><option>Follow-up</option><option>Proposal Sent</option>
+        </select>
+        <button class="btn btn-primary" onclick="openNewActivity()">+ Log Activity</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;max-height:500px;">
+        <table><thead><tr><th>Date</th><th>Type</th><th>Subject</th><th>Related To</th><th>Outcome</th><th>Duration</th></tr></thead>
+        <tbody id="sa-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div id="sales-products" class="subtab-panel">
+      <div class="card" style="padding:0;overflow:auto;">
+        <table><thead><tr><th>Product</th><th>Category</th><th>SKU</th><th>List Price</th><th>Max Discount</th><th>Tier</th></tr></thead>
+        <tbody id="sproduct-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ MANAGER CONSOLE ═══════════ -->
+  <div id="console-manager" class="console">
+    <div class="page-title">Territory Manager</div>
+    <div class="page-sub">Pipeline performance by territory &amp; team</div>
+
+    <div class="subtabs">
+      <button class="active" onclick="mgrTab('overview')">Overview</button>
+      <button onclick="mgrTab('territories')">Territories</button>
+      <button onclick="mgrTab('team')">Team Performance</button>
+      <button onclick="mgrTab('forecast')">Forecast</button>
+    </div>
+
+    <div id="mgr-overview" class="subtab-panel active">
+      <div id="mgr-kpis" class="kpi-row"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Pipeline by Stage</h3>
+          <div id="mgr-stage-chart"></div>
+        </div>
+        <div class="card">
+          <h3>Revenue by Territory</h3>
+          <div id="mgr-territory-chart"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Pipeline Overview</h3>
+        <div style="overflow:auto;max-height:400px;">
+          <table><thead><tr><th>Opp</th><th>Account</th><th>Rep</th><th>Territory</th><th>Stage</th><th>Amount</th><th>Close</th></tr></thead>
+          <tbody id="mgr-pipeline-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="mgr-territories" class="subtab-panel">
+      <div id="territory-cards"></div>
+    </div>
+
+    <div id="mgr-team" class="subtab-panel">
+      <div class="card" style="padding:0;overflow:auto;">
+        <table><thead><tr><th>#</th><th>Rep</th><th>Territory</th><th>Open Opps</th><th>Pipeline $</th><th>Won $</th><th>Win Rate</th><th>Avg Deal</th><th>Activities (14d)</th></tr></thead>
+        <tbody id="mgr-team-table"></tbody></table>
+      </div>
+    </div>
+
+    <div id="mgr-forecast" class="subtab-panel">
+      <div id="mgr-forecast-kpis" class="kpi-row"></div>
+      <div class="card">
+        <h3>Forecast by Month</h3>
+        <div id="forecast-chart"></div>
+      </div>
+      <div class="card">
+        <h3>Weighted Pipeline</h3>
+        <div style="overflow:auto;max-height:400px;">
+          <table><thead><tr><th>Opp</th><th>Rep</th><th>Stage</th><th>Amount</th><th>Probability</th><th>Weighted</th><th>Close Date</th></tr></thead>
+          <tbody id="forecast-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ OWNER CONSOLE ═══════════ -->
+  <div id="console-owner" class="console">
+    <div class="page-title">Command Center</div>
+    <div class="page-sub">Total visibility. Total control. Total accountability.</div>
+
+    <div id="owner-nags"></div>
+
+    <div class="subtabs">
+      <button class="active" onclick="ownerTab('radar')">Radar</button>
+      <button onclick="ownerTab('accountability')">Accountability</button>
+      <button onclick="ownerTab('deals')">Deal Tracker</button>
+      <button onclick="ownerTab('leakage')">Revenue Leakage</button>
+    </div>
+
+    <div id="owner-radar" class="subtab-panel active">
+      <div id="owner-kpis" class="kpi-row"></div>
+      <div class="grid-3">
+        <div class="card score-card">
+          <div class="score" id="owner-revenue-score" style="color:var(--green);">--</div>
+          <div class="score-label">Revenue Velocity Index&trade;</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px;">Real-time health metric</div>
+        </div>
+        <div class="card score-card">
+          <div class="score" id="owner-hustle-score" style="color:var(--orange);">--</div>
+          <div class="score-label">Team Hustle Score&trade;</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px;">Activity-to-revenue ratio</div>
+        </div>
+        <div class="card score-card">
+          <div class="score" id="owner-leak-score" style="color:var(--red);">--</div>
+          <div class="score-label">Leakage Risk Factor&trade;</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:4px;">Deals at risk of slipping</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Who's Actually Working Today?</h3>
+          <div id="owner-today-activity"></div>
+        </div>
+        <div class="card">
+          <h3>Stale Deals (No Activity 7+ Days)</h3>
+          <div id="owner-stale-deals"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="owner-accountability" class="subtab-panel">
+      <div class="nag-banner">
+        <span class="nag-icon">&#128064;</span>
+        <span><strong>Accountability is not micromanagement.</strong> It's <em>structured caring</em> about outcomes. With timestamps.</span>
+      </div>
+      <div class="card">
+        <h3>Rep Accountability Scorecard</h3>
+        <div style="overflow:auto;">
+          <table><thead><tr><th>#</th><th>Rep</th><th>Calls (14d)</th><th>Emails</th><th>Meetings</th><th>Demos</th><th>Pipeline $</th><th>Won $</th><th>Hustle Score&trade;</th><th>Action</th></tr></thead>
+          <tbody id="owner-scorecard"></tbody></table>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Activity Distribution (Are They Even Trying?)</h3>
+          <div id="owner-activity-dist"></div>
+        </div>
+        <div class="card">
+          <h3>Lead Response Time (First Contact)</h3>
+          <div id="owner-response-time"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="owner-deals" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="od-search" placeholder="Search deals..." oninput="renderOwnerDeals()">
+        <select id="od-stage" onchange="renderOwnerDeals()">
+          <option value="">All Stages</option>
+          <option>Prospecting</option><option>Discovery</option><option>Proposal</option>
+          <option>Negotiation</option><option>Closed Won</option><option>Closed Lost</option>
+        </select>
+        <select id="od-rep" onchange="renderOwnerDeals()">
+          <option value="">All Reps</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;max-height:600px;">
+        <table><thead><tr><th>Opp</th><th>Account</th><th>Rep</th><th>Stage</th><th>Amount</th><th>Close Date</th><th>Days In Stage</th><th>Last Activity</th><th>Risk</th></tr></thead>
+        <tbody id="od-table"></tbody></table>
+      </div>
+    </div>
+
+    <div id="owner-leakage" class="subtab-panel">
+      <div id="leakage-kpis" class="kpi-row"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Lost Deals Analysis</h3>
+          <div id="leakage-lost"></div>
+        </div>
+        <div class="card">
+          <h3>Competitor Win/Loss</h3>
+          <div id="leakage-competitors"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>At-Risk Pipeline (High Days In Stage, No Recent Activity)</h3>
+        <div style="overflow:auto;max-height:400px;">
+          <table><thead><tr><th>Opp</th><th>Account</th><th>Rep</th><th>Stage</th><th>Amount</th><th>Days Stuck</th><th>Last Activity</th><th>Action</th></tr></thead>
+          <tbody id="leakage-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  API
+// ═══════════════════════════════════════
+let API = { url:'', auth:'', user:'' };
+
+async function api(path, opts={}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts, headers: { 'Authorization':`Basic ${API.auth}`, 'Content-Type':'application/json', ...opts.headers },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchSubs(form, params={}) {
+  const qs = new URLSearchParams({ include:'values', limit:'1000', ...params });
+  return (await api(`/kapps/crm/forms/${form}/submissions?${qs}`)).submissions || [];
+}
+
+function v(sub, f) { return sub.values?.[f] || ''; }
+
+// ═══════════════════════════════════════
+//  LOGIN / LOGOUT
+// ═══════════════════════════════════════
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    API = { url, auth: btoa(`${user}:${pass}`), user };
+    const res = await fetch(`${url}/app/api/v1/me`, { headers:{'Authorization':`Basic ${API.auth}`} });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const d = await res.json();
+    API.displayName = d.user?.displayName || user;
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('user-display').textContent = API.displayName;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAllData();
+  } catch(e) {
+    err.textContent = e.message.includes('Failed to fetch') ? 'Cannot reach server.' : `Login failed: ${e.message}`;
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url:'', auth:'', user:'' };
+  D = { leads:[], opps:[], products:[], activities:[] };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('console-sales').classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.toggle('active', b.dataset.console === 'sales'));
+}
+
+async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    API = JSON.parse(s);
+    const res = await fetch(`${API.url}/app/api/v1/me`, { headers: { 'Authorization': `Basic ${API.auth}` } });
+    if (!res.ok) throw new Error('expired');
+    document.getElementById('user-display').textContent = API.displayName || API.user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAllData();
+  } catch(e) {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url:'', auth:'', user:'' };
+  }
+}
+restoreSession();
+
+// ═══════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════
+function switchConsole(id) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById(`console-${id}`).classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.toggle('active', b.dataset.console === id));
+  if (id === 'manager') renderManager();
+  if (id === 'owner') renderOwner();
+}
+
+function salesTab(t) {
+  const map = { pipeline:'sales-pipeline', leads:'sales-leads', activities:'sales-activities', products:'sales-products' };
+  document.querySelectorAll('#console-sales .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-sales .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['pipeline','leads','activities','products'][i]===t));
+}
+
+function mgrTab(t) {
+  const map = { overview:'mgr-overview', territories:'mgr-territories', team:'mgr-team', forecast:'mgr-forecast' };
+  document.querySelectorAll('#console-manager .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-manager .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['overview','territories','team','forecast'][i]===t));
+}
+
+function ownerTab(t) {
+  const map = { radar:'owner-radar', accountability:'owner-accountability', deals:'owner-deals', leakage:'owner-leakage' };
+  document.querySelectorAll('#console-owner .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-owner .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['radar','accountability','deals','leakage'][i]===t));
+}
+
+// ═══════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════
+let D = { leads:[], opps:[], products:[], activities:[] };
+
+async function loadAllData() {
+  try {
+    const [leads, opps, products, activities] = await Promise.all([
+      fetchSubs('leads'), fetchSubs('opportunities'), fetchSubs('products'), fetchSubs('activities')
+    ]);
+    D = { leads, opps, products, activities };
+    // Populate rep filter in owner deals
+    const reps = [...new Set(D.opps.map(o => v(o,'Assigned To')).filter(Boolean))].sort();
+    const sel = document.getElementById('od-rep');
+    sel.innerHTML = '<option value="">All Reps</option>' + reps.map(r => `<option>${r}</option>`).join('');
+    renderSales();
+  } catch(e) { showToast('Error loading: ' + e.message); }
+}
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+function openModal(h) { document.getElementById('modal-content').innerHTML=h; document.getElementById('modal').classList.add('show'); }
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+function parseMoney(s) { return parseFloat(String(s||'0').replace(/[$,]/g,''))||0; }
+function money(n) { const v = typeof n==='string' ? parseFloat(n.replace(/[$,]/g,''))||0 : Number(n||0); return '$' + v.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function pct(n) { return Math.round(parseFloat(String(n||'0').replace('%',''))||0) + '%'; }
+
+function stageBadge(s) {
+  const cls = {'Prospecting':'prospecting','Discovery':'discovery','Proposal':'proposal','Negotiation':'negotiation','Closed Won':'won','Closed Lost':'closed-lost'}[s]||'new';
+  return `<span class="badge badge-${cls}">${s||'\u2014'}</span>`;
+}
+function leadStatusBadge(s) {
+  const cls = {'New':'new','Contacted':'contacted','Qualified':'qualified','Proposal':'proposal','Converted':'converted','Lost':'lost'}[s]||'new';
+  return `<span class="badge badge-${cls}">${s||'\u2014'}</span>`;
+}
+function territoryBadge(t) {
+  const cls = (t||'').toLowerCase().replace(/\s+/g,'');
+  return `<span class="badge badge-${cls||'new'}">${t||'\u2014'}</span>`;
+}
+function scoreBadge(s) {
+  const n = parseInt(s)||0;
+  const color = n>=75?'var(--green)':n>=50?'var(--orange)':n>=25?'var(--yellow)':'var(--red)';
+  return `<span style="font-weight:700;color:${color};">${n}</span>`;
+}
+function daysSince(d) { if(!d) return null; return Math.floor((Date.now()-new Date(d))/86400000); }
+function riskLevel(opp) {
+  const days = parseInt(v(opp,'Days In Stage'))||0;
+  const lastAct = daysSince(v(opp,'Last Activity'));
+  if (days > 20 || (lastAct && lastAct > 10)) return 'High';
+  if (days > 10 || (lastAct && lastAct > 5)) return 'Medium';
+  return 'Low';
+}
+function riskBadge(r) {
+  const cls = {'High':'high','Medium':'medium','Low':'low'}[r]||'low';
+  return `<span class="badge badge-${cls}">${r}</span>`;
+}
+
+const STAGE_COLORS = { Prospecting:'#1565C0', Discovery:'#E65100', Proposal:'#283593', Negotiation:'#F9A825', 'Closed Won':'#2E7D32', 'Closed Lost':'#C62828' };
+const STAGES_OPEN = ['Prospecting','Discovery','Proposal','Negotiation'];
+
+// ═══════════════════════════════════════
+//  SALES CONSOLE
+// ═══════════════════════════════════════
+function renderSales() {
+  const myOpps = D.opps; // Show all for now (no user filter since admin)
+  const openOpps = myOpps.filter(o => STAGES_OPEN.includes(v(o,'Stage')));
+  const wonOpps = myOpps.filter(o => v(o,'Stage')==='Closed Won');
+  const totalPipeline = openOpps.reduce((s,o) => s + (parseMoney(v(o,'Amount'))||0), 0);
+  const totalWon = wonOpps.reduce((s,o) => s + (parseMoney(v(o,'Amount'))||0), 0);
+  const weighted = openOpps.reduce((s,o) => s + (parseMoney(v(o,'Amount'))||0) * (parseFloat(v(o,'Probability'))||0) / 100, 0);
+  const avgDeal = openOpps.length ? totalPipeline / openOpps.length : 0;
+
+  document.getElementById('sales-kpis').innerHTML = `
+    <div class="kpi orange"><div class="label">Open Pipeline</div><div class="val">${money(totalPipeline)}</div><div class="sub">${openOpps.length} deals</div></div>
+    <div class="kpi green"><div class="label">Closed Won</div><div class="val">${money(totalWon)}</div><div class="sub">${wonOpps.length} deals</div></div>
+    <div class="kpi purple"><div class="label">Weighted Pipeline</div><div class="val">${money(weighted)}</div><div class="sub">expected revenue</div></div>
+    <div class="kpi"><div class="label">Avg Deal Size</div><div class="val">${money(avgDeal)}</div><div class="sub">open opps</div></div>
+    <div class="kpi teal"><div class="label">Win Rate</div><div class="val">${pct(wonOpps.length/(wonOpps.length+myOpps.filter(o=>v(o,'Stage')==='Closed Lost').length||1)*100)}</div><div class="sub">closed deals</div></div>
+  `;
+
+  // Funnel
+  const stageCounts = {};
+  const stageAmounts = {};
+  STAGES_OPEN.forEach(s => { stageCounts[s]=0; stageAmounts[s]=0; });
+  openOpps.forEach(o => {
+    const s = v(o,'Stage');
+    if (stageCounts[s] !== undefined) {
+      stageCounts[s]++;
+      stageAmounts[s] += parseMoney(v(o,'Amount'))||0;
+    }
+  });
+  const maxAmt = Math.max(...Object.values(stageAmounts), 1);
+  document.getElementById('sales-funnel').innerHTML = '<div class="funnel">' +
+    STAGES_OPEN.map(s => `<div class="funnel-stage">
+      <div class="funnel-bar" style="width:${Math.max(stageAmounts[s]/maxAmt*100,15)}%;background:${STAGE_COLORS[s]}">${stageCounts[s]}</div>
+      <div class="funnel-info"><strong>${money(stageAmounts[s])}</strong> ${s}</div>
+    </div>`).join('') + '</div>';
+
+  // Upcoming closes
+  const now = new Date();
+  const in30 = new Date(now.getTime() + 30*86400000);
+  const upcoming = openOpps.filter(o => {
+    const cd = new Date(v(o,'Close Date'));
+    return cd >= now && cd <= in30;
+  }).sort((a,b) => new Date(v(a,'Close Date')) - new Date(v(b,'Close Date')));
+  document.getElementById('sales-upcoming').innerHTML = upcoming.length ? upcoming.slice(0,8).map(o => `
+    <div class="deal-card" onclick="viewOpp('${o.id}')">
+      <div class="deal-name">${v(o,'Name')}</div>
+      <div class="deal-meta">
+        <span>${v(o,'Account')}</span>
+        <span class="deal-amount">${money(v(o,'Amount'))}</span>
+        <span>${v(o,'Close Date')}</span>
+        ${stageBadge(v(o,'Stage'))}
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--gray);text-align:center;padding:20px;">No deals closing in next 30 days</p>';
+
+  renderSalesOpps();
+  renderSalesLeads();
+  renderSalesActivities();
+  renderProductsTable();
+}
+
+function renderSalesOpps() {
+  const stage = document.getElementById('sp-stage').value;
+  let opps = D.opps;
+  if (stage) opps = opps.filter(o => v(o,'Stage')===stage);
+  opps.sort((a,b) => (parseMoney(v(b,'Amount'))||0) - (parseMoney(v(a,'Amount'))||0));
+  document.getElementById('sp-table').innerHTML = opps.length ? opps.map(o => `<tr onclick="viewOpp('${o.id}')">
+    <td><strong style="color:var(--orange);">${v(o,'Opportunity ID')}</strong></td>
+    <td>${v(o,'Account')}</td>
+    <td>${stageBadge(v(o,'Stage'))}</td>
+    <td><strong>${money(v(o,'Amount'))}</strong></td>
+    <td>${v(o,'Close Date')}</td>
+    <td>${pct(v(o,'Probability'))}</td>
+    <td>${v(o,'Product')}</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px;">No opportunities</td></tr>';
+}
+
+function renderSalesLeads() {
+  const search = (document.getElementById('sl-search').value||'').toLowerCase();
+  const status = document.getElementById('sl-status').value;
+  let leads = D.leads;
+  if (status) leads = leads.filter(l => v(l,'Status')===status);
+  if (search) leads = leads.filter(l => `${v(l,'First Name')} ${v(l,'Last Name')} ${v(l,'Company')} ${v(l,'Email')}`.toLowerCase().includes(search));
+  leads.sort((a,b) => (parseInt(v(b,'Lead Score'))||0) - (parseInt(v(a,'Lead Score'))||0));
+  document.getElementById('sl-table').innerHTML = leads.length ? leads.map(l => `<tr onclick="viewLead('${l.id}')">
+    <td><strong>${v(l,'Lead ID')}</strong></td>
+    <td>${v(l,'First Name')} ${v(l,'Last Name')}</td>
+    <td>${v(l,'Company')}</td>
+    <td>${v(l,'Source')}</td>
+    <td>${leadStatusBadge(v(l,'Status'))}</td>
+    <td>${scoreBadge(v(l,'Lead Score'))}</td>
+    <td>${v(l,'Last Contact')||'\u2014'}</td>
+    <td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openLogActivity('Lead',v_id='${v(l,'Lead ID')}')">Log Activity</button></td>
+  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px;">No leads</td></tr>';
+}
+
+function renderSalesActivities() {
+  const type = document.getElementById('sa-type').value;
+  let acts = D.activities;
+  if (type) acts = acts.filter(a => v(a,'Type')===type);
+  acts.sort((a,b) => (v(b,'Activity Date')||'').localeCompare(v(a,'Activity Date')||''));
+  document.getElementById('sa-table').innerHTML = acts.length ? acts.slice(0,50).map(a => `<tr onclick="viewActivity('${a.id}')">
+    <td>${v(a,'Activity Date')}</td>
+    <td><span class="badge badge-new">${v(a,'Type')}</span></td>
+    <td>${v(a,'Subject')}</td>
+    <td>${v(a,'Related To')} ${v(a,'Related ID')}</td>
+    <td>${v(a,'Outcome')}</td>
+    <td>${v(a,'Duration')}m</td>
+  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px;">No activities</td></tr>';
+}
+
+function renderProductsTable() {
+  document.getElementById('sproduct-table').innerHTML = D.products.map(p => `<tr>
+    <td><strong>${v(p,'Name')}</strong></td>
+    <td><span class="badge badge-active">${v(p,'Category')}</span></td>
+    <td>${v(p,'SKU')}</td>
+    <td><strong>${money(v(p,'List Price'))}</strong>/yr</td>
+    <td>${v(p,'Discount Max')}</td>
+    <td>${v(p,'Tier')}</td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  VIEW DETAILS
+// ═══════════════════════════════════════
+function viewOpp(id) {
+  const o = D.opps.find(x=>x.id===id); if(!o) return;
+  const vals = o.values;
+  openModal(`
+    <h2>${stageBadge(vals.Stage)} ${vals['Opportunity ID']} \u2014 ${vals.Name}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+      ${Object.entries(vals).filter(([k,val])=>val&&!['Description','Next Steps'].includes(k)).map(([k,val]) => `<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">${k}</div><div style="font-size:13px;">${k==='Amount'?money(val):k==='Probability'?pct(val):k==='Stage'?stageBadge(val):val}</div></div>`).join('')}
+    </div>
+    ${vals.Description?`<div style="margin-bottom:12px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Description</div><div style="background:var(--light);padding:10px;border-radius:8px;font-size:13px;margin-top:4px;">${vals.Description}</div></div>`:''}
+    ${vals['Next Steps']?`<div style="margin-bottom:12px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Next Steps</div><div style="background:#E8F5E9;padding:10px;border-radius:8px;font-size:13px;margin-top:4px;">${vals['Next Steps']}</div></div>`:''}
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    <button class="btn btn-primary" onclick="closeModal();openUpdateStage('${o.id}')">Update Stage</button></div>
+  `);
+}
+
+function viewLead(id) {
+  const l = D.leads.find(x=>x.id===id); if(!l) return;
+  const vals = l.values;
+  openModal(`
+    <h2>${leadStatusBadge(vals.Status)} ${vals['Lead ID']} \u2014 ${vals['First Name']} ${vals['Last Name']}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+      ${Object.entries(vals).filter(([k,val])=>val&&k!=='Notes').map(([k,val]) => `<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">${k}</div><div style="font-size:13px;">${k==='Status'?leadStatusBadge(val):k==='Lead Score'?scoreBadge(val):val}</div></div>`).join('')}
+    </div>
+    ${vals.Notes?`<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Notes</div><div style="background:var(--light);padding:10px;border-radius:8px;font-size:13px;margin-top:4px;">${vals.Notes}</div></div>`:''}
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    <button class="btn btn-primary" onclick="closeModal();openUpdateLead('${l.id}')">Update Lead</button></div>
+  `);
+}
+
+function viewActivity(id) {
+  const a = D.activities.find(x=>x.id===id); if(!a) return;
+  openModal(`
+    <h2>${v(a,'Type')} \u2014 ${v(a,'Subject')}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+      ${Object.entries(a.values).filter(([k,val])=>val&&k!=='Details').map(([k,val]) => `<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">${k}</div><div>${val}</div></div>`).join('')}
+    </div>
+    ${v(a,'Details')?`<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Details</div><div style="background:var(--light);padding:10px;border-radius:8px;font-size:13px;margin-top:4px;">${v(a,'Details')}</div></div>`:''}
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+// ═══════════════════════════════════════
+//  CREATE / UPDATE FORMS
+// ═══════════════════════════════════════
+function openNewOpp() {
+  const prods = D.products.map(p => `<option>${v(p,'Name')}</option>`).join('');
+  openModal(`
+    <h2>New Opportunity</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Name *</label><input id="no-name" placeholder="Deal name..."></div>
+      <div class="form-row"><label>Account</label><input id="no-account" placeholder="Company name"></div>
+      <div class="form-row"><label>Contact</label><input id="no-contact" placeholder="Contact name"></div>
+      <div class="form-row"><label>Product</label><select id="no-product"><option value="">Select...</option>${prods}</select></div>
+      <div class="form-row"><label>Amount ($)</label><input id="no-amount" type="number" placeholder="Deal value"></div>
+      <div class="form-row"><label>Close Date</label><input id="no-close" type="date"></div>
+      <div class="form-row"><label>Stage</label><select id="no-stage"><option>Prospecting</option><option>Discovery</option><option>Proposal</option><option>Negotiation</option></select></div>
+      <div class="form-row"><label>Territory</label><select id="no-territory"><option>West</option><option>East</option><option>Central</option><option>Southeast</option><option>Northeast</option></select></div>
+    </div>
+    <div class="form-row"><label>Description</label><textarea id="no-desc" rows="3"></textarea></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitNewOpp()">Create</button></div>
+  `);
+}
+
+async function submitNewOpp() {
+  const name = document.getElementById('no-name').value.trim();
+  if (!name) { showToast('Name required'); return; }
+  const stage = document.getElementById('no-stage').value;
+  const prob = {Prospecting:'10%',Discovery:'25%',Proposal:'50%',Negotiation:'75%'}[stage]||'10%';
+  try {
+    await api('/kapps/crm/forms/opportunities/submissions', { method:'POST', body:JSON.stringify({values:{
+      'Opportunity ID': 'OPP'+String(Date.now()).slice(-6),
+      'Name': name, 'Account': document.getElementById('no-account').value,
+      'Contact': document.getElementById('no-contact').value,
+      'Product': document.getElementById('no-product').value,
+      'Amount': '$'+Number(document.getElementById('no-amount').value||0).toLocaleString(),
+      'Close Date': document.getElementById('no-close').value,
+      'Stage': stage, 'Probability': prob,
+      'Territory': document.getElementById('no-territory').value,
+      'Assigned To': API.user, 'Description': document.getElementById('no-desc').value,
+      'Created Date': new Date().toISOString().split('T')[0],
+      'Last Activity': new Date().toISOString().split('T')[0], 'Days In Stage': '0',
+    }})});
+    closeModal(); showToast('Opportunity created');
+    D.opps = await fetchSubs('opportunities'); renderSales();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function openUpdateStage(id) {
+  const o = D.opps.find(x=>x.id===id); if(!o) return;
+  openModal(`
+    <h2>Update Stage: ${v(o,'Opportunity ID')}</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Stage</label><select id="us-stage">
+        ${['Prospecting','Discovery','Proposal','Negotiation','Closed Won','Closed Lost'].map(s => `<option ${v(o,'Stage')===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label>Amount ($)</label><input id="us-amount" type="number" value="${parseMoney(v(o,'Amount'))}"></div>
+    </div>
+    <div class="form-row"><label>Next Steps</label><textarea id="us-next" rows="2">${v(o,'Next Steps')}</textarea></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitStageUpdate('${o.id}')">Save</button></div>
+  `);
+}
+
+async function submitStageUpdate(id) {
+  const stage = document.getElementById('us-stage').value;
+  const prob = {Prospecting:'10%',Discovery:'25%',Proposal:'50%',Negotiation:'75%','Closed Won':'100%','Closed Lost':'0%'}[stage]||'10%';
+  try {
+    await api(`/submissions/${id}`, { method:'PUT', body:JSON.stringify({values:{
+      'Stage': stage, 'Probability': prob,
+      'Amount': '$'+Number(document.getElementById('us-amount').value||0).toLocaleString(),
+      'Next Steps': document.getElementById('us-next').value,
+      'Last Activity': new Date().toISOString().split('T')[0], 'Days In Stage': '0',
+    }})});
+    closeModal(); showToast('Stage updated');
+    D.opps = await fetchSubs('opportunities'); renderSales();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function openNewLead() {
+  openModal(`
+    <h2>New Lead</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>First Name *</label><input id="nl-first"></div>
+      <div class="form-row"><label>Last Name *</label><input id="nl-last"></div>
+      <div class="form-row"><label>Company</label><input id="nl-company"></div>
+      <div class="form-row"><label>Email</label><input id="nl-email" type="email"></div>
+      <div class="form-row"><label>Phone</label><input id="nl-phone"></div>
+      <div class="form-row"><label>Source</label><select id="nl-source"><option>Web</option><option>Referral</option><option>Trade Show</option><option>Cold Call</option><option>Partner</option><option>Inbound</option></select></div>
+      <div class="form-row"><label>Territory</label><select id="nl-territory"><option>West</option><option>East</option><option>Central</option><option>Southeast</option><option>Northeast</option></select></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="nl-notes" rows="3"></textarea></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitNewLead()">Create Lead</button></div>
+  `);
+}
+
+async function submitNewLead() {
+  const first = document.getElementById('nl-first').value.trim();
+  const last = document.getElementById('nl-last').value.trim();
+  if (!first||!last) { showToast('Name required'); return; }
+  try {
+    await api('/kapps/crm/forms/leads/submissions', { method:'POST', body:JSON.stringify({values:{
+      'Lead ID': 'LD'+String(Date.now()).slice(-6),
+      'First Name':first, 'Last Name':last,
+      'Company': document.getElementById('nl-company').value,
+      'Email': document.getElementById('nl-email').value,
+      'Phone': document.getElementById('nl-phone').value,
+      'Source': document.getElementById('nl-source').value,
+      'Territory': document.getElementById('nl-territory').value,
+      'Status':'New', 'Assigned To':API.user, 'Lead Score':'15',
+      'Created Date': new Date().toISOString().split('T')[0],
+      'Notes': document.getElementById('nl-notes').value,
+    }})});
+    closeModal(); showToast('Lead created');
+    D.leads = await fetchSubs('leads'); renderSalesLeads();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function openUpdateLead(id) {
+  const l = D.leads.find(x=>x.id===id); if(!l) return;
+  openModal(`
+    <h2>Update Lead: ${v(l,'Lead ID')}</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Status</label><select id="ul-status">
+        ${['New','Contacted','Qualified','Proposal','Converted','Lost'].map(s=>`<option ${v(l,'Status')===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label>Lead Score</label><input id="ul-score" type="number" value="${v(l,'Lead Score')}" min="0" max="100"></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="ul-notes" rows="3">${v(l,'Notes')}</textarea></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitLeadUpdate('${l.id}')">Save</button></div>
+  `);
+}
+
+async function submitLeadUpdate(id) {
+  try {
+    await api(`/submissions/${id}`, { method:'PUT', body:JSON.stringify({values:{
+      'Status': document.getElementById('ul-status').value,
+      'Lead Score': document.getElementById('ul-score').value,
+      'Notes': document.getElementById('ul-notes').value,
+      'Last Contact': new Date().toISOString().split('T')[0],
+    }})});
+    closeModal(); showToast('Lead updated');
+    D.leads = await fetchSubs('leads'); renderSalesLeads();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function openNewActivity() { openLogActivity('',''); }
+function openLogActivity(relType, relId) {
+  openModal(`
+    <h2>Log Activity</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Type</label><select id="na-type"><option>Call</option><option>Email</option><option>Meeting</option><option>Demo</option><option>Follow-up</option><option>Proposal Sent</option></select></div>
+      <div class="form-row"><label>Date</label><input id="na-date" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="form-row"><label>Subject *</label><input id="na-subject"></div>
+      <div class="form-row"><label>Duration (min)</label><input id="na-duration" type="number" value="15"></div>
+      <div class="form-row"><label>Related To</label><select id="na-related"><option ${relType==='Lead'?'selected':''}>Lead</option><option ${relType==='Opportunity'?'selected':''}>Opportunity</option></select></div>
+      <div class="form-row"><label>Related ID</label><input id="na-relid" value="${relId}"></div>
+      <div class="form-row"><label>Outcome</label><select id="na-outcome"><option>Completed</option><option>No Answer</option><option>Rescheduled</option><option>Interested</option><option>Not Interested</option></select></div>
+      <div class="form-row"><label>Follow Up</label><input id="na-followup" type="date"></div>
+    </div>
+    <div class="form-row"><label>Details</label><textarea id="na-details" rows="3"></textarea></div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitActivity()">Log</button></div>
+  `);
+}
+
+async function submitActivity() {
+  const subj = document.getElementById('na-subject').value.trim();
+  if (!subj) { showToast('Subject required'); return; }
+  try {
+    await api('/kapps/crm/forms/activities/submissions', { method:'POST', body:JSON.stringify({values:{
+      'Activity ID': 'ACT'+String(Date.now()).slice(-6),
+      'Type': document.getElementById('na-type').value,
+      'Subject': subj, 'Details': document.getElementById('na-details').value,
+      'Activity Date': document.getElementById('na-date').value,
+      'Duration': document.getElementById('na-duration').value,
+      'Related To': document.getElementById('na-related').value,
+      'Related ID': document.getElementById('na-relid').value,
+      'Assigned To': API.user,
+      'Outcome': document.getElementById('na-outcome').value,
+      'Follow Up Date': document.getElementById('na-followup').value,
+    }})});
+    closeModal(); showToast('Activity logged');
+    D.activities = await fetchSubs('activities'); renderSalesActivities();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+// ═══════════════════════════════════════
+//  MANAGER CONSOLE
+// ═══════════════════════════════════════
+function renderManager() {
+  const opps = D.opps;
+  const openOpps = opps.filter(o => STAGES_OPEN.includes(v(o,'Stage')));
+  const wonOpps = opps.filter(o => v(o,'Stage')==='Closed Won');
+  const lostOpps = opps.filter(o => v(o,'Stage')==='Closed Lost');
+  const totalPipeline = openOpps.reduce((s,o) => s+(parseMoney(v(o,'Amount'))||0), 0);
+  const totalWon = wonOpps.reduce((s,o) => s+(parseMoney(v(o,'Amount'))||0), 0);
+  const totalLost = lostOpps.reduce((s,o) => s+(parseMoney(v(o,'Amount'))||0), 0);
+  const winRate = (wonOpps.length+lostOpps.length) ? (wonOpps.length/(wonOpps.length+lostOpps.length)*100) : 0;
+
+  document.getElementById('mgr-kpis').innerHTML = `
+    <div class="kpi orange"><div class="label">Total Pipeline</div><div class="val">${money(totalPipeline)}</div><div class="sub">${openOpps.length} open deals</div></div>
+    <div class="kpi green"><div class="label">Revenue Won</div><div class="val">${money(totalWon)}</div><div class="sub">${wonOpps.length} deals</div></div>
+    <div class="kpi red"><div class="label">Revenue Lost</div><div class="val">${money(totalLost)}</div><div class="sub">${lostOpps.length} deals</div></div>
+    <div class="kpi"><div class="label">Win Rate</div><div class="val">${pct(winRate)}</div></div>
+    <div class="kpi purple"><div class="label">Active Leads</div><div class="val">${D.leads.filter(l=>!['Converted','Lost'].includes(v(l,'Status'))).length}</div></div>
+    <div class="kpi teal"><div class="label">Activities (14d)</div><div class="val">${D.activities.filter(a=>daysSince(v(a,'Activity Date'))!==null&&daysSince(v(a,'Activity Date'))<=14).length}</div></div>
+  `;
+
+  // Stage chart
+  const stages = {};
+  STAGES_OPEN.forEach(s => stages[s] = 0);
+  openOpps.forEach(o => { const s=v(o,'Stage'); if(stages[s]!==undefined) stages[s]+=(parseMoney(v(o,'Amount'))||0); });
+  const maxS = Math.max(...Object.values(stages), 1);
+  document.getElementById('mgr-stage-chart').innerHTML = Object.entries(stages).map(([s,amt]) => `
+    <div class="h-bar-row"><div class="h-bar-label">${s}</div>
+    <div class="h-bar-track"><div class="h-bar-fill" style="width:${Math.max(amt/maxS*100,5)}%;background:${STAGE_COLORS[s]}">${money(amt)}</div></div></div>
+  `).join('');
+
+  // Territory chart
+  const territories = {};
+  openOpps.forEach(o => { const t=v(o,'Territory')||'Unknown'; territories[t]=(territories[t]||0)+(parseMoney(v(o,'Amount'))||0); });
+  const maxT = Math.max(...Object.values(territories), 1);
+  const tColors = ['#1565C0','#7B1FA2','#E65100','#00695C','#283593'];
+  document.getElementById('mgr-territory-chart').innerHTML = Object.entries(territories).sort((a,b)=>b[1]-a[1]).map(([t,amt],i) => `
+    <div class="h-bar-row"><div class="h-bar-label">${t}</div>
+    <div class="h-bar-track"><div class="h-bar-fill" style="width:${Math.max(amt/maxT*100,5)}%;background:${tColors[i%tColors.length]}">${money(amt)}</div></div></div>
+  `).join('');
+
+  // Pipeline table
+  const sorted = [...openOpps].sort((a,b)=>(parseMoney(v(b,'Amount'))||0)-(parseMoney(v(a,'Amount'))||0));
+  document.getElementById('mgr-pipeline-table').innerHTML = sorted.map(o => `<tr onclick="viewOpp('${o.id}')">
+    <td><strong style="color:var(--orange);">${v(o,'Opportunity ID')}</strong></td>
+    <td>${v(o,'Account')}</td><td>${v(o,'Assigned To')}</td>
+    <td>${territoryBadge(v(o,'Territory'))}</td><td>${stageBadge(v(o,'Stage'))}</td>
+    <td><strong>${money(v(o,'Amount'))}</strong></td><td>${v(o,'Close Date')}</td>
+  </tr>`).join('');
+
+  // Territory cards
+  const terrList = ['West','East','Central','Southeast','Northeast'];
+  document.getElementById('territory-cards').innerHTML = terrList.map(t => {
+    const tOpps = openOpps.filter(o=>v(o,'Territory')===t);
+    const tWon = wonOpps.filter(o=>v(o,'Territory')===t);
+    const tLeads = D.leads.filter(l=>v(l,'Territory')===t && !['Converted','Lost'].includes(v(l,'Status')));
+    const tAmt = tOpps.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+    const tWonAmt = tWon.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+    const rep = tOpps.length ? v(tOpps[0],'Assigned To') : '\u2014';
+    return `<div class="card">
+      <h3>${territoryBadge(t)} ${t} Territory \u2014 ${rep}</h3>
+      <div class="kpi-row" style="margin-bottom:12px;">
+        <div class="kpi"><div class="label">Pipeline</div><div class="val" style="font-size:20px;">${money(tAmt)}</div><div class="sub">${tOpps.length} deals</div></div>
+        <div class="kpi green"><div class="label">Won</div><div class="val" style="font-size:20px;">${money(tWonAmt)}</div></div>
+        <div class="kpi"><div class="label">Active Leads</div><div class="val" style="font-size:20px;">${tLeads.length}</div></div>
+      </div>
+      ${tOpps.length ? `<table><thead><tr><th>Opp</th><th>Account</th><th>Stage</th><th>Amount</th></tr></thead>
+        <tbody>${tOpps.slice(0,5).map(o=>`<tr onclick="viewOpp('${o.id}')"><td><strong>${v(o,'Opportunity ID')}</strong></td><td>${v(o,'Account')}</td><td>${stageBadge(v(o,'Stage'))}</td><td><strong>${money(v(o,'Amount'))}</strong></td></tr>`).join('')}</tbody></table>` : '<p style="color:var(--gray);text-align:center;">No open deals</p>'}
+    </div>`;
+  }).join('');
+
+  // Team performance
+  const reps = {};
+  D.opps.forEach(o => {
+    const r = v(o,'Assigned To'); if(!r) return;
+    if(!reps[r]) reps[r] = { territory:'', open:0, pipeline:0, won:0, wonAmt:0, lost:0, acts:0 };
+    reps[r].territory = v(o,'Territory');
+    if (STAGES_OPEN.includes(v(o,'Stage'))) { reps[r].open++; reps[r].pipeline+=(parseMoney(v(o,'Amount'))||0); }
+    if (v(o,'Stage')==='Closed Won') { reps[r].won++; reps[r].wonAmt+=(parseMoney(v(o,'Amount'))||0); }
+    if (v(o,'Stage')==='Closed Lost') reps[r].lost++;
+  });
+  D.activities.forEach(a => {
+    const r = v(a,'Assigned To');
+    if(reps[r] && daysSince(v(a,'Activity Date'))!==null && daysSince(v(a,'Activity Date'))<=14) reps[r].acts++;
+  });
+  const repList = Object.entries(reps).sort((a,b)=>b[1].wonAmt-a[1].wonAmt);
+  document.getElementById('mgr-team-table').innerHTML = repList.map(([name,s],i) => {
+    const wr = (s.won+s.lost)?Math.round(s.won/(s.won+s.lost)*100):0;
+    const avg = s.open ? Math.round(s.pipeline/s.open) : 0;
+    return `<tr>
+      <td><div class="shame-rank"><div class="rank-num ${i<1?'rank-1':i<2?'rank-2':i<3?'rank-3':'rank-ok'}">${i+1}</div></div></td>
+      <td><strong>${name}</strong></td><td>${territoryBadge(s.territory)}</td>
+      <td>${s.open}</td><td><strong>${money(s.pipeline)}</strong></td>
+      <td style="color:var(--green);font-weight:700;">${money(s.wonAmt)}</td>
+      <td><span style="color:${wr>=50?'var(--green)':'var(--red)'};">${wr}%</span></td>
+      <td>${money(avg)}</td>
+      <td>${s.acts}</td>
+    </tr>`;
+  }).join('');
+
+  // Forecast
+  renderForecast();
+}
+
+function renderForecast() {
+  const openOpps = D.opps.filter(o => STAGES_OPEN.includes(v(o,'Stage')));
+  const weighted = openOpps.reduce((s,o) => s+(parseMoney(v(o,'Amount'))||0)*(parseFloat(v(o,'Probability'))||0)/100, 0);
+  const bestCase = openOpps.reduce((s,o) => s+(parseMoney(v(o,'Amount'))||0), 0);
+  const committed = openOpps.filter(o=>['Proposal','Negotiation'].includes(v(o,'Stage'))).reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+
+  document.getElementById('mgr-forecast-kpis').innerHTML = `
+    <div class="kpi green"><div class="label">Weighted Forecast</div><div class="val">${money(weighted)}</div></div>
+    <div class="kpi orange"><div class="label">Best Case</div><div class="val">${money(bestCase)}</div></div>
+    <div class="kpi purple"><div class="label">Committed</div><div class="val">${money(committed)}</div><div class="sub">Proposal + Negotiation</div></div>
+  `;
+
+  // By month
+  const months = {};
+  openOpps.forEach(o => {
+    const cd = v(o,'Close Date');
+    if(!cd) return;
+    const m = cd.substring(0,7);
+    if(!months[m]) months[m] = { total:0, weighted:0 };
+    const amt = parseMoney(v(o,'Amount'))||0;
+    months[m].total += amt;
+    months[m].weighted += amt * (parseFloat(v(o,'Probability'))||0) / 100;
+  });
+  const maxM = Math.max(...Object.values(months).map(m=>m.total), 1);
+  document.getElementById('forecast-chart').innerHTML = Object.entries(months).sort().map(([m,d]) => `
+    <div class="h-bar-row">
+      <div class="h-bar-label">${m}</div>
+      <div class="h-bar-track">
+        <div class="h-bar-fill" style="width:${Math.max(d.total/maxM*100,5)}%;background:var(--blue);">${money(d.total)}</div>
+      </div>
+      <div class="h-bar-val">${money(d.weighted)}</div>
+    </div>
+  `).join('') || '<p style="color:var(--gray);text-align:center;padding:20px;">No forecast data</p>';
+
+  // Weighted table
+  const sorted = [...openOpps].sort((a,b)=>(parseMoney(v(b,'Amount'))||0)*(parseFloat(v(b,'Probability'))||0) - (parseMoney(v(a,'Amount'))||0)*(parseFloat(v(a,'Probability'))||0));
+  document.getElementById('forecast-table').innerHTML = sorted.map(o => {
+    const amt = parseMoney(v(o,'Amount'))||0;
+    const prob = parseFloat(v(o,'Probability'))||0;
+    return `<tr onclick="viewOpp('${o.id}')">
+      <td><strong>${v(o,'Opportunity ID')}</strong> ${v(o,'Name')}</td>
+      <td>${v(o,'Assigned To')}</td><td>${stageBadge(v(o,'Stage'))}</td>
+      <td>${money(amt)}</td><td>${pct(prob)}</td>
+      <td><strong style="color:var(--green);">${money(amt*prob/100)}</strong></td>
+      <td>${v(o,'Close Date')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  OWNER CONSOLE (The Paranoid One)
+// ═══════════════════════════════════════
+function renderOwner() {
+  const opps = D.opps;
+  const openOpps = opps.filter(o => STAGES_OPEN.includes(v(o,'Stage')));
+  const wonOpps = opps.filter(o => v(o,'Stage')==='Closed Won');
+  const lostOpps = opps.filter(o => v(o,'Stage')==='Closed Lost');
+  const totalPipeline = openOpps.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+  const totalWon = wonOpps.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+  const totalLost = lostOpps.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+  const acts14 = D.activities.filter(a=>daysSince(v(a,'Activity Date'))!==null&&daysSince(v(a,'Activity Date'))<=14);
+  const staleDeals = openOpps.filter(o => {
+    const d = daysSince(v(o,'Last Activity'));
+    return d===null || d > 7;
+  });
+  const newLeadsNoContact = D.leads.filter(l => v(l,'Status')==='New' && !v(l,'Last Contact'));
+
+  // Nag banners
+  let nags = '';
+  if (staleDeals.length) {
+    nags += `<div class="nag-banner"><span class="nag-icon pulse">&#128680;</span><strong>ALERT:</strong> ${staleDeals.length} deal${staleDeals.length>1?'s':''} with NO activity in 7+ days. That's ${money(staleDeals.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0))} sitting there <em>rotting</em>.</div>`;
+  }
+  if (newLeadsNoContact.length) {
+    nags += `<div class="nag-banner"><span class="nag-icon">&#128561;</span><strong>UNACCEPTABLE:</strong> ${newLeadsNoContact.length} new lead${newLeadsNoContact.length>1?'s':''} haven't been contacted yet. Every minute is a competitor's opportunity.</div>`;
+  }
+  const todayActs = D.activities.filter(a => v(a,'Activity Date') === new Date().toISOString().split('T')[0]);
+  if (todayActs.length < 3) {
+    nags += `<div class="nag-banner"><span class="nag-icon">&#128064;</span>Only <strong>${todayActs.length}</strong> activities logged today. Are we even open for business?</div>`;
+  }
+  document.getElementById('owner-nags').innerHTML = nags;
+
+  // KPIs
+  document.getElementById('owner-kpis').innerHTML = `
+    <div class="kpi orange"><div class="label">Total Pipeline</div><div class="val">${money(totalPipeline)}</div><div class="sub">${openOpps.length} deals I'm watching</div></div>
+    <div class="kpi green"><div class="label">Revenue Closed</div><div class="val">${money(totalWon)}</div><div class="sub">better be on target</div></div>
+    <div class="kpi red"><div class="label">Revenue LOST</div><div class="val">${money(totalLost)}</div><div class="sub">${lostOpps.length} deals someone dropped</div></div>
+    <div class="kpi yellow"><div class="label">Stale Deals</div><div class="val">${staleDeals.length}</div><div class="sub">7+ days no activity</div></div>
+    <div class="kpi"><div class="label">Untouched Leads</div><div class="val">${newLeadsNoContact.length}</div><div class="sub">money on the table</div></div>
+  `;
+
+  // Scores
+  const revVelocity = totalPipeline > 0 ? Math.min(((totalWon / (totalWon+totalPipeline)) * 100 + acts14.length * 2), 100).toFixed(1) : '0.0';
+  document.getElementById('owner-revenue-score').textContent = revVelocity;
+  document.getElementById('owner-revenue-score').style.color = parseFloat(revVelocity)>60?'var(--green)':parseFloat(revVelocity)>30?'var(--orange)':'var(--red)';
+
+  const hustleScore = (acts14.length / Math.max(openOpps.length,1) * 20).toFixed(1);
+  document.getElementById('owner-hustle-score').textContent = hustleScore;
+  document.getElementById('owner-hustle-score').style.color = parseFloat(hustleScore)>15?'var(--green)':parseFloat(hustleScore)>8?'var(--orange)':'var(--red)';
+
+  const leakScore = ((staleDeals.length / Math.max(openOpps.length,1)) * 100).toFixed(0);
+  document.getElementById('owner-leak-score').textContent = leakScore + '%';
+
+  // Who's working today
+  const repActivity = {};
+  const allReps = [...new Set(D.opps.map(o=>v(o,'Assigned To')).filter(Boolean))];
+  allReps.forEach(r => repActivity[r] = { today:0, week:0, lastAct:null });
+  D.activities.forEach(a => {
+    const r = v(a,'Assigned To');
+    if (!repActivity[r]) return;
+    const d = daysSince(v(a,'Activity Date'));
+    if (d===0) repActivity[r].today++;
+    if (d!==null && d<=7) repActivity[r].week++;
+    if (!repActivity[r].lastAct || v(a,'Activity Date') > repActivity[r].lastAct) repActivity[r].lastAct = v(a,'Activity Date');
+  });
+  document.getElementById('owner-today-activity').innerHTML = allReps.map(r => {
+    const ra = repActivity[r];
+    const statusIcon = ra.today >= 5 ? '&#9989;' : ra.today >= 2 ? '&#128993;' : ra.today > 0 ? '&#128308;' : '&#128564;';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:18px;">${statusIcon}</span>
+      <strong style="flex:1;">${r}</strong>
+      <span style="font-size:12px;">Today: <strong>${ra.today}</strong></span>
+      <span style="font-size:12px;color:var(--gray);">Week: ${ra.week}</span>
+      <span style="font-size:11px;color:var(--gray);">Last: ${ra.lastAct||'NEVER'}</span>
+    </div>`;
+  }).join('') || '<p style="color:var(--gray);">No reps found</p>';
+
+  // Stale deals
+  document.getElementById('owner-stale-deals').innerHTML = staleDeals.length ? staleDeals.sort((a,b)=>(parseMoney(v(b,'Amount'))||0)-(parseMoney(v(a,'Amount'))||0)).slice(0,8).map(o => `
+    <div class="deal-card" onclick="viewOpp('${o.id}')">
+      <div class="deal-name">${v(o,'Name')} <span style="color:var(--red);font-size:11px;">[${daysSince(v(o,'Last Activity'))||'?'}d stale]</span></div>
+      <div class="deal-meta">
+        <span>${v(o,'Assigned To')}</span>
+        <span class="deal-amount">${money(v(o,'Amount'))}</span>
+        ${stageBadge(v(o,'Stage'))}
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--green);text-align:center;padding:20px;">No stale deals. For now.</p>';
+
+  // Accountability scorecard
+  const repStats = {};
+  allReps.forEach(r => repStats[r] = { calls:0, emails:0, meetings:0, demos:0, pipeline:0, won:0 });
+  D.activities.forEach(a => {
+    const r = v(a,'Assigned To');
+    if (!repStats[r]) return;
+    const d = daysSince(v(a,'Activity Date'));
+    if (d===null || d > 14) return;
+    const t = v(a,'Type');
+    if (t==='Call') repStats[r].calls++;
+    if (t==='Email') repStats[r].emails++;
+    if (t==='Meeting') repStats[r].meetings++;
+    if (t==='Demo') repStats[r].demos++;
+  });
+  D.opps.forEach(o => {
+    const r = v(o,'Assigned To');
+    if (!repStats[r]) return;
+    if (STAGES_OPEN.includes(v(o,'Stage'))) repStats[r].pipeline += (parseMoney(v(o,'Amount'))||0);
+    if (v(o,'Stage')==='Closed Won') repStats[r].won += (parseMoney(v(o,'Amount'))||0);
+  });
+  const repArr = Object.entries(repStats).sort((a,b) => {
+    const sa = a[1].calls+a[1].emails+a[1].meetings+a[1].demos;
+    const sb = b[1].calls+b[1].emails+b[1].meetings+b[1].demos;
+    return sb - sa;
+  });
+  document.getElementById('owner-scorecard').innerHTML = repArr.map(([name,s],i) => {
+    const total = s.calls+s.emails+s.meetings+s.demos;
+    const hustle = (total / Math.max(s.pipeline/10000, 1)).toFixed(1);
+    const hustleColor = parseFloat(hustle)>3?'var(--green)':parseFloat(hustle)>1.5?'var(--orange)':'var(--red)';
+    return `<tr>
+      <td><div class="shame-rank"><div class="rank-num ${i<1?'rank-1':i<2?'rank-2':i<3?'rank-3':'rank-ok'}">${i+1}</div></div></td>
+      <td><strong>${name}</strong></td>
+      <td style="color:${s.calls>5?'var(--green)':'var(--red)'};">${s.calls}</td>
+      <td>${s.emails}</td><td>${s.meetings}</td><td>${s.demos}</td>
+      <td>${money(s.pipeline)}</td>
+      <td style="color:var(--green);font-weight:700;">${money(s.won)}</td>
+      <td><strong style="color:${hustleColor};">${hustle}</strong></td>
+      <td><button class="btn btn-sm btn-secondary" onclick="sendNudge('${name}')">&#128232; Nudge</button></td>
+    </tr>`;
+  }).join('');
+
+  // Activity distribution
+  const typeCounts = {};
+  acts14.forEach(a => { const t=v(a,'Type'); typeCounts[t]=(typeCounts[t]||0)+1; });
+  const maxAct = Math.max(...Object.values(typeCounts), 1);
+  const actColors = ['#F36C24','#242F4D','#34A853','#7B1FA2','#1565C0','#E65100'];
+  document.getElementById('owner-activity-dist').innerHTML = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).map(([t,c],i) => `
+    <div class="h-bar-row"><div class="h-bar-label">${t}</div>
+    <div class="h-bar-track"><div class="h-bar-fill" style="width:${Math.max(c/maxAct*100,8)}%;background:${actColors[i%actColors.length]}">${c}</div></div></div>
+  `).join('') || '<p style="color:var(--gray);text-align:center;">No activities. Shocking.</p>';
+
+  // Response time (simplified)
+  document.getElementById('owner-response-time').innerHTML = allReps.map(r => {
+    const rLeads = D.leads.filter(l => v(l,'Assigned To')===r);
+    const contacted = rLeads.filter(l => v(l,'Last Contact'));
+    const rate = rLeads.length ? Math.round(contacted.length/rLeads.length*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <strong style="width:120px;">${r}</strong>
+      <div style="flex:1;height:20px;background:var(--light);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${rate}%;background:${rate>80?'var(--green)':rate>50?'var(--orange)':'var(--red)'};border-radius:4px;"></div>
+      </div>
+      <span style="width:40px;text-align:right;font-weight:700;font-size:12px;">${rate}%</span>
+    </div>`;
+  }).join('');
+
+  renderOwnerDeals();
+  renderLeakage();
+}
+
+function renderOwnerDeals() {
+  const search = (document.getElementById('od-search').value||'').toLowerCase();
+  const stage = document.getElementById('od-stage').value;
+  const rep = document.getElementById('od-rep').value;
+  let opps = D.opps;
+  if (stage) opps = opps.filter(o=>v(o,'Stage')===stage);
+  if (rep) opps = opps.filter(o=>v(o,'Assigned To')===rep);
+  if (search) opps = opps.filter(o=>`${v(o,'Opportunity ID')} ${v(o,'Name')} ${v(o,'Account')} ${v(o,'Assigned To')}`.toLowerCase().includes(search));
+  opps.sort((a,b)=>(parseMoney(v(b,'Amount'))||0)-(parseMoney(v(a,'Amount'))||0));
+
+  document.getElementById('od-table').innerHTML = opps.length ? opps.map(o => {
+    const risk = riskLevel(o);
+    return `<tr onclick="viewOpp('${o.id}')">
+      <td><strong style="color:var(--orange);">${v(o,'Opportunity ID')}</strong></td>
+      <td>${v(o,'Account')}</td><td>${v(o,'Assigned To')}</td>
+      <td>${stageBadge(v(o,'Stage'))}</td><td><strong>${money(v(o,'Amount'))}</strong></td>
+      <td>${v(o,'Close Date')}</td>
+      <td>${v(o,'Days In Stage')||'0'}</td>
+      <td>${v(o,'Last Activity')||'\u2014'}</td>
+      <td>${riskBadge(risk)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px;">No deals</td></tr>';
+}
+
+function renderLeakage() {
+  const opps = D.opps;
+  const lostOpps = opps.filter(o=>v(o,'Stage')==='Closed Lost');
+  const totalLost = lostOpps.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+  const openOpps = opps.filter(o=>STAGES_OPEN.includes(v(o,'Stage')));
+  const atRisk = openOpps.filter(o=>riskLevel(o)==='High');
+  const atRiskAmt = atRisk.reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0);
+
+  document.getElementById('leakage-kpis').innerHTML = `
+    <div class="kpi red"><div class="label">Lost Revenue</div><div class="val">${money(totalLost)}</div><div class="sub">${lostOpps.length} deals lost</div></div>
+    <div class="kpi yellow"><div class="label">At-Risk Pipeline</div><div class="val">${money(atRiskAmt)}</div><div class="sub">${atRisk.length} deals at risk</div></div>
+    <div class="kpi"><div class="label">Leakage Rate</div><div class="val">${pct(totalLost/(totalLost+(opps.filter(o=>v(o,'Stage')==='Closed Won').reduce((s,o)=>s+(parseMoney(v(o,'Amount'))||0),0))||1)*100)}</div></div>
+  `;
+
+  // Lost by rep
+  const lostByRep = {};
+  lostOpps.forEach(o => { const r=v(o,'Assigned To'); lostByRep[r]=(lostByRep[r]||0)+(parseMoney(v(o,'Amount'))||0); });
+  const maxLost = Math.max(...Object.values(lostByRep), 1);
+  document.getElementById('leakage-lost').innerHTML = Object.entries(lostByRep).sort((a,b)=>b[1]-a[1]).map(([r,amt]) => `
+    <div class="h-bar-row"><div class="h-bar-label">${r}</div>
+    <div class="h-bar-track"><div class="h-bar-fill" style="width:${Math.max(amt/maxLost*100,8)}%;background:var(--red)">${money(amt)}</div></div></div>
+  `).join('') || '<p style="color:var(--gray);text-align:center;">No lost deals yet</p>';
+
+  // Competitors
+  const compWL = {};
+  opps.filter(o=>['Closed Won','Closed Lost'].includes(v(o,'Stage'))&&v(o,'Competitor')).forEach(o => {
+    const c = v(o,'Competitor');
+    if(!compWL[c]) compWL[c] = {won:0,lost:0};
+    if(v(o,'Stage')==='Closed Won') compWL[c].won++; else compWL[c].lost++;
+  });
+  document.getElementById('leakage-competitors').innerHTML = Object.entries(compWL).length ? Object.entries(compWL).map(([c,d]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <strong style="flex:1;">${c}</strong>
+      <span style="color:var(--green);font-weight:700;">W: ${d.won}</span>
+      <span style="color:var(--red);font-weight:700;">L: ${d.lost}</span>
+      <span style="font-size:12px;color:${d.won>=d.lost?'var(--green)':'var(--red)'};">${Math.round(d.won/(d.won+d.lost)*100)}% win</span>
+    </div>
+  `).join('') : '<p style="color:var(--gray);text-align:center;">No competitor data</p>';
+
+  // At risk table
+  document.getElementById('leakage-table').innerHTML = atRisk.length ? atRisk.sort((a,b)=>(parseMoney(v(b,'Amount'))||0)-(parseMoney(v(a,'Amount'))||0)).map(o => `<tr onclick="viewOpp('${o.id}')">
+    <td><strong style="color:var(--orange);">${v(o,'Opportunity ID')}</strong></td>
+    <td>${v(o,'Account')}</td><td>${v(o,'Assigned To')}</td>
+    <td>${stageBadge(v(o,'Stage'))}</td>
+    <td><strong>${money(v(o,'Amount'))}</strong></td>
+    <td style="color:var(--red);font-weight:700;">${v(o,'Days In Stage')||'?'}</td>
+    <td>${v(o,'Last Activity')||'NEVER'}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();sendNudge('${v(o,'Assigned To')}')">&#128232; Escalate</button></td>
+  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--green);padding:20px;">No at-risk deals. Miraculously.</td></tr>';
+}
+
+function sendNudge(rep) {
+  openModal(`
+    <h2>&#128232; Performance Discussion Request</h2>
+    <p style="margin-bottom:16px;color:var(--gray);">Draft a <em>constructive</em> message to <strong>${rep}</strong>:</p>
+    <div class="form-row"><label>Template</label>
+      <select id="nudge-template" onchange="updateNudge()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;">
+        <option value="0">The "Just Checking In"</option>
+        <option value="1">The "I Noticed Something"</option>
+        <option value="2">The "Let's Talk Numbers"</option>
+        <option value="3">The "Calendar Invite Incoming"</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Preview</label>
+      <textarea id="nudge-text" rows="6" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">Hi ${rep},\n\nI was reviewing the pipeline dashboard (as I do hourly) and noticed some opportunities that could use attention.\n\nLet's sync up. How about tomorrow at 7:30 AM? I'll bring the metrics.\n\nBest</textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal();showToast('Message sent to ${rep}. They will definitely not be stressed about this.')">&#128228; Send</button>
+    </div>
+  `);
+}
+
+function updateNudge() {
+  const templates = [
+    "Hi {rep},\n\nJust checking in on your pipeline. I noticed a few deals that seem a bit quiet lately.\n\nI'm sure you're on top of it! Just wanted to make sure we're aligned.\n\nBest",
+    "Hi {rep},\n\nI was going through the CRM data (it's a hobby) and I noticed your activity numbers are... interesting.\n\nWould love to hear your perspective on your current deals. Coffee tomorrow?\n\nRegards",
+    "Hi {rep},\n\nI've been running some analysis on the team's numbers. Your pipeline is at an interesting stage.\n\nI'd love to do a deal-by-deal review. I've blocked 2 hours. It'll be fun!\n\nBest",
+    "Hi {rep},\n\nYou'll see a calendar invite for tomorrow at 7 AM. Nothing to worry about - just a routine performance deep-dive.\n\nPlease bring your pipeline notes, activity log, and a growth mindset.\n\nSee you there",
+  ];
+  document.getElementById('nudge-text').value = templates[document.getElementById('nudge-template').value];
+}
+
+// Keyboard
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>

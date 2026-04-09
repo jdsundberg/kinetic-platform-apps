@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Governance</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+  --purple: #6A1B9A;
+  --indigo: #283593;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--indigo); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--indigo); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--indigo); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #1A237E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: #7986CB; }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--indigo); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtab { background: var(--light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--gray); }
+.subtab.active { background: var(--indigo); color: var(--white); }
+.subtab:hover:not(.active) { background: var(--border); }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.kpi-card.kpi-indigo { border-left-color: var(--indigo); }
+.kpi-card.kpi-purple { border-left-color: var(--purple); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-current, .badge-approved, .badge-completed, .badge-resolved, .badge-optimized { background: #E8F5E9; color: #2E7D32; }
+.badge-open, .badge-submitted, .badge-planned, .badge-initial { background: #E0F7FA; color: #00838F; }
+.badge-in-progress, .badge-under-review, .badge-under-development, .badge-managed, .badge-defined { background: #F3E5F5; color: #6A1B9A; }
+.badge-draft, .badge-pending, .badge-reclassification-required { background: #E3F2FD; color: #1565C0; }
+.badge-deferred, .badge-follow-up-required, .badge-expired, .badge-measured { background: #FFF3E0; color: #E65100; }
+.badge-denied, .badge-revoked, .badge-deprecated, .badge-retired, .badge-inactive, .badge-archived { background: #FFEBEE; color: #C62828; }
+.badge-accepted { background: #F1F8E9; color: #558B2F; }
+
+/* Quality score badges */
+.q-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: var(--white); }
+.q-high { background: #2E7D32; }
+.q-med { background: #F9A825; color: #333; }
+.q-low { background: #C62828; }
+
+/* Sensitivity badges */
+.sens-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+.sens-public { background: #E8F5E9; color: #2E7D32; }
+.sens-internal { background: #E3F2FD; color: #1565C0; }
+.sens-confidential { background: #FFF3E0; color: #E65100; }
+.sens-restricted { background: #FCE4EC; color: #AD1457; }
+.sens-phi { background: #FFEBEE; color: #C62828; }
+
+/* Impact */
+.impact-critical { color: var(--red); font-weight: 700; }
+.impact-high { color: var(--orange); font-weight: 600; }
+.impact-medium { color: var(--yellow); font-weight: 600; }
+.impact-low { color: var(--green); }
+
+/* Maturity gauge */
+.maturity { display: flex; gap: 3px; align-items: center; }
+.maturity-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.maturity-dot.filled { background: var(--indigo); }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--indigo); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 960px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--indigo); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--indigo); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-indigo { background: var(--indigo); color: var(--white); }
+.act-btn-indigo:hover { background: #1A237E; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Domain cards */
+.domain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.domain-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); border-left: 4px solid var(--indigo); }
+.domain-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 4px; }
+.domain-card .meta { font-size: 11px; color: var(--gray); margin-bottom: 8px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Data Governance</h1>
+      <p class="subtitle">Cross-Enterprise Data Governance Platform</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Data <span class="accent">Governance</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="assets">Data Assets</button>
+      <button class="tab-btn" data-tab="domains">Domains</button>
+      <button class="tab-btn" data-tab="quality">Quality</button>
+      <button class="tab-btn" data-tab="policies">Policies</button>
+      <button class="tab-btn" data-tab="access">Access</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Governance Dashboard</div>
+      <div class="page-sub">Enterprise data governance overview and key metrics</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Quality by Domain</h3><div id="dash-quality" class="bar-chart"></div></div>
+        <div class="card"><h3>Sensitivity Distribution</h3><div id="dash-sens" class="bar-chart"></div></div>
+      </div>
+      <div class="two-col">
+        <div class="card"><h3>Recent Quality Issues</h3><div id="dash-issues"></div></div>
+        <div class="card"><h3>Pending Access Requests</h3><div id="dash-access"></div></div>
+      </div>
+    </div>
+
+    <!-- DATA ASSETS -->
+    <div class="tab-panel" id="panel-assets">
+      <div class="page-title">Data Assets</div>
+      <div class="page-sub">Enterprise data asset inventory and quality tracking</div>
+      <div class="filter-bar" id="assets-filters">
+        <select id="asset-f-status"><option value="">All Statuses</option><option>Active</option><option>Deprecated</option><option>Under Review</option><option>Archived</option></select>
+        <select id="asset-f-type"><option value="">All Types</option><option>Database</option><option>Data Warehouse</option><option>File System</option><option>API</option><option>Application</option><option>Report</option><option>Spreadsheet</option><option>Data Lake</option></select>
+        <select id="asset-f-domain"><option value="">All Domains</option><option>Clinical</option><option>Financial</option><option>Operational</option><option>Human Resources</option><option>Supply Chain</option><option>Research</option><option>Regulatory</option><option>Patient</option></select>
+        <select id="asset-f-sens"><option value="">All Sensitivity</option><option>Public</option><option>Internal</option><option>Confidential</option><option>Restricted</option><option>PHI</option></select>
+        <input id="asset-f-search" type="text" placeholder="Search assets...">
+      </div>
+      <div id="assets-table"></div>
+      <div id="assets-pag" class="pagination"></div>
+    </div>
+
+    <!-- DOMAINS -->
+    <div class="tab-panel" id="panel-domains">
+      <div class="page-title">Data Domains</div>
+      <div class="page-sub">Organizational data domain governance structure</div>
+      <div id="domains-content"></div>
+    </div>
+
+    <!-- QUALITY -->
+    <div class="tab-panel" id="panel-quality">
+      <div class="page-title">Data Quality</div>
+      <div class="page-sub">Quality rules, scores, and issue management</div>
+      <div class="subtabs" id="quality-subtabs">
+        <button class="subtab active" data-sub="rules">Rules</button>
+        <button class="subtab" data-sub="issues">Issues</button>
+      </div>
+      <div id="quality-rules-panel">
+        <div class="filter-bar">
+          <select id="rule-f-status"><option value="">All Statuses</option><option>Active</option><option>Inactive</option><option>Under Review</option></select>
+          <select id="rule-f-type"><option value="">All Types</option><option>Completeness</option><option>Accuracy</option><option>Consistency</option><option>Timeliness</option><option>Uniqueness</option><option>Validity</option></select>
+          <input id="rule-f-search" type="text" placeholder="Search rules...">
+        </div>
+        <div id="rules-table"></div>
+        <div id="rules-pag" class="pagination"></div>
+      </div>
+      <div id="quality-issues-panel" style="display:none">
+        <div class="filter-bar">
+          <select id="issue-f-status"><option value="">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Deferred</option><option>Accepted</option></select>
+          <select id="issue-f-impact"><option value="">All Impact</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+          <select id="issue-f-type"><option value="">All Types</option><option>Missing Data</option><option>Duplicate</option><option>Invalid Format</option><option>Stale Data</option><option>Inconsistency</option><option>Orphaned Record</option></select>
+          <input id="issue-f-search" type="text" placeholder="Search issues...">
+        </div>
+        <div id="issues-table"></div>
+        <div id="issues-pag" class="pagination"></div>
+      </div>
+    </div>
+
+    <!-- POLICIES -->
+    <div class="tab-panel" id="panel-policies">
+      <div class="page-title">Governance Policies</div>
+      <div class="page-sub">Enterprise data governance policy management</div>
+      <div class="filter-bar" id="policies-filters">
+        <select id="pol-f-status"><option value="">All Statuses</option><option>Active</option><option>Draft</option><option>Under Review</option><option>Retired</option></select>
+        <select id="pol-f-type"><option value="">All Types</option><option>Data Access</option><option>Data Retention</option><option>Data Quality</option><option>Data Privacy</option><option>Data Sharing</option><option>Data Classification</option><option>Data Archival</option></select>
+        <select id="pol-f-compliance"><option value="">All Compliance</option><option>HIPAA</option><option>SOX</option><option>GDPR</option><option>State Law</option><option>Internal</option><option>Joint Commission</option></select>
+        <input id="pol-f-search" type="text" placeholder="Search policies...">
+      </div>
+      <div id="policies-table"></div>
+      <div id="policies-pag" class="pagination"></div>
+    </div>
+
+    <!-- ACCESS -->
+    <div class="tab-panel" id="panel-access">
+      <div class="page-title">Access Requests</div>
+      <div class="page-sub">Data access request management and approval workflow</div>
+      <div class="filter-bar" id="access-filters">
+        <select id="ar-f-status"><option value="">All Statuses</option><option>Submitted</option><option>Under Review</option><option>Approved</option><option>Denied</option><option>Expired</option><option>Revoked</option></select>
+        <select id="ar-f-level"><option value="">All Levels</option><option>Read Only</option><option>Read Write</option><option>Admin</option><option>Extract</option></select>
+        <input id="ar-f-search" type="text" placeholder="Search requests...">
+      </div>
+      <div id="access-table"></div>
+      <div id="access-pag" class="pagination"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate governance reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSET DETAIL MODAL -->
+<div class="modal-overlay" id="asset-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="asset-modal-title">Asset Detail</h2>
+      <button class="modal-close" onclick="closeModal('asset-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="asset-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="rules">Quality Rules</button>
+        <button class="modal-tab" data-sec="classifications">Classifications</button>
+        <button class="modal-tab" data-sec="access">Access History</button>
+      </div>
+      <div id="asset-modal-overview" class="modal-section active"></div>
+      <div id="asset-modal-rules" class="modal-section"></div>
+      <div id="asset-modal-classifications" class="modal-section"></div>
+      <div id="asset-modal-access" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD DETAIL MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =============== STATE & AUTH =============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'data-governance';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* =============== API HELPERS =============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* =============== BADGES =============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+
+function qBadge(score) {
+  const n = parseFloat(score) || 0;
+  const cls = n >= 90 ? 'q-high' : n >= 75 ? 'q-med' : 'q-low';
+  return `<span class="q-badge ${cls}">${score}%</span>`;
+}
+
+function sensBadge(level) {
+  const cls = (level || '').toLowerCase().replace(/\s+/g, '-');
+  return `<span class="sens-badge sens-${cls}">${level || ''}</span>`;
+}
+
+function impactSpan(imp) {
+  const cls = (imp || '').toLowerCase();
+  return `<span class="impact-${cls}">${imp || ''}</span>`;
+}
+
+function maturityGauge(level) {
+  const levels = { 'Initial': 1, 'Managed': 2, 'Defined': 3, 'Measured': 4, 'Optimized': 5 };
+  const n = levels[level] || 0;
+  let html = '<div class="maturity">';
+  for (let i = 1; i <= 5; i++) html += `<div class="maturity-dot ${i <= n ? 'filled' : ''}"></div>`;
+  html += ` <span style="font-size:11px; margin-left:4px">${level || ''}</span></div>`;
+  return html;
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span style="color:var(--red); font-weight:700">${Math.abs(days)}d overdue</span>`;
+  if (days <= 7) return `<span style="color:var(--red)">${days}d</span>`;
+  if (days <= 30) return `<span style="color:var(--yellow); font-weight:600">${days}d</span>`;
+  return `<span style="color:var(--green)">${days}d</span>`;
+}
+
+/* =============== PAGINATION =============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* =============== TAB NAVIGATION =============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'assets') loadAssets();
+    else if (tab === 'domains') loadDomains();
+    else if (tab === 'quality') { qualitySub === 'rules' ? loadRules() : loadIssues(); }
+    else if (tab === 'policies') loadPolicies();
+    else if (tab === 'access') loadAccess();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* =============== MODAL =============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('asset-modal-tabs', ['asset-modal-overview', 'asset-modal-rules', 'asset-modal-classifications', 'asset-modal-access']);
+
+/* =============== DASHBOARD =============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/dgov/dashboard');
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-indigo"><div class="kpi-value">${d.totalAssets}</div><div class="kpi-label">Active Assets</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${d.activePolicies}</div><div class="kpi-label">Active Policies</div></div>
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.avgQuality}%</div><div class="kpi-label">Avg Quality Score</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.openIssues}</div><div class="kpi-label">Open Issues</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.pendingAccess}</div><div class="kpi-label">Pending Access Reqs</div></div>
+      <div class="kpi-card kpi-purple"><div class="kpi-value">${d.domainsGoverned}</div><div class="kpi-label">Domains Governed</div></div>`;
+
+    // Quality by domain chart
+    const domKeys = Object.keys(d.qualityByDomain);
+    const maxQ = 100;
+    const qColors = { Clinical:'#1565C0', Financial:'#2E7D32', Operational:'#E65100', 'Human Resources':'#6A1B9A', 'Supply Chain':'#00838F', Research:'#AD1457', Regulatory:'#283593', Patient:'#F9A825' };
+    document.getElementById('dash-quality').innerHTML = domKeys.map(k =>
+      `<div class="bar-col"><div class="bar-value">${d.qualityByDomain[k].avg}%</div><div class="bar" style="height:${(d.qualityByDomain[k].avg / maxQ * 120)}px; background:${qColors[k] || 'var(--indigo)'}"></div><div class="bar-label">${k.slice(0, 8)}</div></div>`
+    ).join('');
+
+    // Sensitivity chart
+    const sensKeys = Object.keys(d.sensDist);
+    const sensMax = Math.max(...Object.values(d.sensDist), 1);
+    const sensColors = { Public:'#2E7D32', Internal:'#1565C0', Confidential:'#E65100', Restricted:'#AD1457', PHI:'#C62828' };
+    document.getElementById('dash-sens').innerHTML = sensKeys.map(k =>
+      `<div class="bar-col"><div class="bar-value">${d.sensDist[k]}</div><div class="bar" style="height:${(d.sensDist[k] / sensMax * 120)}px; background:${sensColors[k] || 'var(--gray)'}"></div><div class="bar-label">${k}</div></div>`
+    ).join('');
+
+    // Recent issues
+    document.getElementById('dash-issues').innerHTML = d.recentIssues.length === 0
+      ? '<div class="loading">No recent issues</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Type</th><th>Impact</th><th>Status</th></tr></thead><tbody>${
+        d.recentIssues.map(i => `<tr><td>${i.issueId}</td><td>${i.assetName}</td><td>${i.type}</td><td>${impactSpan(i.impact)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Access requests
+    document.getElementById('dash-access').innerHTML = d.recentAccess.length === 0
+      ? '<div class="loading">No pending requests</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Requestor</th><th>Level</th><th>Status</th></tr></thead><tbody>${
+        d.recentAccess.map(r => `<tr><td>${r.requestId}</td><td>${r.assetName}</td><td>${r.requestor}</td><td>${r.level}</td><td>${badge(r.status)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== DATA ASSETS TAB =============== */
+let assetPage = 1, assetPageKeys = [null], assetHasNext = false;
+
+['asset-f-status', 'asset-f-type', 'asset-f-domain', 'asset-f-sens'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { assetPage = 1; assetPageKeys = [null]; assetHasNext = false; loadAssets(); });
+});
+document.getElementById('asset-f-search').addEventListener('input', debounce(() => { assetPage = 1; assetPageKeys = [null]; assetHasNext = false; loadAssets(); }, 300));
+
+async function loadAssets() {
+  const status = document.getElementById('asset-f-status').value;
+  const atype = document.getElementById('asset-f-type').value;
+  const domain = document.getElementById('asset-f-domain').value;
+  const sens = document.getElementById('asset-f-sens').value;
+  const search = document.getElementById('asset-f-search').value.trim().toLowerCase();
+
+  const parts = [];
+  if (status) parts.push(`values[Status] = "${status}"`);
+  if (atype) parts.push(`values[Asset Type] = "${atype}"`);
+  if (domain) parts.push(`values[Domain] = "${domain}"`);
+  if (sens) parts.push(`values[Sensitivity Level] = "${sens}"`);
+  const kql = parts.length <= 1 ? parts.join('') : null;
+
+  try {
+    const data = await kqlFetch('data-assets', kql, 25, assetPageKeys[assetPage - 1]);
+    let subs = data.submissions || [];
+
+    if (parts.length > 1) {
+      subs = subs.filter(s => {
+        if (status && vf(s, 'Status') !== status) return false;
+        if (atype && vf(s, 'Asset Type') !== atype) return false;
+        if (domain && vf(s, 'Domain') !== domain) return false;
+        if (sens && vf(s, 'Sensitivity Level') !== sens) return false;
+        return true;
+      });
+    }
+    if (search) subs = subs.filter(s => (vf(s, 'Asset ID') + ' ' + vf(s, 'Asset Name') + ' ' + vf(s, 'Department')).toLowerCase().includes(search));
+
+    document.getElementById('assets-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No assets found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Domain</th><th>Sensitivity</th><th>Quality</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openAssetDetail('${vf(s, 'Asset ID')}')">
+          <td>${vf(s, 'Asset ID')}</td>
+          <td>${vf(s, 'Asset Name')}</td>
+          <td>${vf(s, 'Asset Type')}</td>
+          <td>${vf(s, 'Domain')}</td>
+          <td>${sensBadge(vf(s, 'Sensitivity Level'))}</td>
+          <td>${qBadge(vf(s, 'Quality Score'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    assetHasNext = !!data.nextPageToken;
+    if (assetHasNext && subs.length) assetPageKeys[assetPage] = subs[subs.length - 1].createdAt;
+    renderPag('assets-pag', assetPage, assetHasNext, 'assetPrev()', 'assetNext()');
+  } catch (e) {
+    document.getElementById('assets-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function assetNext() { if (!assetHasNext) return; assetPage++; loadAssets(); }
+function assetPrev() { if (assetPage <= 1) return; assetPage--; loadAssets(); }
+
+/* =============== ASSET DETAIL MODAL =============== */
+async function openAssetDetail(assetId) {
+  openModal('asset-modal');
+  document.getElementById('asset-modal-title').textContent = 'Loading...';
+  document.getElementById('asset-modal-overview').innerHTML = '<div class="loading">Loading asset profile...</div>';
+  ['asset-modal-rules', 'asset-modal-classifications', 'asset-modal-access'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  document.querySelectorAll('#asset-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#asset-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#asset-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('asset-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/dgov/asset/${encodeURIComponent(assetId)}/profile`);
+    const a = d.asset;
+    document.getElementById('asset-modal-title').textContent = `${a['Asset ID']} - ${a['Asset Name']}`;
+
+    document.getElementById('asset-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${sensBadge(a['Sensitivity Level'])} ${badge(a.Status)} ${qBadge(a['Quality Score'])}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Asset Type</span><span class="detail-value">${a['Asset Type']}</span></div>
+        <div class="detail-row"><span class="detail-label">Domain</span><span class="detail-value">${a.Domain}</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${a.Department}</span></div>
+        <div class="detail-row"><span class="detail-label">Owner</span><span class="detail-value">${a.Owner}</span></div>
+        <div class="detail-row"><span class="detail-label">Steward</span><span class="detail-value">${a.Steward}</span></div>
+        <div class="detail-row"><span class="detail-label">System of Record</span><span class="detail-value">${a['System of Record']}</span></div>
+        <div class="detail-row"><span class="detail-label">Data Format</span><span class="detail-value">${a['Data Format']}</span></div>
+        <div class="detail-row"><span class="detail-label">Record Count</span><span class="detail-value">${parseInt(a['Record Count'] || 0).toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-label">Update Frequency</span><span class="detail-value">${a['Update Frequency']}</span></div>
+        <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value">${a['Last Updated']}</span></div>
+      </div>`;
+
+    // Quality rules
+    document.getElementById('asset-modal-rules').innerHTML = d.rules.length === 0
+      ? '<div class="loading">No quality rules defined</div>'
+      : `<table class="data-table"><thead><tr><th>Rule</th><th>Type</th><th>Threshold</th><th>Score</th><th>Status</th><th>Last Eval</th></tr></thead><tbody>${
+        d.rules.map(r => {
+          const score = parseFloat(r['Current Score']) || 0;
+          const threshold = parseFloat(r.Threshold) || 0;
+          const pass = score >= threshold;
+          return `<tr><td>${r['Rule Name']}</td><td>${r['Rule Type']}</td><td>${r.Threshold}%</td><td><span style="color:${pass ? 'var(--green)' : 'var(--red)'}; font-weight:600">${r['Current Score']}%</span></td><td>${badge(r.Status)}</td><td>${r['Last Evaluated']}</td></tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    // Classifications
+    document.getElementById('asset-modal-classifications').innerHTML = d.classifications.length === 0
+      ? '<div class="loading">No classifications</div>'
+      : `<table class="data-table"><thead><tr><th>Level</th><th>PHI</th><th>PII</th><th>Financial</th><th>Retention</th><th>Status</th><th>Review Date</th></tr></thead><tbody>${
+        d.classifications.map(c => `<tr><td>${sensBadge(c['Classification Level'])}</td><td>${c['Contains PHI']}</td><td>${c['Contains PII']}</td><td>${c['Contains Financial']}</td><td>${c['Retention Period']}</td><td>${badge(c.Status)}</td><td>${daysUntil(c['Review Date'])}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Access history
+    document.getElementById('asset-modal-access').innerHTML = d.accessHistory.length === 0
+      ? '<div class="loading">No access history</div>'
+      : `<table class="data-table"><thead><tr><th>Request</th><th>Requestor</th><th>Level</th><th>Status</th><th>Date</th><th>Expiration</th></tr></thead><tbody>${
+        d.accessHistory.map(r => `<tr><td>${r['Request ID']}</td><td>${r.Requestor}</td><td>${r['Access Level']}</td><td>${badge(r.Status)}</td><td>${r['Request Date']}</td><td>${r.Status === 'Approved' ? daysUntil(r['Expiration Date']) : '-'}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('asset-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== RECORD DETAIL MODAL =============== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* =============== DOMAINS TAB =============== */
+async function loadDomains() {
+  const el = document.getElementById('domains-content');
+  el.innerHTML = '<div class="loading">Loading domains...</div>';
+  try {
+    const data = await kqlFetch('data-domains', null, 25);
+    const subs = data.submissions || [];
+    if (subs.length === 0) { el.innerHTML = '<div class="loading">No domains found</div>'; return; }
+
+    const domColors = ['#1565C0', '#2E7D32', '#E65100', '#6A1B9A', '#00838F', '#AD1457', '#283593', '#F9A825', '#455A64'];
+    el.innerHTML = '<div class="domain-grid">' + subs.map((s, i) => `
+      <div class="domain-card" style="border-left-color:${domColors[i % domColors.length]}">
+        <h4>${vf(s, 'Domain Name')}</h4>
+        <div class="meta">${vf(s, 'Domain Type')} | ${vf(s, 'Domain Owner')}</div>
+        <div style="margin-bottom:8px">${maturityGauge(vf(s, 'Maturity Level'))}</div>
+        <div style="display:flex; gap:16px; font-size:12px; color:var(--gray)">
+          <span><strong style="color:var(--blue)">${vf(s, 'Asset Count')}</strong> assets</span>
+          <span><strong style="color:var(--blue)">${vf(s, 'Steward Count')}</strong> stewards</span>
+        </div>
+        <div style="font-size:11px; color:var(--gray); margin-top:6px">${badge(vf(s, 'Status'))}</div>
+        <p style="font-size:12px; color:var(--gray); margin-top:8px; line-height:1.4">${(vf(s, 'Description') || '').slice(0, 120)}</p>
+      </div>
+    `).join('') + '</div>';
+  } catch (e) {
+    el.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== QUALITY TAB =============== */
+let qualitySub = 'rules';
+document.getElementById('quality-subtabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('subtab')) return;
+  e.currentTarget.querySelectorAll('.subtab').forEach(s => s.classList.remove('active'));
+  e.target.classList.add('active');
+  qualitySub = e.target.dataset.sub;
+  if (qualitySub === 'rules') {
+    document.getElementById('quality-rules-panel').style.display = '';
+    document.getElementById('quality-issues-panel').style.display = 'none';
+    loadRules();
+  } else {
+    document.getElementById('quality-rules-panel').style.display = 'none';
+    document.getElementById('quality-issues-panel').style.display = '';
+    loadIssues();
+  }
+});
+
+// Rules
+let rulePage = 1, rulePageKeys = [null], ruleHasNext = false;
+['rule-f-status', 'rule-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { rulePage = 1; rulePageKeys = [null]; ruleHasNext = false; loadRules(); });
+});
+document.getElementById('rule-f-search').addEventListener('input', debounce(() => { rulePage = 1; rulePageKeys = [null]; ruleHasNext = false; loadRules(); }, 300));
+
+async function loadRules() {
+  const status = document.getElementById('rule-f-status').value;
+  const rtype = document.getElementById('rule-f-type').value;
+  const search = document.getElementById('rule-f-search').value.trim().toLowerCase();
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('quality-rules', kql, 25, rulePageKeys[rulePage - 1]);
+    let subs = data.submissions || [];
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (rtype) subs = subs.filter(s => vf(s, 'Rule Type') === rtype);
+    if (search) subs = subs.filter(s => (vf(s, 'Rule ID') + ' ' + vf(s, 'Rule Name') + ' ' + vf(s, 'Asset Name')).toLowerCase().includes(search));
+
+    document.getElementById('rules-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No rules found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Rule Name</th><th>Asset</th><th>Type</th><th>Threshold</th><th>Score</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => {
+          const score = parseFloat(vf(s, 'Current Score')) || 0;
+          const threshold = parseFloat(vf(s, 'Threshold')) || 0;
+          const pass = score >= threshold;
+          return `<tr onclick="openAssetDetail('${vf(s, 'Asset ID')}')">
+            <td>${vf(s, 'Rule ID')}</td>
+            <td>${vf(s, 'Rule Name')}</td>
+            <td>${vf(s, 'Asset Name')}</td>
+            <td>${vf(s, 'Rule Type')}</td>
+            <td>${vf(s, 'Threshold')}%</td>
+            <td><span style="color:${pass ? 'var(--green)' : 'var(--red)'}; font-weight:600">${vf(s, 'Current Score')}%</span></td>
+            <td>${badge(vf(s, 'Status'))}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    ruleHasNext = !!data.nextPageToken;
+    if (ruleHasNext && subs.length) rulePageKeys[rulePage] = subs[subs.length - 1].createdAt;
+    renderPag('rules-pag', rulePage, ruleHasNext, 'rulePrev()', 'ruleNext()');
+  } catch (e) {
+    document.getElementById('rules-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function ruleNext() { if (!ruleHasNext) return; rulePage++; loadRules(); }
+function rulePrev() { if (rulePage <= 1) return; rulePage--; loadRules(); }
+
+// Issues
+let issuePage = 1, issuePageKeys = [null], issueHasNext = false;
+['issue-f-status', 'issue-f-impact', 'issue-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { issuePage = 1; issuePageKeys = [null]; issueHasNext = false; loadIssues(); });
+});
+document.getElementById('issue-f-search').addEventListener('input', debounce(() => { issuePage = 1; issuePageKeys = [null]; issueHasNext = false; loadIssues(); }, 300));
+
+async function loadIssues() {
+  const status = document.getElementById('issue-f-status').value;
+  const impact = document.getElementById('issue-f-impact').value;
+  const itype = document.getElementById('issue-f-type').value;
+  const search = document.getElementById('issue-f-search').value.trim().toLowerCase();
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('quality-issues', kql, 25, issuePageKeys[issuePage - 1]);
+    let subs = data.submissions || [];
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (impact) subs = subs.filter(s => vf(s, 'Impact') === impact);
+    if (itype) subs = subs.filter(s => vf(s, 'Issue Type') === itype);
+    if (search) subs = subs.filter(s => (vf(s, 'Issue ID') + ' ' + vf(s, 'Asset Name') + ' ' + vf(s, 'Description')).toLowerCase().includes(search));
+
+    document.getElementById('issues-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No issues found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Type</th><th>Impact</th><th>Records</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const iid = vf(s, 'Issue ID');
+          let actions = '';
+          if (st === 'Open') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionIssue('${iid}','In Progress')">Start</button>`;
+          else if (st === 'In Progress') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionIssue('${iid}','Resolved')">Resolve</button> <button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionIssue('${iid}','Deferred')">Defer</button>`;
+          else if (st === 'Deferred') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionIssue('${iid}','Open')">Reopen</button>`;
+          return `<tr onclick="showRecord('quality-issues','Issue ID','${iid}','Quality Issue Details')">
+            <td>${iid}</td>
+            <td>${vf(s, 'Asset Name')}</td>
+            <td>${vf(s, 'Issue Type')}</td>
+            <td>${impactSpan(vf(s, 'Impact'))}</td>
+            <td>${parseInt(vf(s, 'Records Affected') || 0).toLocaleString()}</td>
+            <td>${badge(st)}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    issueHasNext = !!data.nextPageToken;
+    if (issueHasNext && subs.length) issuePageKeys[issuePage] = subs[subs.length - 1].createdAt;
+    renderPag('issues-pag', issuePage, issueHasNext, 'issuePrev()', 'issueNext()');
+  } catch (e) {
+    document.getElementById('issues-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function issueNext() { if (!issueHasNext) return; issuePage++; loadIssues(); }
+function issuePrev() { if (issuePage <= 1) return; issuePage--; loadIssues(); }
+
+async function transitionIssue(issueId, newStatus) {
+  try {
+    await apiPost(`/api/dgov/issues/${encodeURIComponent(issueId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadIssues();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== POLICIES TAB =============== */
+let polPage = 1, polPageKeys = [null], polHasNext = false;
+
+['pol-f-status', 'pol-f-type', 'pol-f-compliance'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { polPage = 1; polPageKeys = [null]; polHasNext = false; loadPolicies(); });
+});
+document.getElementById('pol-f-search').addEventListener('input', debounce(() => { polPage = 1; polPageKeys = [null]; polHasNext = false; loadPolicies(); }, 300));
+
+async function loadPolicies() {
+  const status = document.getElementById('pol-f-status').value;
+  const ptype = document.getElementById('pol-f-type').value;
+  const compliance = document.getElementById('pol-f-compliance').value;
+  const search = document.getElementById('pol-f-search').value.trim().toLowerCase();
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('policies', kql, 25, polPageKeys[polPage - 1]);
+    let subs = data.submissions || [];
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (ptype) subs = subs.filter(s => vf(s, 'Policy Type') === ptype);
+    if (compliance) subs = subs.filter(s => vf(s, 'Compliance Requirement') === compliance);
+    if (search) subs = subs.filter(s => (vf(s, 'Policy ID') + ' ' + vf(s, 'Policy Name') + ' ' + vf(s, 'Description')).toLowerCase().includes(search));
+
+    document.getElementById('policies-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No policies found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Policy Name</th><th>Type</th><th>Compliance</th><th>Version</th><th>Status</th><th>Review Date</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="showRecord('policies','Policy ID','${vf(s, 'Policy ID')}','Policy Details')">
+          <td>${vf(s, 'Policy ID')}</td>
+          <td>${vf(s, 'Policy Name')}</td>
+          <td>${vf(s, 'Policy Type')}</td>
+          <td><span style="font-weight:600">${vf(s, 'Compliance Requirement')}</span></td>
+          <td>v${vf(s, 'Version')}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${daysUntil(vf(s, 'Review Date'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    polHasNext = !!data.nextPageToken;
+    if (polHasNext && subs.length) polPageKeys[polPage] = subs[subs.length - 1].createdAt;
+    renderPag('policies-pag', polPage, polHasNext, 'polPrev()', 'polNext()');
+  } catch (e) {
+    document.getElementById('policies-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function polNext() { if (!polHasNext) return; polPage++; loadPolicies(); }
+function polPrev() { if (polPage <= 1) return; polPage--; loadPolicies(); }
+
+/* =============== ACCESS TAB =============== */
+let arPage = 1, arPageKeys = [null], arHasNext = false;
+
+['ar-f-status', 'ar-f-level'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { arPage = 1; arPageKeys = [null]; arHasNext = false; loadAccess(); });
+});
+document.getElementById('ar-f-search').addEventListener('input', debounce(() => { arPage = 1; arPageKeys = [null]; arHasNext = false; loadAccess(); }, 300));
+
+async function loadAccess() {
+  const status = document.getElementById('ar-f-status').value;
+  const level = document.getElementById('ar-f-level').value;
+  const search = document.getElementById('ar-f-search').value.trim().toLowerCase();
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('access-requests', kql, 25, arPageKeys[arPage - 1]);
+    let subs = data.submissions || [];
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (level) subs = subs.filter(s => vf(s, 'Access Level') === level);
+    if (search) subs = subs.filter(s => (vf(s, 'Request ID') + ' ' + vf(s, 'Asset Name') + ' ' + vf(s, 'Requestor')).toLowerCase().includes(search));
+
+    document.getElementById('access-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No access requests found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Requestor</th><th>Dept</th><th>Level</th><th>Status</th><th>Expiration</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const rid = vf(s, 'Request ID');
+          let actions = '';
+          if (st === 'Submitted') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionAccess('${rid}','Under Review')">Review</button>`;
+          else if (st === 'Under Review') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionAccess('${rid}','Approved')">Approve</button> <button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionAccess('${rid}','Denied')">Deny</button>`;
+          else if (st === 'Approved') actions = `<button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionAccess('${rid}','Revoked')">Revoke</button>`;
+          else if (st === 'Denied') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionAccess('${rid}','Submitted')">Resubmit</button>`;
+          return `<tr onclick="showRecord('access-requests','Request ID','${rid}','Access Request Details')">
+            <td>${rid}</td>
+            <td>${vf(s, 'Asset Name')}</td>
+            <td>${vf(s, 'Requestor')}</td>
+            <td>${vf(s, 'Department')}</td>
+            <td>${vf(s, 'Access Level')}</td>
+            <td>${badge(st)}</td>
+            <td>${st === 'Approved' ? daysUntil(vf(s, 'Expiration Date')) : '-'}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    arHasNext = !!data.nextPageToken;
+    if (arHasNext && subs.length) arPageKeys[arPage] = subs[subs.length - 1].createdAt;
+    renderPag('access-pag', arPage, arHasNext, 'arPrev()', 'arNext()');
+  } catch (e) {
+    document.getElementById('access-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function arNext() { if (!arHasNext) return; arPage++; loadAccess(); }
+function arPrev() { if (arPage <= 1) return; arPage--; loadAccess(); }
+
+async function transitionAccess(requestId, newStatus) {
+  try {
+    await apiPost(`/api/dgov/access-requests/${encodeURIComponent(requestId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadAccess();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== ANALYTICS TAB =============== */
+const REPORT_TYPES = [
+  { id: 'quality', name: 'Data Quality Report', desc: 'Quality rules, scores, and issues across all data assets and domains' },
+  { id: 'asset-inventory', name: 'Asset Inventory Report', desc: 'Complete inventory of data assets with type, domain, and sensitivity' },
+  { id: 'classification', name: 'Classification Report', desc: 'Data classification levels, PHI/PII flags, and retention periods' },
+  { id: 'access', name: 'Access Report', desc: 'Access request history, approvals, and expiration tracking' },
+  { id: 'policy', name: 'Policy Report', desc: 'Governance policies with compliance requirements and version tracking' },
+  { id: 'audit', name: 'Audit Report', desc: 'Audit results, findings, and compliance status across all audit types' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/dgov/report/${type}`);
+
+    if (type === 'quality') {
+      const csvRows = [['Rule ID', 'Name', 'Asset', 'Type', 'Threshold', 'Score', 'Status']];
+      d.rules.forEach(r => csvRows.push([r.ruleId, r.name, r.asset, r.type, r.threshold, r.score, r.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.rules.length} rules, ${d.issues.length} issues)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'quality-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Rule</th><th>Asset</th><th>Type</th><th>Threshold</th><th>Score</th><th>Status</th></tr></thead><tbody>${
+        d.rules.slice(0, 50).map(r => {
+          const pass = parseFloat(r.score) >= parseFloat(r.threshold);
+          return `<tr><td>${r.name}</td><td>${r.asset}</td><td>${r.type}</td><td>${r.threshold}%</td><td><span style="color:${pass ? 'var(--green)' : 'var(--red)'}; font-weight:600">${r.score}%</span></td><td>${badge(r.status)}</td></tr>`;
+        }).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'asset-inventory') {
+      const csvRows = [['Asset ID', 'Name', 'Type', 'Domain', 'Dept', 'Sensitivity', 'Format', 'Quality', 'Status']];
+      d.items.forEach(i => csvRows.push([i.assetId, i.name, i.type, i.domain, i.dept, i.sensitivity, i.format, i.quality, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} assets)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'asset-inventory.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Domain</th><th>Sensitivity</th><th>Quality</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.assetId}</td><td>${i.name}</td><td>${i.type}</td><td>${i.domain}</td><td>${sensBadge(i.sensitivity)}</td><td>${qBadge(i.quality)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'classification') {
+      const csvRows = [['Classification ID', 'Asset', 'Level', 'PHI', 'PII', 'Financial', 'Retention', 'Status', 'Date']];
+      d.items.forEach(i => csvRows.push([i.classId, i.asset, i.level, i.phi, i.pii, i.financial, i.retention, i.status, i.date]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} classifications)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'classification-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Asset</th><th>Level</th><th>PHI</th><th>PII</th><th>Financial</th><th>Retention</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.asset}</td><td>${sensBadge(i.level)}</td><td>${i.phi}</td><td>${i.pii}</td><td>${i.financial}</td><td>${i.retention}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'access') {
+      const csvRows = [['Request ID', 'Asset', 'Requestor', 'Level', 'Dept', 'Status', 'Request Date', 'Approval', 'Expiration']];
+      d.items.forEach(i => csvRows.push([i.requestId, i.asset, i.requestor, i.level, i.dept, i.status, i.requestDate, i.approvalDate, i.expiration]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} requests)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'access-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Requestor</th><th>Level</th><th>Status</th><th>Date</th><th>Expiration</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.requestId}</td><td>${i.asset}</td><td>${i.requestor}</td><td>${i.level}</td><td>${badge(i.status)}</td><td>${i.requestDate}</td><td>${i.expiration || '-'}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'policy') {
+      const csvRows = [['Policy ID', 'Name', 'Type', 'Compliance', 'Version', 'Status', 'Effective', 'Review']];
+      d.items.forEach(i => csvRows.push([i.policyId, i.name, i.type, i.compliance, i.version, i.status, i.effective, i.review]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} policies)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'policy-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Compliance</th><th>Version</th><th>Status</th><th>Review</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.policyId}</td><td>${i.name}</td><td>${i.type}</td><td><strong>${i.compliance}</strong></td><td>v${i.version}</td><td>${badge(i.status)}</td><td>${daysUntil(i.review)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'audit') {
+      const csvRows = [['Audit ID', 'Name', 'Type', 'Auditor', 'Findings', 'Critical', 'Status', 'Start', 'End']];
+      d.items.forEach(i => csvRows.push([i.auditId, i.name, i.type, i.auditor, i.findings, i.critical, i.status, i.start, i.end]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} audits)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'audit-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Auditor</th><th>Findings</th><th>Critical</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.auditId}</td><td>${i.name}</td><td>${i.type}</td><td>${i.auditor}</td><td>${i.findings}</td><td><span style="color:${parseInt(i.critical) > 0 ? 'var(--red)' : 'var(--green)'}; font-weight:600">${i.critical}</span></td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* =============== UTILITY =============== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

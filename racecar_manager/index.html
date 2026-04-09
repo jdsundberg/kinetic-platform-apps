@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racecar Manager</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light);position:sticky;top:0;z-index:1}
+td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px}
+tbody tr:hover{background:#FAFAFA}
+tbody tr.clickable{cursor:pointer}tbody tr.clickable:hover{background:#EEF1F6}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{margin-bottom:16px}
+.login-box .login-btn{width:100%;padding:12px;background:var(--orange);color:white;border:none;border-radius:8px;font-weight:600;font-size:15px}
+.login-box .login-btn:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* Shell */
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;margin-left:32px}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;white-space:nowrap;transition:all .15s}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.logout-btn:hover{border-color:#F36C24;color:#F36C24}
+
+/* Main */
+.main{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.main.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+/* Cards */
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:14px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:white;border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::before{background:var(--indigo)}.kpi.green::before{background:var(--green)}.kpi.orange::before{background:var(--orange)}.kpi.red::before{background:var(--red)}.kpi.purple::before{background:var(--purple)}.kpi.teal::before{background:var(--teal)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0}
+.kpi.blue .val{color:var(--indigo)}.kpi.green .val{color:var(--green)}.kpi.orange .val{color:var(--orange)}.kpi.red .val{color:var(--red)}.kpi.purple .val{color:var(--purple)}.kpi.teal .val{color:var(--teal)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-gray{background:#F1F3F4;color:#5F6368}
+.badge-blue{background:#E3F2FD;color:#1565C0}
+.badge-orange{background:#FFF3E0;color:#E65100}
+.badge-red{background:#FDECEA;color:#C62828}
+.badge-yellow{background:#FFF8E1;color:#F57F17}
+.badge-purple{background:#F3E5F5;color:#6A1B9A}
+.badge-teal{background:#E0F2F1;color:#00695C}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none}
+.btn-primary{background:var(--blue);color:white}.btn-primary:hover{background:var(--blue-light)}
+.btn-accent{background:var(--orange);color:white}.btn-accent:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border)}.btn-secondary:hover{background:#E8EAED}
+.btn-danger{background:var(--red);color:white}
+.btn-success{background:var(--green);color:white}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:6px}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.toolbar input[type="text"]{flex:1;min-width:180px}
+.toolbar select{min-width:120px;width:auto}
+
+/* Pagination */
+.pagination{display:flex;gap:8px;align-items:center;justify-content:center;padding:12px}
+.pagination .page-info{font-size:12px;color:var(--gray);font-weight:600}
+
+/* Modal */
+#modal{display:none;position:fixed;inset:0;z-index:200}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--white);margin:40px auto;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;border-radius:16px;box-shadow:var(--shadow-lg);padding:28px;z-index:1}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-close{position:absolute;top:12px;right:16px;background:none;font-size:22px;color:var(--gray);padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--light)}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .3s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.error{background:var(--red)}
+
+.empty{text-align:center;padding:40px;color:var(--gray);font-size:13px}
+.loading{text-align:center;padding:40px;color:var(--gray)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Subtabs */
+.subtabs{display:flex;gap:4px;margin-bottom:16px}
+.subtabs button{background:var(--light);color:var(--gray);padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;border:1px solid var(--border)}
+.subtabs button.active{background:var(--blue);color:white;border-color:var(--blue)}
+
+@media(max-width:900px){.field-row{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Racecar Manager</h1>
+    <div class="sub">Parts & Prices, Race Schedule & Results, Contact Updates & Swag</div>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://second.jdsultra1.lan">
+    <label>Username</label>
+    <input id="login-user" value="second_admin">
+    <label>Password</label>
+    <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Racecar <span>Manager</span></div>
+    <nav>
+      <button onclick="switchTab('parts')" data-tab="parts">Parts & Prices</button>
+      <button onclick="switchTab('races')" data-tab="races">Races</button>
+      <button onclick="switchTab('contacts')" data-tab="contacts">Contacts</button>
+      <button onclick="switchTab('swag')" data-tab="swag">Swag</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══ PARTS ═══ -->
+  <div class="main" id="tab-parts">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Parts & Prices</div>
+      <button class="btn btn-accent btn-sm" onclick="showPartModal()">+ Add Part</button>
+    </div>
+    <div class="page-sub">Track car parts, inventory, and pricing</div>
+    <div id="parts-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="parts-search" placeholder="Search parts..." oninput="renderParts()">
+      <select id="parts-cat-filter" onchange="partsPage=1;partsPageKeys={1:null};partsHasNext=false;loadParts()">
+        <option value="">All Categories</option>
+        <option>Engine</option><option>Transmission</option><option>Suspension</option>
+        <option>Brakes</option><option>Tires</option><option>Body/Aero</option>
+        <option>Electrical</option><option>Safety</option><option>Fuel System</option><option>Exhaust</option>
+      </select>
+      <select id="parts-status-filter" onchange="partsPage=1;partsPageKeys={1:null};partsHasNext=false;loadParts()">
+        <option value="">All Status</option><option>Installed</option><option>In Stock</option><option>Needs Repair</option><option>On Order</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Part Name</th><th>Part #</th><th>Category</th><th>Manufacturer</th><th>Price</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody id="parts-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="parts-pagination"></div>
+  </div>
+
+  <!-- ═══ RACES ═══ -->
+  <div class="main" id="tab-races">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Race Schedule & Results</div>
+      <button class="btn btn-accent btn-sm" onclick="showRaceModal()">+ Add Race</button>
+    </div>
+    <div class="page-sub">Upcoming races and past results</div>
+    <div id="races-kpis" class="kpi-row"></div>
+    <div class="subtabs" id="race-subtabs">
+      <button class="active" onclick="setRaceView('all')">All</button>
+      <button onclick="setRaceView('upcoming')">Upcoming</button>
+      <button onclick="setRaceView('completed')">Completed</button>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="races-search" placeholder="Search by race or track..." oninput="renderRaces()">
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Race Name</th><th>Track</th><th>Date</th><th>Type</th><th>Finish</th><th>Best Lap</th><th>Status</th></tr></thead>
+        <tbody id="races-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="races-pagination"></div>
+  </div>
+
+  <!-- ═══ CONTACTS ═══ -->
+  <div class="main" id="tab-contacts">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Contacts & Updates</div>
+      <button class="btn btn-accent btn-sm" onclick="showContactModal()">+ Add Contact</button>
+    </div>
+    <div class="page-sub">People to send race status updates and swag notifications</div>
+    <div id="contacts-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="contacts-search" placeholder="Search contacts..." oninput="renderContacts()">
+      <select id="contacts-type-filter" onchange="renderContacts()"><option value="">All Types</option><option>Team Member</option><option>Sponsor</option><option>Fan</option><option>Media</option><option>Vendor</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Race Updates</th><th>Swag</th><th>Status</th></tr></thead>
+        <tbody id="contacts-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="contacts-pagination"></div>
+  </div>
+
+  <!-- ═══ SWAG ═══ -->
+  <div class="main" id="tab-swag">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Swag Store</div>
+      <button class="btn btn-accent btn-sm" onclick="showSwagModal()">+ Add Item</button>
+    </div>
+    <div class="page-sub">Merchandise available for purchase</div>
+    <div id="swag-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="swag-search" placeholder="Search swag..." oninput="renderSwag()">
+      <select id="swag-cat-filter" onchange="renderSwag()"><option value="">All Categories</option><option>Apparel</option><option>Collectibles</option><option>Accessories</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Sizes</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody id="swag-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="swag-pagination"></div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal"><div class="modal-overlay" onclick="closeModal()"></div><div class="modal-content" id="modal-body"></div></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   Racecar Manager
+   ═══════════════════════════════════════ */
+
+const KAPP = 'racecar-manager';
+let API = { url: '', user: '', pass: '' };
+
+function authHeader() { return 'Basic ' + btoa(API.user + ':' + API.pass); }
+
+async function api(path, opts = {}) {
+  const headers = { 'Authorization': authHeader(), 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const res = await fetch(API.url + path, { ...opts, headers });
+  if (!res.ok) { const t = await res.text(); throw new Error(t.slice(0, 200)); }
+  const t = await res.text();
+  return t ? JSON.parse(t) : {};
+}
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, f) { return (sub.values && sub.values[f]) || ''; }
+function toast(msg, err) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show' + (err ? ' error' : ''); setTimeout(() => el.className = 'toast', 3000); }
+function openModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal').style.display = 'block'; }
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+/* ── Auth ─── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  try {
+    const res = await fetch(url + '/app/api/v1/me', { headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass) } });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const me = await res.json();
+    API = { url: url + '/app/api/v1', user, pass };
+    document.getElementById('user-display').textContent = me.displayName || me.username || user;
+    showApp();
+  } catch (e) {
+    const el = document.getElementById('login-error');
+    el.textContent = e.message; el.style.display = 'block';
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  switchTab('parts');
+}
+
+function doLogout() {
+  API = { url: '', user: '', pass: '' };
+  try { sessionStorage.removeItem('kinetic_session'); } catch {}
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function restoreSession() {
+  try {
+    const s = sessionStorage.getItem('kinetic_session');
+    if (!s) return false;
+    const sess = JSON.parse(s);
+    API = { url: (sess.url || '') + '/app/api/v1', user: sess.user, pass: sess.pass || atob(sess.auth || '').split(':')[1] || '' };
+    document.getElementById('user-display').textContent = sess.displayName || sess.user;
+    return true;
+  } catch { return false; }
+}
+
+/* ── Tab switching ─── */
+function switchTab(tab) {
+  document.querySelectorAll('.main').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'parts') loadParts();
+  else if (tab === 'races') loadRaces();
+  else if (tab === 'contacts') loadContacts();
+  else if (tab === 'swag') loadSwag();
+}
+
+/* ══════════════════════════════════════
+   PARTS
+   ══════════════════════════════════════ */
+let partsData = [], partsPage = 1, partsPageKeys = { 1: null }, partsHasNext = false;
+
+async function loadParts() {
+  try {
+    const cat = document.getElementById('parts-cat-filter').value;
+    const status = document.getElementById('parts-status-filter').value;
+    let kql = '';
+    if (cat && status) kql = `values[Category]="${cat}" AND values[Status]="${status}"`;
+    else if (cat) kql = `values[Category]="${cat}"`;
+    else if (status) kql = `values[Status]="${status}"`;
+
+    const lastCreatedAt = partsPageKeys[partsPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/parts/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    partsData = res.submissions || [];
+    partsHasNext = !!res.nextPageToken;
+    if (partsHasNext && partsData.length) partsPageKeys[partsPage + 1] = partsData[partsData.length - 1].createdAt;
+    renderParts();
+  } catch (e) { toast('Failed to load parts: ' + e.message, true); }
+}
+
+function renderParts() {
+  const q = (document.getElementById('parts-search').value || '').toLowerCase();
+  const filtered = partsData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Part Name'),v(s,'Part Number'),v(s,'Manufacturer')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = partsData.length;
+  const installed = partsData.filter(s => v(s,'Status') === 'Installed').length;
+  const inStock = partsData.filter(s => v(s,'Status') === 'In Stock').length;
+  const totalValue = partsData.reduce((sum, s) => sum + (parseFloat(v(s,'Price')) || 0) * (parseInt(v(s,'Quantity')) || 1), 0);
+  document.getElementById('parts-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Installed</div><div class="val">${installed}</div></div>
+    <div class="kpi teal"><div class="label">In Stock</div><div class="val">${inStock}</div></div>
+    <div class="kpi orange"><div class="label">Page Value</div><div class="val">$${totalValue.toLocaleString()}</div></div>
+  `;
+
+  const tbody = document.getElementById('parts-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No parts found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'Installed' ? 'badge-green' : s === 'In Stock' ? 'badge-blue' : s === 'Needs Repair' ? 'badge-red' : s === 'On Order' ? 'badge-yellow' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showPartDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Part Name'))}</strong></td>
+      <td style="font-family:monospace;font-size:11px">${esc(v(s,'Part Number'))}</td>
+      <td><span class="badge badge-purple">${esc(v(s,'Category'))}</span></td>
+      <td>${esc(v(s,'Manufacturer'))}</td>
+      <td>$${esc(v(s,'Price'))}</td>
+      <td>${esc(v(s,'Quantity'))}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('parts-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="partsPrev()" ${partsPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${partsPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="partsNext()" ${!partsHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function partsPrev() { if (partsPage > 1) { partsPage--; loadParts(); } }
+function partsNext() { if (partsHasNext) { partsPage++; loadParts(); } }
+
+function showPartDetail(id) {
+  const s = partsData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Part Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Part #:</strong> <span style="font-family:monospace">${esc(v(s,'Part Number'))}</span></div>
+      <div><strong style="color:var(--gray)">Category:</strong> <span class="badge badge-purple">${esc(v(s,'Category'))}</span></div>
+      <div><strong style="color:var(--gray)">Manufacturer:</strong> ${esc(v(s,'Manufacturer'))}</div>
+      <div><strong style="color:var(--gray)">Supplier:</strong> ${esc(v(s,'Supplier'))}</div>
+      <div><strong style="color:var(--gray)">Price:</strong> $${esc(v(s,'Price'))}</div>
+      <div><strong style="color:var(--gray)">Quantity:</strong> ${esc(v(s,'Quantity'))}</div>
+      <div><strong style="color:var(--gray)">Condition:</strong> ${esc(v(s,'Condition'))}</div>
+      <div><strong style="color:var(--gray)">Weight:</strong> ${esc(v(s,'Weight'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showPartModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Part</h2>
+    <div class="field-group"><label>Part Name</label><input id="p-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Part Number</label><input id="p-number"></div>
+      <div class="field-group"><label>Category</label><select id="p-cat"><option>Engine</option><option>Transmission</option><option>Suspension</option><option>Brakes</option><option>Tires</option><option>Body/Aero</option><option>Electrical</option><option>Safety</option><option>Fuel System</option><option>Exhaust</option><option>Other</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Manufacturer</label><input id="p-mfr"></div>
+      <div class="field-group"><label>Supplier</label><input id="p-supplier"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Price</label><input id="p-price" placeholder="0.00"></div>
+      <div class="field-group"><label>Quantity</label><input id="p-qty" type="number" value="1"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Condition</label><select id="p-cond"><option>New</option><option>Used</option><option>Refurbished</option></select></div>
+      <div class="field-group"><label>Status</label><select id="p-status"><option>In Stock</option><option>Installed</option><option>On Order</option><option>Needs Repair</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Weight</label><input id="p-weight" placeholder="e.g. 24 lbs"></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="p-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="savePart()">Add Part</button>
+    </div>
+  `);
+}
+
+async function savePart() {
+  const values = {
+    'Part Name': document.getElementById('p-name').value,
+    'Part Number': document.getElementById('p-number').value,
+    Category: document.getElementById('p-cat').value,
+    Manufacturer: document.getElementById('p-mfr').value,
+    Supplier: document.getElementById('p-supplier').value,
+    Price: document.getElementById('p-price').value,
+    Quantity: document.getElementById('p-qty').value,
+    Condition: document.getElementById('p-cond').value,
+    Status: document.getElementById('p-status').value,
+    Weight: document.getElementById('p-weight').value,
+    Notes: document.getElementById('p-notes').value,
+  };
+  if (!values['Part Name']) { toast('Part Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/parts/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Part added'); loadParts();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   RACES
+   ══════════════════════════════════════ */
+let racesData = [], racesPage = 1, racesPageKeys = { 1: null }, racesHasNext = false, raceView = 'all';
+
+function setRaceView(view) {
+  raceView = view;
+  racesPage = 1; racesPageKeys = { 1: null }; racesHasNext = false;
+  document.querySelectorAll('#race-subtabs button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#race-subtabs button[onclick="setRaceView('${view}')"]`).classList.add('active');
+  loadRaces();
+}
+
+async function loadRaces() {
+  try {
+    let kql = '';
+    if (raceView === 'upcoming') kql = 'values[Status]="Upcoming"';
+    else if (raceView === 'completed') kql = 'values[Status]="Completed"';
+
+    const lastCreatedAt = racesPageKeys[racesPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/races/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    racesData = res.submissions || [];
+    racesHasNext = !!res.nextPageToken;
+    if (racesHasNext && racesData.length) racesPageKeys[racesPage + 1] = racesData[racesData.length - 1].createdAt;
+    renderRaces();
+  } catch (e) { toast('Failed to load races: ' + e.message, true); }
+}
+
+function renderRaces() {
+  const q = (document.getElementById('races-search').value || '').toLowerCase();
+  const filtered = racesData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Race Name'),v(s,'Track')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const upcoming = racesData.filter(s => v(s,'Status') === 'Upcoming').length;
+  const completed = racesData.filter(s => v(s,'Status') === 'Completed').length;
+  const wins = racesData.filter(s => v(s,'Finish Position') === '1').length;
+  const podiums = racesData.filter(s => { const p = parseInt(v(s,'Finish Position')); return p >= 1 && p <= 3; }).length;
+  document.getElementById('races-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${racesData.length}</div></div>
+    <div class="kpi teal"><div class="label">Upcoming</div><div class="val">${upcoming}</div></div>
+    <div class="kpi green"><div class="label">Wins</div><div class="val">${wins}</div></div>
+    <div class="kpi orange"><div class="label">Podiums</div><div class="val">${podiums}</div></div>
+  `;
+
+  const tbody = document.getElementById('races-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No races found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'Completed' ? 'badge-green' : s === 'Upcoming' ? 'badge-blue' : s === 'Cancelled' ? 'badge-red' : 'badge-yellow';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showRaceDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Race Name'))}</strong></td>
+      <td>${esc(v(s,'Track'))}</td>
+      <td>${esc(v(s,'Race Date'))}</td>
+      <td><span class="badge badge-purple">${esc(v(s,'Race Type'))}</span></td>
+      <td>${v(s,'Finish Position') ? '<strong>P' + esc(v(s,'Finish Position')) + '</strong>' : '—'}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(v(s,'Best Lap Time')) || '—'}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('races-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="racesPrev()" ${racesPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${racesPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="racesNext()" ${!racesHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function racesPrev() { if (racesPage > 1) { racesPage--; loadRaces(); } }
+function racesNext() { if (racesHasNext) { racesPage++; loadRaces(); } }
+
+function showRaceDetail(id) {
+  const s = racesData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Race Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Track:</strong> ${esc(v(s,'Track'))}</div>
+      <div><strong style="color:var(--gray)">Date:</strong> ${esc(v(s,'Race Date'))}</div>
+      <div><strong style="color:var(--gray)">Type:</strong> <span class="badge badge-purple">${esc(v(s,'Race Type'))}</span></div>
+      <div><strong style="color:var(--gray)">Laps:</strong> ${esc(v(s,'Laps'))}</div>
+      <div><strong style="color:var(--gray)">Car #:</strong> ${esc(v(s,'Car Number'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+      ${v(s,'Finish Position') ? `<div><strong style="color:var(--gray)">Finish:</strong> <strong>P${esc(v(s,'Finish Position'))}</strong></div>` : ''}
+      ${v(s,'Best Lap Time') ? `<div><strong style="color:var(--gray)">Best Lap:</strong> ${esc(v(s,'Best Lap Time'))}</div>` : ''}
+      ${v(s,'Avg Speed') ? `<div><strong style="color:var(--gray)">Avg Speed:</strong> ${esc(v(s,'Avg Speed'))}</div>` : ''}
+      ${v(s,'Prize Money') ? `<div><strong style="color:var(--gray)">Prize:</strong> $${esc(v(s,'Prize Money'))}</div>` : ''}
+    </div>
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showRaceModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Race</h2>
+    <div class="field-group"><label>Race Name</label><input id="r-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Track</label><input id="r-track"></div>
+      <div class="field-group"><label>Date</label><input id="r-date" type="date"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Type</label><select id="r-type"><option>Sprint</option><option>Endurance</option><option>Time Trial</option><option>Qualifying</option></select></div>
+      <div class="field-group"><label>Laps</label><input id="r-laps" type="number"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Car Number</label><input id="r-car" value="42"></div>
+      <div class="field-group"><label>Status</label><select id="r-status"><option>Upcoming</option><option>Completed</option><option>Cancelled</option></select></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="r-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveRace()">Add Race</button>
+    </div>
+  `);
+}
+
+async function saveRace() {
+  const values = {
+    'Race Name': document.getElementById('r-name').value,
+    Track: document.getElementById('r-track').value,
+    'Race Date': document.getElementById('r-date').value,
+    'Race Type': document.getElementById('r-type').value,
+    Laps: document.getElementById('r-laps').value,
+    'Car Number': document.getElementById('r-car').value,
+    Status: document.getElementById('r-status').value,
+    Notes: document.getElementById('r-notes').value,
+    'Finish Position': '', 'Best Lap Time': '', 'Avg Speed': '', 'Prize Money': '',
+  };
+  if (!values['Race Name']) { toast('Race Name is required', true); return; }
+  if (!values.Track) { toast('Track is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/races/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Race added'); loadRaces();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   CONTACTS
+   ══════════════════════════════════════ */
+let contactsData = [], contactsPage = 1, contactsPageKeys = { 1: null }, contactsHasNext = false;
+
+async function loadContacts() {
+  try {
+    const lastCreatedAt = contactsPageKeys[contactsPage];
+    let kql = '';
+    if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/contacts/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    contactsData = res.submissions || [];
+    contactsHasNext = !!res.nextPageToken;
+    if (contactsHasNext && contactsData.length) contactsPageKeys[contactsPage + 1] = contactsData[contactsData.length - 1].createdAt;
+    renderContacts();
+  } catch (e) { toast('Failed to load contacts: ' + e.message, true); }
+}
+
+function renderContacts() {
+  const q = (document.getElementById('contacts-search').value || '').toLowerCase();
+  const typeFilter = document.getElementById('contacts-type-filter').value;
+  const filtered = contactsData.filter(s => {
+    if (typeFilter && v(s,'Contact Type') !== typeFilter) return false;
+    if (!q) return true;
+    return [v(s,'Name'),v(s,'Email')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = contactsData.length;
+  const raceUpdates = contactsData.filter(s => v(s,'Race Updates') === 'Yes').length;
+  const swagNotif = contactsData.filter(s => v(s,'Swag Notifications') === 'Yes').length;
+  const active = contactsData.filter(s => v(s,'Status') === 'Active').length;
+  document.getElementById('contacts-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+    <div class="kpi teal"><div class="label">Race Updates</div><div class="val">${raceUpdates}</div></div>
+    <div class="kpi orange"><div class="label">Swag Notifs</div><div class="val">${swagNotif}</div></div>
+  `;
+
+  const tbody = document.getElementById('contacts-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No contacts found</td></tr>'; }
+  else {
+    const typeBadge = t => t === 'Team Member' ? 'badge-blue' : t === 'Sponsor' ? 'badge-green' : t === 'Fan' ? 'badge-orange' : t === 'Media' ? 'badge-purple' : 'badge-teal';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showContactDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td><span class="badge ${typeBadge(v(s,'Contact Type'))}">${esc(v(s,'Contact Type'))}</span></td>
+      <td>${v(s,'Race Updates') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+      <td>${v(s,'Swag Notifications') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+      <td><span class="badge ${v(s,'Status') === 'Active' ? 'badge-green' : 'badge-gray'}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('contacts-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="contactsPrev()" ${contactsPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${contactsPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="contactsNext()" ${!contactsHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function contactsPrev() { if (contactsPage > 1) { contactsPage--; loadContacts(); } }
+function contactsNext() { if (contactsHasNext) { contactsPage++; loadContacts(); } }
+
+function showContactDetail(id) {
+  const s = contactsData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Email'))}</div>
+      <div><strong style="color:var(--gray)">Phone:</strong> ${esc(v(s,'Phone'))}</div>
+      <div><strong style="color:var(--gray)">Type:</strong> ${esc(v(s,'Contact Type'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+      <div><strong style="color:var(--gray)">Race Updates:</strong> ${v(s,'Race Updates') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</div>
+      <div><strong style="color:var(--gray)">Swag Notifications:</strong> ${v(s,'Swag Notifications') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</div>
+      ${v(s,'Preferred Swag') ? `<div><strong style="color:var(--gray)">Preferred Swag:</strong> ${esc(v(s,'Preferred Swag'))}</div>` : ''}
+    </div>
+    ${v(s,'Mailing Address') ? `<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--gray)">Address:</strong> ${esc(v(s,'Mailing Address'))}</div>` : ''}
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showContactModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Contact</h2>
+    <div class="field-group"><label>Name</label><input id="c-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Email</label><input id="c-email" type="email"></div>
+      <div class="field-group"><label>Phone</label><input id="c-phone"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Contact Type</label><select id="c-type"><option>Fan</option><option>Team Member</option><option>Sponsor</option><option>Media</option><option>Vendor</option></select></div>
+      <div class="field-group"><label>Status</label><select id="c-status"><option>Active</option><option>Inactive</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Race Updates</label><select id="c-updates"><option>Yes</option><option>No</option></select></div>
+      <div class="field-group"><label>Swag Notifications</label><select id="c-swag"><option>Yes</option><option>No</option></select></div>
+    </div>
+    <div class="field-group"><label>Preferred Swag</label><input id="c-pref" placeholder="e.g. Hats, T-Shirts"></div>
+    <div class="field-group"><label>Mailing Address</label><textarea id="c-addr" rows="2"></textarea></div>
+    <div class="field-group"><label>Notes</label><textarea id="c-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveContact()">Add Contact</button>
+    </div>
+  `);
+}
+
+async function saveContact() {
+  const values = {
+    Name: document.getElementById('c-name').value,
+    Email: document.getElementById('c-email').value,
+    Phone: document.getElementById('c-phone').value,
+    'Contact Type': document.getElementById('c-type').value,
+    Status: document.getElementById('c-status').value,
+    'Race Updates': document.getElementById('c-updates').value,
+    'Swag Notifications': document.getElementById('c-swag').value,
+    'Preferred Swag': document.getElementById('c-pref').value,
+    'Mailing Address': document.getElementById('c-addr').value,
+    Notes: document.getElementById('c-notes').value,
+  };
+  if (!values.Name) { toast('Name is required', true); return; }
+  if (!values.Email) { toast('Email is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/contacts/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Contact added'); loadContacts();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════
+   SWAG
+   ══════════════════════════════════════ */
+let swagData = [], swagPage = 1, swagPageKeys = { 1: null }, swagHasNext = false;
+
+async function loadSwag() {
+  try {
+    const lastCreatedAt = swagPageKeys[swagPage];
+    let kql = '';
+    if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/swag/submissions?limit=25&include=values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    swagData = res.submissions || [];
+    swagHasNext = !!res.nextPageToken;
+    if (swagHasNext && swagData.length) swagPageKeys[swagPage + 1] = swagData[swagData.length - 1].createdAt;
+    renderSwag();
+  } catch (e) { toast('Failed to load swag: ' + e.message, true); }
+}
+
+function renderSwag() {
+  const q = (document.getElementById('swag-search').value || '').toLowerCase();
+  const catFilter = document.getElementById('swag-cat-filter').value;
+  const filtered = swagData.filter(s => {
+    if (catFilter && v(s,'Category') !== catFilter) return false;
+    if (!q) return true;
+    return [v(s,'Item Name'),v(s,'Category')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = swagData.length;
+  const inStock = swagData.filter(s => v(s,'Status') === 'In Stock').length;
+  const lowStock = swagData.filter(s => v(s,'Status') === 'Low Stock').length;
+  const outOfStock = swagData.filter(s => v(s,'Status') === 'Out of Stock').length;
+  document.getElementById('swag-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Items</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">In Stock</div><div class="val">${inStock}</div></div>
+    <div class="kpi orange"><div class="label">Low Stock</div><div class="val">${lowStock}</div></div>
+    <div class="kpi red"><div class="label">Out of Stock</div><div class="val">${outOfStock}</div></div>
+  `;
+
+  const tbody = document.getElementById('swag-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No swag items found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'In Stock' ? 'badge-green' : s === 'Low Stock' ? 'badge-yellow' : s === 'Out of Stock' ? 'badge-red' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showSwagDetail('${s.id}')">
+      <td><strong>${esc(v(s,'Item Name'))}</strong></td>
+      <td><span class="badge badge-purple">${esc(v(s,'Category'))}</span></td>
+      <td>$${esc(v(s,'Price'))}</td>
+      <td>${esc(v(s,'Size'))}</td>
+      <td>${esc(v(s,'Quantity'))}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('swag-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="swagPrev()" ${swagPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${swagPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="swagNext()" ${!swagHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function swagPrev() { if (swagPage > 1) { swagPage--; loadSwag(); } }
+function swagNext() { if (swagHasNext) { swagPage++; loadSwag(); } }
+
+function showSwagDetail(id) {
+  const s = swagData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Item Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Category:</strong> <span class="badge badge-purple">${esc(v(s,'Category'))}</span></div>
+      <div><strong style="color:var(--gray)">Price:</strong> $${esc(v(s,'Price'))}</div>
+      <div><strong style="color:var(--gray)">Size:</strong> ${esc(v(s,'Size'))}</div>
+      <div><strong style="color:var(--gray)">Color:</strong> ${esc(v(s,'Color'))}</div>
+      <div><strong style="color:var(--gray)">Quantity:</strong> ${esc(v(s,'Quantity'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    ${v(s,'Description') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Description:</strong> ${esc(v(s,'Description'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showSwagModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Swag Item</h2>
+    <div class="field-group"><label>Item Name</label><input id="sw-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Category</label><select id="sw-cat"><option>Apparel</option><option>Collectibles</option><option>Accessories</option></select></div>
+      <div class="field-group"><label>Price</label><input id="sw-price" placeholder="0.00"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Size</label><input id="sw-size" placeholder="e.g. S/M/L/XL"></div>
+      <div class="field-group"><label>Color</label><input id="sw-color"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Quantity</label><input id="sw-qty" type="number" value="1"></div>
+      <div class="field-group"><label>Status</label><select id="sw-status"><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></select></div>
+    </div>
+    <div class="field-group"><label>Description</label><textarea id="sw-desc" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveSwag()">Add Item</button>
+    </div>
+  `);
+}
+
+async function saveSwag() {
+  const values = {
+    'Item Name': document.getElementById('sw-name').value,
+    Category: document.getElementById('sw-cat').value,
+    Price: document.getElementById('sw-price').value,
+    Size: document.getElementById('sw-size').value,
+    Color: document.getElementById('sw-color').value,
+    Quantity: document.getElementById('sw-qty').value,
+    Status: document.getElementById('sw-status').value,
+    Description: document.getElementById('sw-desc').value,
+  };
+  if (!values['Item Name']) { toast('Item Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/swag/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Item added'); loadSwag();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ── Init ─── */
+(function init() {
+  if (restoreSession()) showApp();
+})();
+</script>
+</body>
+</html>

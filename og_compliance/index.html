@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oil &amp; Gas Compliance</title>
+<style>
+/* ===== DESIGN SYSTEM ===== */
+:root {
+  --blue: #1A2744;
+  --blue-light: #243354;
+  --accent: #0D6E3F;
+  --accent-light: #14A860;
+  --orange: #E8590C;
+  --red: #DC2626;
+  --yellow: #D97706;
+  --green: #16A34A;
+  --gray: #6B7280;
+  --light: #F3F4F6;
+  --border: #E5E7EB;
+  --bg: #F0F2F5;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.12);
+  --teal: #0D9488;
+  --indigo: #4338CA;
+  --purple: #7C3AED;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: var(--bg);
+}
+.login-card {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg);
+  width: 400px; max-width: 95vw; overflow: hidden;
+}
+.login-accent { height: 4px; background: var(--accent); }
+.login-body { padding: 32px; }
+.login-body h1 { font-size: 22px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 14px; outline: none; transition: border-color .2s;
+}
+.login-body input:focus { border-color: var(--accent); }
+.login-btn {
+  width: 100%; padding: 11px; margin-top: 20px; background: var(--accent); color: var(--white);
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+}
+.login-btn:hover { background: #0A5A33; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: var(--blue); color: var(--white); display: flex; align-items: center;
+  padding: 0 20px; height: 52px; position: sticky; top: 0; z-index: 100;
+}
+.topbar-logo { font-size: 17px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--accent-light); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.topbar-nav button {
+  background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px;
+  font-size: 12.5px; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all .15s;
+}
+.topbar-nav button:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.topbar-nav button.active { background: var(--accent); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+}
+.logout-btn:hover { border-color: var(--accent-light); color: var(--accent-light); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 20px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== CARDS & GRIDS ===== */
+.card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+.card h3 { font-size: 15px; color: var(--blue); margin-bottom: 14px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 16px; position: relative;
+  border-left: 4px solid var(--gray); overflow: hidden;
+}
+.kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--blue); }
+.kpi-card .kpi-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.kpi-card .kpi-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 1000px) { .three-col { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
+
+/* ===== TABLES ===== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px; color: var(--gray);
+  background: var(--light); border-bottom: 1px solid var(--border);
+}
+tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: #F8F9FB; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: #EEF2F7; }
+.empty-row td { text-align: center; padding: 30px; color: var(--gray); font-style: italic; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-critical { background: #FEE2E2; color: #991B1B; }
+.badge-high { background: #FFEDD5; color: #C2410C; }
+.badge-medium { background: #FEF3C7; color: #B45309; }
+.badge-low { background: #DCFCE7; color: #166534; }
+.badge-info, .badge-informational { background: #DBEAFE; color: #1E40AF; }
+
+.badge-new { background: #DBEAFE; color: #1E40AF; }
+.badge-triaged, .badge-triage { background: #E0E7FF; color: #3730A3; }
+.badge-correlated { background: #EDE9FE; color: #5B21B6; }
+.badge-case-created { background: #DCFCE7; color: #166534; }
+.badge-suppressed { background: #F3F4F6; color: #6B7280; }
+
+.badge-investigation { background: #FEF3C7; color: #B45309; }
+.badge-remediation { background: #FFEDD5; color: #C2410C; }
+.badge-validation { background: #E0E7FF; color: #3730A3; }
+.badge-closure-pending { background: #DCFCE7; color: #166534; }
+.badge-closed { background: #F3F4F6; color: #6B7280; }
+.badge-reopened { background: #FEE2E2; color: #991B1B; }
+
+.badge-open { background: #DBEAFE; color: #1E40AF; }
+.badge-in-progress { background: #EDE9FE; color: #5B21B6; }
+.badge-pending-verification { background: #FEF3C7; color: #B45309; }
+.badge-verified { background: #DCFCE7; color: #166534; }
+
+.badge-planned { background: #DBEAFE; color: #1E40AF; }
+.badge-review { background: #FEF3C7; color: #B45309; }
+.badge-active { background: #DCFCE7; color: #166534; }
+
+.badge-effective, .badge-strong { background: #DCFCE7; color: #166534; }
+.badge-adequate { background: #FEF3C7; color: #B45309; }
+.badge-weak, .badge-ineffective { background: #FEE2E2; color: #991B1B; }
+
+.badge-draft { background: #F3F4F6; color: #6B7280; }
+.badge-collecting { background: #DBEAFE; color: #1E40AF; }
+.badge-under-review { background: #FEF3C7; color: #B45309; }
+.badge-approved, .badge-published { background: #DCFCE7; color: #166534; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input {
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+  background: var(--white); color: #333; outline: none; cursor: pointer;
+}
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--accent); }
+
+/* ===== BAR CHART ===== */
+.bar-chart { margin-bottom: 10px; }
+.bar-row { display: flex; align-items: center; margin-bottom: 8px; }
+.bar-label { width: 90px; font-size: 12px; font-weight: 600; color: var(--gray); }
+.bar-track { flex: 1; background: var(--light); border-radius: 4px; height: 22px; overflow: hidden; margin: 0 10px; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: var(--white); min-width: 0; }
+.bar-count { font-size: 12px; color: var(--gray); width: 30px; text-align: right; }
+
+/* ===== PIPELINE ===== */
+.pipeline { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.pipeline-chip {
+  padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 100px;
+  font-size: 13px; font-weight: 600; position: relative;
+}
+.pipeline-chip .chip-count { font-size: 22px; font-weight: 700; display: block; }
+.pipeline-chip .chip-label { font-size: 11px; font-weight: 400; opacity: .8; }
+
+/* ===== MODAL ===== */
+#modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,.5); z-index: 200; justify-content: center; align-items: flex-start;
+  padding-top: 5vh; overflow-y: auto;
+}
+#modal.show { display: flex; }
+.modal-content {
+  background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg);
+  max-width: 700px; width: 95%; max-height: 85vh; overflow-y: auto; padding: 28px; position: relative;
+}
+.modal-content h2 { font-size: 18px; color: var(--blue); margin-bottom: 16px; }
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  font-size: 22px; color: var(--gray); cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: var(--red); }
+.modal-section { margin-top: 18px; }
+.modal-section h4 { font-size: 13px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-field label { font-size: 11px; color: var(--gray); display: block; margin-bottom: 2px; }
+.modal-field .val { font-size: 14px; color: #333; }
+
+/* ===== TRANSITION BUTTONS ===== */
+.transition-btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.transition-btn {
+  padding: 8px 18px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.transition-btn:hover { opacity: .85; }
+.transition-btn.green { background: var(--green); color: var(--white); }
+.transition-btn.blue { background: #2563EB; color: var(--white); }
+.transition-btn.orange { background: var(--orange); color: var(--white); }
+.transition-btn.red { background: var(--red); color: var(--white); }
+.transition-btn.gray { background: var(--gray); color: var(--white); }
+.transition-btn.purple { background: var(--purple); color: var(--white); }
+.transition-btn.indigo { background: var(--indigo); color: var(--white); }
+.transition-btn.teal { background: var(--teal); color: var(--white); }
+
+/* ===== REPORTS GRID ===== */
+.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .reports-grid { grid-template-columns: 1fr; } }
+.report-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.report-card h4 { font-size: 15px; color: var(--blue); }
+.report-card p { font-size: 12px; color: var(--gray); flex: 1; }
+.report-btn {
+  align-self: flex-start; padding: 8px 20px; background: var(--accent); color: var(--white);
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.report-btn:hover { background: #0A5A33; }
+.report-btn:disabled { background: var(--gray); cursor: wait; }
+
+/* ===== SITE CARDS ===== */
+.site-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.site-card {
+  background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px;
+  border-left: 4px solid var(--accent); cursor: pointer; transition: box-shadow .15s;
+}
+.site-card:hover { box-shadow: var(--shadow-lg); }
+.site-card h4 { font-size: 16px; color: var(--blue); margin-bottom: 8px; }
+.site-card .site-stat { font-size: 13px; color: var(--gray); margin-bottom: 4px; }
+.site-card .site-stat strong { color: #333; }
+
+/* ===== TOAST ===== */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: var(--white); padding: 12px 28px; border-radius: 8px;
+  font-size: 14px; box-shadow: var(--shadow-lg); z-index: 300;
+  display: none; white-space: nowrap;
+}
+#toast.show { display: block; }
+
+/* ===== LOADING ===== */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* ===== SUBTABS ===== */
+.subtabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--light); border-radius: 8px; padding: 3px; width: fit-content; }
+.subtabs button {
+  background: none; border: none; padding: 7px 16px; font-size: 13px; color: var(--gray);
+  border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.subtabs button:hover { color: var(--blue); }
+.subtabs button.active { background: var(--white); color: var(--accent); box-shadow: var(--shadow); font-weight: 600; }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Oil &amp; Gas Compliance</h1>
+      <p class="subtitle">Compliance, CAPA, Audits &amp; Sustainability</p>
+      <label>Server URL</label>
+      <input id="login-url" type="text" value="http://localhost:3017">
+      <label>Username</label>
+      <input id="login-user" type="text">
+      <label>Password</label>
+      <input id="login-pass" type="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">OG<span class="accent">Comply</span></div>
+    <div class="topbar-nav" id="topbar-nav">
+      <button data-tab="dashboard" class="active">Command Center</button>
+      <button data-tab="events">Events</button>
+      <button data-tab="cases">Cases</button>
+      <button data-tab="capas">CAPA</button>
+      <button data-tab="knowledge">Knowledge</button>
+      <button data-tab="registry">Registry</button>
+      <button data-tab="audits">Audits</button>
+      <button data-tab="sustainability">Sustainability</button>
+      <button data-tab="reports">Reports</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- ===== TAB: COMMAND CENTER ===== -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div id="dash-loading" class="loading">Loading command center...</div>
+      <div id="dash-content" style="display:none">
+        <div class="kpi-grid" id="dash-kpis"></div>
+        <div class="two-col">
+          <div class="card">
+            <h3>Recent Cases</h3>
+            <div style="overflow-x:auto"><table id="dash-cases-table"><thead><tr>
+              <th>Case ID</th><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Site</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="card">
+            <h3>Recent Events</h3>
+            <div style="overflow-x:auto"><table id="dash-events-table"><thead><tr>
+              <th>Event ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Source</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: EVENTS ===== -->
+    <div id="tab-events" class="tab-panel">
+      <div class="filter-bar">
+        <select id="events-filter-severity"><option value="">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="events-filter-status"><option value="">All Statuses</option><option>New</option><option>Triaged</option><option>Correlated</option><option>Case Created</option><option>Suppressed</option></select>
+      </div>
+      <div class="card">
+        <h3>Events Inbox</h3>
+        <div id="events-loading" class="loading">Loading events...</div>
+        <div style="overflow-x:auto"><table id="events-table"><thead><tr>
+          <th>Event ID</th><th>Title</th><th>Source</th><th>Severity</th><th>Status</th><th>Site</th><th>Timestamp</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: CASES ===== -->
+    <div id="tab-cases" class="tab-panel">
+      <div id="cases-pipeline" class="pipeline"></div>
+      <div class="filter-bar">
+        <select id="cases-filter-severity"><option value="">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="cases-filter-type"><option value="">All Types</option><option>Incident</option><option>Finding</option><option>Audit Issue</option><option>Nonconformance</option><option>Permit Deviation</option><option>Data Quality Issue</option><option>Supplier Risk</option><option>Sustainability Disclosure Issue</option></select>
+        <select id="cases-filter-status"><option value="">All Statuses</option><option>New</option><option>Triage</option><option>Investigation</option><option>Remediation</option><option>Validation</option><option>Closure Pending</option><option>Closed</option><option>Reopened</option></select>
+      </div>
+      <div class="card">
+        <div id="cases-loading" class="loading">Loading cases...</div>
+        <div style="overflow-x:auto"><table id="cases-table"><thead><tr>
+          <th>Case ID</th><th>Title</th><th>Type</th><th>Severity</th><th>Priority</th><th>Status</th><th>Site</th><th>Owner</th><th>Due Date</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: CAPA ===== -->
+    <div id="tab-capas" class="tab-panel">
+      <div id="capas-pipeline" class="pipeline"></div>
+      <div class="filter-bar">
+        <select id="capas-filter-status"><option value="">All Statuses</option><option>Open</option><option>In Progress</option><option>Pending Verification</option><option>Verified</option><option>Closed</option></select>
+        <select id="capas-filter-type"><option value="">All Types</option><option>Corrective</option><option>Preventive</option></select>
+      </div>
+      <div class="card">
+        <div id="capas-loading" class="loading">Loading CAPAs...</div>
+        <div style="overflow-x:auto"><table id="capas-table"><thead><tr>
+          <th>CAPA ID</th><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th>Site</th><th>Owner</th><th>Due Date</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: KNOWLEDGE ===== -->
+    <div id="tab-knowledge" class="tab-panel">
+      <div class="subtabs" id="knowledge-subtabs">
+        <button class="active" data-sub="controls">Controls</button>
+        <button data-sub="requirements">Requirements</button>
+        <button data-sub="policies">Policies</button>
+        <button data-sub="playbooks">Playbooks</button>
+      </div>
+      <div id="knowledge-sub-controls" class="subtab-panel active">
+        <div class="card">
+          <h3>Controls Library</h3>
+          <div id="controls-loading" class="loading">Loading controls...</div>
+          <div style="overflow-x:auto"><table id="controls-table"><thead><tr>
+            <th>Control ID</th><th>Name</th><th>Domain</th><th>Type</th><th>Status</th><th>Effectiveness</th><th>Last Tested</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="knowledge-sub-requirements" class="subtab-panel">
+        <div class="card">
+          <h3>Requirements</h3>
+          <div id="requirements-loading" class="loading">Loading requirements...</div>
+          <div style="overflow-x:auto"><table id="requirements-table"><thead><tr>
+            <th>Req ID</th><th>Summary</th><th>Domain</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="knowledge-sub-policies" class="subtab-panel">
+        <div class="card">
+          <h3>Policies &amp; Standards</h3>
+          <div id="policies-loading" class="loading">Loading policies...</div>
+          <div style="overflow-x:auto"><table id="policies-table"><thead><tr>
+            <th>Policy ID</th><th>Title</th><th>Type</th><th>Version</th><th>Status</th><th>Review Date</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="knowledge-sub-playbooks" class="subtab-panel">
+        <div class="card">
+          <h3>Playbooks</h3>
+          <div id="playbooks-loading" class="loading">Loading playbooks...</div>
+          <div style="overflow-x:auto"><table id="playbooks-table"><thead><tr>
+            <th>Playbook ID</th><th>Title</th><th>Category</th><th>Severity</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: REGISTRY ===== -->
+    <div id="tab-registry" class="tab-panel">
+      <div class="subtabs" id="registry-subtabs">
+        <button class="active" data-sub="sites">Sites</button>
+        <button data-sub="assets">Assets</button>
+        <button data-sub="vendors">Vendors</button>
+      </div>
+      <div id="registry-sub-sites" class="subtab-panel active">
+        <div id="sites-loading" class="loading">Loading sites...</div>
+        <div id="sites-grid" class="site-grid"></div>
+      </div>
+      <div id="registry-sub-assets" class="subtab-panel">
+        <div class="card">
+          <h3>Asset Registry</h3>
+          <div id="assets-loading" class="loading">Loading assets...</div>
+          <div style="overflow-x:auto"><table id="assets-table"><thead><tr>
+            <th>Asset ID</th><th>Name</th><th>Type</th><th>Site</th><th>Criticality</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="registry-sub-vendors" class="subtab-panel">
+        <div class="card">
+          <h3>Vendor Registry</h3>
+          <div id="vendors-loading" class="loading">Loading vendors...</div>
+          <div style="overflow-x:auto"><table id="vendors-table"><thead><tr>
+            <th>Vendor ID</th><th>Name</th><th>Category</th><th>Risk Profile</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: AUDITS ===== -->
+    <div id="tab-audits" class="tab-panel">
+      <div class="subtabs" id="audits-subtabs">
+        <button class="active" data-sub="audits-list">Audits</button>
+        <button data-sub="findings">Findings</button>
+      </div>
+      <div id="audits-sub-audits-list" class="subtab-panel active">
+        <div class="card">
+          <h3>Audit Schedule</h3>
+          <div id="audits-loading" class="loading">Loading audits...</div>
+          <div style="overflow-x:auto"><table id="audits-table"><thead><tr>
+            <th>Audit ID</th><th>Title</th><th>Type</th><th>Status</th><th>Site</th><th>Lead Auditor</th><th>Start Date</th><th>End Date</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="audits-sub-findings" class="subtab-panel">
+        <div class="card">
+          <h3>Audit Findings</h3>
+          <div id="findings-loading" class="loading">Loading findings...</div>
+          <div style="overflow-x:auto"><table id="findings-table"><thead><tr>
+            <th>Finding ID</th><th>Title</th><th>Severity</th><th>Audit ID</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: SUSTAINABILITY ===== -->
+    <div id="tab-sustainability" class="tab-panel">
+      <div class="subtabs" id="sustainability-subtabs">
+        <button class="active" data-sub="cycles">Reporting Cycles</button>
+        <button data-sub="attestations">Attestations</button>
+        <button data-sub="evidence-list">Evidence</button>
+      </div>
+      <div id="sustainability-sub-cycles" class="subtab-panel active">
+        <div class="card">
+          <h3>Reporting Cycles</h3>
+          <div id="cycles-loading" class="loading">Loading reporting cycles...</div>
+          <div style="overflow-x:auto"><table id="cycles-table"><thead><tr>
+            <th>Cycle ID</th><th>Title</th><th>Period</th><th>Framework</th><th>Status</th><th>Deadline</th><th>Quality Score</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="sustainability-sub-attestations" class="subtab-panel">
+        <div class="card">
+          <h3>Attestations</h3>
+          <div id="attestations-loading" class="loading">Loading attestations...</div>
+          <div style="overflow-x:auto"><table id="attestations-table"><thead><tr>
+            <th>Attestation ID</th><th>Title</th><th>Status</th><th>Assigned To</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div id="sustainability-sub-evidence-list" class="subtab-panel">
+        <div class="card">
+          <h3>Evidence Records</h3>
+          <div id="evidence-loading" class="loading">Loading evidence...</div>
+          <div style="overflow-x:auto"><table id="evidence-table"><thead><tr>
+            <th>Evidence ID</th><th>Title</th><th>Type</th><th>Related Case</th><th>Status</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: REPORTS ===== -->
+    <div id="tab-reports" class="tab-panel">
+      <div class="reports-grid">
+        <div class="report-card">
+          <h4>Events Summary</h4>
+          <p>Distribution of compliance events by severity, source system, and site.</p>
+          <button class="report-btn" onclick="generateReport('events-summary')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Cases Summary</h4>
+          <p>Full case lifecycle analysis by type, severity, status, and site.</p>
+          <button class="report-btn" onclick="generateReport('cases-summary')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>CAPA Summary</h4>
+          <p>Corrective and preventive action tracking with overdue analysis.</p>
+          <button class="report-btn" onclick="generateReport('capas-summary')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Audits Summary</h4>
+          <p>Audit schedule, findings by severity, and completion status.</p>
+          <button class="report-btn" onclick="generateReport('audits-summary')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Sustainability Report</h4>
+          <p>ESG reporting cycles, attestation status, and evidence collection metrics.</p>
+          <button class="report-btn" onclick="generateReport('sustainability-summary')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Controls Health</h4>
+          <p>Control effectiveness, testing status, and overdue tests by domain.</p>
+          <button class="report-btn" onclick="generateReport('controls-health')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Site &amp; Asset Registry</h4>
+          <p>Site inventory, asset criticality distribution, and vendor summary.</p>
+          <button class="report-btn" onclick="generateReport('site-registry')">Generate</button>
+        </div>
+        <div class="report-card">
+          <h4>Overdue Items</h4>
+          <p>All overdue cases, CAPAs, and control tests across the platform.</p>
+          <button class="report-btn" onclick="generateReport('overdue-items')">Generate</button>
+        </div>
+      </div>
+      <div id="report-output" class="card" style="display:none; margin-top: 16px;">
+        <h3 id="report-title"></h3>
+        <pre id="report-data" style="white-space: pre-wrap; font-size: 12px; max-height: 500px; overflow-y: auto; background: var(--light); padding: 16px; border-radius: 8px;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div id="modal">
+  <div class="modal-content" id="modal-body">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+/* ===== GLOBALS ===== */
+let API = { url: "", auth: "", user: "", displayName: "" };
+const KAPP = "og-compliance";
+
+/* ===== AUTH ===== */
+function doLogin() {
+  const url = document.getElementById("login-url").value.replace(/\/+$/, "");
+  const user = document.getElementById("login-user").value;
+  const pass = document.getElementById("login-pass").value;
+  const errEl = document.getElementById("login-error");
+  errEl.style.display = "none";
+
+  API.url = url;
+  API.auth = btoa(user + ":" + pass);
+  API.user = user;
+
+  fetch(API.url + "/app/api/v1/me", { headers: { Authorization: "Basic " + API.auth } })
+    .then(r => { if (!r.ok) throw new Error("Login failed"); return r.json(); })
+    .then(async data => {
+      API.displayName = data.displayName || data.user?.displayName || user;
+      try {
+        const sr = await fetch(API.url + "/app/api/v1/space", { headers: { Authorization: "Basic " + API.auth, Accept: "application/json" } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+      } catch(e2) {}
+      sessionStorage.setItem("kinetic_session", JSON.stringify(API));
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("user-display").textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+      loadDashboard();
+    })
+    .catch(e => { errEl.textContent = e.message; errEl.style.display = "block"; });
+}
+
+function doLogout() {
+  sessionStorage.removeItem("kinetic_session");
+  API = { url: "", auth: "", user: "", displayName: "" };
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+// Auto-login from session
+(async function() {
+  const s = sessionStorage.getItem("kinetic_session");
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API.url = sess.url || "";
+    API.auth = sess.auth || "";
+    API.user = sess.user || "";
+    API.displayName = sess.displayName || sess.user || "";
+    API.spaceSlug = sess.spaceSlug || "";
+    if (!API.auth) return;
+    const r = await fetch(API.url + "/app/api/v1/me", { headers: { Authorization: "Basic " + API.auth } });
+    if (!r.ok) throw new Error("expired");
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(API.url + "/app/api/v1/space", { headers: { Authorization: "Basic " + API.auth, Accept: "application/json" } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem("kinetic_session", JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("user-display").textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    loadDashboard();
+  } catch { sessionStorage.removeItem("kinetic_session"); API = { url: "", auth: "", user: "", displayName: "" }; }
+})();
+
+/* ===== HELPERS ===== */
+function api(path, opts = {}) {
+  const headers = { Authorization: "Basic " + API.auth, "Content-Type": "application/json", ...(opts.headers || {}) };
+  return fetch(API.url + path, { ...opts, headers }).then(r => r.json());
+}
+
+function ogcApi(path, opts = {}) {
+  const headers = { Authorization: "Basic " + API.auth, "Content-Type": "application/json", ...(opts.headers || {}) };
+  return fetch("/api/ogc" + path, { ...opts, headers }).then(r => r.json());
+}
+
+function kapi(path) { return api("/app/api/v1" + path); }
+
+function badge(text) {
+  if (!text) return "";
+  const cls = text.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return `<span class="badge badge-${cls}">${text}</span>`;
+}
+
+function emptyRow(cols) { return `<tr class="empty-row"><td colspan="${cols}">No records found</td></tr>`; }
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+function closeModal() { document.getElementById("modal").classList.remove("show"); }
+
+function showModal(html) {
+  const m = document.getElementById("modal");
+  document.getElementById("modal-body").innerHTML = `<button class="modal-close" onclick="closeModal()">&times;</button>` + html;
+  m.classList.add("show");
+}
+
+/* ===== TAB NAVIGATION ===== */
+document.getElementById("topbar-nav").addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  document.querySelectorAll("#topbar-nav button").forEach(b => b.classList.remove("active"));
+  e.target.classList.add("active");
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  const tab = e.target.dataset.tab;
+  document.getElementById("tab-" + tab).classList.add("active");
+
+  if (tab === "events" && !window._eventsLoaded) loadEvents();
+  if (tab === "cases" && !window._casesLoaded) loadCases();
+  if (tab === "capas" && !window._capasLoaded) loadCAPAs();
+  if (tab === "knowledge" && !window._controlsLoaded) loadControls();
+  if (tab === "registry" && !window._sitesLoaded) loadSites();
+  if (tab === "audits" && !window._auditsLoaded) loadAudits();
+  if (tab === "sustainability" && !window._cyclesLoaded) loadCycles();
+});
+
+// Subtab handling
+document.querySelectorAll(".subtabs").forEach(container => {
+  container.addEventListener("click", e => {
+    if (e.target.tagName !== "BUTTON") return;
+    container.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    e.target.classList.add("active");
+    const parentId = container.id.replace("-subtabs", "");
+    container.parentElement.querySelectorAll(".subtab-panel").forEach(p => p.classList.remove("active"));
+    const panel = document.getElementById(parentId + "-sub-" + e.target.dataset.sub);
+    if (panel) panel.classList.add("active");
+
+    const sub = e.target.dataset.sub;
+    if (sub === "requirements" && !window._requirementsLoaded) loadRequirements();
+    if (sub === "policies" && !window._policiesLoaded) loadPolicies();
+    if (sub === "playbooks" && !window._playbooksLoaded) loadPlaybooks();
+    if (sub === "assets" && !window._assetsLoaded) loadAssets();
+    if (sub === "vendors" && !window._vendorsLoaded) loadVendors();
+    if (sub === "findings" && !window._findingsLoaded) loadFindings();
+    if (sub === "attestations" && !window._attestationsLoaded) loadAttestations();
+    if (sub === "evidence-list" && !window._evidenceLoaded) loadEvidence();
+  });
+});
+
+/* ===== FILTER HELPERS ===== */
+function setupFilter(selectId, callback) {
+  document.getElementById(selectId)?.addEventListener("change", callback);
+}
+
+/* ===== DASHBOARD ===== */
+async function loadDashboard() {
+  try {
+    const d = await api("/api/ogc/dashboard");
+    document.getElementById("dash-loading").style.display = "none";
+    document.getElementById("dash-content").style.display = "block";
+
+    const kpis = document.getElementById("dash-kpis");
+    kpis.innerHTML = `
+      <div class="kpi-card" style="border-color: var(--red)">
+        <div class="kpi-value">${d.openCases}</div>
+        <div class="kpi-label">Open Cases</div>
+        <div class="kpi-sub">${d.criticalCases} critical</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--orange)">
+        <div class="kpi-value">${d.newEvents}</div>
+        <div class="kpi-label">New Events</div>
+        <div class="kpi-sub">${d.recentEvents} this week</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--yellow)">
+        <div class="kpi-value">${d.openCAPAs}</div>
+        <div class="kpi-label">Open CAPAs</div>
+        <div class="kpi-sub">${d.overdueCAPAs} overdue</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--indigo)">
+        <div class="kpi-value">${d.activeAudits}</div>
+        <div class="kpi-label">Active Audits</div>
+        <div class="kpi-sub">${d.totalFindings} total findings</div>
+      </div>
+      <div class="kpi-card" style="border-color: ${d.controlHealth >= 80 ? 'var(--green)' : 'var(--red)'}">
+        <div class="kpi-value">${d.controlHealth}%</div>
+        <div class="kpi-label">Control Health</div>
+        <div class="kpi-sub">${d.controlsEffective}/${d.controlsTotal} effective</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--teal)">
+        <div class="kpi-value">${d.activeSites}</div>
+        <div class="kpi-label">Active Sites</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--purple)">
+        <div class="kpi-value">${d.slaAtRisk}</div>
+        <div class="kpi-label">SLA at Risk</div>
+        <div class="kpi-sub">within 3 days</div>
+      </div>
+      <div class="kpi-card" style="border-color: var(--accent)">
+        <div class="kpi-value">${d.activeCycles}</div>
+        <div class="kpi-label">ESG Cycles</div>
+        <div class="kpi-sub">active reporting</div>
+      </div>
+    `;
+
+    // Recent cases
+    const casesTb = document.querySelector("#dash-cases-table tbody");
+    casesTb.innerHTML = d.recentCases?.length
+      ? d.recentCases.map(c => `<tr class="clickable" onclick="showCaseDetail('${c.id}')">
+          <td>${c.caseId}</td><td>${c.title}</td><td>${c.caseType}</td><td>${badge(c.severity)}</td><td>${badge(c.status)}</td><td>${c.site}</td>
+        </tr>`).join("")
+      : emptyRow(6);
+
+    // Recent events
+    const eventsTb = document.querySelector("#dash-events-table tbody");
+    eventsTb.innerHTML = d.recentEventsList?.length
+      ? d.recentEventsList.map(e => `<tr class="clickable" onclick="showEventDetail('${e.id}')">
+          <td>${e.eventId}</td><td>${e.title}</td><td>${badge(e.severity)}</td><td>${badge(e.status)}</td><td>${e.source}</td>
+        </tr>`).join("")
+      : emptyRow(5);
+  } catch (e) {
+    document.getElementById("dash-loading").textContent = "Error loading dashboard: " + e.message;
+  }
+}
+
+/* ===== EVENTS ===== */
+let _allEvents = [];
+async function loadEvents() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/event/submissions?include=values&limit=100`);
+    _allEvents = r.submissions || [];
+    window._eventsLoaded = true;
+    document.getElementById("events-loading").style.display = "none";
+    renderEvents();
+  } catch (e) { document.getElementById("events-loading").textContent = "Error: " + e.message; }
+}
+
+function renderEvents() {
+  let list = _allEvents;
+  const sevFilter = document.getElementById("events-filter-severity").value;
+  const stFilter = document.getElementById("events-filter-status").value;
+  if (sevFilter) list = list.filter(s => s.values?.["Severity"] === sevFilter);
+  if (stFilter) list = list.filter(s => s.values?.["Status"] === stFilter);
+
+  const tb = document.querySelector("#events-table tbody");
+  tb.innerHTML = list.length
+    ? list.map(s => {
+        const v = s.values || {};
+        return `<tr class="clickable" onclick="showEventDetail('${s.id}')">
+          <td>${v["Event ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Source System"] || ""}</td>
+          <td>${badge(v["Severity"])}</td><td>${badge(v["Status"])}</td><td>${v["Site"] || ""}</td>
+          <td>${(v["Event Timestamp"] || "").slice(0, 16)}</td>
+        </tr>`;
+      }).join("")
+    : emptyRow(7);
+}
+setupFilter("events-filter-severity", renderEvents);
+setupFilter("events-filter-status", renderEvents);
+
+async function showEventDetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  const status = v["Status"] || "";
+  const transitions = { New: ["Triaged", "Suppressed"], Triaged: ["Correlated", "Case Created", "Suppressed"], Correlated: ["Case Created", "Suppressed"] };
+  const allowed = transitions[status] || [];
+  const btnColors = { Triaged: "blue", Correlated: "purple", "Case Created": "green", Suppressed: "gray" };
+
+  showModal(`
+    <h2>${v["Event ID"]} - ${v["Title"]}</h2>
+    <div class="modal-section"><h4>Details</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Source System</label><div class="val">${v["Source System"] || "-"}</div></div>
+        <div class="modal-field"><label>Severity</label><div class="val">${badge(v["Severity"])}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Site</label><div class="val">${v["Site"] || "-"}</div></div>
+        <div class="modal-field"><label>Asset</label><div class="val">${v["Asset"] || "-"}</div></div>
+        <div class="modal-field"><label>Timestamp</label><div class="val">${v["Event Timestamp"] || "-"}</div></div>
+        <div class="modal-field"><label>Category</label><div class="val">${v["Normalized Category"] || "-"}</div></div>
+        <div class="modal-field"><label>Related Case</label><div class="val">${v["Related Case ID"] || "-"}</div></div>
+      </div>
+    </div>
+    <div class="modal-section"><h4>Description</h4><p style="font-size:13px;color:#555">${v["Description"] || "No description"}</p></div>
+    ${allowed.length ? `<div class="transition-btns">${allowed.map(s => `<button class="transition-btn ${btnColors[s] || 'blue'}" onclick="transitionEvent('${id}','${s}')">${s}</button>`).join("")}</div>` : ""}
+  `);
+}
+
+async function transitionEvent(id, newStatus) {
+  try {
+    await api(`/api/ogc/events/${id}/transition`, {
+      method: "POST", body: JSON.stringify({ newStatus, user: API.user }),
+    });
+    toast(`Event transitioned to ${newStatus}`);
+    closeModal();
+    window._eventsLoaded = false; loadEvents();
+  } catch (e) { toast("Error: " + e.message); }
+}
+
+/* ===== CASES ===== */
+let _allCases = [];
+async function loadCases() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/case/submissions?include=values&limit=100`);
+    _allCases = r.submissions || [];
+    window._casesLoaded = true;
+    document.getElementById("cases-loading").style.display = "none";
+    renderCases();
+  } catch (e) { document.getElementById("cases-loading").textContent = "Error: " + e.message; }
+}
+
+function renderCases() {
+  let list = _allCases;
+  const sevFilter = document.getElementById("cases-filter-severity").value;
+  const typeFilter = document.getElementById("cases-filter-type").value;
+  const stFilter = document.getElementById("cases-filter-status").value;
+  if (sevFilter) list = list.filter(s => s.values?.["Severity"] === sevFilter);
+  if (typeFilter) list = list.filter(s => s.values?.["Case Type"] === typeFilter);
+  if (stFilter) list = list.filter(s => s.values?.["Status"] === stFilter);
+
+  // Pipeline
+  const statuses = ["New", "Triage", "Investigation", "Remediation", "Validation", "Closure Pending", "Closed"];
+  const counts = {};
+  for (const s of _allCases) { const st = s.values?.["Status"] || "Unknown"; counts[st] = (counts[st] || 0) + 1; }
+  const pipeColors = { New: "#DBEAFE;color:#1E40AF", Triage: "#E0E7FF;color:#3730A3", Investigation: "#FEF3C7;color:#B45309", Remediation: "#FFEDD5;color:#C2410C", Validation: "#EDE9FE;color:#5B21B6", "Closure Pending": "#DCFCE7;color:#166534", Closed: "#F3F4F6;color:#6B7280" };
+  document.getElementById("cases-pipeline").innerHTML = statuses.map(s =>
+    `<div class="pipeline-chip" style="background:${pipeColors[s] || '#F3F4F6;color:#6B7280'}"><span class="chip-count">${counts[s] || 0}</span><span class="chip-label">${s}</span></div>`
+  ).join("");
+
+  const tb = document.querySelector("#cases-table tbody");
+  tb.innerHTML = list.length
+    ? list.map(s => {
+        const v = s.values || {};
+        return `<tr class="clickable" onclick="showCaseDetail('${s.id}')">
+          <td>${v["Case ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Case Type"] || ""}</td>
+          <td>${badge(v["Severity"])}</td><td>${v["Priority"] || ""}</td><td>${badge(v["Status"])}</td>
+          <td>${v["Site"] || ""}</td><td>${v["Owner"] || ""}</td><td>${v["Due Date"] || ""}</td>
+        </tr>`;
+      }).join("")
+    : emptyRow(9);
+}
+setupFilter("cases-filter-severity", renderCases);
+setupFilter("cases-filter-type", renderCases);
+setupFilter("cases-filter-status", renderCases);
+
+async function showCaseDetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  const status = v["Status"] || "";
+  const transitions = { New: ["Triage"], Triage: ["Investigation", "Closed"], Investigation: ["Remediation", "Closed"], Remediation: ["Validation", "Investigation"], Validation: ["Closure Pending", "Remediation"], "Closure Pending": ["Closed", "Validation"], Closed: ["Reopened"], Reopened: ["Triage"] };
+  const allowed = transitions[status] || [];
+  const btnColors = { Triage: "blue", Investigation: "orange", Remediation: "purple", Validation: "indigo", "Closure Pending": "teal", Closed: "gray", Reopened: "red" };
+
+  showModal(`
+    <h2>${v["Case ID"]} - ${v["Title"]}</h2>
+    <div class="modal-section"><h4>Case Information</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Type</label><div class="val">${v["Case Type"] || "-"}</div></div>
+        <div class="modal-field"><label>Severity</label><div class="val">${badge(v["Severity"])}</div></div>
+        <div class="modal-field"><label>Priority</label><div class="val">${v["Priority"] || "-"}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Owner</label><div class="val">${v["Owner"] || "-"}</div></div>
+        <div class="modal-field"><label>Assigned To</label><div class="val">${v["Assigned To"] || "-"}</div></div>
+        <div class="modal-field"><label>Site</label><div class="val">${v["Site"] || "-"}</div></div>
+        <div class="modal-field"><label>Asset</label><div class="val">${v["Asset"] || "-"}</div></div>
+        <div class="modal-field"><label>Due Date</label><div class="val">${v["Due Date"] || "-"}</div></div>
+        <div class="modal-field"><label>SLA Target</label><div class="val">${v["SLA Target Date"] || "-"}</div></div>
+        <div class="modal-field"><label>Regulatory Domain</label><div class="val">${v["Regulatory Domain"] || "-"}</div></div>
+        <div class="modal-field"><label>Business Unit</label><div class="val">${v["Business Unit"] || "-"}</div></div>
+      </div>
+    </div>
+    <div class="modal-section"><h4>Description</h4><p style="font-size:13px;color:#555">${v["Description"] || "No description"}</p></div>
+    ${v["Root Cause"] ? `<div class="modal-section"><h4>Root Cause</h4><p style="font-size:13px;color:#555">${v["Root Cause"]}</p></div>` : ""}
+    ${v["Remediation Plan"] ? `<div class="modal-section"><h4>Remediation Plan</h4><p style="font-size:13px;color:#555">${v["Remediation Plan"]}</p></div>` : ""}
+    ${v["Closure Summary"] ? `<div class="modal-section"><h4>Closure Summary</h4><p style="font-size:13px;color:#555">${v["Closure Summary"]}</p></div>` : ""}
+    ${allowed.length ? `<div class="transition-btns">${allowed.map(s => `<button class="transition-btn ${btnColors[s] || 'blue'}" onclick="transitionCase('${id}','${s}')">${s}</button>`).join("")}</div>` : ""}
+  `);
+}
+
+async function transitionCase(id, newStatus) {
+  try {
+    await api(`/api/ogc/cases/${id}/transition`, {
+      method: "POST", body: JSON.stringify({ newStatus, user: API.user }),
+    });
+    toast(`Case transitioned to ${newStatus}`);
+    closeModal();
+    window._casesLoaded = false; loadCases();
+  } catch (e) { toast("Error: " + e.message); }
+}
+
+/* ===== CAPAs ===== */
+let _allCAPAs = [];
+async function loadCAPAs() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/capa/submissions?include=values&limit=100`);
+    _allCAPAs = r.submissions || [];
+    window._capasLoaded = true;
+    document.getElementById("capas-loading").style.display = "none";
+    renderCAPAs();
+  } catch (e) { document.getElementById("capas-loading").textContent = "Error: " + e.message; }
+}
+
+function renderCAPAs() {
+  let list = _allCAPAs;
+  const stFilter = document.getElementById("capas-filter-status").value;
+  const typeFilter = document.getElementById("capas-filter-type").value;
+  if (stFilter) list = list.filter(s => s.values?.["Status"] === stFilter);
+  if (typeFilter) list = list.filter(s => s.values?.["Type"] === typeFilter);
+
+  // Pipeline
+  const statuses = ["Open", "In Progress", "Pending Verification", "Verified", "Closed"];
+  const counts = {};
+  for (const s of _allCAPAs) { const st = s.values?.["Status"] || "Unknown"; counts[st] = (counts[st] || 0) + 1; }
+  const pipeColors = { Open: "#DBEAFE;color:#1E40AF", "In Progress": "#EDE9FE;color:#5B21B6", "Pending Verification": "#FEF3C7;color:#B45309", Verified: "#DCFCE7;color:#166534", Closed: "#F3F4F6;color:#6B7280" };
+  document.getElementById("capas-pipeline").innerHTML = statuses.map(s =>
+    `<div class="pipeline-chip" style="background:${pipeColors[s] || '#F3F4F6;color:#6B7280'}"><span class="chip-count">${counts[s] || 0}</span><span class="chip-label">${s}</span></div>`
+  ).join("");
+
+  const tb = document.querySelector("#capas-table tbody");
+  tb.innerHTML = list.length
+    ? list.map(s => {
+        const v = s.values || {};
+        return `<tr class="clickable" onclick="showCAPADetail('${s.id}')">
+          <td>${v["CAPA ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Type"] || ""}</td>
+          <td>${v["Priority"] || ""}</td><td>${badge(v["Status"])}</td><td>${v["Site"] || ""}</td>
+          <td>${v["Owner"] || ""}</td><td>${v["Due Date"] || ""}</td>
+        </tr>`;
+      }).join("")
+    : emptyRow(8);
+}
+setupFilter("capas-filter-status", renderCAPAs);
+setupFilter("capas-filter-type", renderCAPAs);
+
+async function showCAPADetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  const status = v["Status"] || "";
+  const transitions = { Open: ["In Progress"], "In Progress": ["Pending Verification"], "Pending Verification": ["Verified", "In Progress"], Verified: ["Closed", "In Progress"] };
+  const allowed = transitions[status] || [];
+  const btnColors = { "In Progress": "purple", "Pending Verification": "orange", Verified: "green", Closed: "gray" };
+
+  showModal(`
+    <h2>${v["CAPA ID"]} - ${v["Title"]}</h2>
+    <div class="modal-section"><h4>CAPA Details</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Type</label><div class="val">${v["Type"] || "-"}</div></div>
+        <div class="modal-field"><label>Priority</label><div class="val">${v["Priority"] || "-"}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Owner</label><div class="val">${v["Owner"] || "-"}</div></div>
+        <div class="modal-field"><label>Assigned To</label><div class="val">${v["Assigned To"] || "-"}</div></div>
+        <div class="modal-field"><label>Due Date</label><div class="val">${v["Due Date"] || "-"}</div></div>
+        <div class="modal-field"><label>Related Case</label><div class="val">${v["Related Case ID"] || "-"}</div></div>
+        <div class="modal-field"><label>Site</label><div class="val">${v["Site"] || "-"}</div></div>
+      </div>
+    </div>
+    <div class="modal-section"><h4>Description</h4><p style="font-size:13px;color:#555">${v["Description"] || "No description"}</p></div>
+    ${v["Action Plan"] ? `<div class="modal-section"><h4>Action Plan</h4><p style="font-size:13px;color:#555">${v["Action Plan"]}</p></div>` : ""}
+    ${v["Recurrence Prevention"] ? `<div class="modal-section"><h4>Recurrence Prevention</h4><p style="font-size:13px;color:#555">${v["Recurrence Prevention"]}</p></div>` : ""}
+    ${v["Verification Notes"] ? `<div class="modal-section"><h4>Verification Notes</h4><p style="font-size:13px;color:#555">${v["Verification Notes"]}</p></div>` : ""}
+    ${allowed.length ? `<div class="transition-btns">${allowed.map(s => `<button class="transition-btn ${btnColors[s] || 'blue'}" onclick="transitionCAPA('${id}','${s}')">${s}</button>`).join("")}</div>` : ""}
+  `);
+}
+
+async function transitionCAPA(id, newStatus) {
+  try {
+    await api(`/api/ogc/capas/${id}/transition`, {
+      method: "POST", body: JSON.stringify({ newStatus, user: API.user }),
+    });
+    toast(`CAPA transitioned to ${newStatus}`);
+    closeModal();
+    window._capasLoaded = false; loadCAPAs();
+  } catch (e) { toast("Error: " + e.message); }
+}
+
+/* ===== KNOWLEDGE: CONTROLS ===== */
+async function loadControls() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/control/submissions?include=values&limit=100`);
+    window._controlsLoaded = true;
+    document.getElementById("controls-loading").style.display = "none";
+    const tb = document.querySelector("#controls-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr class="clickable" onclick="showControlDetail('${s.id}')">
+            <td>${v["Control ID"] || ""}</td><td>${v["Name"] || ""}</td><td>${v["Domain"] || ""}</td>
+            <td>${v["Control Type"] || ""}</td><td>${badge(v["Status"])}</td><td>${badge(v["Effectiveness Rating"])}</td>
+            <td>${v["Last Tested Date"] || ""}</td>
+          </tr>`;
+        }).join("")
+      : emptyRow(7);
+  } catch (e) { document.getElementById("controls-loading").textContent = "Error: " + e.message; }
+}
+
+async function showControlDetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  showModal(`
+    <h2>${v["Control ID"]} - ${v["Name"]}</h2>
+    <div class="modal-section"><h4>Control Details</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Type</label><div class="val">${v["Control Type"] || "-"}</div></div>
+        <div class="modal-field"><label>Domain</label><div class="val">${v["Domain"] || "-"}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Effectiveness</label><div class="val">${badge(v["Effectiveness Rating"])}</div></div>
+        <div class="modal-field"><label>Owner</label><div class="val">${v["Control Owner"] || "-"}</div></div>
+        <div class="modal-field"><label>Frequency</label><div class="val">${v["Frequency"] || "-"}</div></div>
+        <div class="modal-field"><label>Key Control</label><div class="val">${v["Key Control"] || "-"}</div></div>
+        <div class="modal-field"><label>Automation</label><div class="val">${v["Automation Level"] || "-"}</div></div>
+        <div class="modal-field"><label>Last Tested</label><div class="val">${v["Last Tested Date"] || "-"}</div></div>
+        <div class="modal-field"><label>Next Test</label><div class="val">${v["Next Test Date"] || "-"}</div></div>
+      </div>
+    </div>
+    <div class="modal-section"><h4>Description</h4><p style="font-size:13px;color:#555">${v["Description"] || "No description"}</p></div>
+    ${v["Test Procedure"] ? `<div class="modal-section"><h4>Test Procedure</h4><p style="font-size:13px;color:#555">${v["Test Procedure"]}</p></div>` : ""}
+  `);
+}
+
+/* ===== KNOWLEDGE: REQUIREMENTS ===== */
+async function loadRequirements() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/requirement/submissions?include=values&limit=100`);
+    window._requirementsLoaded = true;
+    document.getElementById("requirements-loading").style.display = "none";
+    const tb = document.querySelector("#requirements-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Requirement ID"] || ""}</td><td>${v["Summary"] || ""}</td><td>${v["Domain"] || ""}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(4);
+  } catch (e) { document.getElementById("requirements-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== KNOWLEDGE: POLICIES ===== */
+async function loadPolicies() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/policy/submissions?include=values&limit=100`);
+    window._policiesLoaded = true;
+    document.getElementById("policies-loading").style.display = "none";
+    const tb = document.querySelector("#policies-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Policy ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Document Type"] || ""}</td><td>${v["Version"] || ""}</td><td>${badge(v["Status"])}</td><td>${v["Next Review Date"] || ""}</td></tr>`;
+        }).join("")
+      : emptyRow(6);
+  } catch (e) { document.getElementById("policies-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== KNOWLEDGE: PLAYBOOKS ===== */
+async function loadPlaybooks() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/playbook/submissions?include=values&limit=100`);
+    window._playbooksLoaded = true;
+    document.getElementById("playbooks-loading").style.display = "none";
+    const tb = document.querySelector("#playbooks-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Playbook ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Category"] || ""}</td><td>${badge(v["Severity Level"])}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(5);
+  } catch (e) { document.getElementById("playbooks-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== REGISTRY: SITES ===== */
+async function loadSites() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/site/submissions?include=values&limit=100`);
+    window._sitesLoaded = true;
+    document.getElementById("sites-loading").style.display = "none";
+    const subs = r.submissions || [];
+    const grid = document.getElementById("sites-grid");
+    grid.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<div class="site-card" onclick="showSiteDetail('${s.id}')">
+            <h4>${v["Name"] || "Unnamed Site"}</h4>
+            <div class="site-stat">Type: <strong>${v["Site Type"] || "-"}</strong></div>
+            <div class="site-stat">Region: <strong>${v["Region"] || "-"}</strong></div>
+            <div class="site-stat">Status: ${badge(v["Status"])}</div>
+            <div class="site-stat">Risk: <strong>${v["Risk Rating"] || "-"}</strong></div>
+            <div class="site-stat">Jurisdiction: <strong>${v["Regulatory Jurisdiction"] || "-"}</strong></div>
+          </div>`;
+        }).join("")
+      : '<div class="loading">No sites found</div>';
+  } catch (e) { document.getElementById("sites-loading").textContent = "Error: " + e.message; }
+}
+
+async function showSiteDetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  showModal(`
+    <h2>${v["Name"]}</h2>
+    <div class="modal-section"><h4>Site Information</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Site ID</label><div class="val">${v["Site ID"] || "-"}</div></div>
+        <div class="modal-field"><label>Type</label><div class="val">${v["Site Type"] || "-"}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Region</label><div class="val">${v["Region"] || "-"}</div></div>
+        <div class="modal-field"><label>State/Province</label><div class="val">${v["State Province"] || "-"}</div></div>
+        <div class="modal-field"><label>Country</label><div class="val">${v["Country"] || "-"}</div></div>
+        <div class="modal-field"><label>Business Unit</label><div class="val">${v["Business Unit"] || "-"}</div></div>
+        <div class="modal-field"><label>Risk Rating</label><div class="val">${v["Risk Rating"] || "-"}</div></div>
+        <div class="modal-field"><label>Jurisdiction</label><div class="val">${v["Regulatory Jurisdiction"] || "-"}</div></div>
+        <div class="modal-field"><label>Employees</label><div class="val">${v["Employee Count"] || "-"}</div></div>
+        <div class="modal-field"><label>Contractors</label><div class="val">${v["Contractor Count"] || "-"}</div></div>
+        <div class="modal-field"><label>Last Inspection</label><div class="val">${v["Last Inspection Date"] || "-"}</div></div>
+      </div>
+    </div>
+    ${v["Description"] ? `<div class="modal-section"><h4>Description</h4><p style="font-size:13px;color:#555">${v["Description"]}</p></div>` : ""}
+    <div class="modal-section"><h4>Emergency Contact</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Name</label><div class="val">${v["Emergency Contact Name"] || "-"}</div></div>
+        <div class="modal-field"><label>Phone</label><div class="val">${v["Emergency Contact Phone"] || "-"}</div></div>
+      </div>
+    </div>
+  `);
+}
+
+/* ===== REGISTRY: ASSETS ===== */
+async function loadAssets() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/asset/submissions?include=values&limit=100`);
+    window._assetsLoaded = true;
+    document.getElementById("assets-loading").style.display = "none";
+    const tb = document.querySelector("#assets-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Asset ID"] || ""}</td><td>${v["Name"] || ""}</td><td>${v["Asset Type"] || ""}</td><td>${v["Site"] || ""}</td><td>${v["Criticality"] || ""}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(6);
+  } catch (e) { document.getElementById("assets-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== REGISTRY: VENDORS ===== */
+async function loadVendors() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/vendor/submissions?include=values&limit=100`);
+    window._vendorsLoaded = true;
+    document.getElementById("vendors-loading").style.display = "none";
+    const tb = document.querySelector("#vendors-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Vendor ID"] || ""}</td><td>${v["Name"] || ""}</td><td>${v["Category"] || ""}</td><td>${badge(v["Risk Profile"])}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(5);
+  } catch (e) { document.getElementById("vendors-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== AUDITS ===== */
+async function loadAudits() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/audit/submissions?include=values&limit=100`);
+    window._auditsLoaded = true;
+    document.getElementById("audits-loading").style.display = "none";
+    const tb = document.querySelector("#audits-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr class="clickable" onclick="showAuditDetail('${s.id}')">
+            <td>${v["Audit ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Audit Type"] || ""}</td>
+            <td>${badge(v["Status"])}</td><td>${v["Site"] || ""}</td><td>${v["Lead Auditor"] || ""}</td>
+            <td>${v["Start Date"] || ""}</td><td>${v["End Date"] || ""}</td>
+          </tr>`;
+        }).join("")
+      : emptyRow(8);
+  } catch (e) { document.getElementById("audits-loading").textContent = "Error: " + e.message; }
+}
+
+async function showAuditDetail(id) {
+  const r = await kapi(`/submissions/${id}?include=values`);
+  const v = r.submission?.values || {};
+  const status = v["Status"] || "";
+  const transitions = { Planned: ["In Progress"], "In Progress": ["Review"], Review: ["Closed", "In Progress"] };
+  const allowed = transitions[status] || [];
+  const btnColors = { "In Progress": "blue", Review: "orange", Closed: "gray" };
+
+  showModal(`
+    <h2>${v["Audit ID"]} - ${v["Title"]}</h2>
+    <div class="modal-section"><h4>Audit Details</h4>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Type</label><div class="val">${v["Audit Type"] || "-"}</div></div>
+        <div class="modal-field"><label>Status</label><div class="val">${badge(v["Status"])}</div></div>
+        <div class="modal-field"><label>Lead Auditor</label><div class="val">${v["Lead Auditor"] || "-"}</div></div>
+        <div class="modal-field"><label>Site</label><div class="val">${v["Site"] || "-"}</div></div>
+        <div class="modal-field"><label>Start Date</label><div class="val">${v["Start Date"] || "-"}</div></div>
+        <div class="modal-field"><label>End Date</label><div class="val">${v["End Date"] || "-"}</div></div>
+        <div class="modal-field"><label>Findings</label><div class="val">${v["Findings Count"] || "0"} (${v["Critical Findings Count"] || "0"} critical)</div></div>
+        <div class="modal-field"><label>Domain</label><div class="val">${v["Regulatory Domain"] || "-"}</div></div>
+      </div>
+    </div>
+    ${v["Scope"] ? `<div class="modal-section"><h4>Scope</h4><p style="font-size:13px;color:#555">${v["Scope"]}</p></div>` : ""}
+    ${v["Findings Summary"] ? `<div class="modal-section"><h4>Findings Summary</h4><p style="font-size:13px;color:#555">${v["Findings Summary"]}</p></div>` : ""}
+    ${v["Recommendations"] ? `<div class="modal-section"><h4>Recommendations</h4><p style="font-size:13px;color:#555">${v["Recommendations"]}</p></div>` : ""}
+    ${allowed.length ? `<div class="transition-btns">${allowed.map(s => `<button class="transition-btn ${btnColors[s] || 'blue'}" onclick="transitionAudit('${id}','${s}')">${s}</button>`).join("")}</div>` : ""}
+  `);
+}
+
+async function transitionAudit(id, newStatus) {
+  try {
+    await api(`/api/ogc/audits/${id}/transition`, {
+      method: "POST", body: JSON.stringify({ newStatus, user: API.user }),
+    });
+    toast(`Audit transitioned to ${newStatus}`);
+    closeModal();
+    window._auditsLoaded = false; loadAudits();
+  } catch (e) { toast("Error: " + e.message); }
+}
+
+async function loadFindings() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/audit-finding/submissions?include=values&limit=100`);
+    window._findingsLoaded = true;
+    document.getElementById("findings-loading").style.display = "none";
+    const tb = document.querySelector("#findings-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Finding ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${badge(v["Severity"])}</td><td>${v["Related Audit ID"] || ""}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(5);
+  } catch (e) { document.getElementById("findings-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== SUSTAINABILITY ===== */
+async function loadCycles() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/reporting-cycle/submissions?include=values&limit=100`);
+    window._cyclesLoaded = true;
+    document.getElementById("cycles-loading").style.display = "none";
+    const tb = document.querySelector("#cycles-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Cycle ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Reporting Period"] || ""}</td><td>${v["Framework"] || ""}</td><td>${badge(v["Status"])}</td><td>${v["Submission Deadline"] || ""}</td><td>${v["Data Quality Score"] || "-"}</td></tr>`;
+        }).join("")
+      : emptyRow(7);
+  } catch (e) { document.getElementById("cycles-loading").textContent = "Error: " + e.message; }
+}
+
+async function loadAttestations() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/attestation/submissions?include=values&limit=100`);
+    window._attestationsLoaded = true;
+    document.getElementById("attestations-loading").style.display = "none";
+    const tb = document.querySelector("#attestations-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Attestation ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${badge(v["Status"])}</td><td>${v["Assigned To"] || ""}</td></tr>`;
+        }).join("")
+      : emptyRow(4);
+  } catch (e) { document.getElementById("attestations-loading").textContent = "Error: " + e.message; }
+}
+
+async function loadEvidence() {
+  try {
+    const r = await kapi(`/kapps/${KAPP}/forms/evidence/submissions?include=values&limit=100`);
+    window._evidenceLoaded = true;
+    document.getElementById("evidence-loading").style.display = "none";
+    const tb = document.querySelector("#evidence-table tbody");
+    const subs = r.submissions || [];
+    tb.innerHTML = subs.length
+      ? subs.map(s => {
+          const v = s.values || {};
+          return `<tr><td>${v["Evidence ID"] || ""}</td><td>${v["Title"] || ""}</td><td>${v["Evidence Type"] || ""}</td><td>${v["Related Case ID"] || ""}</td><td>${badge(v["Status"])}</td></tr>`;
+        }).join("")
+      : emptyRow(5);
+  } catch (e) { document.getElementById("evidence-loading").textContent = "Error: " + e.message; }
+}
+
+/* ===== REPORTS ===== */
+async function generateReport(type) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = "Generating...";
+  try {
+    const r = await api(`/api/ogc/report/${type}`);
+    document.getElementById("report-output").style.display = "block";
+    document.getElementById("report-title").textContent = type.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) + " Report";
+    document.getElementById("report-data").textContent = JSON.stringify(r.data, null, 2);
+    document.getElementById("report-output").scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    toast("Error generating report: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Generate";
+  }
+}
+</script>
+</body>
+</html>

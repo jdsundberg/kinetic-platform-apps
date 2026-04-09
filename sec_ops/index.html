@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecurityOps - Kinetic Platform</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;--deep-orange:#BF360C;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+a{color:var(--orange);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:6px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.9}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover{background:#F8F9FA}
+.card{background:var(--white);border-radius:10px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.card h3{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--blue)}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.sev-critical,.sev-s1{background:#FDECEA;color:#C62828}
+.sev-high,.sev-s2{background:#FFF3E0;color:#E65100}
+.sev-medium,.sev-s3{background:#FFF8E1;color:#F9A825}
+.sev-low,.sev-s4{background:#E8F5E9;color:#2E7D32}
+.sev-informational{background:#F3E5F5;color:#7B1FA2}
+.stat-new{background:#E3F2FD;color:#1565C0}
+.stat-in-progress,.stat-in-remediation,.stat-running{background:#FFF8E1;color:#F57F17}
+.stat-contained,.stat-triaged{background:#E0F2F1;color:#00695C}
+.stat-eradicated,.stat-fixed,.stat-verified{background:#E8F5E9;color:#2E7D32}
+.stat-recovered,.stat-succeeded{background:#E8F5E9;color:#1B5E20}
+.stat-closed,.stat-suppressed{background:#F1F3F4;color:#5F6368}
+.stat-converted,.stat-correlated{background:#EDE7F6;color:#4527A0}
+.stat-accepted-risk{background:#FFF3E0;color:#E65100}
+.stat-failed{background:#FDECEA;color:#C62828}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-secondary{background:var(--blue);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray)}
+.btn-outline:hover{background:var(--light)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:10px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.subtabs{display:flex;gap:2px;margin-bottom:16px}
+.subtabs button{background:var(--white);color:var(--gray);border:1px solid var(--border);border-radius:6px 6px 0 0;padding:8px 18px;font-weight:500}
+.subtabs button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--white);border-radius:10px;box-shadow:var(--shadow);padding:18px;text-align:center;border-top:4px solid var(--gray)}
+.kpi-card .kpi-value{font-size:32px;font-weight:700;margin:6px 0}
+.kpi-card .kpi-label{font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+.clickable-row{cursor:pointer}.clickable-row:hover{background:#EEF1F6!important}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-light) 50%,#3A4A73 100%)}
+.login-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow-lg);padding:40px;width:380px;max-width:90vw}
+.login-card h1{text-align:center;font-size:26px;margin-bottom:6px;color:var(--blue)}
+.login-card h1 span{color:var(--orange)}
+.login-card p{text-align:center;color:var(--gray);margin-bottom:24px;font-size:13px}
+.login-card label{display:block;font-weight:600;font-size:12px;margin-bottom:4px;color:var(--gray);margin-top:14px}
+.login-card input{width:100%}
+.login-card button{width:100%;margin-top:22px;padding:12px;font-size:15px;font-weight:600}
+.login-error{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:100;background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 20px;height:52px;box-shadow:var(--shadow)}
+.topbar .logo{font-size:18px;font-weight:700;margin-right:30px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:14px 14px;font-size:13px;font-weight:500;border-radius:0;border-bottom:3px solid transparent;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{color:#fff;border-bottom-color:var(--orange)}
+.topbar .user-info{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap}
+.topbar .user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+.console{display:none;padding:20px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+#modal{display:none;position:fixed;inset:0;z-index:1000}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--white);margin:30px auto;width:90%;max-width:800px;max-height:calc(100vh - 60px);overflow-y:auto;border-radius:12px;box-shadow:var(--shadow-lg);padding:28px;z-index:1}
+.modal-content h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modal-content .modal-close{position:absolute;top:12px;right:16px;background:none;font-size:22px;color:var(--gray);padding:4px 8px}
+.modal-tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:16px}
+.modal-tabs button{background:none;color:var(--gray);padding:8px 16px;font-weight:500;border-radius:6px 6px 0 0;border-bottom:3px solid transparent}
+.modal-tabs button.active{color:var(--blue);border-bottom-color:var(--orange)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:16px}
+.detail-field label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.detail-field .val{font-size:14px;word-break:break-word}
+.timeline-list{position:relative;padding-left:24px}
+.timeline-list::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:16px;padding-left:16px}
+.timeline-item::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--orange);border:2px solid var(--white)}
+.timeline-item .tl-time{font-size:11px;color:var(--gray)}
+.timeline-item .tl-actor{font-weight:600;font-size:13px}
+.timeline-item .tl-action{font-size:13px;margin-top:2px}
+#toast{position:fixed;bottom:30px;right:30px;z-index:2000}
+.toast-msg{background:var(--blue);color:#fff;padding:12px 24px;border-radius:8px;box-shadow:var(--shadow-lg);margin-top:8px;font-size:13px;animation:toastIn .3s ease}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.raw-payload{background:#1e1e2e;color:#cdd6f4;padding:14px;border-radius:8px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px;max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.sla-ok{color:var(--green);font-weight:600}.sla-breach{color:var(--red);font-weight:600}
+.empty{text-align:center;padding:30px;color:var(--gray);font-style:italic}
+.metric-card{text-align:center;padding:24px}
+.metric-card .metric-val{font-size:36px;font-weight:700}
+.metric-card .metric-label{font-size:12px;color:var(--gray);text-transform:uppercase;margin-top:4px}
+.form-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;font-weight:600;color:var(--gray)}
+.form-group input,.form-group select,.form-group textarea{min-width:180px}
+.env-prod,.env-production{background:#FDECEA;color:#C62828}
+.env-staging{background:#FFF8E1;color:#F9A825}
+.env-dev,.env-development{background:#E8F5E9;color:#2E7D32}
+.env-dr{background:#E3F2FD;color:#1565C0}
+.crit-5{color:#C62828;font-weight:700}.crit-4{color:#E65100;font-weight:700}
+.crit-3{color:#F9A825;font-weight:600}.crit-2{color:#2E7D32}.crit-1{color:var(--gray)}
+</style>
+</head>
+<body>
+<div id="login-screen">
+<div class="login-card">
+<h1>Security<span>Ops</span></h1>
+<p>Kinetic Security Operations Console</p>
+<label>Server URL</label>
+<input type="text" id="login-url" value="http://localhost:3007">
+<label>Username</label>
+<input type="text" id="login-user" autocomplete="username">
+<label>Password</label>
+<input type="password" id="login-pass" autocomplete="current-password">
+<button class="btn-primary" onclick="doLogin()">Sign In</button>
+<div class="login-error" id="login-error"></div>
+</div>
+</div>
+<div id="app">
+<div class="topbar">
+<div class="logo">Security<span>Ops</span></div>
+<nav id="main-nav">
+<button class="active" onclick="showTab('dashboard')">Dashboard</button>
+<button onclick="showTab('alerts')">Alerts</button>
+<button onclick="showTab('incidents')">Incidents</button>
+<button onclick="showTab('vulnerabilities')">Vulnerabilities</button>
+<button onclick="showTab('assets')">Assets</button>
+<button onclick="showTab('playbooks')">Playbooks</button>
+<button onclick="showTab('reports')">Reports</button>
+<button onclick="showTab('admin')">Admin</button>
+</nav>
+<div class="user-info">
+<strong id="user-display"></strong>
+<button class="logout-btn" onclick="doLogout()">Logout</button>
+</div>
+</div>
+<div class="console active" id="tab-dashboard"></div>
+<div class="console" id="tab-alerts"></div>
+<div class="console" id="tab-incidents"></div>
+<div class="console" id="tab-vulnerabilities"></div>
+<div class="console" id="tab-assets"></div>
+<div class="console" id="tab-playbooks"></div>
+<div class="console" id="tab-reports"></div>
+<div class="console" id="tab-admin"></div>
+</div>
+<div id="modal"><div class="modal-overlay" onclick="closeModal()"></div><div class="modal-content" id="modal-body"></div></div>
+<div id="toast"></div>
+<script>
+/* ── API helpers ── */
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+async function api(path,opts={}){const r=await fetch(API.url+'/app/api/v1'+path,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});if(!r.ok)throw new Error(r.status+' '+r.statusText);return r.json()}
+async function secopsApi(path,opts={}){const r=await fetch(API.url+path,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});if(!r.ok)throw new Error(r.status+' '+r.statusText);return r.json()}
+function v(sub,field){return sub.values?.[field]||''}
+
+/* ── pager infrastructure ── */
+function makePager(){return{items:[],pageKeys:[null],pageIndex:0,hasNext:false,hasPrev:false}}
+const PAGERS={alerts:makePager(),incidents:makePager(),vulns:makePager(),assets:makePager(),playbooks:makePager(),sla:makePager(),suppression:makePager()};
+
+async function fetchPage(pager,formSlug,kql,direction){
+if(direction==='reset'){pager.pageKeys=[null];pager.pageIndex=0}
+else if(direction==='next'&&pager.hasNext){pager.pageIndex++}
+else if(direction==='prev'&&pager.hasPrev){pager.pageIndex--}
+let fullKql=kql||'';
+const lastCreatedAt=pager.pageKeys[pager.pageIndex];
+if(lastCreatedAt){const dc='createdAt < "'+lastCreatedAt+'"';fullKql=fullKql?'('+fullKql+') AND '+dc:dc}
+let url='/kapps/sec-ops/forms/'+formSlug+'/submissions?include=values,details&limit=25';
+if(fullKql)url+='&q='+encodeURIComponent(fullKql);
+const r=await api(url);
+pager.items=r.submissions||[];
+pager.hasNext=!!r.nextPageToken;
+if(pager.hasNext&&pager.items.length)pager.pageKeys[pager.pageIndex+1]=pager.items[pager.items.length-1].createdAt;
+pager.hasPrev=pager.pageIndex>0}
+
+async function fetchServerPage(pager,serverPath,direction){
+if(direction==='reset'){pager.pageKeys=[null];pager.pageIndex=0}
+else if(direction==='next'&&pager.hasNext){pager.pageIndex++}
+else if(direction==='prev'&&pager.hasPrev){pager.pageIndex--}
+const r=await secopsApi(serverPath);
+pager.items=r.submissions||[];
+pager.hasNext=!!r.nextPageToken;
+if(pager.hasNext&&pager.items.length)pager.pageKeys[pager.pageIndex+1]=pager.items[pager.items.length-1].createdAt;
+pager.hasPrev=pager.pageIndex>0}
+
+function pgCtrl(pager,navFn){
+if(!pager.hasNext&&!pager.hasPrev)return'';
+return'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border)"><button class="btn-outline btn-small" onclick="'+navFn+"('prev')\" "+(pager.hasPrev?'':'disabled')+'>&#8592; Previous</button><span style="color:var(--gray);font-size:13px">Page '+(pager.pageIndex+1)+'</span><button class="btn-outline btn-small" onclick="'+navFn+"('next')\" "+(pager.hasNext?'':'disabled')+'>Next &#8594;</button></div>'}
+
+/* ── utilities ── */
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function sevBadge(s){if(!s)return'';return'<span class="badge sev-'+s.toLowerCase().replace(/\s+/g,'-')+'">'+esc(s)+'</span>'}
+function statBadge(s){if(!s)return'';return'<span class="badge stat-'+s.toLowerCase().replace(/\s+/g,'-')+'">'+esc(s)+'</span>'}
+function formatDate(iso){if(!iso)return'-';const d=new Date(iso);if(isNaN(d))return iso;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function formatDateShort(iso){if(!iso)return'-';const d=new Date(iso);if(isNaN(d))return iso;return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function timeAgo(iso){if(!iso)return'-';const d=new Date(iso);if(isNaN(d))return iso;const diff=Date.now()-d.getTime();const m=Math.floor(diff/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';const dy=Math.floor(h/24);if(dy<30)return dy+'d ago';return Math.floor(dy/30)+'mo ago'}
+function isOverdue(ds){if(!ds)return false;return new Date(ds)<new Date()}
+function slaStatus(rBy,cBy,rsBy,bf){const rb=bf?.response==='true'||isOverdue(rBy);const cb=bf?.containment==='true'||isOverdue(cBy);const rsb=bf?.resolution==='true'||isOverdue(rsBy);if(rb||cb||rsb)return'<span class="sla-breach" title="SLA Breached">&#9888; Breached</span>';return'<span class="sla-ok" title="SLA OK">&#10003; OK</span>'}
+function showToast(msg){const el=document.getElementById('toast');const t=document.createElement('div');t.className='toast-msg';t.textContent=msg;el.appendChild(t);setTimeout(()=>t.remove(),3000)}
+function openModal(html){document.getElementById('modal-body').innerHTML=html;document.getElementById('modal').style.display='block'}
+function closeModal(){document.getElementById('modal').style.display='none';document.getElementById('modal-body').innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ── login / session ── */
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+let cachedPlaybooks=null;
+async function doLogin(){
+const url=document.getElementById('login-url').value.replace(/\/+$/,'');
+const user=document.getElementById('login-user').value;
+const pass=document.getElementById('login-pass').value;
+const errEl=document.getElementById('login-error');errEl.textContent='';
+if(!url||!user||!pass){errEl.textContent='All fields required.';return}
+API.url=url;API.auth=btoa(user+':'+pass);API.user=user;
+try{const me=await api('/me');API.displayName=me.displayName||me.username||me.user?.displayName||me.user?.username||user;
+try{const sr=await fetch(API.url+'/app/api/v1/space',{headers:{'Authorization':'Basic '+API.auth,'Accept':'application/json'}});if(sr.ok){const sd=await sr.json();API.spaceSlug=(sd.space||sd).slug||'';}}catch(e2){}
+sessionStorage.setItem('kinetic_session',JSON.stringify(API));
+document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';
+document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' \u00b7 '+API.spaceSlug:'');
+await loadDashboard();
+}catch(e){errEl.textContent='Login failed: '+e.message}}
+
+function doLogout(){sessionStorage.removeItem('kinetic_session');API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+Object.values(PAGERS).forEach(p=>{Object.assign(p,makePager())});cachedPlaybooks=null;
+document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';
+document.getElementById('login-pass').value='';document.getElementById('login-error').textContent=''}
+
+async function restoreSession(){const s=sessionStorage.getItem('kinetic_session');if(!s)return;try{API=JSON.parse(s);const r=await fetch(API.url+'/app/api/v1/me',{headers:{'Authorization':'Basic '+API.auth}});if(!r.ok)throw 0;
+if(!API.spaceSlug){try{const sr=await fetch(API.url+'/app/api/v1/space',{headers:{'Authorization':'Basic '+API.auth,'Accept':'application/json'}});if(sr.ok){const sd=await sr.json();API.spaceSlug=(sd.space||sd).slug||'';sessionStorage.setItem('kinetic_session',JSON.stringify(API));}}catch(e2){}}
+document.getElementById('user-display').textContent=(API.displayName||API.user)+(API.spaceSlug?' \u00b7 '+API.spaceSlug:'');document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';await loadDashboard()}catch(e){sessionStorage.removeItem('kinetic_session');API={url:'',auth:'',user:'',displayName:'',spaceSlug:''}}}
+restoreSession();
+
+/* ── tabs ── */
+const TABS=['dashboard','alerts','incidents','vulnerabilities','assets','playbooks','reports','admin'];
+function showTab(name){
+document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+document.getElementById('tab-'+name).classList.add('active');
+document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
+const idx=TABS.indexOf(name);if(idx>=0)document.querySelectorAll('#main-nav button')[idx].classList.add('active');
+const loaders={dashboard:loadDashboard,alerts:loadAlerts,incidents:loadIncidents,vulnerabilities:loadVulnerabilities,assets:loadAssets,playbooks:loadPlaybooks,reports:loadReports,admin:loadAdmin};
+if(loaders[name])loaders[name]()}
+
+/* ===== DASHBOARD ===== */
+async function loadDashboard(){
+const el=document.getElementById('tab-dashboard');
+el.innerHTML='<div class="empty">Loading dashboard...</div>';
+try{const d=await secopsApi('/api/secops/stats');
+el.innerHTML=`
+<div class="kpi-row">
+<div class="kpi-card" style="border-top-color:var(--red)"><div class="kpi-label">Open Incidents</div><div class="kpi-value">${d.incidents.open}</div></div>
+<div class="kpi-card" style="border-top-color:var(--red)"><div class="kpi-label">SLA Breaches</div><div class="kpi-value">${d.incidents.slaBreaches}</div></div>
+<div class="kpi-card" style="border-top-color:var(--orange)"><div class="kpi-label">New Alerts 24h</div><div class="kpi-value">${d.alerts.last24h}</div></div>
+<div class="kpi-card" style="border-top-color:var(--yellow)"><div class="kpi-label">Open Vulns</div><div class="kpi-value">${d.vulns.open}</div></div>
+<div class="kpi-card" style="border-top-color:var(--red)"><div class="kpi-label">Overdue Vulns</div><div class="kpi-value">${d.vulns.overdue}</div></div>
+<div class="kpi-card" style="border-top-color:var(--teal)"><div class="kpi-label">Mean Time to Contain</div><div class="kpi-value">${d.incidents.mttc}</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>Incidents by Severity</h3><table><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>
+<tr><td>${sevBadge('S1')}</td><td>${d.incidents.bySeverity.S1}</td></tr><tr><td>${sevBadge('S2')}</td><td>${d.incidents.bySeverity.S2}</td></tr>
+<tr><td>${sevBadge('S3')}</td><td>${d.incidents.bySeverity.S3}</td></tr><tr><td>${sevBadge('S4')}</td><td>${d.incidents.bySeverity.S4}</td></tr>
+</tbody></table></div>
+<div class="card"><h3>Alerts by Source (24h)</h3><table><thead><tr><th>Source</th><th>Count</th></tr></thead><tbody>
+${Object.keys(d.alerts.bySource).length===0?'<tr><td colspan="2" class="empty">No alerts in last 24h</td></tr>':Object.entries(d.alerts.bySource).sort((a,b)=>b[1]-a[1]).map(([s,c])=>'<tr><td>'+esc(s)+'</td><td>'+c+'</td></tr>').join('')}
+</tbody></table></div></div>
+<div class="card"><h3>Top Risky Assets</h3><table><thead><tr><th>Hostname</th><th>Open Vulns</th><th>Open Incidents</th><th>Total</th></tr></thead><tbody>
+${d.topRiskyAssets.length===0?'<tr><td colspan="4" class="empty">No data</td></tr>':d.topRiskyAssets.map(a=>'<tr><td>'+esc(a.hostname)+'</td><td>'+a.openVulns+'</td><td>'+a.openIncidents+'</td><td><strong>'+a.total+'</strong></td></tr>').join('')}
+</tbody></table></div>`}catch(e){el.innerHTML='<div class="empty">Error loading dashboard: '+esc(e.message)+'</div>'}}
+
+/* ===== ALERTS ===== */
+let alertSubtab='triage',alertFilters={search:'',severity:'',status:'',source:'',category:''};
+const ALERT_CATEGORIES=['Cloud','Data Exfiltration','Identity','Intrusion','Lateral Movement','Malware','Network','Phishing','Suspicious Activity'];
+
+function buildAlertKql(){
+const f=alertFilters,parts=[];let cf={};
+if(alertSubtab==='triage'){
+  parts.push('values[Status]="New"');
+  if(f.severity){parts.push('values[Severity]="'+f.severity+'"');if(f.source)cf.Source=f.source;if(f.category)cf.Category=f.category}
+  else if(f.source){parts.push('values[Source]="'+f.source+'"');if(f.category)cf.Category=f.category}
+  else if(f.category){parts.push('values[Category]="'+f.category+'"')}
+} else {
+  if(f.status&&f.severity){parts.push('values[Status]="'+f.status+'"');parts.push('values[Severity]="'+f.severity+'"');if(f.source)cf.Source=f.source;if(f.category)cf.Category=f.category}
+  else if(f.severity){parts.push('values[Severity]="'+f.severity+'"');if(f.source)cf.Source=f.source;if(f.category)cf.Category=f.category;if(f.status)cf.Status=f.status}
+  else if(f.status){parts.push('values[Status]="'+f.status+'"');if(f.source)cf.Source=f.source;if(f.category)cf.Category=f.category}
+  else if(f.source){parts.push('values[Source]="'+f.source+'"');if(f.category)cf.Category=f.category}
+  else if(f.category){parts.push('values[Category]="'+f.category+'"')}
+}
+return{kql:parts.join(' AND '),cf}}
+
+async function loadAlerts(){
+const el=document.getElementById('tab-alerts');
+el.innerHTML=`
+<div class="toolbar">
+<input type="text" placeholder="Search alerts..." oninput="alertFilters.search=this.value;renderAlertTable()">
+<select onchange="alertFilters.severity=this.value;applyAlertFilters('reset')"><option value="">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+<select onchange="alertFilters.status=this.value;applyAlertFilters('reset')"><option value="">All Statuses</option><option>New</option><option>Triaged</option><option>Suppressed</option><option>Correlated</option><option>Converted</option><option>Closed</option></select>
+<select onchange="alertFilters.source=this.value;applyAlertFilters('reset')"><option value="">All Sources</option><option>Splunk</option><option>CrowdStrike</option><option>Sentinel</option><option>Palo Alto</option><option>Other</option></select>
+<select onchange="alertFilters.category=this.value;applyAlertFilters('reset')"><option value="">All Categories</option>${ALERT_CATEGORIES.map(c=>'<option>'+esc(c)+'</option>').join('')}</select>
+</div>
+<div class="subtabs" id="alert-subtabs">
+<button class="${alertSubtab==='triage'?'active':''}" onclick="alertSubtab='triage';applyAlertFilters('reset');document.querySelectorAll('#alert-subtabs button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Triage Queue</button>
+<button class="${alertSubtab==='all'?'active':''}" onclick="alertSubtab='all';applyAlertFilters('reset');document.querySelectorAll('#alert-subtabs button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">All Alerts</button>
+</div><div id="alert-table-ct"><div class="empty">Loading...</div></div>`;
+await applyAlertFilters('reset')}
+
+async function applyAlertFilters(dir){
+try{const{kql,cf}=buildAlertKql();
+await fetchPage(PAGERS.alerts,'security-alert',kql,dir);
+PAGERS.alerts._cf=cf;
+renderAlertTable()}catch(e){document.getElementById('alert-table-ct').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+function renderAlertTable(){
+const p=PAGERS.alerts;let list=[...p.items];
+const cf=p._cf||{};
+if(cf.Source)list=list.filter(s=>v(s,'Source')===cf.Source);
+if(cf.Category)list=list.filter(s=>v(s,'Category')===cf.Category);
+if(cf.Severity)list=list.filter(s=>v(s,'Severity')===cf.Severity);
+if(cf.Status)list=list.filter(s=>v(s,'Status')===cf.Status);
+if(alertFilters.search){const q=alertFilters.search.toLowerCase();list=list.filter(s=>(v(s,'Title')+v(s,'Hostname')+v(s,'Source')+v(s,'Category')).toLowerCase().includes(q))}
+document.getElementById('alert-table-ct').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Severity</th><th>Title</th><th>Source</th><th>Category</th><th>Hostname</th><th>Status</th><th>Received At</th><th>Actions</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="8" class="empty">No alerts found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openAlertDetail('${s.id}')">
+<td>${sevBadge(v(s,'Severity'))}</td><td>${esc(v(s,'Title'))}</td><td>${esc(v(s,'Source'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Hostname'))}</td><td>${statBadge(v(s,'Status'))}</td><td>${timeAgo(v(s,'Received At'))}</td>
+<td><button class="btn-primary btn-small" onclick="event.stopPropagation();openAlertDetail('${s.id}')">Triage</button></td></tr>`).join('')}
+</tbody></table>${pgCtrl(p,'pageAlerts')}</div>`}
+
+async function pageAlerts(dir){await applyAlertFilters(dir)}
+
+async function openAlertDetail(id){
+try{const r=await api('/submissions/'+id+'?include=values');const s=r.submission;if(!s)return;
+let raw=v(s,'Raw Payload');try{raw=JSON.stringify(JSON.parse(raw),null,2)}catch(e){}
+let ind=v(s,'Indicators');try{ind=JSON.parse(ind).join(', ')}catch(e){}
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${sevBadge(v(s,'Severity'))} ${esc(v(s,'Title'))} ${statBadge(v(s,'Status'))}</h2>
+<div class="detail-grid">
+<div class="detail-field"><label>Source</label><div class="val">${esc(v(s,'Source'))}</div></div>
+<div class="detail-field"><label>External ID</label><div class="val">${esc(v(s,'External Alert ID'))}</div></div>
+<div class="detail-field"><label>Category</label><div class="val">${esc(v(s,'Category'))}</div></div>
+<div class="detail-field"><label>Hostname</label><div class="val">${esc(v(s,'Hostname'))}</div></div>
+<div class="detail-field"><label>IP Address</label><div class="val">${esc(v(s,'IP Address'))}</div></div>
+<div class="detail-field"><label>Received At</label><div class="val">${formatDate(v(s,'Received At'))}</div></div>
+<div class="detail-field"><label>Indicators</label><div class="val">${esc(ind)}</div></div>
+<div class="detail-field"><label>Alert Count</label><div class="val">${esc(v(s,'Alert Count')||'1')}</div></div>
+</div>
+<div class="detail-field" style="margin-bottom:14px"><label>Description</label><div class="val">${esc(v(s,'Description'))}</div></div>
+<div class="detail-field" style="margin-bottom:14px"><label>Raw Payload</label><div class="raw-payload">${esc(raw)}</div></div>
+<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:12px">Triage Actions</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+<button class="btn-outline" onclick="triageAlert('${s.id}','Suppressed')">Suppress</button>
+<button class="btn-outline" onclick="triageAlert('${s.id}','Closed')">Close as Benign</button>
+<button class="btn-primary" onclick="createIncidentFromAlert('${s.id}')">Create Incident</button>
+<div style="display:flex;align-items:center;gap:6px"><input type="text" id="link-inc-id" placeholder="Incident ID..." style="min-width:160px">
+<button class="btn-secondary btn-small" onclick="linkAlertToIncident('${s.id}')">Link to Incident</button></div>
+</div>`)}catch(e){showToast('Error: '+e.message)}}
+
+async function triageAlert(id,ns){try{await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify({Status:ns})});
+showToast('Alert updated to '+ns);closeModal();await applyAlertFilters()}catch(e){showToast('Error: '+e.message)}}
+
+async function createIncidentFromAlert(aid){
+try{const ar=await api('/submissions/'+aid+'?include=values');const s=ar.submission;if(!s)return;
+const cr=await api('/kapps/sec-ops/forms/security-incident/submissions?limit=1');
+const cnt=(cr.count||0)+1;const incNum='SEC-'+String(cnt).padStart(5,'0');
+const now=new Date();const sev=v(s,'Severity')==='Critical'?'S1':v(s,'Severity')==='High'?'S2':v(s,'Severity')==='Medium'?'S3':'S4';
+const rBy=new Date(now.getTime()+(sev==='S1'?30:sev==='S2'?60:240)*6e4).toISOString();
+const cBy=new Date(now.getTime()+(sev==='S1'?120:sev==='S2'?480:1440)*6e4).toISOString();
+const rsBy=new Date(now.getTime()+(sev==='S1'?1440:sev==='S2'?4320:10080)*6e4).toISOString();
+const result=await api('/kapps/sec-ops/forms/security-incident/submissions',{method:'POST',body:JSON.stringify({values:{
+'Incident Number':incNum,'Severity':sev,'Priority':sev==='S1'?'Critical':sev==='S2'?'High':'Medium',
+'Status':'New','Type':v(s,'Category')||'Unknown','Summary':'Created from alert: '+v(s,'Title'),
+'Affected Assets':v(s,'Hostname')||'','Opened At':now.toISOString(),
+'Respond By':rBy,'Contain By':cBy,'Resolve By':rsBy,
+'Response SLA Breached':'false','Containment SLA Breached':'false','Resolution SLA Breached':'false',
+'Linked Alerts':aid,'Source Alert ID':v(s,'External Alert ID')}})});
+const nid=result.submission?.id;
+await api('/submissions/'+aid+'/values',{method:'PUT',body:JSON.stringify({Status:'Converted','Related Incident ID':nid||''})});
+showToast('Incident '+incNum+' created');closeModal();await applyAlertFilters()}catch(e){showToast('Error: '+e.message)}}
+
+async function linkAlertToIncident(aid){const iid=document.getElementById('link-inc-id')?.value;if(!iid){showToast('Enter an incident ID');return}
+try{await api('/submissions/'+aid+'/values',{method:'PUT',body:JSON.stringify({Status:'Correlated','Related Incident ID':iid})});
+const inc=await api('/submissions/'+iid+'?include=values');const ex=inc.submission?.values?.['Linked Alerts']||'';
+await api('/submissions/'+iid+'/values',{method:'PUT',body:JSON.stringify({'Linked Alerts':ex?ex+','+aid:aid})});
+showToast('Alert linked');closeModal();await applyAlertFilters()}catch(e){showToast('Error: '+e.message)}}
+
+/* ===== INCIDENTS ===== */
+let incSubtab='active',incFilters={search:'',severity:'',status:'',priority:''};
+
+function buildIncKql(){
+const f=incFilters,parts=[];let cf={};
+if(incSubtab==='active'){
+  if(f.status&&f.severity){parts.push('values[Status]="'+f.status+'"');parts.push('values[Severity]="'+f.severity+'"');if(f.priority)cf.Priority=f.priority;cf._excludeClosed=false}
+  else if(f.severity){parts.push('values[Severity]="'+f.severity+'"');cf._excludeClosed=true;if(f.status)cf.Status=f.status;if(f.priority)cf.Priority=f.priority}
+  else if(f.status){parts.push('values[Status]="'+f.status+'"');if(f.priority)cf.Priority=f.priority}
+  else{cf._excludeClosed=true;if(f.priority)cf.Priority=f.priority}
+} else if(incSubtab==='mine'){
+  cf._mine=true;cf._excludeClosed=false;
+  if(f.severity){parts.push('values[Severity]="'+f.severity+'"');if(f.status)cf.Status=f.status;if(f.priority)cf.Priority=f.priority}
+  else if(f.status){parts.push('values[Status]="'+f.status+'"');if(f.priority)cf.Priority=f.priority}
+  else{if(f.priority)cf.Priority=f.priority}
+} else if(incSubtab==='all'){
+  if(f.status&&f.severity){parts.push('values[Status]="'+f.status+'"');parts.push('values[Severity]="'+f.severity+'"');if(f.priority)cf.Priority=f.priority}
+  else if(f.severity){parts.push('values[Severity]="'+f.severity+'"');if(f.status)cf.Status=f.status;if(f.priority)cf.Priority=f.priority}
+  else if(f.status){parts.push('values[Status]="'+f.status+'"');if(f.priority)cf.Priority=f.priority}
+  else{if(f.priority)cf.Priority=f.priority}
+}
+return{kql:parts.join(' AND '),cf}}
+
+async function loadIncidents(){
+const el=document.getElementById('tab-incidents');
+el.innerHTML=`<div class="toolbar">
+<input type="text" placeholder="Search incidents..." oninput="incFilters.search=this.value;renderIncTable()">
+<select onchange="incFilters.severity=this.value;applyIncFilters('reset')"><option value="">All Severities</option><option>S1</option><option>S2</option><option>S3</option><option>S4</option></select>
+<select onchange="incFilters.status=this.value;applyIncFilters('reset')"><option value="">All Statuses</option><option>New</option><option>In Progress</option><option>Contained</option><option>Eradicated</option><option>Recovered</option><option>Closed</option></select>
+<select onchange="incFilters.priority=this.value;applyIncFilters('reset')"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+</div>
+<div class="subtabs" id="inc-subtabs">
+<button class="${incSubtab==='active'?'active':''}" onclick="setIncSub('active',this)">Active</button>
+<button class="${incSubtab==='mine'?'active':''}" onclick="setIncSub('mine',this)">My Incidents</button>
+<button class="${incSubtab==='sla'?'active':''}" onclick="setIncSub('sla',this)">SLA At Risk</button>
+<button class="${incSubtab==='all'?'active':''}" onclick="setIncSub('all',this)">All</button>
+</div><div id="inc-table-ct"><div class="empty">Loading...</div></div>`;
+await applyIncFilters('reset')}
+
+function setIncSub(t,btn){incSubtab=t;document.querySelectorAll('#inc-subtabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyIncFilters('reset')}
+
+async function applyIncFilters(dir){
+try{
+if(incSubtab==='sla'){
+  await fetchServerPage(PAGERS.incidents,'/api/secops/incidents/sla-at-risk',dir);
+  PAGERS.incidents._cf={};
+} else {
+  const{kql,cf}=buildIncKql();
+  await fetchPage(PAGERS.incidents,'security-incident',kql,dir);
+  PAGERS.incidents._cf=cf;
+}
+renderIncTable()}catch(e){document.getElementById('inc-table-ct').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+function renderIncTable(){
+const p=PAGERS.incidents;let list=[...p.items];
+const cf=p._cf||{};
+if(cf._excludeClosed)list=list.filter(s=>v(s,'Status')!=='Closed');
+if(cf._mine)list=list.filter(s=>v(s,'Commander')===API.user||v(s,'Assignee')===API.user||v(s,'Commander')===API.displayName||v(s,'Assignee')===API.displayName);
+if(cf.Status)list=list.filter(s=>v(s,'Status')===cf.Status);
+if(cf.Severity)list=list.filter(s=>v(s,'Severity')===cf.Severity);
+if(cf.Priority)list=list.filter(s=>v(s,'Priority')===cf.Priority);
+if(incFilters.search){const q=incFilters.search.toLowerCase();list=list.filter(s=>(v(s,'Incident Number')+v(s,'Summary')+v(s,'Type')+v(s,'Commander')+v(s,'Assignee')).toLowerCase().includes(q))}
+document.getElementById('inc-table-ct').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Incident #</th><th>Severity</th><th>Summary</th><th>Type</th><th>Status</th><th>Commander</th><th>Assignee</th><th>SLA</th><th>Opened At</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="9" class="empty">No incidents found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openIncDetail('${s.id}')">
+<td><a href="#" onclick="event.preventDefault()">${esc(v(s,'Incident Number'))}</a></td><td>${sevBadge(v(s,'Severity'))}</td><td>${esc(v(s,'Summary'))}</td><td>${esc(v(s,'Type'))}</td><td>${statBadge(v(s,'Status'))}</td><td>${esc(v(s,'Commander'))}</td><td>${esc(v(s,'Assignee'))}</td>
+<td>${slaStatus(v(s,'Respond By'),v(s,'Contain By'),v(s,'Resolve By'),{response:v(s,'Response SLA Breached'),containment:v(s,'Containment SLA Breached'),resolution:v(s,'Resolution SLA Breached')})}</td><td>${timeAgo(v(s,'Opened At'))}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(p,'pageIncs')}</div>`}
+
+async function pageIncs(dir){await applyIncFilters(dir)}
+
+let incModalTab='details';
+async function openIncDetail(id){incModalTab='details';await renderIncModal(id)}
+
+async function renderIncModal(id){
+try{const r=await api('/submissions/'+id+'?include=values');const s=r.submission;if(!s)return;
+const st=v(s,'Status');const vn={'New':['In Progress'],'In Progress':['Contained'],'Contained':['Eradicated'],'Eradicated':['Recovered'],'Recovered':['Closed']};
+const ns=vn[st]||[];
+const slaF=(l,val,br)=>{const c=br==='true'||isOverdue(val)?'sla-breach':'sla-ok';return`<div class="detail-field"><label>${l}</label><div class="val ${c}">${formatDate(val)} ${br==='true'?' (Breached)':''}</div></div>`};
+let tc='';
+if(incModalTab==='details'){
+tc=`<div class="detail-grid">
+<div class="detail-field"><label>Summary</label><div class="val">${esc(v(s,'Summary'))}</div></div>
+<div class="detail-field"><label>Impact</label><div class="val">${esc(v(s,'Impact'))}</div></div>
+<div class="detail-field"><label>Type</label><div class="val">${esc(v(s,'Type'))}</div></div>
+<div class="detail-field"><label>Priority</label><div class="val">${esc(v(s,'Priority'))}</div></div>
+<div class="detail-field"><label>Commander</label><div class="val">${esc(v(s,'Commander'))}</div></div>
+<div class="detail-field"><label>Assignee</label><div class="val">${esc(v(s,'Assignee'))}</div></div>
+<div class="detail-field"><label>Affected Assets</label><div class="val">${esc(v(s,'Affected Assets'))}</div></div>
+<div class="detail-field"><label>Opened At</label><div class="val">${formatDate(v(s,'Opened At'))}</div></div>
+${slaF('Respond By',v(s,'Respond By'),v(s,'Response SLA Breached'))}
+${slaF('Contain By',v(s,'Contain By'),v(s,'Containment SLA Breached'))}
+${slaF('Resolve By',v(s,'Resolve By'),v(s,'Resolution SLA Breached'))}
+<div class="detail-field"><label>Contained At</label><div class="val">${formatDate(v(s,'Contained At'))}</div></div>
+</div>
+<div class="detail-field" style="margin-bottom:10px"><label>Containment Notes</label><div class="val">${esc(v(s,'Containment Notes'))}</div></div>
+<div class="detail-field" style="margin-bottom:10px"><label>Eradication Notes</label><div class="val">${esc(v(s,'Eradication Notes'))}</div></div>
+<div class="detail-field" style="margin-bottom:10px"><label>Recovery Notes</label><div class="val">${esc(v(s,'Recovery Notes'))}</div></div>
+<div class="detail-field" style="margin-bottom:10px"><label>Root Cause</label><div class="val">${esc(v(s,'Root Cause'))}</div></div>
+<div class="detail-field"><label>Lessons Learned</label><div class="val">${esc(v(s,'Lessons Learned'))}</div></div>`}
+else if(incModalTab==='timeline'){
+let evts=[];
+try{const er=await api('/kapps/sec-ops/forms/audit-event/submissions?include=values&limit=25&q='+encodeURIComponent('values[Entity Type]="Incident" AND values[Entity ID]="'+id+'"'));evts=er.submissions||[]}catch(e){}
+evts.sort((a,b)=>new Date(v(b,'Timestamp'))-new Date(v(a,'Timestamp')));
+tc=`<div class="timeline-list">${evts.length===0?'<div class="empty">No timeline events</div>':evts.map(e=>`<div class="timeline-item">
+<div class="tl-time">${formatDate(v(e,'Timestamp'))}</div><div class="tl-actor">${esc(v(e,'Actor'))}</div>
+<div class="tl-action">${esc(v(e,'Action'))}</div>${v(e,'Details')?`<div style="font-size:12px;color:var(--gray);margin-top:2px">${esc(v(e,'Details'))}</div>`:''}</div>`).join('')}</div>`}
+else if(incModalTab==='related'){
+const laIds=(v(s,'Linked Alerts')||'').split(',').map(x=>x.trim()).filter(Boolean);
+let la=[];
+if(laIds.length>0){const fetches=laIds.slice(0,10).map(aid=>api('/submissions/'+aid+'?include=values').then(r=>r.submission).catch(()=>null));la=(await Promise.all(fetches)).filter(Boolean)}
+const hn=v(s,'Affected Assets');let lv=[];
+if(hn){try{const vr=await api('/kapps/sec-ops/forms/vulnerability-finding/submissions?include=values&limit=25&q='+encodeURIComponent('values[Hostname]="'+hn.split(',')[0].trim()+'"'));lv=vr.submissions||[]}catch(e){}}
+tc=`<h3 style="margin-bottom:10px">Linked Alerts (${la.length})</h3>
+<table><thead><tr><th>Severity</th><th>Title</th><th>Source</th><th>Status</th></tr></thead><tbody>
+${la.length===0?'<tr><td colspan="4" class="empty">No linked alerts</td></tr>':la.map(a=>`<tr><td>${sevBadge(v(a,'Severity'))}</td><td>${esc(v(a,'Title'))}</td><td>${esc(v(a,'Source'))}</td><td>${statBadge(v(a,'Status'))}</td></tr>`).join('')}
+</tbody></table>
+<h3 style="margin:16px 0 10px">Related Vulnerabilities (${lv.length})</h3>
+<table><thead><tr><th>CVE</th><th>Severity</th><th>Title</th><th>Status</th></tr></thead><tbody>
+${lv.length===0?'<tr><td colspan="4" class="empty">No related vulnerabilities</td></tr>':lv.map(vl=>`<tr><td>${esc(v(vl,'CVE'))}</td><td>${sevBadge(v(vl,'Severity'))}</td><td>${esc(v(vl,'Title'))}</td><td>${statBadge(v(vl,'Status'))}</td></tr>`).join('')}
+</tbody></table>`}
+else if(incModalTab==='actions'){
+if(!cachedPlaybooks){try{const pr=await api('/kapps/sec-ops/forms/playbook/submissions?include=values&limit=25');cachedPlaybooks=pr.submissions||[]}catch(e){cachedPlaybooks=[]}}
+const pbOpts=cachedPlaybooks.map(p=>`<option value="${p.id}">${esc(v(p,'Name'))}</option>`).join('');
+tc=`<div class="card" style="margin-bottom:16px"><h3>Status Transition</h3>
+${ns.length===0?'<p class="empty">No transitions available from current status.</p>':`
+<div class="form-row"><div class="form-group"><label>Next Status</label><select id="inc-next-st">${ns.map(n=>`<option value="${n}">${n}</option>`).join('')}</select></div></div>
+<div class="form-group" style="margin-bottom:12px"><label>Notes</label><textarea id="inc-tr-notes" rows="3" style="width:100%"></textarea></div>
+<button class="btn-primary" onclick="transitionInc('${s.id}')">Transition Status</button>`}
+</div>
+<div class="card" style="margin-bottom:16px"><h3>Assignment</h3>
+<div class="form-row"><div class="form-group"><label>Commander</label><input type="text" id="inc-cmdr" value="${esc(v(s,'Commander'))}"></div>
+<div class="form-group"><label>Assignee</label><input type="text" id="inc-asgn" value="${esc(v(s,'Assignee'))}"></div>
+<button class="btn-secondary" onclick="updateIncAssign('${s.id}')" style="align-self:flex-end">Update</button></div></div>
+<div class="card" style="margin-bottom:16px"><h3>Add Notes</h3>
+<div class="form-group" style="margin-bottom:12px"><label>Field</label><select id="inc-note-f"><option>Containment Notes</option><option>Eradication Notes</option><option>Recovery Notes</option><option>Root Cause</option><option>Lessons Learned</option></select></div>
+<div class="form-group" style="margin-bottom:12px"><label>Content</label><textarea id="inc-note-c" rows="3" style="width:100%"></textarea></div>
+<button class="btn-secondary" onclick="addIncNote('${s.id}')">Save Note</button></div>
+<div class="card"><h3>Run Playbook</h3><div class="form-row">
+<div class="form-group"><label>Playbook</label><select id="inc-pb">${pbOpts||'<option>No playbooks</option>'}</select></div>
+<button class="btn-primary" onclick="runPbForInc('${s.id}')" style="align-self:flex-end">Run</button></div></div>`}
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${esc(v(s,'Incident Number'))} ${sevBadge(v(s,'Severity'))} ${statBadge(v(s,'Status'))} <span style="font-size:13px;color:var(--gray)">${esc(v(s,'Priority'))}</span></h2>
+<div class="modal-tabs">
+<button class="${incModalTab==='details'?'active':''}" onclick="incModalTab='details';renderIncModal('${s.id}')">Details</button>
+<button class="${incModalTab==='timeline'?'active':''}" onclick="incModalTab='timeline';renderIncModal('${s.id}')">Timeline</button>
+<button class="${incModalTab==='related'?'active':''}" onclick="incModalTab='related';renderIncModal('${s.id}')">Related</button>
+<button class="${incModalTab==='actions'?'active':''}" onclick="incModalTab='actions';renderIncModal('${s.id}')">Actions</button>
+</div>${tc}`)}catch(e){showToast('Error: '+e.message)}}
+
+async function transitionInc(id){const ns=document.getElementById('inc-next-st')?.value;const notes=document.getElementById('inc-tr-notes')?.value||'';if(!ns)return;
+try{await secopsApi('/api/secops/incidents/'+id+'/transition',{method:'POST',body:JSON.stringify({new_status:ns,notes:notes,user:API.displayName})});
+showToast('Transitioned to '+ns);await renderIncModal(id)}catch(e){showToast('Error: '+e.message)}}
+
+async function updateIncAssign(id){const c=document.getElementById('inc-cmdr')?.value||'';const a=document.getElementById('inc-asgn')?.value||'';
+try{await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify({Commander:c,Assignee:a})});
+showToast('Assignment updated');await renderIncModal(id)}catch(e){showToast('Error: '+e.message)}}
+
+async function addIncNote(id){const f=document.getElementById('inc-note-f')?.value;const c=document.getElementById('inc-note-c')?.value;
+if(!f||!c){showToast('Select field and enter content');return}
+try{const u={};u[f]=c;await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify(u)});
+showToast('Note saved');await renderIncModal(id)}catch(e){showToast('Error: '+e.message)}}
+
+async function runPbForInc(iid){const pid=document.getElementById('inc-pb')?.value;if(!pid){showToast('Select a playbook');return}
+try{await secopsApi('/api/secops/playbooks/'+pid+'/run',{method:'POST',body:JSON.stringify({target_type:'Incident',target_id:iid,executed_by:API.displayName})});
+showToast('Playbook execution started')}catch(e){showToast('Error: '+e.message)}}
+
+/* ===== VULNERABILITIES ===== */
+let vulnSubtab='open',vulnFilters={search:'',severity:'',status:'',source:''};
+
+function buildVulnKql(){
+const f=vulnFilters,parts=[];let cf={};
+if(vulnSubtab==='open'){
+  if(f.severity){parts.push('values[Severity]="'+f.severity+'"');cf._openOnly=true}
+  else{cf._openOnly=true}
+  if(f.source)cf.Source=f.source;if(f.status)cf.Status=f.status;
+} else if(vulnSubtab==='accepted'){
+  parts.push('values[Status]="Accepted Risk"');
+  if(f.severity)cf.Severity=f.severity;if(f.source)cf.Source=f.source;
+} else {
+  if(f.severity){parts.push('values[Severity]="'+f.severity+'"');if(f.status)cf.Status=f.status;if(f.source)cf.Source=f.source}
+  else if(f.status){parts.push('values[Status]="'+f.status+'"');if(f.source)cf.Source=f.source}
+  else if(f.source){parts.push('values[Source]="'+f.source+'"')}
+}
+return{kql:parts.join(' AND '),cf}}
+
+async function loadVulnerabilities(){
+const el=document.getElementById('tab-vulnerabilities');
+el.innerHTML=`<div class="toolbar">
+<input type="text" placeholder="Search vulnerabilities..." oninput="vulnFilters.search=this.value;renderVulnTable()">
+<select onchange="vulnFilters.severity=this.value;applyVulnFilters('reset')"><option value="">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option><option>Informational</option></select>
+<select onchange="vulnFilters.status=this.value;applyVulnFilters('reset')"><option value="">All Statuses</option><option>New</option><option>In Remediation</option><option>Accepted Risk</option><option>Fixed</option><option>Verified</option><option>Closed</option></select>
+<select onchange="vulnFilters.source=this.value;applyVulnFilters('reset')"><option value="">All Sources</option><option>Qualys</option><option>Tenable</option><option>Rapid7</option></select>
+</div>
+<div class="subtabs" id="vuln-subtabs">
+<button class="${vulnSubtab==='open'?'active':''}" onclick="setVulnSub('open',this)">Open</button>
+<button class="${vulnSubtab==='overdue'?'active':''}" onclick="setVulnSub('overdue',this)">Overdue</button>
+<button class="${vulnSubtab==='accepted'?'active':''}" onclick="setVulnSub('accepted',this)">Accepted Risk</button>
+<button class="${vulnSubtab==='allv'?'active':''}" onclick="setVulnSub('allv',this)">All</button>
+</div><div id="vuln-table-ct"><div class="empty">Loading...</div></div>`;
+await applyVulnFilters('reset')}
+
+function setVulnSub(t,btn){vulnSubtab=t;document.querySelectorAll('#vuln-subtabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyVulnFilters('reset')}
+
+async function applyVulnFilters(dir){
+try{
+if(vulnSubtab==='overdue'){
+  await fetchServerPage(PAGERS.vulns,'/api/secops/vulns/overdue',dir);
+  PAGERS.vulns._cf={};
+} else {
+  const{kql,cf}=buildVulnKql();
+  await fetchPage(PAGERS.vulns,'vulnerability-finding',kql,dir);
+  PAGERS.vulns._cf=cf;
+}
+renderVulnTable()}catch(e){document.getElementById('vuln-table-ct').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+function renderVulnTable(){
+const p=PAGERS.vulns;let list=[...p.items];
+const cf=p._cf||{};
+if(cf._openOnly)list=list.filter(s=>{const st=v(s,'Status');return st==='New'||st==='In Remediation'});
+if(cf.Status)list=list.filter(s=>v(s,'Status')===cf.Status);
+if(cf.Severity)list=list.filter(s=>v(s,'Severity')===cf.Severity);
+if(cf.Source)list=list.filter(s=>v(s,'Source')===cf.Source);
+if(vulnFilters.search){const q=vulnFilters.search.toLowerCase();list=list.filter(s=>(v(s,'CVE')+v(s,'Title')+v(s,'Hostname')+v(s,'Package')+v(s,'Component')).toLowerCase().includes(q))}
+document.getElementById('vuln-table-ct').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>CVE</th><th>Severity</th><th>Title</th><th>Hostname</th><th>Risk Score</th><th>Status</th><th>Due Date</th><th>Assignee</th><th>Source</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="9" class="empty">No vulnerabilities found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openVulnDetail('${s.id}')">
+<td>${esc(v(s,'CVE'))}</td><td>${sevBadge(v(s,'Severity'))}</td><td>${esc(v(s,'Title'))}</td><td>${esc(v(s,'Hostname'))}</td>
+<td><strong>${esc(v(s,'Risk Score'))}</strong></td><td>${statBadge(v(s,'Status'))}</td>
+<td class="${isOverdue(v(s,'Due Date'))&&!['Fixed','Closed','Verified'].includes(v(s,'Status'))?'sla-breach':''}">${formatDateShort(v(s,'Due Date'))}</td>
+<td>${esc(v(s,'Assignee'))}</td><td>${esc(v(s,'Source'))}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(p,'pageVulns')}</div>`}
+
+async function pageVulns(dir){await applyVulnFilters(dir)}
+
+async function openVulnDetail(id){
+try{const r=await api('/submissions/'+id+'?include=values');const s=r.submission;if(!s)return;
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${esc(v(s,'CVE'))} ${sevBadge(v(s,'Severity'))} ${statBadge(v(s,'Status'))} <span style="font-size:14px;font-weight:600">Risk: ${esc(v(s,'Risk Score'))}</span></h2>
+<div class="detail-grid">
+<div class="detail-field"><label>Title</label><div class="val">${esc(v(s,'Title'))}</div></div>
+<div class="detail-field"><label>Source</label><div class="val">${esc(v(s,'Source'))}</div></div>
+<div class="detail-field"><label>Hostname</label><div class="val">${esc(v(s,'Hostname'))}</div></div>
+<div class="detail-field"><label>Asset ID</label><div class="val">${esc(v(s,'Asset ID'))}</div></div>
+<div class="detail-field"><label>Package / Component</label><div class="val">${esc(v(s,'Package'))} ${esc(v(s,'Component'))}</div></div>
+<div class="detail-field"><label>CVSS</label><div class="val">${esc(v(s,'CVSS'))}</div></div>
+<div class="detail-field"><label>EPSS</label><div class="val">${esc(v(s,'EPSS'))}</div></div>
+<div class="detail-field"><label>CISA KEV</label><div class="val">${v(s,'CISA KEV')==='true'?'<span class="badge sev-critical">YES</span>':'No'}</div></div>
+<div class="detail-field"><label>First Seen</label><div class="val">${formatDate(v(s,'First Seen'))}</div></div>
+<div class="detail-field"><label>Last Seen</label><div class="val">${formatDate(v(s,'Last Seen'))}</div></div>
+<div class="detail-field"><label>Due Date</label><div class="val ${isOverdue(v(s,'Due Date'))?'sla-breach':''}">${formatDateShort(v(s,'Due Date'))}</div></div>
+<div class="detail-field"><label>Environment</label><div class="val">${esc(v(s,'Environment'))}</div></div>
+</div>
+<div class="detail-field" style="margin-bottom:14px"><label>Description</label><div class="val">${esc(v(s,'Description'))}</div></div>
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:10px">Remediation</h3>
+<div class="detail-grid">
+<div class="detail-field"><label>Owner Team</label><div class="val">${esc(v(s,'Remediation Owner Team'))}</div></div>
+<div class="detail-field"><label>Assignee</label><div class="val">${esc(v(s,'Assignee'))}</div></div>
+</div>
+<div class="detail-field" style="margin-bottom:10px"><label>Remediation Notes</label><div class="val">${esc(v(s,'Remediation Notes'))}</div></div>
+<div class="detail-field" style="margin-bottom:14px"><label>Verification Notes</label><div class="val">${esc(v(s,'Verification Notes'))}</div></div>
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:12px">Actions</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+<div class="form-group"><label>Change Status</label><select id="vuln-ns"><option value="">Select...</option><option>New</option><option>In Remediation</option><option>Fixed</option><option>Verified</option><option>Closed</option></select></div>
+<button class="btn-secondary" onclick="changeVulnSt('${s.id}')">Update Status</button>
+<button class="btn-success btn-small" onclick="changeVulnStD('${s.id}','Fixed')">Mark Fixed</button>
+<button class="btn-success btn-small" onclick="changeVulnStD('${s.id}','Verified')">Mark Verified</button>
+</div>
+<div class="card" style="background:var(--light)"><h3>Accept Risk</h3>
+<div class="form-group" style="margin-bottom:10px"><label>Reason</label><textarea id="vuln-ar-reason" rows="2" style="width:100%"></textarea></div>
+<div class="form-row"><div class="form-group"><label>Expiry Date</label><input type="date" id="vuln-ar-exp"></div>
+<button class="btn-danger" onclick="acceptVulnRisk('${s.id}')" style="align-self:flex-end">Accept Risk</button></div></div>`)}catch(e){showToast('Error: '+e.message)}}
+
+async function changeVulnSt(id){const ns=document.getElementById('vuln-ns')?.value;if(!ns){showToast('Select a status');return}await changeVulnStD(id,ns)}
+async function changeVulnStD(id,ns){try{await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify({Status:ns})});
+showToast('Status updated to '+ns);closeModal();await applyVulnFilters()}catch(e){showToast('Error: '+e.message)}}
+
+async function acceptVulnRisk(id){const reason=document.getElementById('vuln-ar-reason')?.value;const exp=document.getElementById('vuln-ar-exp')?.value;
+if(!reason){showToast('Reason is required');return}
+try{await secopsApi('/api/secops/vulns/'+id+'/accept-risk',{method:'POST',body:JSON.stringify({reason:reason,expiry:exp||'',approved_by:API.displayName})});
+showToast('Risk accepted');closeModal();await applyVulnFilters()}catch(e){showToast('Error: '+e.message)}}
+
+/* ===== ASSETS ===== */
+let assetFilters={search:'',environment:'',criticality:'',ownerTeam:''};
+const ASSET_ENVIRONMENTS=['Prod','Staging','Dev'];
+
+function buildAssetKql(){
+const f=assetFilters,parts=[];let cf={};
+if(f.environment&&f.criticality){parts.push('values[Environment]="'+f.environment+'"');parts.push('values[Criticality]="'+f.criticality+'"');if(f.ownerTeam)cf['Owner Team']=f.ownerTeam}
+else if(f.environment&&f.ownerTeam){parts.push('values[Environment]="'+f.environment+'"');parts.push('values[Owner Team]="'+f.ownerTeam+'"');if(f.criticality)cf.Criticality=f.criticality}
+else if(f.environment){parts.push('values[Environment]="'+f.environment+'"');if(f.criticality)cf.Criticality=f.criticality;if(f.ownerTeam)cf['Owner Team']=f.ownerTeam}
+else if(f.criticality){parts.push('values[Criticality]="'+f.criticality+'"');if(f.ownerTeam)cf['Owner Team']=f.ownerTeam}
+else if(f.ownerTeam){parts.push('values[Owner Team]="'+f.ownerTeam+'"')}
+return{kql:parts.join(' AND '),cf}}
+
+async function loadAssets(){
+const el=document.getElementById('tab-assets');
+el.innerHTML=`<div class="toolbar">
+<input type="text" placeholder="Search assets..." oninput="assetFilters.search=this.value;renderAssetTable()">
+<select onchange="assetFilters.environment=this.value;applyAssetFilters('reset')"><option value="">All Environments</option>${ASSET_ENVIRONMENTS.map(e=>'<option>'+esc(e)+'</option>').join('')}</select>
+<select onchange="assetFilters.criticality=this.value;applyAssetFilters('reset')"><option value="">All Criticality</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+<select onchange="assetFilters.ownerTeam=this.value;applyAssetFilters('reset')"><option value="">All Teams</option></select>
+</div><div id="asset-table-ct"><div class="empty">Loading...</div></div>`;
+await applyAssetFilters('reset')}
+
+async function applyAssetFilters(dir){
+try{const{kql,cf}=buildAssetKql();
+await fetchPage(PAGERS.assets,'asset',kql,dir);
+PAGERS.assets._cf=cf;
+renderAssetTable()}catch(e){document.getElementById('asset-table-ct').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+function renderAssetTable(){
+const p=PAGERS.assets;let list=[...p.items];
+const cf=p._cf||{};
+if(cf.Criticality)list=list.filter(s=>v(s,'Criticality')===cf.Criticality);
+if(cf['Owner Team'])list=list.filter(s=>v(s,'Owner Team')===cf['Owner Team']);
+if(assetFilters.search){const q=assetFilters.search.toLowerCase();list=list.filter(s=>(v(s,'Hostname')+v(s,'FQDN')+v(s,'IP Address')+v(s,'Service Name')+v(s,'OS')+v(s,'Owner Team')).toLowerCase().includes(q))}
+document.getElementById('asset-table-ct').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Hostname</th><th>FQDN</th><th>IP</th><th>Environment</th><th>Criticality</th><th>Owner Team</th><th>OS</th><th>Service</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="8" class="empty">No assets found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openAssetDetail('${s.id}')">
+<td><strong>${esc(v(s,'Hostname'))}</strong></td><td>${esc(v(s,'FQDN'))}</td><td>${esc(v(s,'IP Address'))}</td>
+<td><span class="badge env-${(v(s,'Environment')||'').toLowerCase().replace(/\s+/g,'-')}">${esc(v(s,'Environment'))}</span></td>
+<td><span class="crit-${v(s,'Criticality')||'1'}">${esc(v(s,'Criticality'))}</span></td>
+<td>${esc(v(s,'Owner Team'))}</td><td>${esc(v(s,'OS'))}</td><td>${esc(v(s,'Service Name'))}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(p,'pageAssets')}</div>`}
+
+async function pageAssets(dir){await applyAssetFilters(dir)}
+
+async function openAssetDetail(id){
+try{const r=await api('/submissions/'+id+'?include=values');const s=r.submission;if(!s)return;
+const hn=v(s,'Hostname');
+let ra=[],rv=[];
+if(hn){
+  const[ar,vr]=await Promise.all([
+    api('/kapps/sec-ops/forms/security-alert/submissions?include=values&limit=25&q='+encodeURIComponent('values[Hostname]="'+hn+'"')).catch(()=>({submissions:[]})),
+    api('/kapps/sec-ops/forms/vulnerability-finding/submissions?include=values&limit=25&q='+encodeURIComponent('values[Hostname]="'+hn+'"')).catch(()=>({submissions:[]}))
+  ]);
+  ra=ar.submissions||[];rv=vr.submissions||[];
+}
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${esc(hn)}</h2>
+<div class="detail-grid">
+<div class="detail-field"><label>Hostname</label><div class="val">${esc(hn)}</div></div>
+<div class="detail-field"><label>FQDN</label><div class="val">${esc(v(s,'FQDN'))}</div></div>
+<div class="detail-field"><label>IP Address</label><div class="val">${esc(v(s,'IP Address'))}</div></div>
+<div class="detail-field"><label>Environment</label><div class="val">${esc(v(s,'Environment'))}</div></div>
+<div class="detail-field"><label>Criticality</label><div class="val">${esc(v(s,'Criticality'))}</div></div>
+<div class="detail-field"><label>Owner Team</label><div class="val">${esc(v(s,'Owner Team'))}</div></div>
+<div class="detail-field"><label>OS</label><div class="val">${esc(v(s,'OS'))}</div></div>
+<div class="detail-field"><label>Service Name</label><div class="val">${esc(v(s,'Service Name'))}</div></div>
+<div class="detail-field"><label>Asset ID</label><div class="val">${esc(v(s,'Asset ID'))}</div></div>
+<div class="detail-field"><label>MAC Address</label><div class="val">${esc(v(s,'MAC Address'))}</div></div>
+</div>
+<hr style="margin:16px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:10px">Related Alerts (${ra.length})</h3>
+<table><thead><tr><th>Severity</th><th>Title</th><th>Source</th><th>Status</th><th>Received</th></tr></thead><tbody>
+${ra.length===0?'<tr><td colspan="5" class="empty">No related alerts</td></tr>':ra.map(a=>`<tr><td>${sevBadge(v(a,'Severity'))}</td><td>${esc(v(a,'Title'))}</td><td>${esc(v(a,'Source'))}</td><td>${statBadge(v(a,'Status'))}</td><td>${timeAgo(v(a,'Received At'))}</td></tr>`).join('')}
+</tbody></table>
+<h3 style="margin:16px 0 10px">Related Vulnerabilities (${rv.length})</h3>
+<table><thead><tr><th>CVE</th><th>Severity</th><th>Title</th><th>Status</th><th>Due Date</th></tr></thead><tbody>
+${rv.length===0?'<tr><td colspan="5" class="empty">No related vulnerabilities</td></tr>':rv.map(x=>`<tr><td>${esc(v(x,'CVE'))}</td><td>${sevBadge(v(x,'Severity'))}</td><td>${esc(v(x,'Title'))}</td><td>${statBadge(v(x,'Status'))}</td><td>${formatDateShort(v(x,'Due Date'))}</td></tr>`).join('')}
+</tbody></table>`)}catch(e){showToast('Error: '+e.message)}}
+
+/* ===== PLAYBOOKS ===== */
+async function loadPlaybooks(){
+const el=document.getElementById('tab-playbooks');
+el.innerHTML='<div class="empty">Loading playbooks...</div>';
+try{await fetchPage(PAGERS.playbooks,'playbook','','reset');
+const list=PAGERS.playbooks.items;
+el.innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Trigger Type</th><th>Automation Level</th><th>Category</th><th>Est. Duration</th><th>Active</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="6" class="empty">No playbooks found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openPbDetail('${s.id}')">
+<td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Trigger Type'))}</td><td>${esc(v(s,'Automation Level'))}</td>
+<td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Estimated Duration'))}</td>
+<td>${v(s,'Active')==='true'?'<span class="badge sev-low">Active</span>':'<span class="badge stat-closed">Inactive</span>'}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(PAGERS.playbooks,'pagePlaybooks')}</div>`}catch(e){el.innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+async function pagePlaybooks(dir){
+try{await fetchPage(PAGERS.playbooks,'playbook','',dir);
+const el=document.getElementById('tab-playbooks');
+const list=PAGERS.playbooks.items;
+el.innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Trigger Type</th><th>Automation Level</th><th>Category</th><th>Est. Duration</th><th>Active</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="6" class="empty">No playbooks found</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openPbDetail('${s.id}')">
+<td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Trigger Type'))}</td><td>${esc(v(s,'Automation Level'))}</td>
+<td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Estimated Duration'))}</td>
+<td>${v(s,'Active')==='true'?'<span class="badge sev-low">Active</span>':'<span class="badge stat-closed">Inactive</span>'}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(PAGERS.playbooks,'pagePlaybooks')}</div>`}catch(e){showToast('Error: '+e.message)}}
+
+async function openPbDetail(id){
+try{const r=await api('/submissions/'+id+'?include=values');const s=r.submission;if(!s)return;
+let steps=[];try{steps=JSON.parse(v(s,'Steps')||'[]')}catch(e){}
+const pbName=v(s,'Name');
+let runs=[];
+try{const rr=await api('/kapps/sec-ops/forms/playbook-run/submissions?include=values&limit=25&q='+encodeURIComponent('values[Playbook Name]="'+pbName+'"'));runs=rr.submissions||[]}catch(e){}
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${esc(pbName)}</h2>
+<div class="detail-grid">
+<div class="detail-field"><label>Trigger Type</label><div class="val">${esc(v(s,'Trigger Type'))}</div></div>
+<div class="detail-field"><label>Automation Level</label><div class="val">${esc(v(s,'Automation Level'))}</div></div>
+<div class="detail-field"><label>Category</label><div class="val">${esc(v(s,'Category'))}</div></div>
+<div class="detail-field"><label>Required Roles</label><div class="val">${esc(v(s,'Required Roles'))}</div></div>
+<div class="detail-field"><label>Est. Duration</label><div class="val">${esc(v(s,'Estimated Duration'))}</div></div>
+<div class="detail-field"><label>Active</label><div class="val">${v(s,'Active')==='true'?'Yes':'No'}</div></div>
+</div>
+<div class="detail-field" style="margin-bottom:14px"><label>Description</label><div class="val">${esc(v(s,'Description'))}</div></div>
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:10px">Steps</h3>
+${steps.length===0?'<p class="empty">No steps defined</p>':`<ol style="padding-left:20px">${steps.map(st=>`<li style="margin-bottom:10px"><strong>${esc(st.name||st.Name||'')}</strong>
+${st.type||st.Type?' <span class="badge stat-new">'+esc(st.type||st.Type)+'</span>':''}
+${st.role||st.Role?' <span style="font-size:11px;color:var(--gray)">Role: '+esc(st.role||st.Role)+'</span>':''}
+${st.description||st.Description?'<div style="font-size:13px;color:var(--gray);margin-top:2px">'+esc(st.description||st.Description)+'</div>':''}</li>`).join('')}</ol>`}
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:10px">Recent Runs (${runs.length})</h3>
+<table><thead><tr><th>Target</th><th>Status</th><th>Started</th><th>Executed By</th></tr></thead><tbody>
+${runs.length===0?'<tr><td colspan="4" class="empty">No runs</td></tr>':runs.map(rn=>`<tr><td>${esc(v(rn,'Target Type'))}: ${esc(v(rn,'Target ID'))}</td><td>${statBadge(v(rn,'Status'))}</td><td>${formatDate(v(rn,'Started At'))}</td><td>${esc(v(rn,'Executed By'))}</td></tr>`).join('')}
+</tbody></table>
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<h3 style="margin-bottom:10px">Run Playbook</h3>
+<div class="form-row"><div class="form-group"><label>Target Type</label><select id="pb-tt"><option>Incident</option><option>Alert</option><option>Vulnerability</option><option>Asset</option></select></div>
+<div class="form-group"><label>Target ID</label><input type="text" id="pb-tid" placeholder="Submission ID..."></div>
+<button class="btn-primary" onclick="runPb('${s.id}')" style="align-self:flex-end">Run</button></div>`)}catch(e){showToast('Error: '+e.message)}}
+
+async function runPb(pid){const tt=document.getElementById('pb-tt')?.value||'';const tid=document.getElementById('pb-tid')?.value||'';
+try{await secopsApi('/api/secops/playbooks/'+pid+'/run',{method:'POST',body:JSON.stringify({target_type:tt,target_id:tid,executed_by:API.displayName})});
+showToast('Playbook execution started');closeModal()}catch(e){showToast('Error: '+e.message)}}
+
+/* ===== REPORTS ===== */
+async function loadReports(){
+const el=document.getElementById('tab-reports');
+el.innerHTML='<div class="empty">Loading reports...</div>';
+try{const d=await secopsApi('/api/secops/stats/reports');
+const maxW=Math.max(...d.weeklyAlerts.map(w=>w.count),1);
+el.innerHTML=`<div class="kpi-row" style="grid-template-columns:repeat(3,1fr)">
+<div class="card metric-card"><div class="metric-val" style="color:var(--orange)">${d.mtta}</div><div class="metric-label">Mean Time to Acknowledge (MTTA)</div></div>
+<div class="card metric-card"><div class="metric-val" style="color:var(--teal)">${d.mttc}</div><div class="metric-label">Mean Time to Contain (MTTC)</div></div>
+<div class="card metric-card"><div class="metric-val" style="color:var(--indigo)">${d.mttr}</div><div class="metric-label">Mean Time to Resolve (MTTR)</div></div>
+</div>
+<div class="card"><h3>Vulnerability Remediation Aging</h3><table><thead><tr><th>Age Bucket</th><th>Open Vulns</th></tr></thead><tbody>
+${Object.entries(d.vulnAging).map(([k,c])=>`<tr><td>${k}</td><td><strong>${c}</strong></td></tr>`).join('')}
+</tbody></table></div>
+<div class="grid-2">
+<div class="card metric-card"><div class="metric-val" style="color:var(--green)">${d.closedThisMonth}</div><div class="metric-label">Incidents Closed This Month</div></div>
+<div class="card metric-card"><div class="metric-val" style="color:var(--green)">${d.fixedThisMonth}</div><div class="metric-label">Vulns Fixed This Month</div></div>
+</div>
+<div class="card"><h3>Alert Volume Trend (Weekly)</h3><table><thead><tr><th>Week Starting</th><th>Alerts</th><th>Volume</th></tr></thead><tbody>
+${d.weeklyAlerts.map(w=>`<tr><td>${w.label}</td><td><strong>${w.count}</strong></td><td><div style="background:var(--orange);height:18px;width:${Math.round(w.count/maxW*100)}%;border-radius:4px;min-width:${w.count>0?'4px':'0'}"></div></td></tr>`).join('')}
+</tbody></table></div>`}catch(e){el.innerHTML='<div class="empty">Error loading reports: '+esc(e.message)+'</div>'}}
+
+/* ===== ADMIN ===== */
+let adminSubtab='sla';
+async function loadAdmin(){
+const el=document.getElementById('tab-admin');
+el.innerHTML=`<div class="subtabs" id="admin-subtabs">
+<button class="${adminSubtab==='sla'?'active':''}" onclick="adminSubtab='sla';loadAdminContent();document.querySelectorAll('#admin-subtabs button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">SLA Policies</button>
+<button class="${adminSubtab==='suppression'?'active':''}" onclick="adminSubtab='suppression';loadAdminContent();document.querySelectorAll('#admin-subtabs button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Suppression Rules</button>
+</div><div id="admin-ct"><div class="empty">Loading...</div></div>`;
+await loadAdminContent()}
+
+async function loadAdminContent(){
+try{if(adminSubtab==='sla'){
+  await fetchPage(PAGERS.sla,'sla-policy','','reset');renderSLA()
+}else{
+  await fetchPage(PAGERS.suppression,'suppression-rule','','reset');renderSupp()
+}}catch(e){document.getElementById('admin-ct').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>'}}
+
+function renderSLA(){
+const list=PAGERS.sla.items;
+document.getElementById('admin-ct').innerHTML=`<div style="margin-bottom:12px"><button class="btn-primary" onclick="openSLAModal()">Add Policy</button></div>
+<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Applies To</th><th>Severity</th><th>Response Time</th><th>Contain Time</th><th>Resolve Time</th><th>Active</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="7" class="empty">No SLA policies</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openSLAModal('${s.id}')">
+<td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Applies To'))}</td><td>${sevBadge(v(s,'Severity'))}</td>
+<td>${esc(v(s,'Response Time'))}</td><td>${esc(v(s,'Contain Time'))}</td><td>${esc(v(s,'Resolve Time'))}</td>
+<td>${v(s,'Active')==='true'?'<span class="badge sev-low">Active</span>':'<span class="badge stat-closed">Inactive</span>'}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(PAGERS.sla,'pageSLA')}</div>`}
+
+async function pageSLA(dir){try{await fetchPage(PAGERS.sla,'sla-policy','',dir);renderSLA()}catch(e){showToast('Error: '+e.message)}}
+
+function openSLAModal(id){
+const s=id?PAGERS.sla.items.find(p=>p.id===id):null;
+if(id&&!s){api('/submissions/'+id+'?include=values').then(r=>{openSLAModalWith(r.submission)}).catch(e=>showToast('Error: '+e.message));return}
+openSLAModalWith(s)}
+
+function openSLAModalWith(s){const isE=!!s;
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${isE?'Edit':'Add'} SLA Policy</h2>
+<div class="form-group" style="margin-bottom:10px"><label>Name</label><input type="text" id="sla-name" value="${esc(s?v(s,'Name'):'')}"></div>
+<div class="form-row">
+<div class="form-group"><label>Applies To</label><select id="sla-applies"><option ${s&&v(s,'Applies To')==='Incident'?'selected':''}>Incident</option><option ${s&&v(s,'Applies To')==='Vulnerability'?'selected':''}>Vulnerability</option></select></div>
+<div class="form-group"><label>Severity</label><select id="sla-sev"><option value="">All</option><option ${s&&v(s,'Severity')==='S1'?'selected':''}>S1</option><option ${s&&v(s,'Severity')==='S2'?'selected':''}>S2</option><option ${s&&v(s,'Severity')==='S3'?'selected':''}>S3</option><option ${s&&v(s,'Severity')==='S4'?'selected':''}>S4</option></select></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Response Time</label><input type="text" id="sla-rt" value="${esc(s?v(s,'Response Time'):'')}"></div>
+<div class="form-group"><label>Contain Time</label><input type="text" id="sla-ct" value="${esc(s?v(s,'Contain Time'):'')}"></div>
+<div class="form-group"><label>Resolve Time</label><input type="text" id="sla-rst" value="${esc(s?v(s,'Resolve Time'):'')}"></div>
+</div>
+<div class="form-group" style="margin-bottom:16px"><label>Active</label><select id="sla-act"><option value="true" ${!s||v(s,'Active')==='true'?'selected':''}>Yes</option><option value="false" ${s&&v(s,'Active')==='false'?'selected':''}>No</option></select></div>
+<button class="btn-primary" onclick="saveSLA('${s?s.id:''}')">${isE?'Save Changes':'Create Policy'}</button>`)}
+
+async function saveSLA(id){const vals={'Name':document.getElementById('sla-name')?.value||'','Applies To':document.getElementById('sla-applies')?.value||'',
+'Severity':document.getElementById('sla-sev')?.value||'','Response Time':document.getElementById('sla-rt')?.value||'',
+'Contain Time':document.getElementById('sla-ct')?.value||'','Resolve Time':document.getElementById('sla-rst')?.value||'',
+'Active':document.getElementById('sla-act')?.value||'true'};
+if(!vals.Name){showToast('Name is required');return}
+try{if(id){await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify(vals)});showToast('Policy updated')}
+else{await api('/kapps/sec-ops/forms/sla-policy/submissions',{method:'POST',body:JSON.stringify({values:vals})});showToast('Policy created')}
+closeModal();await fetchPage(PAGERS.sla,'sla-policy','','reset');renderSLA()}catch(e){showToast('Error: '+e.message)}}
+
+function renderSupp(){
+const list=PAGERS.suppression.items;
+document.getElementById('admin-ct').innerHTML=`<div style="margin-bottom:12px"><button class="btn-primary" onclick="openSuppModal()">Add Rule</button></div>
+<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Match Field</th><th>Pattern</th><th>Source Filter</th><th>Status</th></tr></thead><tbody>
+${list.length===0?'<tr><td colspan="5" class="empty">No suppression rules</td></tr>':list.map(s=>`<tr class="clickable-row" onclick="openSuppModal('${s.id}')">
+<td><strong>${esc(v(s,'Name'))}</strong></td><td>${esc(v(s,'Match Field'))}</td><td><code>${esc(v(s,'Pattern'))}</code></td>
+<td>${esc(v(s,'Source Filter'))}</td>
+<td>${v(s,'Active')==='true'||v(s,'Status')==='Active'?'<span class="badge sev-low">Active</span>':'<span class="badge stat-closed">Inactive</span>'}</td></tr>`).join('')}
+</tbody></table>${pgCtrl(PAGERS.suppression,'pageSupp')}</div>`}
+
+async function pageSupp(dir){try{await fetchPage(PAGERS.suppression,'suppression-rule','',dir);renderSupp()}catch(e){showToast('Error: '+e.message)}}
+
+function openSuppModal(id){
+const s=id?PAGERS.suppression.items.find(r=>r.id===id):null;
+if(id&&!s){api('/submissions/'+id+'?include=values').then(r=>{openSuppModalWith(r.submission)}).catch(e=>showToast('Error: '+e.message));return}
+openSuppModalWith(s)}
+
+function openSuppModalWith(s){const isE=!!s;
+openModal(`<button class="modal-close" onclick="closeModal()">&times;</button>
+<h2>${isE?'Edit':'Add'} Suppression Rule</h2>
+<div class="form-group" style="margin-bottom:10px"><label>Name</label><input type="text" id="sup-name" value="${esc(s?v(s,'Name'):'')}"></div>
+<div class="form-row">
+<div class="form-group"><label>Match Field</label><select id="sup-field"><option ${s&&v(s,'Match Field')==='Title'?'selected':''}>Title</option><option ${s&&v(s,'Match Field')==='Category'?'selected':''}>Category</option><option ${s&&v(s,'Match Field')==='Hostname'?'selected':''}>Hostname</option><option ${s&&v(s,'Match Field')==='Source'?'selected':''}>Source</option><option ${s&&v(s,'Match Field')==='Indicators'?'selected':''}>Indicators</option></select></div>
+<div class="form-group"><label>Pattern (regex)</label><input type="text" id="sup-pat" value="${esc(s?v(s,'Pattern'):'')}"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Source Filter</label><select id="sup-src"><option value="">All Sources</option><option ${s&&v(s,'Source Filter')==='Splunk'?'selected':''}>Splunk</option><option ${s&&v(s,'Source Filter')==='CrowdStrike'?'selected':''}>CrowdStrike</option><option ${s&&v(s,'Source Filter')==='Sentinel'?'selected':''}>Sentinel</option><option ${s&&v(s,'Source Filter')==='Palo Alto'?'selected':''}>Palo Alto</option></select></div>
+<div class="form-group"><label>Status</label><select id="sup-st"><option value="Active" ${!s||v(s,'Status')==='Active'||v(s,'Active')==='true'?'selected':''}>Active</option><option value="Inactive" ${s&&(v(s,'Status')==='Inactive'||v(s,'Active')==='false')?'selected':''}>Inactive</option></select></div>
+</div>
+<div class="form-group" style="margin-bottom:16px"><label>Description</label><textarea id="sup-desc" rows="2" style="width:100%">${esc(s?v(s,'Description'):'')}</textarea></div>
+<button class="btn-primary" onclick="saveSupp('${s?s.id:''}')">${isE?'Save Changes':'Create Rule'}</button>`)}
+
+async function saveSupp(id){const vals={'Name':document.getElementById('sup-name')?.value||'','Match Field':document.getElementById('sup-field')?.value||'',
+'Pattern':document.getElementById('sup-pat')?.value||'','Source Filter':document.getElementById('sup-src')?.value||'',
+'Status':document.getElementById('sup-st')?.value||'Active','Active':document.getElementById('sup-st')?.value==='Active'?'true':'false',
+'Description':document.getElementById('sup-desc')?.value?.trim()||''};
+if(!vals.Name){showToast('Name is required');return}
+try{if(id){await api('/submissions/'+id+'/values',{method:'PUT',body:JSON.stringify(vals)});showToast('Rule updated')}
+else{await api('/kapps/sec-ops/forms/suppression-rule/submissions',{method:'POST',body:JSON.stringify({values:vals})});showToast('Rule created')}
+closeModal();await fetchPage(PAGERS.suppression,'suppression-rule','','reset');renderSupp()}catch(e){showToast('Error: '+e.message)}}
+</script>
+</body>
+</html>

@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataAtlas - Enterprise Data Dictionary</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;--deep-orange:#BF360C;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+a{color:var(--orange);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:6px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.9}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr:hover{background:#FAFAFA}
+.card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px;border:1px solid var(--border)}
+.card h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);margin-bottom:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+
+/* Status badges */
+.stat-active{background:#E8F5E9;color:#2E7D32}
+.stat-draft{background:#F1F3F4;color:#5F6368}
+.stat-proposed{background:#E3F2FD;color:#1565C0}
+.stat-approved{background:#E8F5E9;color:#1B5E20}
+.stat-deprecated{background:#FFF3E0;color:#E65100}
+.stat-open{background:#E3F2FD;color:#1565C0}
+.stat-in-review{background:#FFF8E1;color:#F57F17}
+.stat-resolved{background:#E8F5E9;color:#2E7D32}
+.stat-accepted{background:#E8F5E9;color:#1B5E20}
+.stat-rejected{background:#FDECEA;color:#C62828}
+.stat-closed{background:#F1F3F4;color:#5F6368}
+.stat-completed{background:#E8F5E9;color:#2E7D32}
+.stat-failed{background:#FDECEA;color:#C62828}
+.stat-new{background:#E3F2FD;color:#1565C0}
+
+/* Severity badges */
+.sev-critical{background:#FDECEA;color:#C62828}
+.sev-high{background:#FFF3E0;color:#E65100}
+.sev-medium{background:#FFF8E1;color:#F9A825}
+.sev-low{background:#E8F5E9;color:#2E7D32}
+
+/* Classification badges */
+.cls-public{background:#E8F5E9;color:#2E7D32}
+.cls-internal{background:#E3F2FD;color:#1565C0}
+.cls-confidential{background:#FFF8E1;color:#F9A825}
+.cls-restricted{background:#FDECEA;color:#C62828}
+.cls-sensitive{background:#FFF3E0;color:#E65100}
+.cls-pii{background:#FDECEA;color:#C62828}
+.cls-phi{background:#FDECEA;color:#C62828}
+
+/* Environment badges */
+.env-production,.env-prod{background:#FDECEA;color:#C62828}
+.env-staging{background:#FFF8E1;color:#F9A825}
+.env-development,.env-dev{background:#E8F5E9;color:#2E7D32}
+.env-dr{background:#E3F2FD;color:#1565C0}
+
+/* Type badges */
+.type-badge{background:#EDE7F6;color:#4527A0}
+.type-database{background:#E3F2FD;color:#1565C0}
+.type-platform{background:#E0F2F1;color:#00695C}
+.type-api{background:#FFF3E0;color:#E65100}
+.type-file{background:#F1F3F4;color:#5F6368}
+.type-table{background:#E3F2FD;color:#1565C0}
+.type-form{background:#E0F2F1;color:#00695C}
+.type-view{background:#EDE7F6;color:#4527A0}
+.type-endpoint{background:#FFF3E0;color:#E65100}
+
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px;border-radius:6px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray)}
+.btn-outline:hover{background:var(--light)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:10px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:180px}
+.toolbar select{min-width:110px}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px}
+.subtabs button{background:var(--white);color:var(--gray);border:1px solid var(--border);border-radius:6px 6px 0 0;padding:8px 18px;font-weight:500}
+.subtabs button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi-card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:16px;text-align:center;border-top:4px solid var(--gray)}
+.kpi-card .kpi-value{font-size:26px;font-weight:700;margin:6px 0}
+.kpi-card .kpi-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+
+.clickable-row{cursor:pointer}.clickable-row:hover{background:#EEF1F6!important}
+.clickable-card{cursor:pointer;transition:box-shadow .15s,transform .15s}.clickable-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+
+/* Coverage bars */
+.coverage-bar{margin-bottom:16px}
+.coverage-bar .bar-label{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;font-weight:600}
+.coverage-bar .bar-track{height:24px;background:var(--border);border-radius:12px;overflow:hidden}
+.coverage-bar .bar-fill{height:100%;border-radius:12px;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:white;font-size:11px;font-weight:600;min-width:30px}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.login-card{background:var(--white);border-radius:16px;box-shadow:var(--shadow-lg);padding:40px;width:400px;max-width:90vw}
+.login-card h1{text-align:center;font-size:24px;margin-bottom:6px;color:var(--blue)}
+.login-card h1 span{color:var(--orange)}
+.login-card p{text-align:center;color:var(--gray);margin-bottom:24px;font-size:13px}
+.login-card label{display:block;font-weight:600;font-size:12px;margin-bottom:4px;color:var(--gray);margin-top:14px;text-transform:uppercase;letter-spacing:.3px}
+.login-card input{width:100%}
+.login-card button{width:100%;margin-top:22px;padding:12px;font-size:15px;font-weight:600}
+.login-error{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+
+/* App layout */
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:100;background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 24px;height:56px;box-shadow:var(--shadow)}
+.topbar .logo{font-size:18px;font-weight:700;margin-right:30px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:14px 14px;font-size:13px;font-weight:500;border-radius:0;border-bottom:3px solid transparent;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{color:#fff;border-bottom-color:var(--orange)}
+.topbar .user-info{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap}
+.topbar .user-info strong{color:white}
+.about-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.about-btn:hover{border-color:var(--orange);color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+/* Modal */
+#modal{display:none;position:fixed;inset:0;z-index:200}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--white);margin:30px auto;width:90%;max-width:650px;max-height:85vh;overflow-y:auto;border-radius:16px;box-shadow:var(--shadow-lg);padding:28px;z-index:1}
+.modal-content h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modal-close{position:absolute;top:12px;right:16px;background:none;font-size:22px;color:var(--gray);padding:4px 8px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:16px}
+.detail-field label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.detail-field .val{font-size:14px;word-break:break-word}
+
+/* Toast */
+#toast{position:fixed;bottom:30px;right:30px;z-index:300}
+.toast-msg{background:var(--blue);color:#fff;padding:12px 24px;border-radius:8px;box-shadow:var(--shadow-lg);margin-top:8px;font-size:13px;font-weight:600;animation:toastIn .3s ease}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.empty{text-align:center;padding:30px;color:var(--gray);font-style:italic}
+
+/* Drill-down header */
+.drill-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.drill-header .back-btn{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 12px;font-size:13px;border-radius:6px}
+.drill-header .back-btn:hover{background:var(--border)}
+.drill-header h2{font-size:20px;font-weight:700;color:var(--blue)}
+
+/* Graph */
+.graph-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:16px;background:var(--white);border-radius:10px;box-shadow:var(--shadow)}
+.graph-controls select{min-width:160px}
+.graph-area{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.graph-area svg{display:block}
+.graph-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--gray)}
+.graph-legend span{display:flex;align-items:center;gap:4px}
+.graph-legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* Admin */
+.scanner-card{max-width:500px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.form-group label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+.form-group input{width:100%}
+
+.pager{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border)}
+.pager-info{color:var(--gray);font-size:13px}
+
+/* Count badge in cards */
+.count-badge{display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--gray);margin-left:4px}
+
+/* Section headings */
+.section-title{font-size:15px;font-weight:600;color:var(--blue);margin:20px 0 12px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+<div class="login-card">
+<h1>Data<span>Atlas</span></h1>
+<p>Enterprise Data Dictionary &amp; Catalog</p>
+<label>Server URL</label>
+<input type="text" id="login-url" value="http://localhost:3008">
+<label>Username</label>
+<input type="text" id="login-user" autocomplete="username">
+<label>Password</label>
+<input type="password" id="login-pass" autocomplete="current-password">
+<button class="btn-primary" onclick="doLogin()">Sign In</button>
+<div class="login-error" id="login-error"></div>
+</div>
+</div>
+
+<div id="app">
+<div class="topbar">
+<div class="logo">Data<span>Atlas</span></div>
+<nav id="main-nav">
+<button class="active" onclick="showTab('dashboard')">Dashboard</button>
+<button onclick="showTab('catalog')">Catalog</button>
+<button onclick="showTab('domains')">Domains</button>
+<button onclick="showTab('systems')">Systems</button>
+<button onclick="showTab('glossary')">Glossary</button>
+<button onclick="showTab('issues')">Issues</button>
+<button onclick="showTab('graph')">Graph</button>
+<button onclick="showTab('admin')">Admin</button>
+</nav>
+<div class="user-info">
+<strong id="user-display"></strong>
+<button class="about-btn" onclick="showAbout()" title="About this app">About</button>
+<button class="logout-btn" onclick="doLogout()">Logout</button>
+</div>
+</div>
+
+<div class="console active" id="tab-dashboard"></div>
+<div class="console" id="tab-catalog"></div>
+<div class="console" id="tab-domains"></div>
+<div class="console" id="tab-systems"></div>
+<div class="console" id="tab-glossary"></div>
+<div class="console" id="tab-issues"></div>
+<div class="console" id="tab-graph"></div>
+<div class="console" id="tab-admin"></div>
+</div>
+
+<div id="modal">
+<div class="modal-overlay" onclick="closeModal()"></div>
+<div class="modal-content">
+<button class="modal-close" onclick="closeModal()">&times;</button>
+<div id="modal-body"></div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================================================================
+   API LAYER
+   ================================================================ */
+let API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function atlasApi(path, opts = {}) {
+  const res = await fetch(`${API.url}${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+/* ================================================================
+   UTILITIES
+   ================================================================ */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+function statBadge(s) {
+  if (!s) return '';
+  return `<span class="badge stat-${s.toLowerCase().replace(/\s+/g, '-')}">${esc(s)}</span>`;
+}
+
+function sevBadge(s) {
+  if (!s) return '';
+  return `<span class="badge sev-${s.toLowerCase().replace(/\s+/g, '-')}">${esc(s)}</span>`;
+}
+
+function clsBadge(s) {
+  if (!s) return '';
+  return `<span class="badge cls-${s.toLowerCase().replace(/[\s/]+/g, '-')}">${esc(s)}</span>`;
+}
+
+function envBadge(s) {
+  if (!s) return '';
+  return `<span class="badge env-${s.toLowerCase().replace(/\s+/g, '-')}">${esc(s)}</span>`;
+}
+
+function typeBadge(s) {
+  if (!s) return '';
+  return `<span class="badge type-${s.toLowerCase().replace(/\s+/g, '-')}">${esc(s)}</span>`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function barColor(pct) {
+  if (pct >= 80) return 'var(--green)';
+  if (pct >= 50) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  const d = document.createElement('div');
+  d.className = 'toast-msg';
+  d.textContent = msg;
+  el.appendChild(d);
+  setTimeout(() => d.remove(), 3000);
+}
+
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+  document.getElementById('modal-body').innerHTML = '';
+  document.querySelector('.modal-content').style.maxWidth = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function showAbout() {
+  const mc = document.querySelector('.modal-content');
+  mc.style.maxWidth = '800px';
+  openModal(`
+    <h2>About DataAtlas</h2>
+    <div style="font-size:14px;line-height:1.7;color:var(--dark)">
+
+    <p style="font-size:15px;color:var(--gray);margin-bottom:20px">
+      DataAtlas is an enterprise <strong>data dictionary and catalog</strong> that provides a searchable inventory of your organization's data assets &mdash; databases, tables, APIs, forms, fields &mdash; along with their definitions, owners, relationships, and consistency health.
+    </p>
+
+    <h3 style="font-size:16px;border-bottom:2px solid var(--border);padding-bottom:6px;margin:24px 0 12px">Core Concepts</h3>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
+      <thead><tr style="background:var(--light);text-align:left">
+        <th style="padding:10px 12px;font-weight:600;width:130px">Concept</th>
+        <th style="padding:10px 12px;font-weight:600">What It Tracks</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Domain</td>
+          <td style="padding:10px 12px">A <strong>business area</strong> that groups related data together. Examples: <em>Customer</em>, <em>Finance</em>, <em>Operations</em>. Domains give you a high-level organizational view of who owns what data and how well it is governed.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">System</td>
+          <td style="padding:10px 12px">A <strong>data source or platform</strong> that hosts datasets. Could be a database (PostgreSQL, Oracle), an application (Salesforce, SAP), a message queue, a file system, or the Kinetic Platform itself. Systems are discovered automatically by scanners or added manually.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Dataset</td>
+          <td style="padding:10px 12px">A <strong>structured collection of data</strong> within a system. Depending on the system type, a dataset could be a database table, a view, a form, an API endpoint, a file, a Kafka topic, or a MongoDB collection. Datasets are the primary unit in the catalog.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Field</td>
+          <td style="padding:10px 12px">An individual <strong>data element</strong> (column, attribute, property) within a dataset. Fields have data types, nullability, primary/foreign key indicators, classifications, and optionally link to glossary terms for business definitions.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Glossary Term</td>
+          <td style="padding:10px 12px">A <strong>business-defined term</strong> with an authoritative definition. Terms like <em>Customer</em>, <em>Account</em>, <em>Transaction</em> are mapped to fields across systems, making it possible to find every place a concept appears and ensure consistent usage.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Relationship</td>
+          <td style="padding:10px 12px">A <strong>connection between entities</strong>. Types include: <em>PK-FK</em> (foreign keys), <em>Same-As</em> (equivalent fields across systems), <em>Derived-From</em> (ETL lineage), <em>Contains</em> (parent-child), and <em>References</em> (loose coupling). Relationships power the Graph Explorer.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Classification</td>
+          <td style="padding:10px 12px">A <strong>sensitivity or compliance label</strong> applied to datasets and fields. Categories include Privacy (PII), Compliance (SOX, HIPAA, GDPR), Access control, and Retention policies. Classifications help track regulatory obligations.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Owner</td>
+          <td style="padding:10px 12px">A <strong>person or team</strong> responsible for data assets. Roles include Data Owner, Data Steward, Technical Owner, and Business Owner. Ownership tracking is key to data governance &mdash; the dashboard shows ownership coverage percentages.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Quality Rule</td>
+          <td style="padding:10px 12px">A <strong>validation or constraint</strong> applied to a dataset or field. Rules define expectations (e.g., &ldquo;email must match regex&rdquo;, &ldquo;balance must be non-negative&rdquo;) and their severity. Violations surface as issues.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--blue)">Issue</td>
+          <td style="padding:10px 12px">A <strong>data quality or governance problem</strong> that needs attention. Types include: inconsistent definitions, duplicate data, missing owners, missing classifications, type mismatches, and quality violations. Issues are tracked through Open &rarr; In Review &rarr; Resolved.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:16px;border-bottom:2px solid var(--border);padding-bottom:6px;margin:24px 0 12px">Application Tabs</h3>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Dashboard</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Executive summary with KPI cards (system/dataset/field/term counts), data governance coverage bars (ownership %, classification %, definition %), domain health scores, and top open issues.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Catalog</strong><br>
+        <span style="font-size:12px;color:var(--gray)">The main browsing interface. Two subtabs: <em>Datasets</em> and <em>Fields</em>. Filter by domain, system, type, classification, and status. Click any row to see full details and related entities.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Domains</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Card view of business domains showing system and dataset counts per domain. Click a domain to drill down into its systems and datasets with governance metrics.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Systems</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Card view of all data systems showing technology, environment, and dataset/field counts. Click a system to see its datasets and connection details.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Glossary</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Business glossary of defined terms. Shows how many fields reference each term across all systems. Click a term to see its full definition and every field that maps to it.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Issues</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Data quality and governance issues. Filter by status, type, and severity. Each issue links to the affected domain, system, dataset, or field with evidence and recommendations.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Graph</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Visual relationship explorer. Select an entity to see a 2-level radial graph of all its connections &mdash; foreign keys, lineage, containment, and equivalences. Click any node to re-center. Use Back to retrace your path.</span>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:12px">
+        <strong style="color:var(--blue)">Admin</strong><br>
+        <span style="font-size:12px;color:var(--gray)">Scanner controls and scan history. Enter source system credentials and run a scan to auto-discover systems, datasets, fields, and relationships. Progress streams in real time.</span>
+      </div>
+    </div>
+
+    <h3 style="font-size:16px;border-bottom:2px solid var(--border);padding-bottom:6px;margin:24px 0 12px">Scanners</h3>
+
+    <p>Atlas can automatically discover and catalog data assets from external systems. Scanners connect to a source, introspect its structure, and create System, Dataset, Field, and Relationship records.</p>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
+      <thead><tr style="background:var(--light);text-align:left">
+        <th style="padding:8px 12px;font-weight:600">Scanner</th>
+        <th style="padding:8px 12px;font-weight:600">Source Type</th>
+        <th style="padding:8px 12px;font-weight:600">Discovers</th>
+        <th style="padding:8px 12px;font-weight:600">Driver</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_kinetic.mjs</code></td>
+          <td style="padding:8px 12px">Kinetic Platform</td>
+          <td style="padding:8px 12px">Kapps &rarr; Forms &rarr; Fields</td>
+          <td style="padding:8px 12px">None (HTTP)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_postgres.mjs</code></td>
+          <td style="padding:8px 12px">PostgreSQL</td>
+          <td style="padding:8px 12px">Schemas &rarr; Tables/Views &rarr; Columns, PKs, FKs</td>
+          <td style="padding:8px 12px"><code>pg</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_oracle.mjs</code></td>
+          <td style="padding:8px 12px">Oracle</td>
+          <td style="padding:8px 12px">Schemas &rarr; Tables/Views &rarr; Columns, PKs, FKs</td>
+          <td style="padding:8px 12px"><code>oracledb</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_mongodb.mjs</code></td>
+          <td style="padding:8px 12px">MongoDB</td>
+          <td style="padding:8px 12px">Databases &rarr; Collections &rarr; Fields (sampled)</td>
+          <td style="padding:8px 12px"><code>mongodb</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_cassandra.mjs</code></td>
+          <td style="padding:8px 12px">Apache Cassandra</td>
+          <td style="padding:8px 12px">Keyspaces &rarr; Tables &rarr; Columns, partition/clustering keys</td>
+          <td style="padding:8px 12px"><code>cassandra-driver</code></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 12px"><code>scan_couchdb.mjs</code></td>
+          <td style="padding:8px 12px">CouchDB</td>
+          <td style="padding:8px 12px">Databases &rarr; Documents (sampled) &rarr; Fields</td>
+          <td style="padding:8px 12px">None (HTTP)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:12px;color:var(--gray)">Scanners run as CLI scripts: <code>node scan_postgres.mjs --host db.example.com --user admin --pass secret --atlas-url http://localhost:3008</code>. The Kinetic scanner can also be triggered from the Admin tab.</p>
+
+    <h3 style="font-size:16px;border-bottom:2px solid var(--border);padding-bottom:6px;margin:24px 0 12px">Data Model</h3>
+
+    <p>Atlas stores all data in 12 Kinetic Platform forms within the <code>atlas</code> kapp:</p>
+
+    <div style="background:var(--light);border-radius:8px;padding:16px;font-size:12px;font-family:monospace;line-height:2;margin-bottom:20px">
+      <span style="color:var(--blue);font-weight:600">Domain</span> 1&mdash;* <span style="color:var(--blue);font-weight:600">System</span> 1&mdash;* <span style="color:var(--blue);font-weight:600">Dataset</span> 1&mdash;* <span style="color:var(--blue);font-weight:600">Field</span><br>
+      <span style="color:var(--blue);font-weight:600">Field</span> *&mdash;1 <span style="color:#7B1FA2;font-weight:600">Glossary Term</span><br>
+      <span style="color:var(--blue);font-weight:600">Dataset</span> *&mdash;1 <span style="color:#00695C;font-weight:600">Classification</span><br>
+      <span style="color:var(--blue);font-weight:600">Dataset</span> *&mdash;1 <span style="color:#E65100;font-weight:600">Owner</span><br>
+      <span style="color:#C62828;font-weight:600">Issue</span> &rarr; Domain | System | Dataset | Field | Term<br>
+      <span style="color:#283593;font-weight:600">Relationship</span> &rarr; Source Entity &harr; Target Entity<br>
+      <span style="color:var(--gray);font-weight:600">Quality Rule</span> &rarr; Dataset + Field<br>
+      <span style="color:var(--gray);font-weight:600">Change Log</span> &mdash; audit trail for all changes<br>
+      <span style="color:var(--gray);font-weight:600">Scan Result</span> &mdash; history of scanner runs
+    </div>
+
+    <h3 style="font-size:16px;border-bottom:2px solid var(--border);padding-bottom:6px;margin:24px 0 12px">Key Metrics</h3>
+
+    <p>The Dashboard tracks three governance coverage metrics across all datasets:</p>
+
+    <ul style="margin:8px 0 20px 20px;font-size:13px">
+      <li><strong>Ownership %</strong> &mdash; How many datasets have an assigned owner. Target: 100%.</li>
+      <li><strong>Classification %</strong> &mdash; How many datasets have a sensitivity classification (Public, Internal, Confidential, Restricted). Target: 100%.</li>
+      <li><strong>Definition %</strong> &mdash; How many fields have a business definition or glossary term mapping. Higher is better; indicates semantic understanding of data.</li>
+    </ul>
+
+    <p style="font-size:12px;color:var(--gray);border-top:1px solid var(--border);padding-top:12px;margin-top:24px">
+      DataAtlas &mdash; Enterprise Data Dictionary &amp; Catalog<br>
+      Built on the Kinetic Platform &bull; Port 3008
+    </p>
+
+    </div>
+  `);
+}
+
+function buildKQL(filters) {
+  const parts = [];
+  for (const [field, val] of Object.entries(filters)) {
+    if (val) parts.push(`values[${field}] = "${val}"`);
+  }
+  return parts.join(' AND ');
+}
+
+/* ================================================================
+   PAGER INFRASTRUCTURE
+   ================================================================ */
+function makePager() { return { items: [], pageKeys: [null], pageIndex: 0, hasNext: false, hasPrev: false }; }
+
+const PAGERS = {
+  datasets: makePager(),
+  fields: makePager(),
+  glossary: makePager(),
+  issues: makePager(),
+  scanHistory: makePager(),
+};
+
+async function fetchPage(pager, formSlug, kql, direction) {
+  if (direction === 'reset') { pager.pageKeys = [null]; pager.pageIndex = 0; }
+  else if (direction === 'next' && pager.hasNext) { pager.pageIndex++; }
+  else if (direction === 'prev' && pager.hasPrev) { pager.pageIndex--; }
+  let fullKql = kql || '';
+  const lastCreatedAt = pager.pageKeys[pager.pageIndex];
+  if (lastCreatedAt) {
+    const dc = `createdAt < "${lastCreatedAt}"`;
+    fullKql = fullKql ? `(${fullKql}) AND ${dc}` : dc;
+  }
+  let url = `/kapps/atlas/forms/${formSlug}/submissions?include=values,details&limit=25`;
+  if (fullKql) url += '&q=' + encodeURIComponent(fullKql);
+  const r = await api(url);
+  pager.items = r.submissions || [];
+  pager.hasNext = !!r.nextPageToken;
+  if (pager.hasNext && pager.items.length) pager.pageKeys[pager.pageIndex + 1] = pager.items[pager.items.length - 1].createdAt;
+  pager.hasPrev = pager.pageIndex > 0;
+}
+
+function pgCtrl(pager, navFn) {
+  if (!pager.hasNext && !pager.hasPrev) return '';
+  return `<div class="pager">
+    <button class="btn-outline btn-small" onclick="${navFn}('prev')" ${pager.hasPrev ? '' : 'disabled'}>&larr; Previous</button>
+    <span class="pager-info">Page ${pager.pageIndex + 1}</span>
+    <button class="btn-outline btn-small" onclick="${navFn}('next')" ${pager.hasNext ? '' : 'disabled'}>Next &rarr;</button>
+  </div>`;
+}
+
+/* ================================================================
+   LOGIN / SESSION
+   ================================================================ */
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!url || !user || !pass) { errEl.textContent = 'All fields required.'; return; }
+  API.url = url; API.auth = btoa(user + ':' + pass); API.user = user;
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+    try {
+      const sr = await fetch(API.url + '/app/api/v1/space', { headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' } });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch(e2) {}
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    showTab('dashboard');
+  } catch (e) { errEl.textContent = 'Login failed: ' + e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  Object.values(PAGERS).forEach(p => Object.assign(p, makePager()));
+  tabLoaded = {};
+  cachedData = {};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    API = JSON.parse(s);
+    const r = await fetch(API.url + '/app/api/v1/me', { headers: { 'Authorization': 'Basic ' + API.auth } });
+    if (!r.ok) throw 0;
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(API.url + '/app/api/v1/space', { headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' } });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(API)); }
+      } catch(e2) {}
+    }
+    document.getElementById('user-display').textContent = (API.displayName || API.user) + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    showTab('dashboard');
+  } catch (e) {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  }
+}
+restoreSession();
+
+/* ================================================================
+   TAB SYSTEM
+   ================================================================ */
+const TABS = ['dashboard', 'catalog', 'domains', 'systems', 'glossary', 'issues', 'graph', 'admin'];
+let tabLoaded = {};
+let cachedData = {};
+
+function showTab(name) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('active'));
+  const idx = TABS.indexOf(name);
+  if (idx >= 0) document.querySelectorAll('#main-nav button')[idx].classList.add('active');
+
+  const loaders = {
+    dashboard: loadDashboard,
+    catalog: loadCatalog,
+    domains: loadDomains,
+    systems: loadSystems,
+    glossary: loadGlossary,
+    issues: loadIssues,
+    graph: loadGraph,
+    admin: loadAdmin,
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+/* ================================================================
+   1. DASHBOARD
+   ================================================================ */
+async function loadDashboard() {
+  const el = document.getElementById('tab-dashboard');
+
+  // Render skeleton immediately
+  el.innerHTML = `
+    <div class="kpi-row">
+      <div class="kpi-card" style="border-top-color:var(--teal)">
+        <div class="kpi-label">Systems</div>
+        <div class="kpi-value" style="color:var(--teal)" id="kpi-systems">...</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--orange)">
+        <div class="kpi-label">Datasets</div>
+        <div class="kpi-value" style="color:var(--orange)" id="kpi-datasets">...</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--indigo)">
+        <div class="kpi-label">Fields</div>
+        <div class="kpi-value" style="color:var(--indigo)" id="kpi-fields">...</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--purple)">
+        <div class="kpi-label">Glossary Terms</div>
+        <div class="kpi-value" style="color:var(--purple)" id="kpi-terms">...</div>
+      </div>
+      <div class="kpi-card" style="border-top-color:var(--red)">
+        <div class="kpi-label">Open Issues</div>
+        <div class="kpi-value" style="color:var(--red)" id="kpi-issues">...</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card" id="dash-coverage">
+        <h3>Data Coverage</h3>
+        <div class="empty" style="font-size:12px;color:var(--gray)">Calculating coverage...</div>
+      </div>
+
+      <div class="card" id="dash-issues">
+        <h3>Top Issues</h3>
+        <div class="empty" style="font-size:12px;color:var(--gray)">Loading issues...</div>
+      </div>
+    </div>
+
+    <div class="card" id="dash-domain-health">
+      <h3>Domain Health</h3>
+      <div class="empty" style="font-size:12px;color:var(--gray)">Calculating domain health...</div>
+    </div>
+  `;
+
+  // Phase 1: Quick stats (5 parallel requests, ~1 second)
+  function kpiText(val, approx) { return approx ? val + '+' : String(val); }
+
+  try {
+    const quick = await atlasApi('/api/atlas/stats/quick');
+    const k = id => document.getElementById(id);
+    if (k('kpi-systems')) k('kpi-systems').textContent = kpiText(quick.systems, quick.systemsApprox);
+    if (k('kpi-datasets')) k('kpi-datasets').textContent = kpiText(quick.datasets, quick.datasetsApprox);
+    if (k('kpi-fields')) k('kpi-fields').textContent = kpiText(quick.fields, quick.fieldsApprox);
+    if (k('kpi-terms')) k('kpi-terms').textContent = kpiText(quick.terms, quick.termsApprox);
+    if (k('kpi-issues')) k('kpi-issues').textContent = String(quick.openIssues);
+
+    // Render issues table immediately from quick data
+    const issueEl = document.getElementById('dash-issues');
+    if (issueEl) {
+      if (quick.topIssues.length === 0) {
+        issueEl.innerHTML = '<h3>Top Issues</h3><div class="empty">No open issues</div>';
+      } else {
+        issueEl.innerHTML = `<h3>Top Issues</h3>
+          <table>
+            <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Dataset</th></tr></thead>
+            <tbody>
+              ${quick.topIssues.map(i => `<tr>
+                <td>${esc(i.title)}</td>
+                <td>${esc(i.type)}</td>
+                <td>${sevBadge(i.severity)}</td>
+                <td>${statBadge(i.status)}</td>
+                <td>${esc(i.dataset)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+      }
+    }
+  } catch (e) {
+    // Quick stats failed — leave skeleton, full stats will try
+  }
+
+  // Phase 2: Full stats in background (accurate counts + health)
+  Promise.all([
+    atlasApi('/api/atlas/stats').catch(() => null),
+    atlasApi('/api/atlas/stats/health').catch(() => null),
+  ]).then(([stats, health]) => {
+    const k = id => document.getElementById(id);
+
+    // Update KPIs with accurate counts (no "+" suffix)
+    if (stats) {
+      if (k('kpi-systems')) k('kpi-systems').textContent = String(stats.systems);
+      if (k('kpi-datasets')) k('kpi-datasets').textContent = String(stats.datasets);
+      if (k('kpi-fields')) k('kpi-fields').textContent = String(stats.fields);
+      if (k('kpi-terms')) k('kpi-terms').textContent = String(stats.terms);
+      if (k('kpi-issues')) k('kpi-issues').textContent = String(stats.openIssues);
+
+      // Update issues table with full data
+      const issueEl = document.getElementById('dash-issues');
+      if (issueEl) {
+        if (stats.topIssues.length === 0) {
+          issueEl.innerHTML = '<h3>Top Issues</h3><div class="empty">No open issues</div>';
+        } else {
+          issueEl.innerHTML = `<h3>Top Issues</h3>
+            <table>
+              <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Dataset</th></tr></thead>
+              <tbody>
+                ${stats.topIssues.map(i => `<tr>
+                  <td>${esc(i.title)}</td>
+                  <td>${esc(i.type)}</td>
+                  <td>${sevBadge(i.severity)}</td>
+                  <td>${statBadge(i.status)}</td>
+                  <td>${esc(i.dataset)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>`;
+        }
+      }
+    }
+
+    // Render coverage bars
+    if (health) {
+      const covEl = document.getElementById('dash-coverage');
+      if (covEl) {
+        covEl.innerHTML = `<h3>Data Coverage</h3>
+          <div class="coverage-bar">
+            <div class="bar-label"><span>Ownership</span><span>${health.ownership}%</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(health.ownership, 3)}%;background:${barColor(health.ownership)}">${health.ownership > 15 ? health.ownership + '%' : ''}</div></div>
+          </div>
+          <div class="coverage-bar">
+            <div class="bar-label"><span>Classification</span><span>${health.classification}%</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(health.classification, 3)}%;background:${barColor(health.classification)}">${health.classification > 15 ? health.classification + '%' : ''}</div></div>
+          </div>
+          <div class="coverage-bar">
+            <div class="bar-label"><span>Definition</span><span>${health.definition}%</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(health.definition, 3)}%;background:${barColor(health.definition)}">${health.definition > 15 ? health.definition + '%' : ''}</div></div>
+          </div>`;
+      }
+
+      // Render domain health table
+      const dhEl = document.getElementById('dash-domain-health');
+      if (dhEl) {
+        if (health.domainHealth.length === 0) {
+          dhEl.innerHTML = '<h3>Domain Health</h3><div class="empty">No domains found</div>';
+        } else {
+          dhEl.innerHTML = `<h3>Domain Health</h3>
+            <table>
+              <thead><tr><th>Domain</th><th>Status</th><th>Systems</th><th>Datasets</th><th>Fields</th><th>Ownership</th><th>Classification</th><th>Definition</th></tr></thead>
+              <tbody>
+                ${health.domainHealth.map(d => `<tr>
+                  <td><strong>${esc(d.domain)}</strong></td>
+                  <td>${statBadge(d.status)}</td>
+                  <td>${d.systems}</td>
+                  <td>${d.datasets}</td>
+                  <td>${d.fields}</td>
+                  <td><span style="color:${barColor(d.ownershipPct)};font-weight:600">${d.ownershipPct}%</span></td>
+                  <td><span style="color:${barColor(d.classificationPct)};font-weight:600">${d.classificationPct}%</span></td>
+                  <td><span style="color:${barColor(d.definitionPct)};font-weight:600">${d.definitionPct}%</span></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>`;
+        }
+      }
+    }
+  });
+}
+
+/* ================================================================
+   2. CATALOG
+   ================================================================ */
+let catalogSubtab = 'datasets';
+let catalogDsFilters = { search: '', Domain: '', System: '', 'Dataset Type': '', Classification: '', Status: '' };
+let catalogFieldFilters = { search: '', Dataset: '', System: '', 'Data Type': '' };
+
+async function loadCatalog() {
+  const el = document.getElementById('tab-catalog');
+  if (!tabLoaded.catalog) {
+    el.innerHTML = `
+      <div class="subtabs" id="catalog-subtabs">
+        <button class="active" onclick="switchCatalogSubtab('datasets')">Datasets</button>
+        <button onclick="switchCatalogSubtab('fields')">Fields</button>
+      </div>
+      <div id="catalog-datasets-panel"></div>
+      <div id="catalog-fields-panel" style="display:none"></div>
+    `;
+    tabLoaded.catalog = true;
+  }
+  if (catalogSubtab === 'datasets') loadCatalogDatasets('reset');
+  else loadCatalogFields('reset');
+}
+
+function switchCatalogSubtab(name) {
+  catalogSubtab = name;
+  document.querySelectorAll('#catalog-subtabs button').forEach(b => b.classList.remove('active'));
+  if (name === 'datasets') {
+    document.querySelector('#catalog-subtabs button:first-child').classList.add('active');
+    document.getElementById('catalog-datasets-panel').style.display = 'block';
+    document.getElementById('catalog-fields-panel').style.display = 'none';
+    loadCatalogDatasets('reset');
+  } else {
+    document.querySelector('#catalog-subtabs button:last-child').classList.add('active');
+    document.getElementById('catalog-datasets-panel').style.display = 'none';
+    document.getElementById('catalog-fields-panel').style.display = 'block';
+    loadCatalogFields('reset');
+  }
+}
+
+async function loadCatalogDatasets(direction) {
+  const panel = document.getElementById('catalog-datasets-panel');
+  const pager = PAGERS.datasets;
+
+  const toolbarHtml = `
+    <div class="toolbar">
+      <input type="text" placeholder="Search datasets..." id="ds-search" value="${esc(catalogDsFilters.search)}" onkeydown="if(event.key==='Enter')applyCatalogDsFilter()">
+      <select id="ds-domain" onchange="applyCatalogDsFilter()">
+        <option value="">All Domains</option>
+      </select>
+      <select id="ds-system" onchange="applyCatalogDsFilter()">
+        <option value="">All Systems</option>
+      </select>
+      <select id="ds-type" onchange="applyCatalogDsFilter()">
+        <option value="">All Types</option>
+        <option value="Table">Table</option>
+        <option value="View">View</option>
+        <option value="Form">Form</option>
+        <option value="Endpoint">Endpoint</option>
+        <option value="File">File</option>
+      </select>
+      <select id="ds-classification" onchange="applyCatalogDsFilter()">
+        <option value="">All Classifications</option>
+      </select>
+      <select id="ds-status" onchange="applyCatalogDsFilter()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Draft">Draft</option>
+        <option value="Deprecated">Deprecated</option>
+      </select>
+    </div>
+  `;
+
+  try {
+    const kqlFilters = {};
+    if (catalogDsFilters.Domain) kqlFilters.Domain = catalogDsFilters.Domain;
+    if (catalogDsFilters.System) kqlFilters.System = catalogDsFilters.System;
+    if (catalogDsFilters['Dataset Type']) kqlFilters['Dataset Type'] = catalogDsFilters['Dataset Type'];
+    if (catalogDsFilters.Classification) kqlFilters.Classification = catalogDsFilters.Classification;
+    if (catalogDsFilters.Status) kqlFilters.Status = catalogDsFilters.Status;
+    const kql = buildKQL(kqlFilters);
+
+    await fetchPage(pager, 'dataset', kql, direction);
+
+    let items = pager.items;
+    if (catalogDsFilters.search) {
+      const q = catalogDsFilters.search.toLowerCase();
+      items = items.filter(s => (v(s, 'Name') || '').toLowerCase().includes(q) || (v(s, 'Description') || '').toLowerCase().includes(q));
+    }
+
+    const tableHtml = items.length === 0
+      ? '<div class="empty">No datasets found</div>'
+      : `<div class="card" style="padding:0;overflow:hidden"><table>
+          <thead><tr><th>Name</th><th>System</th><th>Domain</th><th>Type</th><th>Classification</th><th>Owner</th><th>Status</th><th>Records</th></tr></thead>
+          <tbody>${items.map(s => `<tr class="clickable-row" onclick="openDatasetModal('${s.id}')">
+            <td><strong>${esc(v(s, 'Name'))}</strong></td>
+            <td>${esc(v(s, 'System'))}</td>
+            <td>${esc(v(s, 'Domain'))}</td>
+            <td>${typeBadge(v(s, 'Dataset Type'))}</td>
+            <td>${clsBadge(v(s, 'Classification'))}</td>
+            <td>${esc(v(s, 'Owner'))}</td>
+            <td>${statBadge(v(s, 'Status'))}</td>
+            <td>${esc(v(s, 'Record Count'))}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        ${pgCtrl(pager, 'navCatalogDs')}</div>`;
+
+    panel.innerHTML = toolbarHtml + tableHtml;
+    populateCatalogDsDropdowns();
+  } catch (e) {
+    panel.innerHTML = toolbarHtml + `<div class="empty">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function populateCatalogDsDropdowns() {
+  try {
+    if (!cachedData.domains) {
+      const r = await api('/kapps/atlas/forms/domain/submissions?include=values&limit=100');
+      cachedData.domains = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+    if (!cachedData.systems) {
+      const r = await api('/kapps/atlas/forms/system/submissions?include=values&limit=100');
+      cachedData.systems = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+    if (!cachedData.classifications) {
+      const r = await api('/kapps/atlas/forms/classification/submissions?include=values&limit=100');
+      cachedData.classifications = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+
+    const domSel = document.getElementById('ds-domain');
+    if (domSel && domSel.options.length <= 1) {
+      cachedData.domains.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; domSel.appendChild(o); });
+      domSel.value = catalogDsFilters.Domain || '';
+    }
+    const sysSel = document.getElementById('ds-system');
+    if (sysSel && sysSel.options.length <= 1) {
+      cachedData.systems.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sysSel.appendChild(o); });
+      sysSel.value = catalogDsFilters.System || '';
+    }
+    const clsSel = document.getElementById('ds-classification');
+    if (clsSel && clsSel.options.length <= 1) {
+      cachedData.classifications.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; clsSel.appendChild(o); });
+      clsSel.value = catalogDsFilters.Classification || '';
+    }
+  } catch (e) { /* ignore dropdown population errors */ }
+}
+
+function applyCatalogDsFilter() {
+  catalogDsFilters.search = document.getElementById('ds-search')?.value || '';
+  catalogDsFilters.Domain = document.getElementById('ds-domain')?.value || '';
+  catalogDsFilters.System = document.getElementById('ds-system')?.value || '';
+  catalogDsFilters['Dataset Type'] = document.getElementById('ds-type')?.value || '';
+  catalogDsFilters.Classification = document.getElementById('ds-classification')?.value || '';
+  catalogDsFilters.Status = document.getElementById('ds-status')?.value || '';
+  loadCatalogDatasets('reset');
+}
+
+function navCatalogDs(dir) { loadCatalogDatasets(dir); }
+
+async function openDatasetModal(id) {
+  try {
+    const r = await api(`/submissions/${id}?include=values`);
+    const s = r.submission || r;
+    const name = v(s, 'Name');
+
+    let fieldsHtml = '<div class="empty">Loading fields...</div>';
+    try {
+      const fq = name ? `values[Dataset] = "${name}"` : '';
+      const fr = await api(`/kapps/atlas/forms/field/submissions?include=values&limit=100${fq ? '&q=' + encodeURIComponent(fq) : ''}`);
+      const fields = fr.submissions || [];
+      if (fields.length === 0) {
+        fieldsHtml = '<div class="empty">No fields found</div>';
+      } else {
+        fieldsHtml = `<table>
+          <thead><tr><th>Name</th><th>Data Type</th><th>Nullable</th><th>PK</th><th>FK Target</th><th>Glossary Term</th></tr></thead>
+          <tbody>${fields.map(f => `<tr>
+            <td><strong>${esc(v(f, 'Name'))}</strong></td>
+            <td>${esc(v(f, 'Data Type'))}</td>
+            <td>${esc(v(f, 'Nullable'))}</td>
+            <td>${esc(v(f, 'Primary Key'))}</td>
+            <td>${esc(v(f, 'Foreign Key Target'))}</td>
+            <td>${esc(v(f, 'Glossary Term'))}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }
+    } catch (e) { fieldsHtml = '<div class="empty">Error loading fields</div>'; }
+
+    openModal(`
+      <h2>${esc(name)} ${statBadge(v(s, 'Status'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><label>System</label><div class="val">${esc(v(s, 'System'))}</div></div>
+        <div class="detail-field"><label>Domain</label><div class="val">${esc(v(s, 'Domain'))}</div></div>
+        <div class="detail-field"><label>Type</label><div class="val">${typeBadge(v(s, 'Dataset Type'))}</div></div>
+        <div class="detail-field"><label>Classification</label><div class="val">${clsBadge(v(s, 'Classification'))}</div></div>
+        <div class="detail-field"><label>Owner</label><div class="val">${esc(v(s, 'Owner'))}</div></div>
+        <div class="detail-field"><label>Schema</label><div class="val">${esc(v(s, 'Schema Name'))}</div></div>
+        <div class="detail-field"><label>Record Count</label><div class="val">${esc(v(s, 'Record Count'))}</div></div>
+        <div class="detail-field"><label>Source of Truth</label><div class="val">${esc(v(s, 'Source of Truth'))}</div></div>
+        <div class="detail-field"><label>Refresh Frequency</label><div class="val">${esc(v(s, 'Refresh Frequency'))}</div></div>
+        <div class="detail-field"><label>Version</label><div class="val">${esc(v(s, 'Version'))}</div></div>
+      </div>
+      <div class="detail-field" style="margin-bottom:16px"><label>Description</label><div class="val">${esc(v(s, 'Description'))}</div></div>
+      <div class="detail-field" style="margin-bottom:16px"><label>Tags</label><div class="val">${esc(v(s, 'Tags'))}</div></div>
+      <div class="section-title">Fields</div>
+      ${fieldsHtml}
+    `);
+  } catch (e) { toast('Error loading dataset: ' + e.message); }
+}
+
+/* -- Fields subtab -- */
+async function loadCatalogFields(direction) {
+  const panel = document.getElementById('catalog-fields-panel');
+  const pager = PAGERS.fields;
+
+  const toolbarHtml = `
+    <div class="toolbar">
+      <input type="text" placeholder="Search fields..." id="fld-search" value="${esc(catalogFieldFilters.search)}" onkeydown="if(event.key==='Enter')applyCatalogFieldFilter()">
+      <select id="fld-dataset" onchange="applyCatalogFieldFilter()">
+        <option value="">All Datasets</option>
+      </select>
+      <select id="fld-system" onchange="applyCatalogFieldFilter()">
+        <option value="">All Systems</option>
+      </select>
+      <select id="fld-datatype" onchange="applyCatalogFieldFilter()">
+        <option value="">All Data Types</option>
+        <option value="String">String</option>
+        <option value="Integer">Integer</option>
+        <option value="Decimal">Decimal</option>
+        <option value="Boolean">Boolean</option>
+        <option value="Date">Date</option>
+        <option value="DateTime">DateTime</option>
+        <option value="Text">Text</option>
+        <option value="UUID">UUID</option>
+        <option value="JSON">JSON</option>
+      </select>
+    </div>
+  `;
+
+  try {
+    const kqlFilters = {};
+    if (catalogFieldFilters.Dataset) kqlFilters.Dataset = catalogFieldFilters.Dataset;
+    if (catalogFieldFilters.System) kqlFilters.System = catalogFieldFilters.System;
+    if (catalogFieldFilters['Data Type']) kqlFilters['Data Type'] = catalogFieldFilters['Data Type'];
+    const kql = buildKQL(kqlFilters);
+
+    await fetchPage(pager, 'field', kql, direction);
+
+    let items = pager.items;
+    if (catalogFieldFilters.search) {
+      const q = catalogFieldFilters.search.toLowerCase();
+      items = items.filter(s => (v(s, 'Name') || '').toLowerCase().includes(q) || (v(s, 'Business Definition') || '').toLowerCase().includes(q));
+    }
+
+    const tableHtml = items.length === 0
+      ? '<div class="empty">No fields found</div>'
+      : `<div class="card" style="padding:0;overflow:hidden"><table>
+          <thead><tr><th>Name</th><th>Dataset</th><th>System</th><th>Data Type</th><th>Nullable</th><th>PK</th><th>FK Target</th><th>Glossary Term</th></tr></thead>
+          <tbody>${items.map(s => `<tr class="clickable-row" onclick="openFieldModal('${s.id}')">
+            <td><strong>${esc(v(s, 'Name'))}</strong></td>
+            <td>${esc(v(s, 'Dataset'))}</td>
+            <td>${esc(v(s, 'System'))}</td>
+            <td>${esc(v(s, 'Data Type'))}</td>
+            <td>${esc(v(s, 'Nullable'))}</td>
+            <td>${esc(v(s, 'Primary Key'))}</td>
+            <td>${esc(v(s, 'Foreign Key Target'))}</td>
+            <td>${esc(v(s, 'Glossary Term'))}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        ${pgCtrl(pager, 'navCatalogFields')}</div>`;
+
+    panel.innerHTML = toolbarHtml + tableHtml;
+    populateCatalogFieldDropdowns();
+  } catch (e) {
+    panel.innerHTML = toolbarHtml + `<div class="empty">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function populateCatalogFieldDropdowns() {
+  try {
+    if (!cachedData.datasetNames) {
+      const r = await api('/kapps/atlas/forms/dataset/submissions?include=values&limit=200');
+      cachedData.datasetNames = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+    if (!cachedData.systems) {
+      const r = await api('/kapps/atlas/forms/system/submissions?include=values&limit=100');
+      cachedData.systems = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+
+    const dsSel = document.getElementById('fld-dataset');
+    if (dsSel && dsSel.options.length <= 1) {
+      cachedData.datasetNames.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; dsSel.appendChild(o); });
+      dsSel.value = catalogFieldFilters.Dataset || '';
+    }
+    const sysSel = document.getElementById('fld-system');
+    if (sysSel && sysSel.options.length <= 1) {
+      cachedData.systems.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sysSel.appendChild(o); });
+      sysSel.value = catalogFieldFilters.System || '';
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function applyCatalogFieldFilter() {
+  catalogFieldFilters.search = document.getElementById('fld-search')?.value || '';
+  catalogFieldFilters.Dataset = document.getElementById('fld-dataset')?.value || '';
+  catalogFieldFilters.System = document.getElementById('fld-system')?.value || '';
+  catalogFieldFilters['Data Type'] = document.getElementById('fld-datatype')?.value || '';
+  loadCatalogFields('reset');
+}
+
+function navCatalogFields(dir) { loadCatalogFields(dir); }
+
+async function openFieldModal(id) {
+  try {
+    const r = await api(`/submissions/${id}?include=values`);
+    const s = r.submission || r;
+    openModal(`
+      <h2>${esc(v(s, 'Name'))} ${statBadge(v(s, 'Status'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Dataset</label><div class="val">${esc(v(s, 'Dataset'))}</div></div>
+        <div class="detail-field"><label>System</label><div class="val">${esc(v(s, 'System'))}</div></div>
+        <div class="detail-field"><label>Data Type</label><div class="val">${esc(v(s, 'Data Type'))}</div></div>
+        <div class="detail-field"><label>Max Length</label><div class="val">${esc(v(s, 'Max Length'))}</div></div>
+        <div class="detail-field"><label>Nullable</label><div class="val">${esc(v(s, 'Nullable'))}</div></div>
+        <div class="detail-field"><label>Primary Key</label><div class="val">${esc(v(s, 'Primary Key'))}</div></div>
+        <div class="detail-field"><label>Foreign Key Target</label><div class="val">${esc(v(s, 'Foreign Key Target'))}</div></div>
+        <div class="detail-field"><label>Default Value</label><div class="val">${esc(v(s, 'Default Value'))}</div></div>
+        <div class="detail-field"><label>Glossary Term</label><div class="val">${esc(v(s, 'Glossary Term'))}</div></div>
+        <div class="detail-field"><label>Classification</label><div class="val">${clsBadge(v(s, 'Classification'))}</div></div>
+        <div class="detail-field"><label>Sort Order</label><div class="val">${esc(v(s, 'Sort Order'))}</div></div>
+        <div class="detail-field"><label>Tags</label><div class="val">${esc(v(s, 'Tags'))}</div></div>
+      </div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Business Definition</label><div class="val">${esc(v(s, 'Business Definition')) || '<em style="color:var(--gray)">Not defined</em>'}</div></div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Description</label><div class="val">${esc(v(s, 'Description')) || '-'}</div></div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Allowed Values</label><div class="val">${esc(v(s, 'Allowed Values')) || '-'}</div></div>
+      <div class="detail-field"><label>Example Values</label><div class="val">${esc(v(s, 'Example Values')) || '-'}</div></div>
+    `);
+  } catch (e) { toast('Error loading field: ' + e.message); }
+}
+
+/* ================================================================
+   3. DOMAINS
+   ================================================================ */
+let domainDrillDown = null;
+
+async function loadDomains() {
+  const el = document.getElementById('tab-domains');
+  if (domainDrillDown) { showDomainDrillDown(); return; }
+  el.innerHTML = '<div class="empty">Loading domains...</div>';
+  try {
+    const [domR, sysR, dsR] = await Promise.all([
+      api('/kapps/atlas/forms/domain/submissions?include=values&limit=100'),
+      api('/kapps/atlas/forms/system/submissions?include=values&limit=100'),
+      api('/kapps/atlas/forms/dataset/submissions?include=values&limit=200'),
+    ]);
+    const domains = domR.submissions || [];
+    const systems = sysR.submissions || [];
+    const datasets = dsR.submissions || [];
+
+    cachedData.domainsAll = domains;
+    cachedData.systemsAll = systems;
+    cachedData.datasetsAll = datasets;
+
+    if (domains.length === 0) {
+      el.innerHTML = '<div class="empty">No domains found</div>';
+      return;
+    }
+
+    el.innerHTML = `<div class="grid-3">${domains.map(d => {
+      const dName = v(d, 'Name');
+      const sysCt = systems.filter(s => v(s, 'Domain') === dName).length;
+      const dsCt = datasets.filter(s => v(s, 'Domain') === dName).length;
+      return `<div class="card clickable-card" onclick="drillDomain('${esc(dName)}')">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+          <h3 style="margin:0;font-size:16px;color:var(--blue);text-transform:none;letter-spacing:0">${esc(dName)}</h3>
+          ${statBadge(v(d, 'Status'))}
+        </div>
+        <p style="color:var(--gray);font-size:13px;margin-bottom:12px">${esc(v(d, 'Description')) || 'No description'}</p>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--gray)">
+          <span>Owner: <strong>${esc(v(d, 'Owner')) || '-'}</strong></span>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <span class="count-badge">Systems: ${sysCt}</span>
+          <span class="count-badge">Datasets: ${dsCt}</span>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  } catch (e) { el.innerHTML = `<div class="empty">Error: ${esc(e.message)}</div>`; }
+}
+
+function drillDomain(name) {
+  domainDrillDown = name;
+  showDomainDrillDown();
+}
+
+function showDomainDrillDown() {
+  const el = document.getElementById('tab-domains');
+  const name = domainDrillDown;
+  const systems = (cachedData.systemsAll || []).filter(s => v(s, 'Domain') === name);
+  const datasets = (cachedData.datasetsAll || []).filter(s => v(s, 'Domain') === name);
+
+  el.innerHTML = `
+    <div class="drill-header">
+      <button class="back-btn" onclick="exitDomainDrill()">&larr; Back</button>
+      <h2>${esc(name)}</h2>
+    </div>
+    <div class="section-title">Systems (${systems.length})</div>
+    ${systems.length === 0 ? '<div class="empty">No systems in this domain</div>' : `
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Technology</th><th>Environment</th><th>Owner</th><th>Status</th></tr></thead>
+      <tbody>${systems.map(s => `<tr>
+        <td><strong>${esc(v(s, 'Name'))}</strong></td>
+        <td>${typeBadge(v(s, 'System Type'))}</td>
+        <td>${esc(v(s, 'Technology'))}</td>
+        <td>${envBadge(v(s, 'Environment'))}</td>
+        <td>${esc(v(s, 'Owner'))}</td>
+        <td>${statBadge(v(s, 'Status'))}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`}
+    <div class="section-title" style="margin-top:24px">Datasets (${datasets.length})</div>
+    ${datasets.length === 0 ? '<div class="empty">No datasets in this domain</div>' : `
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Name</th><th>System</th><th>Type</th><th>Classification</th><th>Owner</th><th>Status</th></tr></thead>
+      <tbody>${datasets.map(s => `<tr class="clickable-row" onclick="openDatasetModal('${s.id}')">
+        <td><strong>${esc(v(s, 'Name'))}</strong></td>
+        <td>${esc(v(s, 'System'))}</td>
+        <td>${typeBadge(v(s, 'Dataset Type'))}</td>
+        <td>${clsBadge(v(s, 'Classification'))}</td>
+        <td>${esc(v(s, 'Owner'))}</td>
+        <td>${statBadge(v(s, 'Status'))}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+}
+
+function exitDomainDrill() {
+  domainDrillDown = null;
+  loadDomains();
+}
+
+/* ================================================================
+   4. SYSTEMS
+   ================================================================ */
+let systemDrillDown = null;
+
+async function loadSystems() {
+  const el = document.getElementById('tab-systems');
+  if (systemDrillDown) { showSystemDrillDown(); return; }
+  el.innerHTML = '<div class="empty">Loading systems...</div>';
+  try {
+    const [sysR, dsR] = await Promise.all([
+      api('/kapps/atlas/forms/system/submissions?include=values&limit=100'),
+      api('/kapps/atlas/forms/dataset/submissions?include=values&limit=200'),
+    ]);
+    const systems = sysR.submissions || [];
+    const datasets = dsR.submissions || [];
+
+    cachedData.systemsAll = systems;
+    cachedData.datasetsAll = datasets;
+
+    if (systems.length === 0) {
+      el.innerHTML = '<div class="empty">No systems found</div>';
+      return;
+    }
+
+    el.innerHTML = `<div class="grid-3">${systems.map(s => {
+      const sName = v(s, 'Name');
+      const dsCt = datasets.filter(d => v(d, 'System') === sName).length;
+      return `<div class="card clickable-card" onclick="drillSystem('${esc(sName)}')">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+          <h3 style="margin:0;font-size:16px;color:var(--blue);text-transform:none;letter-spacing:0">${esc(sName)}</h3>
+          ${statBadge(v(s, 'Status'))}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          ${typeBadge(v(s, 'System Type'))}
+          ${envBadge(v(s, 'Environment'))}
+        </div>
+        <p style="color:var(--gray);font-size:13px;margin-bottom:8px">${esc(v(s, 'Technology'))} ${v(s, 'Domain') ? '&middot; ' + esc(v(s, 'Domain')) : ''}</p>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--gray)">
+          <span>Owner: <strong>${esc(v(s, 'Owner')) || '-'}</strong></span>
+        </div>
+        <div style="margin-top:8px">
+          <span class="count-badge">Datasets: ${dsCt}</span>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  } catch (e) { el.innerHTML = `<div class="empty">Error: ${esc(e.message)}</div>`; }
+}
+
+function drillSystem(name) {
+  systemDrillDown = name;
+  showSystemDrillDown();
+}
+
+function showSystemDrillDown() {
+  const el = document.getElementById('tab-systems');
+  const name = systemDrillDown;
+  const datasets = (cachedData.datasetsAll || []).filter(s => v(s, 'System') === name);
+
+  el.innerHTML = `
+    <div class="drill-header">
+      <button class="back-btn" onclick="exitSystemDrill()">&larr; Back</button>
+      <h2>${esc(name)}</h2>
+    </div>
+    <div class="section-title">Datasets (${datasets.length})</div>
+    ${datasets.length === 0 ? '<div class="empty">No datasets in this system</div>' : `
+    <div class="card" style="padding:0;overflow:hidden"><table>
+      <thead><tr><th>Name</th><th>Domain</th><th>Type</th><th>Classification</th><th>Owner</th><th>Status</th><th>Records</th></tr></thead>
+      <tbody>${datasets.map(s => `<tr class="clickable-row" onclick="openDatasetModal('${s.id}')">
+        <td><strong>${esc(v(s, 'Name'))}</strong></td>
+        <td>${esc(v(s, 'Domain'))}</td>
+        <td>${typeBadge(v(s, 'Dataset Type'))}</td>
+        <td>${clsBadge(v(s, 'Classification'))}</td>
+        <td>${esc(v(s, 'Owner'))}</td>
+        <td>${statBadge(v(s, 'Status'))}</td>
+        <td>${esc(v(s, 'Record Count'))}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+}
+
+function exitSystemDrill() {
+  systemDrillDown = null;
+  loadSystems();
+}
+
+/* ================================================================
+   5. GLOSSARY
+   ================================================================ */
+let glossaryFilters = { search: '', Domain: '', Status: '' };
+
+async function loadGlossary(direction) {
+  direction = direction || 'reset';
+  const el = document.getElementById('tab-glossary');
+  const pager = PAGERS.glossary;
+
+  const toolbarHtml = `
+    <div class="toolbar">
+      <input type="text" placeholder="Search terms..." id="gls-search" value="${esc(glossaryFilters.search)}" onkeydown="if(event.key==='Enter')applyGlossaryFilter()">
+      <select id="gls-domain" onchange="applyGlossaryFilter()">
+        <option value="">All Domains</option>
+      </select>
+      <select id="gls-status" onchange="applyGlossaryFilter()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Draft">Draft</option>
+        <option value="Proposed">Proposed</option>
+        <option value="Deprecated">Deprecated</option>
+      </select>
+    </div>
+  `;
+
+  try {
+    const kqlFilters = {};
+    if (glossaryFilters.Domain) kqlFilters.Domain = glossaryFilters.Domain;
+    if (glossaryFilters.Status) kqlFilters.Status = glossaryFilters.Status;
+    const kql = buildKQL(kqlFilters);
+
+    await fetchPage(pager, 'glossary-term', kql, direction);
+
+    // Fetch field counts (how many fields reference each term)
+    if (!cachedData.fieldTermCounts) {
+      try {
+        const fr = await api('/kapps/atlas/forms/field/submissions?include=values&limit=200');
+        const allFields = fr.submissions || [];
+        const counts = {};
+        allFields.forEach(f => {
+          const t = v(f, 'Glossary Term');
+          if (t) counts[t] = (counts[t] || 0) + 1;
+        });
+        cachedData.fieldTermCounts = counts;
+      } catch (e) { cachedData.fieldTermCounts = {}; }
+    }
+
+    let items = pager.items;
+    if (glossaryFilters.search) {
+      const q = glossaryFilters.search.toLowerCase();
+      items = items.filter(s => (v(s, 'Name') || '').toLowerCase().includes(q) || (v(s, 'Definition') || '').toLowerCase().includes(q));
+    }
+
+    const tableHtml = items.length === 0
+      ? '<div class="empty">No glossary terms found</div>'
+      : `<div class="card" style="padding:0;overflow:hidden"><table>
+          <thead><tr><th>Term</th><th>Domain</th><th>Owner</th><th>Status</th><th>Version</th><th>Field Count</th></tr></thead>
+          <tbody>${items.map(s => {
+            const tName = v(s, 'Name');
+            const fieldCt = cachedData.fieldTermCounts[tName] || 0;
+            return `<tr class="clickable-row" onclick="openGlossaryModal('${s.id}')">
+              <td><strong>${esc(tName)}</strong></td>
+              <td>${esc(v(s, 'Domain'))}</td>
+              <td>${esc(v(s, 'Owner'))}</td>
+              <td>${statBadge(v(s, 'Status'))}</td>
+              <td>${esc(v(s, 'Version'))}</td>
+              <td><span class="count-badge">${fieldCt}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+        ${pgCtrl(pager, 'navGlossary')}</div>`;
+
+    el.innerHTML = toolbarHtml + tableHtml;
+    populateGlossaryDropdowns();
+  } catch (e) {
+    el.innerHTML = toolbarHtml + `<div class="empty">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function populateGlossaryDropdowns() {
+  try {
+    if (!cachedData.domains) {
+      const r = await api('/kapps/atlas/forms/domain/submissions?include=values&limit=100');
+      cachedData.domains = (r.submissions || []).map(s => v(s, 'Name')).filter(Boolean).sort();
+    }
+    const domSel = document.getElementById('gls-domain');
+    if (domSel && domSel.options.length <= 1) {
+      cachedData.domains.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; domSel.appendChild(o); });
+      domSel.value = glossaryFilters.Domain || '';
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function applyGlossaryFilter() {
+  glossaryFilters.search = document.getElementById('gls-search')?.value || '';
+  glossaryFilters.Domain = document.getElementById('gls-domain')?.value || '';
+  glossaryFilters.Status = document.getElementById('gls-status')?.value || '';
+  loadGlossary('reset');
+}
+
+function navGlossary(dir) { loadGlossary(dir); }
+
+async function openGlossaryModal(id) {
+  try {
+    const r = await api(`/submissions/${id}?include=values`);
+    const s = r.submission || r;
+    const tName = v(s, 'Name');
+
+    let linkedFieldsHtml = '<div class="empty">Loading linked fields...</div>';
+    try {
+      const fq = tName ? `values[Glossary Term] = "${tName}"` : '';
+      const fr = await api(`/kapps/atlas/forms/field/submissions?include=values&limit=100${fq ? '&q=' + encodeURIComponent(fq) : ''}`);
+      const fields = fr.submissions || [];
+      if (fields.length === 0) {
+        linkedFieldsHtml = '<div class="empty">No fields linked to this term</div>';
+      } else {
+        linkedFieldsHtml = `<table>
+          <thead><tr><th>Field</th><th>Dataset</th><th>System</th><th>Data Type</th></tr></thead>
+          <tbody>${fields.map(f => `<tr>
+            <td><strong>${esc(v(f, 'Name'))}</strong></td>
+            <td>${esc(v(f, 'Dataset'))}</td>
+            <td>${esc(v(f, 'System'))}</td>
+            <td>${esc(v(f, 'Data Type'))}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }
+    } catch (e) { linkedFieldsHtml = '<div class="empty">Error loading linked fields</div>'; }
+
+    openModal(`
+      <h2>${esc(tName)} ${statBadge(v(s, 'Status'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Domain</label><div class="val">${esc(v(s, 'Domain'))}</div></div>
+        <div class="detail-field"><label>Owner</label><div class="val">${esc(v(s, 'Owner'))}</div></div>
+        <div class="detail-field"><label>Version</label><div class="val">${esc(v(s, 'Version'))}</div></div>
+        <div class="detail-field"><label>Tags</label><div class="val">${esc(v(s, 'Tags'))}</div></div>
+      </div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Definition</label><div class="val">${esc(v(s, 'Definition')) || '<em style="color:var(--gray)">Not defined</em>'}</div></div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Synonyms</label><div class="val">${esc(v(s, 'Synonyms')) || '-'}</div></div>
+      <div class="detail-field" style="margin-bottom:16px"><label>Related Terms</label><div class="val">${esc(v(s, 'Related Terms')) || '-'}</div></div>
+      <div class="section-title">Linked Fields</div>
+      ${linkedFieldsHtml}
+    `);
+  } catch (e) { toast('Error loading term: ' + e.message); }
+}
+
+/* ================================================================
+   6. ISSUES
+   ================================================================ */
+let issueFilters = { Status: 'Open', 'Issue Type': '', Severity: '' };
+
+async function loadIssues(direction) {
+  direction = direction || 'reset';
+  const el = document.getElementById('tab-issues');
+  const pager = PAGERS.issues;
+
+  const toolbarHtml = `
+    <div class="toolbar">
+      <select id="iss-status" onchange="applyIssueFilter()">
+        <option value="">All Statuses</option>
+        <option value="Open" ${issueFilters.Status === 'Open' ? 'selected' : ''}>Open</option>
+        <option value="In Review" ${issueFilters.Status === 'In Review' ? 'selected' : ''}>In Review</option>
+        <option value="Resolved" ${issueFilters.Status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+        <option value="Accepted" ${issueFilters.Status === 'Accepted' ? 'selected' : ''}>Accepted</option>
+        <option value="Rejected" ${issueFilters.Status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+      </select>
+      <select id="iss-type" onchange="applyIssueFilter()">
+        <option value="">All Types</option>
+        <option value="Missing Metadata">Missing Metadata</option>
+        <option value="Inconsistent Naming">Inconsistent Naming</option>
+        <option value="Data Quality">Data Quality</option>
+        <option value="Schema Drift">Schema Drift</option>
+        <option value="Orphaned Entity">Orphaned Entity</option>
+        <option value="Classification Gap">Classification Gap</option>
+        <option value="Ownership Gap">Ownership Gap</option>
+      </select>
+      <select id="iss-severity" onchange="applyIssueFilter()">
+        <option value="">All Severities</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+  `;
+
+  try {
+    const kqlFilters = {};
+    if (issueFilters.Status) kqlFilters.Status = issueFilters.Status;
+    if (issueFilters['Issue Type']) kqlFilters['Issue Type'] = issueFilters['Issue Type'];
+    if (issueFilters.Severity) kqlFilters.Severity = issueFilters.Severity;
+
+    // Build KQL carefully: use single-field for one filter, compound for two
+    let kql = '';
+    const activeFilters = Object.entries(kqlFilters).filter(([, val]) => val);
+    if (activeFilters.length === 1) {
+      kql = `values[${activeFilters[0][0]}] = "${activeFilters[0][1]}"`;
+    } else if (activeFilters.length >= 2) {
+      // Try compound; if it fails the server will 400 and we fall back
+      kql = activeFilters.map(([k, val]) => `values[${k}] = "${val}"`).join(' AND ');
+    }
+
+    await fetchPage(pager, 'issue', kql, direction);
+
+    const items = pager.items;
+
+    const tableHtml = items.length === 0
+      ? '<div class="empty">No issues found</div>'
+      : `<div class="card" style="padding:0;overflow:hidden"><table>
+          <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Dataset</th><th>System</th><th>Assigned To</th></tr></thead>
+          <tbody>${items.map(s => `<tr class="clickable-row" onclick="openIssueModal('${s.id}')">
+            <td><strong>${esc(v(s, 'Title'))}</strong></td>
+            <td>${esc(v(s, 'Issue Type'))}</td>
+            <td>${sevBadge(v(s, 'Severity'))}</td>
+            <td>${statBadge(v(s, 'Status'))}</td>
+            <td>${esc(v(s, 'Related Dataset'))}</td>
+            <td>${esc(v(s, 'Related System'))}</td>
+            <td>${esc(v(s, 'Assigned To'))}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+        ${pgCtrl(pager, 'navIssues')}</div>`;
+
+    el.innerHTML = toolbarHtml + tableHtml;
+  } catch (e) {
+    // On KQL error (compound index missing), fall back to single filter
+    if (e.message.includes('400') && Object.values(issueFilters).filter(Boolean).length > 1) {
+      const primary = issueFilters.Status ? { Status: issueFilters.Status } : {};
+      const kql = buildKQL(primary);
+      try {
+        await fetchPage(pager, 'issue', kql, direction);
+        let items = pager.items;
+        // Client-side filter for remaining filters
+        if (issueFilters['Issue Type']) items = items.filter(s => v(s, 'Issue Type') === issueFilters['Issue Type']);
+        if (issueFilters.Severity) items = items.filter(s => v(s, 'Severity') === issueFilters.Severity);
+        if (!issueFilters.Status && issueFilters['Issue Type']) {
+          // already filtered
+        }
+
+        const tableHtml = items.length === 0
+          ? '<div class="empty">No issues found</div>'
+          : `<div class="card" style="padding:0;overflow:hidden"><table>
+              <thead><tr><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th>Dataset</th><th>System</th><th>Assigned To</th></tr></thead>
+              <tbody>${items.map(s => `<tr class="clickable-row" onclick="openIssueModal('${s.id}')">
+                <td><strong>${esc(v(s, 'Title'))}</strong></td>
+                <td>${esc(v(s, 'Issue Type'))}</td>
+                <td>${sevBadge(v(s, 'Severity'))}</td>
+                <td>${statBadge(v(s, 'Status'))}</td>
+                <td>${esc(v(s, 'Related Dataset'))}</td>
+                <td>${esc(v(s, 'Related System'))}</td>
+                <td>${esc(v(s, 'Assigned To'))}</td>
+              </tr>`).join('')}</tbody>
+            </table>
+            ${pgCtrl(pager, 'navIssues')}</div>`;
+
+        el.innerHTML = toolbarHtml + tableHtml;
+      } catch (e2) {
+        el.innerHTML = toolbarHtml + `<div class="empty">Error: ${esc(e2.message)}</div>`;
+      }
+    } else {
+      el.innerHTML = toolbarHtml + `<div class="empty">Error: ${esc(e.message)}</div>`;
+    }
+  }
+}
+
+function applyIssueFilter() {
+  issueFilters.Status = document.getElementById('iss-status')?.value || '';
+  issueFilters['Issue Type'] = document.getElementById('iss-type')?.value || '';
+  issueFilters.Severity = document.getElementById('iss-severity')?.value || '';
+  loadIssues('reset');
+}
+
+function navIssues(dir) { loadIssues(dir); }
+
+async function openIssueModal(id) {
+  try {
+    const r = await api(`/submissions/${id}?include=values`);
+    const s = r.submission || r;
+
+    openModal(`
+      <h2>${esc(v(s, 'Title'))} ${sevBadge(v(s, 'Severity'))}</h2>
+      <div style="margin-bottom:16px">${statBadge(v(s, 'Status'))}</div>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Issue Type</label><div class="val">${esc(v(s, 'Issue Type'))}</div></div>
+        <div class="detail-field"><label>Severity</label><div class="val">${sevBadge(v(s, 'Severity'))}</div></div>
+        <div class="detail-field"><label>Assigned To</label><div class="val">${esc(v(s, 'Assigned To'))}</div></div>
+        <div class="detail-field"><label>Related Domain</label><div class="val">${esc(v(s, 'Related Domain'))}</div></div>
+        <div class="detail-field"><label>Related System</label><div class="val">${esc(v(s, 'Related System'))}</div></div>
+        <div class="detail-field"><label>Related Dataset</label><div class="val">${esc(v(s, 'Related Dataset'))}</div></div>
+        <div class="detail-field"><label>Related Field</label><div class="val">${esc(v(s, 'Related Field'))}</div></div>
+        <div class="detail-field"><label>Related Term</label><div class="val">${esc(v(s, 'Related Term'))}</div></div>
+      </div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Description</label><div class="val">${esc(v(s, 'Description')) || '-'}</div></div>
+      <div class="detail-field" style="margin-bottom:12px"><label>Evidence</label><div class="val">${esc(v(s, 'Evidence')) || '-'}</div></div>
+      <div class="detail-field" style="margin-bottom:16px"><label>Recommendation</label><div class="val">${esc(v(s, 'Recommendation')) || '-'}</div></div>
+      <div class="detail-field" style="margin-bottom:16px"><label>Resolution</label><div class="val">${esc(v(s, 'Resolution')) || '-'}</div></div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;display:flex;gap:12px;align-items:center">
+        <label style="font-size:12px;font-weight:600;color:var(--gray)">Update Status:</label>
+        <select id="issue-status-update" style="min-width:140px">
+          <option value="Open" ${v(s, 'Status') === 'Open' ? 'selected' : ''}>Open</option>
+          <option value="In Review" ${v(s, 'Status') === 'In Review' ? 'selected' : ''}>In Review</option>
+          <option value="Resolved" ${v(s, 'Status') === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          <option value="Accepted" ${v(s, 'Status') === 'Accepted' ? 'selected' : ''}>Accepted</option>
+          <option value="Rejected" ${v(s, 'Status') === 'Rejected' ? 'selected' : ''}>Rejected</option>
+        </select>
+        <button class="btn-primary btn-small" onclick="updateIssueStatus('${s.id}')">Save</button>
+      </div>
+    `);
+  } catch (e) { toast('Error loading issue: ' + e.message); }
+}
+
+async function updateIssueStatus(id) {
+  const newStatus = document.getElementById('issue-status-update')?.value;
+  if (!newStatus) return;
+  try {
+    await api(`/submissions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values: { Status: newStatus } }),
+    });
+    toast('Issue status updated to ' + newStatus);
+    closeModal();
+    loadIssues('reset');
+  } catch (e) { toast('Error updating issue: ' + e.message); }
+}
+
+/* ================================================================
+   7. GRAPH
+   ================================================================ */
+const GRAPH_COLORS = {
+  dataset: '#F36C24',
+  system: '#242F4D',
+  domain: '#7B1FA2',
+  field: '#00695C',
+  'glossary-term': '#283593',
+};
+const GRAPH_LABELS = {
+  dataset: 'Dataset',
+  system: 'System',
+  domain: 'Domain',
+  field: 'Field',
+  'glossary-term': 'Term',
+};
+
+let graphEntityType = 'dataset';
+let graphEntityList = [];
+let graphHistory = [];
+
+async function loadGraph() {
+  const el = document.getElementById('tab-graph');
+  if (tabLoaded.graph) return;
+  tabLoaded.graph = true;
+
+  el.innerHTML = `
+    <div class="graph-controls">
+      <select id="graph-type" onchange="onGraphTypeChange()">
+        <option value="dataset">Dataset</option>
+        <option value="system">System</option>
+        <option value="domain">Domain</option>
+        <option value="field">Field</option>
+        <option value="glossary-term">Glossary Term</option>
+      </select>
+      <select id="graph-entity">
+        <option value="">-- Select Entity --</option>
+      </select>
+      <button class="btn-primary" onclick="exploreGraph()">Explore</button>
+      <button class="btn-secondary" id="graph-back-btn" onclick="graphGoBack()" style="display:none" title="Go back to previous entity">Back</button>
+    </div>
+    <div class="graph-area" id="graph-svg-container">
+      <svg id="graph-svg" width="900" height="700" viewBox="0 0 900 700">
+        <text x="450" y="350" text-anchor="middle" fill="#5F6368" font-size="14" font-style="italic">Select an entity and click Explore</text>
+      </svg>
+    </div>
+    <div class="graph-legend">
+      <span><span class="dot" style="background:#F36C24"></span> Dataset</span>
+      <span><span class="dot" style="background:#242F4D"></span> System</span>
+      <span><span class="dot" style="background:#7B1FA2"></span> Domain</span>
+      <span><span class="dot" style="background:#00695C"></span> Field</span>
+      <span><span class="dot" style="background:#283593"></span> Term</span>
+    </div>
+  `;
+
+  onGraphTypeChange();
+}
+
+async function onGraphTypeChange() {
+  const typeSelect = document.getElementById('graph-type');
+  const entitySelect = document.getElementById('graph-entity');
+  graphEntityType = typeSelect.value;
+
+  entitySelect.innerHTML = '<option value="">Loading...</option>';
+  try {
+    const formSlug = graphEntityType;
+    const r = await api(`/kapps/atlas/forms/${formSlug}/submissions?include=values&limit=100`);
+    graphEntityList = (r.submissions || []).map(s => ({
+      id: s.id,
+      name: v(s, 'Name') || v(s, 'Title') || '(unnamed)',
+    }));
+
+    entitySelect.innerHTML = '<option value="">-- Select Entity --</option>';
+    graphEntityList.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.name;
+      o.textContent = e.name;
+      entitySelect.appendChild(o);
+    });
+  } catch (e) {
+    entitySelect.innerHTML = '<option value="">Error loading</option>';
+  }
+}
+
+async function exploreGraph(entityName) {
+  const name = entityName || document.getElementById('graph-entity')?.value;
+  if (!name) { toast('Select an entity first'); return; }
+
+  const svg = document.getElementById('graph-svg');
+  svg.setAttribute('viewBox', '0 0 900 700');
+  svg.setAttribute('width', '900');
+  svg.setAttribute('height', '700');
+  svg.innerHTML = '<text x="450" y="350" text-anchor="middle" fill="#5F6368" font-size="14">Loading relationships...</text>';
+
+  const CX = 450, CY = 350;
+
+  try {
+    const relR = await api('/kapps/atlas/forms/relationship/submissions?include=values&limit=200');
+    const rels = relR.submissions || [];
+
+    // Helper: find relationships involving an entity
+    function relsFor(entityName) {
+      return rels.filter(r => {
+        const src = v(r, 'Source Entity');
+        const tgt = v(r, 'Target Entity');
+        return src === entityName || tgt === entityName || src.startsWith(entityName + '.') || tgt.startsWith(entityName + '.');
+      });
+    }
+
+    // Helper: extract other node from a relationship
+    function otherNode(rel, fromName) {
+      const src = v(rel, 'Source Entity');
+      const tgt = v(rel, 'Target Entity');
+      const srcType = v(rel, 'Source Entity Type').toLowerCase().replace(/\s+/g, '-');
+      const tgtType = v(rel, 'Target Entity Type').toLowerCase().replace(/\s+/g, '-');
+      const isSource = src === fromName || src.startsWith(fromName + '.');
+      return { name: isSource ? tgt : src, type: isSource ? tgtType : srcType };
+    }
+
+    // Build nodes and edges
+    const nodes = new Map();
+    const edges = [];
+    const currentType = graphEntityType;
+    nodes.set(name, { name, type: currentType, level: 0 });
+
+    // ── Level 1: relationships from center ──
+    const hop1Rels = relsFor(name);
+    const hop1Names = new Set();
+    hop1Rels.forEach(r => {
+      const o = otherNode(r, name);
+      const relType = v(r, 'Relationship Type');
+      if (!nodes.has(o.name)) {
+        nodes.set(o.name, { name: o.name, type: o.type || 'dataset', level: 1 });
+      }
+      hop1Names.add(o.name);
+      edges.push({ source: name, target: o.name, label: relType });
+    });
+
+    // ── Level 1: implicit relationships from data model ──
+    async function addImplicit(parentName, parentType, level) {
+      const MAX = level === 1 ? 6 : 4;
+      if (parentType === 'dataset') {
+        try {
+          const fr = await api(`/kapps/atlas/forms/field/submissions?include=values&limit=50&q=${encodeURIComponent(`values[Dataset] = "${parentName}"`)}`);
+          (fr.submissions || []).slice(0, MAX).forEach(f => {
+            const fn = v(f, 'Name');
+            if (fn && !nodes.has(fn)) {
+              nodes.set(fn, { name: fn, type: 'field', level, parent: parentName });
+              edges.push({ source: parentName, target: fn, label: 'has field' });
+            }
+          });
+        } catch (e) { /* ignore */ }
+      } else if (parentType === 'system') {
+        try {
+          const dr = await api(`/kapps/atlas/forms/dataset/submissions?include=values&limit=50&q=${encodeURIComponent(`values[System] = "${parentName}"`)}`);
+          (dr.submissions || []).slice(0, MAX).forEach(d => {
+            const dn = v(d, 'Name');
+            if (dn && !nodes.has(dn)) {
+              nodes.set(dn, { name: dn, type: 'dataset', level, parent: parentName });
+              edges.push({ source: parentName, target: dn, label: 'contains' });
+            }
+          });
+        } catch (e) { /* ignore */ }
+      } else if (parentType === 'domain') {
+        try {
+          const sr = await api(`/kapps/atlas/forms/system/submissions?include=values&limit=50&q=${encodeURIComponent(`values[Domain] = "${parentName}"`)}`);
+          (sr.submissions || []).slice(0, MAX).forEach(s => {
+            const sn = v(s, 'Name');
+            if (sn && !nodes.has(sn)) {
+              nodes.set(sn, { name: sn, type: 'system', level, parent: parentName });
+              edges.push({ source: parentName, target: sn, label: 'contains' });
+            }
+          });
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    await addImplicit(name, currentType, 1);
+
+    // ── Level 2: relationships from each hop-1 node ──
+    const hop1Nodes = [...nodes.values()].filter(n => n.level === 1);
+    for (const h1 of hop1Nodes) {
+      // Relationship-based 2nd hop
+      const hop2Rels = relsFor(h1.name);
+      hop2Rels.forEach(r => {
+        const o = otherNode(r, h1.name);
+        const relType = v(r, 'Relationship Type');
+        if (o.name === name) return; // skip back to center
+        if (!nodes.has(o.name)) {
+          nodes.set(o.name, { name: o.name, type: o.type || 'dataset', level: 2, parent: h1.name });
+          edges.push({ source: h1.name, target: o.name, label: relType });
+        } else if (nodes.get(o.name).level > 0) {
+          // Add edge even if node exists (cross-link between non-center nodes)
+          const exists = edges.some(e => (e.source === h1.name && e.target === o.name) || (e.source === o.name && e.target === h1.name));
+          if (!exists) edges.push({ source: h1.name, target: o.name, label: relType });
+        }
+      });
+
+      // Implicit 2nd hop (limit 4 per parent)
+      await addImplicit(h1.name, h1.type, 2);
+    }
+
+    // ── Layout: center + inner ring (level 1) + outer arcs (level 2) ──
+    const nodeArr = Array.from(nodes.values());
+    const centerNode = nodeArr.find(n => n.level === 0);
+    centerNode.cx = CX;
+    centerNode.cy = CY;
+
+    const level1 = nodeArr.filter(n => n.level === 1);
+    const level2 = nodeArr.filter(n => n.level === 2);
+    const R1 = Math.min(180, 80 + level1.length * 12);
+    const R2 = R1 + 100;
+
+    // Position level 1 nodes evenly around center
+    level1.forEach((n, i) => {
+      const angle = (2 * Math.PI * i / level1.length) - Math.PI / 2;
+      n.cx = CX + R1 * Math.cos(angle);
+      n.cy = CY + R1 * Math.sin(angle);
+      n._angle = angle;
+    });
+
+    // Position level 2 nodes in small arcs around their parent
+    const parentChildren = new Map();
+    level2.forEach(n => {
+      const p = n.parent || level1[0]?.name;
+      if (!parentChildren.has(p)) parentChildren.set(p, []);
+      parentChildren.get(p).push(n);
+    });
+
+    parentChildren.forEach((children, parentName) => {
+      const parent = nodes.get(parentName);
+      if (!parent || parent.level !== 1) return;
+      const baseAngle = parent._angle ?? 0;
+      const spread = Math.min(0.5, 0.15 * children.length);
+      children.forEach((child, i) => {
+        const offset = children.length === 1 ? 0 : -spread / 2 + (spread * i / (children.length - 1));
+        const angle = baseAngle + offset;
+        child.cx = CX + R2 * Math.cos(angle);
+        child.cy = CY + R2 * Math.sin(angle);
+      });
+    });
+
+    // Handle level 2 orphans (no parent in level 1)
+    level2.filter(n => !n.cx).forEach((n, i) => {
+      const angle = (2 * Math.PI * i / 7) + 0.3;
+      n.cx = CX + R2 * Math.cos(angle);
+      n.cy = CY + R2 * Math.sin(angle);
+    });
+
+    // ── Render SVG ──
+    svg.innerHTML = '';
+
+    // Defs for arrowhead
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', 'arrowhead');
+    marker.setAttribute('markerWidth', '8');
+    marker.setAttribute('markerHeight', '6');
+    marker.setAttribute('refX', '8');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', '0 0, 8 3, 0 6');
+    polygon.setAttribute('fill', '#9AA0A6');
+    marker.appendChild(polygon);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
+    // Draw edges
+    edges.forEach(e => {
+      const srcNode = nodes.get(e.source);
+      const tgtNode = nodes.get(e.target);
+      if (!srcNode || !tgtNode) return;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', srcNode.cx);
+      line.setAttribute('y1', srcNode.cy);
+      line.setAttribute('x2', tgtNode.cx);
+      line.setAttribute('y2', tgtNode.cy);
+      const isOuter = (srcNode.level === 1 && tgtNode.level === 2) || (srcNode.level === 2 && tgtNode.level === 1);
+      line.setAttribute('stroke', isOuter ? '#E8EAED' : '#D2D5DA');
+      line.setAttribute('stroke-width', isOuter ? '1' : '1.5');
+      line.setAttribute('marker-end', 'url(#arrowhead)');
+      svg.appendChild(line);
+
+      // Edge label (only for level 0↔1 edges to avoid clutter)
+      if (e.label && !isOuter) {
+        const mx = (srcNode.cx + tgtNode.cx) / 2;
+        const my = (srcNode.cy + tgtNode.cy) / 2;
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', mx);
+        text.setAttribute('y', my - 6);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#9AA0A6');
+        text.setAttribute('font-size', '10');
+        text.textContent = e.label;
+        svg.appendChild(text);
+      }
+    });
+
+    // Draw nodes
+    nodeArr.forEach(n => {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.style.cursor = 'pointer';
+
+      const isCenter = n.level === 0;
+      const isOuter = n.level === 2;
+      const r = isCenter ? 30 : (isOuter ? 16 : 22);
+      const color = GRAPH_COLORS[n.type] || '#5F6368';
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', n.cx);
+      circle.setAttribute('cy', n.cy);
+      circle.setAttribute('r', r);
+      circle.setAttribute('fill', color);
+      circle.setAttribute('opacity', isOuter ? '0.75' : '1');
+      circle.setAttribute('stroke', isCenter ? '#fff' : 'none');
+      circle.setAttribute('stroke-width', isCenter ? '3' : '0');
+      if (isCenter) {
+        const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        shadow.setAttribute('cx', n.cx);
+        shadow.setAttribute('cy', n.cy + 2);
+        shadow.setAttribute('r', r + 2);
+        shadow.setAttribute('fill', 'rgba(0,0,0,0.15)');
+        g.appendChild(shadow);
+      }
+      g.appendChild(circle);
+
+      // Type label inside circle
+      const typeLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      typeLabel.setAttribute('x', n.cx);
+      typeLabel.setAttribute('y', n.cy + 3);
+      typeLabel.setAttribute('text-anchor', 'middle');
+      typeLabel.setAttribute('fill', '#fff');
+      typeLabel.setAttribute('font-size', isCenter ? '10' : (isOuter ? '7' : '8'));
+      typeLabel.setAttribute('font-weight', '600');
+      typeLabel.textContent = (GRAPH_LABELS[n.type] || n.type || '').slice(0, 5);
+      g.appendChild(typeLabel);
+
+      // Name label below
+      const nameLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      nameLabel.setAttribute('x', n.cx);
+      nameLabel.setAttribute('y', n.cy + r + (isOuter ? 10 : 14));
+      nameLabel.setAttribute('text-anchor', 'middle');
+      nameLabel.setAttribute('fill', '#202124');
+      nameLabel.setAttribute('font-size', isCenter ? '13' : (isOuter ? '9' : '11'));
+      nameLabel.setAttribute('font-weight', isCenter ? '700' : (isOuter ? '400' : '500'));
+      nameLabel.setAttribute('opacity', isOuter ? '0.7' : '1');
+      const maxLen = isOuter ? 14 : 20;
+      const displayName = n.name.length > maxLen ? n.name.slice(0, maxLen - 2) + '..' : n.name;
+      nameLabel.textContent = displayName;
+      g.appendChild(nameLabel);
+
+      // Click to re-center
+      if (!isCenter) {
+        g.addEventListener('click', () => {
+          const typeSelect = document.getElementById('graph-type');
+          const entitySelect = document.getElementById('graph-entity');
+          if (n.type && typeSelect) {
+            graphHistory.push({ type: graphEntityType, name });
+            updateGraphBackBtn();
+            typeSelect.value = n.type;
+            onGraphTypeChange().then(() => {
+              if (entitySelect) entitySelect.value = n.name;
+              graphEntityType = n.type;
+              exploreGraph(n.name);
+            });
+          }
+        });
+      }
+
+      svg.appendChild(g);
+    });
+
+    if (nodeArr.length <= 1) {
+      const noRels = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      noRels.setAttribute('x', CX);
+      noRels.setAttribute('y', CY + 200);
+      noRels.setAttribute('text-anchor', 'middle');
+      noRels.setAttribute('fill', '#9AA0A6');
+      noRels.setAttribute('font-size', '13');
+      noRels.setAttribute('font-style', 'italic');
+      noRels.textContent = 'No relationships found for this entity';
+      svg.appendChild(noRels);
+    }
+
+  } catch (e) {
+    svg.innerHTML = `<text x="450" y="350" text-anchor="middle" fill="#EA4335" font-size="14">Error: ${esc(e.message)}</text>`;
+  }
+}
+
+function updateGraphBackBtn() {
+  const btn = document.getElementById('graph-back-btn');
+  if (btn) btn.style.display = graphHistory.length ? '' : 'none';
+}
+
+function graphGoBack() {
+  if (!graphHistory.length) return;
+  const prev = graphHistory.pop();
+  updateGraphBackBtn();
+  const typeSelect = document.getElementById('graph-type');
+  const entitySelect = document.getElementById('graph-entity');
+  if (typeSelect) {
+    typeSelect.value = prev.type;
+    graphEntityType = prev.type;
+    onGraphTypeChange().then(() => {
+      if (entitySelect) entitySelect.value = prev.name;
+      exploreGraph(prev.name);
+    });
+  }
+}
+
+/* ================================================================
+   8. ADMIN
+   ================================================================ */
+async function loadAdmin() {
+  const el = document.getElementById('tab-admin');
+  if (tabLoaded.admin) return;
+  tabLoaded.admin = true;
+
+  el.innerHTML = `
+    <div class="grid-2">
+      <div class="card scanner-card">
+        <h3>Kinetic Platform Scanner</h3>
+        <p style="color:var(--gray);font-size:13px;margin-bottom:16px">Scan a Kinetic Platform instance to discover systems, datasets, and fields.</p>
+        <div class="form-group">
+          <label>Source URL</label>
+          <input type="text" id="scan-url" placeholder="https://example.kinops.io">
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="scan-user">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="scan-pass">
+        </div>
+        <button class="btn-primary" onclick="runScan()" id="scan-btn">Scan Now</button>
+        <div id="scan-result" style="margin-top:12px"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>About DataAtlas</h3>
+          <p style="color:var(--gray);font-size:13px;line-height:1.6">
+            DataAtlas is an enterprise data dictionary and catalog built on the Kinetic Platform.
+            It tracks systems, datasets, fields, glossary terms, and their relationships to provide
+            a comprehensive view of your data landscape.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Scan History</h3>
+      <div id="scan-history-table"><div class="empty">Loading scan history...</div></div>
+    </div>
+  `;
+
+  loadScanHistory();
+}
+
+async function runScan() {
+  const url = document.getElementById('scan-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('scan-user').value;
+  const pass = document.getElementById('scan-pass').value;
+  const resultEl = document.getElementById('scan-result');
+  const btn = document.getElementById('scan-btn');
+
+  if (!url || !user || !pass) { resultEl.innerHTML = '<span style="color:var(--red);font-size:12px">All fields required</span>'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  resultEl.innerHTML = `
+    <div id="scan-log" style="background:var(--light);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px;font-size:12px;font-family:monospace;max-height:240px;overflow-y:auto">
+      <div style="color:var(--gray)">Starting scan...</div>
+    </div>
+    <div id="scan-counts" style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--gray)">
+      <span>Systems: <strong id="sc-sys">0</strong></span>
+      <span>Datasets: <strong id="sc-ds">0</strong></span>
+      <span>Fields: <strong id="sc-fld">0</strong></span>
+      <span>Relationships: <strong id="sc-rel">0</strong></span>
+    </div>`;
+
+  const logEl = document.getElementById('scan-log');
+  function logLine(msg, color) {
+    const div = document.createElement('div');
+    div.style.color = color || 'var(--dark)';
+    div.textContent = msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function updateCounts(c) {
+    if (!c) return;
+    const s = id => document.getElementById(id);
+    if (c.systems !== undefined) s('sc-sys').textContent = c.systems;
+    if (c.datasets !== undefined) s('sc-ds').textContent = c.datasets;
+    if (c.fields !== undefined) s('sc-fld').textContent = c.fields;
+    if (c.relationships !== undefined) s('sc-rel').textContent = c.relationships;
+  }
+
+  try {
+    const resp = await fetch(`${API.url}/api/atlas/scan/kinetic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${API.auth}` },
+      body: JSON.stringify({ url, user, pass }),
+    });
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalResult = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const evt = JSON.parse(line);
+          if (evt.event === 'status') {
+            logLine(evt.message, '#1967D2');
+          } else if (evt.event === 'progress') {
+            logLine(evt.message);
+            updateCounts(evt.counts);
+          } else if (evt.event === 'complete') {
+            finalResult = evt;
+            updateCounts(evt.counts);
+            logLine(`Scan complete! ID: ${evt.scanId}`, '#2E7D32');
+          } else if (evt.event === 'error') {
+            logLine(`Error: ${evt.message}`, '#EA4335');
+          }
+        } catch (e) { /* skip unparseable lines */ }
+      }
+    }
+
+    if (finalResult) {
+      toast('Scan completed successfully');
+      loadScanHistory();
+    }
+  } catch (e) {
+    logLine(`Scan failed: ${e.message}`, '#EA4335');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Scan Now';
+  }
+}
+
+async function loadScanHistory() {
+  const el = document.getElementById('scan-history-table');
+  if (!el) return;
+  try {
+    const r = await api('/kapps/atlas/forms/scan-result/submissions?include=values&limit=25');
+    const items = r.submissions || [];
+    if (items.length === 0) {
+      el.innerHTML = '<div class="empty">No scan history found</div>';
+      return;
+    }
+    el.innerHTML = `<table>
+      <thead><tr><th>Scan ID</th><th>Source</th><th>Status</th><th>Started</th><th>Completed</th><th>Systems</th><th>Datasets</th><th>Fields</th></tr></thead>
+      <tbody>${items.map(s => `<tr>
+        <td><strong>${esc(v(s, 'Scan ID'))}</strong></td>
+        <td>${esc(v(s, 'Source Name'))}</td>
+        <td>${statBadge(v(s, 'Scan Status'))}</td>
+        <td>${formatDate(v(s, 'Started At'))}</td>
+        <td>${formatDate(v(s, 'Completed At'))}</td>
+        <td>${esc(v(s, 'Systems Found'))}</td>
+        <td>${esc(v(s, 'Datasets Found'))}</td>
+        <td>${esc(v(s, 'Fields Found'))}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch (e) {
+    el.innerHTML = `<div class="empty">Error loading scan history: ${esc(e.message)}</div>`;
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workforce Optimization</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+  --indigo: #3949AB;
+  --purple: #7B1FA2;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--indigo); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--indigo); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--indigo); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #303F9F; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: #7986CB; }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--indigo); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.kpi-card.kpi-indigo { border-left-color: var(--indigo); }
+.kpi-card.kpi-purple { border-left-color: var(--purple); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-current, .badge-completed, .badge-filled, .badge-paid, .badge-confirmed { background: #E8F5E9; color: #2E7D32; }
+.badge-open, .badge-published, .badge-approved { background: #E3F2FD; color: #1565C0; }
+.badge-draft, .badge-pending, .badge-pending-start, .badge-pending-renewal, .badge-on-hold { background: #F3E5F5; color: #6A1B9A; }
+.badge-interviewing, .badge-in-progress, .badge-offer-extended { background: #E0F7FA; color: #00838F; }
+.badge-cancelled, .badge-terminated, .badge-denied, .badge-expired, .badge-no-show, .badge-eliminated { background: #FFEBEE; color: #C62828; }
+.badge-on-leave, .badge-expiring-soon, .badge-frozen { background: #FFF3E0; color: #E65100; }
+.badge-inactive { background: #ECEFF1; color: #546E7A; }
+
+/* Priority */
+.priority-critical { color: var(--red); font-weight: 700; }
+.priority-high { color: var(--orange); font-weight: 600; }
+.priority-medium { color: var(--yellow); font-weight: 600; }
+.priority-low { color: var(--green); }
+
+/* Trend indicators */
+.trend-improving { color: var(--green); font-weight: 600; }
+.trend-stable { color: var(--gray); }
+.trend-declining { color: var(--red); font-weight: 600; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--indigo); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 900px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--indigo); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-indigo { background: var(--indigo); color: var(--white); }
+.act-btn-indigo:hover { background: #303F9F; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Days */
+.days-green { color: var(--green); font-weight: 600; }
+.days-yellow { color: #F9A825; font-weight: 600; }
+.days-red { color: var(--red); font-weight: 700; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+
+/* Cert expiration colors */
+.cert-ok { color: var(--green); }
+.cert-warn { color: var(--orange); font-weight: 600; }
+.cert-expired { color: var(--red); font-weight: 700; }
+
+/* Metric card */
+.metric-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.metric-dept { font-size: 14px; font-weight: 700; color: var(--blue); }
+.metric-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.metric-row:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Workforce Optimization</h1>
+      <p class="subtitle">Enterprise Staffing Analytics & Scheduling</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Workforce <span class="accent">Optimization</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="staffing">Staffing</button>
+      <button class="tab-btn" data-tab="schedules">Schedules</button>
+      <button class="tab-btn" data-tab="vacancies">Vacancies</button>
+      <button class="tab-btn" data-tab="certifications">Certifications</button>
+      <button class="tab-btn" data-tab="productivity">Productivity</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Workforce Dashboard</div>
+      <div class="page-sub">Staffing overview and key performance indicators</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Upcoming Schedules</h3><div id="dash-schedules"></div></div>
+        <div class="card"><h3>Open Vacancies</h3><div id="dash-vacancies"></div></div>
+      </div>
+    </div>
+
+    <!-- STAFFING -->
+    <div class="tab-panel" id="panel-staffing">
+      <div class="page-title">Staff Roster</div>
+      <div class="page-sub">Employee staffing records and department breakdown</div>
+      <div class="filter-bar" id="staff-filters">
+        <select id="stf-f-status"><option value="">All Statuses</option><option>Active</option><option>On Leave</option><option>Terminated</option><option>Pending Start</option></select>
+        <select id="stf-f-dept"><option value="">All Departments</option></select>
+        <select id="stf-f-family"><option value="">All Job Families</option><option>Nursing</option><option>Physician</option><option>Allied Health</option><option>Support</option><option>Administrative</option><option>Technical</option><option>Management</option></select>
+        <select id="stf-f-fte"><option value="">All FTE Types</option><option>Full Time</option><option>Part Time</option><option>PRN</option><option>Contract</option><option>Travel</option></select>
+        <input id="stf-f-search" type="text" placeholder="Search staff...">
+      </div>
+      <div id="staff-table"></div>
+      <div id="staff-pag" class="pagination"></div>
+    </div>
+
+    <!-- SCHEDULES -->
+    <div class="tab-panel" id="panel-schedules">
+      <div class="page-title">Schedules</div>
+      <div class="page-sub">Staff scheduling and shift assignment</div>
+      <div class="filter-bar" id="sched-filters">
+        <select id="sch-f-status"><option value="">All Statuses</option><option>Draft</option><option>Published</option><option>Confirmed</option><option>Completed</option><option>Cancelled</option><option>No Show</option></select>
+        <select id="sch-f-dept"><option value="">All Departments</option></select>
+        <select id="sch-f-type"><option value="">All Types</option><option>Regular</option><option>Overtime</option><option>On Call</option><option>Float</option><option>Trade</option></select>
+        <input id="sch-f-search" type="text" placeholder="Search schedules...">
+      </div>
+      <div id="sched-table"></div>
+      <div id="sched-pag" class="pagination"></div>
+    </div>
+
+    <!-- VACANCIES -->
+    <div class="tab-panel" id="panel-vacancies">
+      <div class="page-title">Vacancies</div>
+      <div class="page-sub">Open position tracking and recruitment pipeline</div>
+      <div class="filter-bar" id="vac-filters">
+        <select id="vac-f-status"><option value="">All Statuses</option><option>Open</option><option>Interviewing</option><option>Offer Extended</option><option>Filled</option><option>Cancelled</option><option>On Hold</option></select>
+        <select id="vac-f-priority"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="vac-f-dept"><option value="">All Departments</option></select>
+        <select id="vac-f-family"><option value="">All Job Families</option><option>Nursing</option><option>Physician</option><option>Allied Health</option><option>Support</option><option>Administrative</option><option>Technical</option><option>Management</option></select>
+        <input id="vac-f-search" type="text" placeholder="Search vacancies...">
+      </div>
+      <div id="vac-table"></div>
+      <div id="vac-pag" class="pagination"></div>
+    </div>
+
+    <!-- CERTIFICATIONS -->
+    <div class="tab-panel" id="panel-certifications">
+      <div class="page-title">Certifications</div>
+      <div class="page-sub">Staff certification and compliance tracking</div>
+      <div class="filter-bar" id="cert-filters">
+        <select id="cert-f-status"><option value="">All Statuses</option><option>Current</option><option>Expiring Soon</option><option>Expired</option><option>Pending Renewal</option></select>
+        <select id="cert-f-dept"><option value="">All Departments</option></select>
+        <input id="cert-f-search" type="text" placeholder="Search certifications...">
+      </div>
+      <div id="cert-table"></div>
+      <div id="cert-pag" class="pagination"></div>
+    </div>
+
+    <!-- PRODUCTIVITY -->
+    <div class="tab-panel" id="panel-productivity">
+      <div class="page-title">Productivity Metrics</div>
+      <div class="page-sub">Department metrics, trends, and target vs actual performance</div>
+      <div id="prod-content"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detail-modal-title">Detail</h2>
+      <button class="modal-close" onclick="closeModal('detail-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="detail-modal-body"></div>
+  </div>
+</div>
+
+<!-- RECORD MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ============== STATE & AUTH ============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'workforce-optimization';
+let deptsLoaded = false;
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDeptDropdowns();
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* ============== API HELPERS ============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* ============== BADGES ============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+function prioritySpan(p) {
+  const cls = (p || '').toLowerCase();
+  return `<span class="priority-${cls}">${p || ''}</span>`;
+}
+function trendSpan(t) {
+  const cls = (t || '').toLowerCase();
+  const arrow = t === 'Improving' ? '&#9650;' : t === 'Declining' ? '&#9660;' : '&#8212;';
+  return `<span class="trend-${cls}">${arrow} ${t || ''}</span>`;
+}
+function daysRemaining(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="days-red">${Math.abs(days)}d overdue</span>`;
+  if (days <= 7) return `<span class="days-red">${days}d</span>`;
+  if (days <= 14) return `<span class="days-yellow">${days}d</span>`;
+  return `<span class="days-green">${days}d</span>`;
+}
+function certExpiry(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="cert-expired">${Math.abs(days)}d expired</span>`;
+  if (days <= 30) return `<span class="cert-warn">${days}d</span>`;
+  return `<span class="cert-ok">${days}d</span>`;
+}
+
+/* ============== PAGINATION ============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* ============== TAB NAVIGATION ============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'staffing') loadStaff();
+    else if (tab === 'schedules') loadSchedules();
+    else if (tab === 'vacancies') loadVacancies();
+    else if (tab === 'certifications') loadCerts();
+    else if (tab === 'productivity') loadProductivity();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* ============== MODAL ============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+/* ============== DEPT DROPDOWNS ============== */
+async function loadDeptDropdowns() {
+  if (deptsLoaded) return;
+  try {
+    const data = await kqlFetch('departments', null, 25);
+    const depts = (data.submissions || []).map(s => vf(s, 'Department Name')).filter(Boolean).sort();
+    ['stf-f-dept', 'sch-f-dept', 'vac-f-dept', 'cert-f-dept'].forEach(id => {
+      const sel = document.getElementById(id);
+      depts.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; sel.appendChild(o); });
+    });
+    deptsLoaded = true;
+  } catch {}
+}
+
+/* ============== DASHBOARD ============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/wfo/dashboard');
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-indigo"><div class="kpi-value">${d.activeStaff}</div><div class="kpi-label">Active Staff</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.openVacancies}</div><div class="kpi-label">Open Vacancies</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.otHours30d}</div><div class="kpi-label">OT Hours (30d)</div></div>
+      <div class="kpi-card kpi-yellow"><div class="kpi-value">${d.vacancyRate}%</div><div class="kpi-label">Vacancy Rate</div></div>
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.avgTenure}y</div><div class="kpi-label">Avg Tenure</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${d.certCompliance}%</div><div class="kpi-label">Cert Compliance</div></div>`;
+
+    document.getElementById('dash-schedules').innerHTML = d.recentSchedules.length === 0
+      ? '<div class="loading">No upcoming schedules</div>'
+      : `<table class="data-table"><thead><tr><th>Staff</th><th>Shift</th><th>Dept</th><th>Date</th><th>Status</th></tr></thead><tbody>${
+        d.recentSchedules.map(s => `<tr><td>${s.staffName}</td><td>${s.shiftName}</td><td>${s.dept}</td><td>${s.date}</td><td>${badge(s.status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    document.getElementById('dash-vacancies').innerHTML = d.vacancyList.length === 0
+      ? '<div class="loading">No open vacancies</div>'
+      : `<table class="data-table"><thead><tr><th>Position</th><th>Dept</th><th>Priority</th><th>Status</th><th>Target</th></tr></thead><tbody>${
+        d.vacancyList.map(v => `<tr><td>${v.title}</td><td>${v.dept}</td><td>${prioritySpan(v.priority)}</td><td>${badge(v.status)}</td><td>${daysRemaining(v.targetFill)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* ============== STAFFING TAB ============== */
+let stfPage = 1, stfPageKeys = [null], stfHasNext = false;
+
+['stf-f-status', 'stf-f-dept', 'stf-f-family', 'stf-f-fte'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { stfPage = 1; stfPageKeys = [null]; stfHasNext = false; loadStaff(); });
+});
+document.getElementById('stf-f-search').addEventListener('input', debounce(() => { stfPage = 1; stfPageKeys = [null]; stfHasNext = false; loadStaff(); }, 300));
+
+async function loadStaff() {
+  const status = document.getElementById('stf-f-status').value;
+  const dept = document.getElementById('stf-f-dept').value;
+  const family = document.getElementById('stf-f-family').value;
+  const fte = document.getElementById('stf-f-fte').value;
+  const search = document.getElementById('stf-f-search').value.trim().toLowerCase();
+
+  // Single field KQL only
+  let kql = null;
+  if (status) kql = `values[Status] = "${status}"`;
+  else if (dept) kql = `values[Department] = "${dept}"`;
+
+  try {
+    const data = await kqlFetch('staff-roster', kql, 25, stfPageKeys[stfPage - 1]);
+    let subs = data.submissions || [];
+
+    // Client-side filter for additional fields
+    if (kql && status && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (!kql && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (family) subs = subs.filter(s => vf(s, 'Job Family') === family);
+    if (fte) subs = subs.filter(s => vf(s, 'FTE Status') === fte);
+    if (search) subs = subs.filter(s => `${vf(s, 'Staff ID')} ${vf(s, 'First Name')} ${vf(s, 'Last Name')} ${vf(s, 'Position')}`.toLowerCase().includes(search));
+
+    document.getElementById('staff-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No staff found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Position</th><th>Job Family</th><th>FTE</th><th>Shift</th><th>Tenure</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openStaffDetail('${vf(s, 'Staff ID')}')">
+          <td>${vf(s, 'Staff ID')}</td>
+          <td>${vf(s, 'First Name')} ${vf(s, 'Last Name')}</td>
+          <td>${vf(s, 'Department')}</td>
+          <td>${vf(s, 'Position')}</td>
+          <td>${vf(s, 'Job Family')}</td>
+          <td>${vf(s, 'FTE Status')}</td>
+          <td>${vf(s, 'Shift Preference')}</td>
+          <td>${vf(s, 'Tenure Years')}y</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    stfHasNext = !!data.nextPageToken;
+    if (stfHasNext && subs.length) stfPageKeys[stfPage] = subs[subs.length - 1].createdAt;
+    renderPag('staff-pag', stfPage, stfHasNext, 'stfPrev()', 'stfNext()');
+  } catch (e) {
+    document.getElementById('staff-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function stfNext() { if (!stfHasNext) return; stfPage++; loadStaff(); }
+function stfPrev() { if (stfPage <= 1) return; stfPage--; loadStaff(); }
+
+async function openStaffDetail(staffId) {
+  openModal('detail-modal');
+  document.getElementById('detail-modal-title').textContent = 'Loading...';
+  document.getElementById('detail-modal-body').innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const data = await kqlFetch('staff-roster', `values[Staff ID] = "${staffId}"`, 1);
+    const s = (data.submissions || [])[0];
+    if (!s) { document.getElementById('detail-modal-body').innerHTML = '<div class="loading">Not found</div>'; return; }
+    document.getElementById('detail-modal-title').textContent = `${vf(s, 'First Name')} ${vf(s, 'Last Name')} (${vf(s, 'Staff ID')})`;
+    document.getElementById('detail-modal-body').innerHTML = `
+      <div style="margin-bottom:16px">${badge(vf(s, 'Status'))} ${vf(s, 'FTE Status')}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Employee #</span><span class="detail-value">${vf(s, 'Employee Number')}</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${vf(s, 'Department')}</span></div>
+        <div class="detail-row"><span class="detail-label">Position</span><span class="detail-value">${vf(s, 'Position')}</span></div>
+        <div class="detail-row"><span class="detail-label">Job Family</span><span class="detail-value">${vf(s, 'Job Family')}</span></div>
+        <div class="detail-row"><span class="detail-label">Hire Date</span><span class="detail-value">${vf(s, 'Hire Date')}</span></div>
+        <div class="detail-row"><span class="detail-label">Tenure</span><span class="detail-value">${vf(s, 'Tenure Years')} years</span></div>
+        <div class="detail-row"><span class="detail-label">Shift Preference</span><span class="detail-value">${vf(s, 'Shift Preference')}</span></div>
+        <div class="detail-row"><span class="detail-label">Base Salary</span><span class="detail-value">$${Number(vf(s, 'Base Salary')).toLocaleString()}</span></div>
+        <div class="detail-row"><span class="detail-label">OT Eligible</span><span class="detail-value">${vf(s, 'Overtime Eligible')}</span></div>
+      </div>`;
+  } catch (e) {
+    document.getElementById('detail-modal-body').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* ============== RECORD DETAIL MODAL ============== */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* ============== SCHEDULES TAB ============== */
+let schPage = 1, schPageKeys = [null], schHasNext = false;
+
+['sch-f-status', 'sch-f-dept', 'sch-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { schPage = 1; schPageKeys = [null]; schHasNext = false; loadSchedules(); });
+});
+document.getElementById('sch-f-search').addEventListener('input', debounce(() => { schPage = 1; schPageKeys = [null]; schHasNext = false; loadSchedules(); }, 300));
+
+async function loadSchedules() {
+  const status = document.getElementById('sch-f-status').value;
+  const dept = document.getElementById('sch-f-dept').value;
+  const stype = document.getElementById('sch-f-type').value;
+  const search = document.getElementById('sch-f-search').value.trim().toLowerCase();
+
+  let kql = null;
+  if (status) kql = `values[Status] = "${status}"`;
+  else if (dept) kql = `values[Department] = "${dept}"`;
+
+  try {
+    const data = await kqlFetch('schedules', kql, 25, schPageKeys[schPage - 1]);
+    let subs = data.submissions || [];
+
+    if (kql && status && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (!kql && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (stype) subs = subs.filter(s => vf(s, 'Schedule Type') === stype);
+    if (search) subs = subs.filter(s => `${vf(s, 'Schedule ID')} ${vf(s, 'Staff Name')} ${vf(s, 'Shift Name')}`.toLowerCase().includes(search));
+
+    const SCHED_TRANS = { Draft: ['Published'], Published: ['Confirmed','Cancelled'], Confirmed: ['Completed','Cancelled','No Show'] };
+
+    document.getElementById('sched-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No schedules found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Staff</th><th>Shift</th><th>Dept</th><th>Date</th><th>Hours</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const sid = vf(s, 'Schedule ID');
+          const allowed = SCHED_TRANS[st] || [];
+          const actions = allowed.slice(0, 2).map(ns => `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionSchedule('${sid}','${ns}')">${ns}</button>`).join(' ');
+          return `<tr onclick="showRecord('schedules','Schedule ID','${sid}','Schedule Details')">
+            <td>${sid}</td>
+            <td>${vf(s, 'Staff Name')}</td>
+            <td>${vf(s, 'Shift Name')}</td>
+            <td>${vf(s, 'Department')}</td>
+            <td>${vf(s, 'Schedule Date')}</td>
+            <td>${vf(s, 'Hours')}h</td>
+            <td>${vf(s, 'Schedule Type')}</td>
+            <td>${badge(st)}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    schHasNext = !!data.nextPageToken;
+    if (schHasNext && subs.length) schPageKeys[schPage] = subs[subs.length - 1].createdAt;
+    renderPag('sched-pag', schPage, schHasNext, 'schPrev()', 'schNext()');
+  } catch (e) {
+    document.getElementById('sched-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function schNext() { if (!schHasNext) return; schPage++; loadSchedules(); }
+function schPrev() { if (schPage <= 1) return; schPage--; loadSchedules(); }
+
+async function transitionSchedule(schedId, newStatus) {
+  try {
+    await apiPost(`/api/wfo/schedules/${encodeURIComponent(schedId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadSchedules();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ============== VACANCIES TAB ============== */
+let vacPage = 1, vacPageKeys = [null], vacHasNext = false;
+
+['vac-f-status', 'vac-f-priority', 'vac-f-dept', 'vac-f-family'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { vacPage = 1; vacPageKeys = [null]; vacHasNext = false; loadVacancies(); });
+});
+document.getElementById('vac-f-search').addEventListener('input', debounce(() => { vacPage = 1; vacPageKeys = [null]; vacHasNext = false; loadVacancies(); }, 300));
+
+async function loadVacancies() {
+  const status = document.getElementById('vac-f-status').value;
+  const priority = document.getElementById('vac-f-priority').value;
+  const dept = document.getElementById('vac-f-dept').value;
+  const family = document.getElementById('vac-f-family').value;
+  const search = document.getElementById('vac-f-search').value.trim().toLowerCase();
+
+  let kql = null;
+  if (status) kql = `values[Status] = "${status}"`;
+  else if (dept) kql = `values[Department] = "${dept}"`;
+
+  try {
+    const data = await kqlFetch('vacancies', kql, 25, vacPageKeys[vacPage - 1]);
+    let subs = data.submissions || [];
+
+    if (kql && status && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (!kql && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (family) subs = subs.filter(s => vf(s, 'Job Family') === family);
+    if (search) subs = subs.filter(s => `${vf(s, 'Vacancy ID')} ${vf(s, 'Position Title')} ${vf(s, 'Recruiter')}`.toLowerCase().includes(search));
+
+    const VAC_TRANS = { Open: ['Interviewing','On Hold','Cancelled'], Interviewing: ['Offer Extended','Open','Cancelled'], 'Offer Extended': ['Filled','Open'], 'On Hold': ['Open','Cancelled'] };
+
+    // Days open calculation
+    function daysOpen(postedDate) {
+      if (!postedDate) return '';
+      const days = Math.ceil((Date.now() - new Date(postedDate).getTime()) / 864e5);
+      if (days > 60) return `<span class="days-red">${days}d</span>`;
+      if (days > 30) return `<span class="days-yellow">${days}d</span>`;
+      return `<span class="days-green">${days}d</span>`;
+    }
+
+    document.getElementById('vac-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No vacancies found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Position</th><th>Dept</th><th>Priority</th><th>Open</th><th>Apps</th><th>Target</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const vid = vf(s, 'Vacancy ID');
+          const allowed = VAC_TRANS[st] || [];
+          const actions = allowed.slice(0, 2).map(ns => `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionVacancy('${vid}','${ns}')">${ns}</button>`).join(' ');
+          return `<tr onclick="showRecord('vacancies','Vacancy ID','${vid}','Vacancy Details')">
+            <td>${vid}</td>
+            <td>${vf(s, 'Position Title')}</td>
+            <td>${vf(s, 'Department')}</td>
+            <td>${prioritySpan(vf(s, 'Priority'))}</td>
+            <td>${daysOpen(vf(s, 'Posted Date'))}</td>
+            <td>${vf(s, 'Applicants')}</td>
+            <td>${daysRemaining(vf(s, 'Target Fill Date'))}</td>
+            <td>${badge(st)}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    vacHasNext = !!data.nextPageToken;
+    if (vacHasNext && subs.length) vacPageKeys[vacPage] = subs[subs.length - 1].createdAt;
+    renderPag('vac-pag', vacPage, vacHasNext, 'vacPrev()', 'vacNext()');
+  } catch (e) {
+    document.getElementById('vac-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function vacNext() { if (!vacHasNext) return; vacPage++; loadVacancies(); }
+function vacPrev() { if (vacPage <= 1) return; vacPage--; loadVacancies(); }
+
+async function transitionVacancy(vacId, newStatus) {
+  try {
+    await apiPost(`/api/wfo/vacancies/${encodeURIComponent(vacId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadVacancies();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ============== CERTIFICATIONS TAB ============== */
+let certPage = 1, certPageKeys = [null], certHasNext = false;
+
+['cert-f-status', 'cert-f-dept'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { certPage = 1; certPageKeys = [null]; certHasNext = false; loadCerts(); });
+});
+document.getElementById('cert-f-search').addEventListener('input', debounce(() => { certPage = 1; certPageKeys = [null]; certHasNext = false; loadCerts(); }, 300));
+
+async function loadCerts() {
+  const status = document.getElementById('cert-f-status').value;
+  const dept = document.getElementById('cert-f-dept').value;
+  const search = document.getElementById('cert-f-search').value.trim().toLowerCase();
+
+  let kql = null;
+  if (status) kql = `values[Status] = "${status}"`;
+  else if (dept) kql = `values[Department] = "${dept}"`;
+
+  try {
+    const data = await kqlFetch('certifications', kql, 25, certPageKeys[certPage - 1]);
+    let subs = data.submissions || [];
+
+    if (kql && status && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (!kql && dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (search) subs = subs.filter(s => `${vf(s, 'Cert ID')} ${vf(s, 'Staff Name')} ${vf(s, 'Certification Name')}`.toLowerCase().includes(search));
+
+    document.getElementById('cert-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No certifications found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Staff</th><th>Certification</th><th>Body</th><th>Dept</th><th>Expires</th><th>CEU</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => {
+          const ceuReq = Number(vf(s, 'CEU Required')) || 0;
+          const ceuComp = Number(vf(s, 'CEU Completed')) || 0;
+          const ceuPct = ceuReq > 0 ? Math.round((ceuComp / ceuReq) * 100) : 100;
+          return `<tr onclick="showRecord('certifications','Cert ID','${vf(s, 'Cert ID')}','Certification Details')">
+            <td>${vf(s, 'Cert ID')}</td>
+            <td>${vf(s, 'Staff Name')}</td>
+            <td>${vf(s, 'Certification Name')}</td>
+            <td>${vf(s, 'Certifying Body')}</td>
+            <td>${vf(s, 'Department')}</td>
+            <td>${certExpiry(vf(s, 'Expiration Date'))}</td>
+            <td>${ceuComp}/${ceuReq} (${ceuPct}%)</td>
+            <td>${badge(vf(s, 'Status'))}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    certHasNext = !!data.nextPageToken;
+    if (certHasNext && subs.length) certPageKeys[certPage] = subs[subs.length - 1].createdAt;
+    renderPag('cert-pag', certPage, certHasNext, 'certPrev()', 'certNext()');
+  } catch (e) {
+    document.getElementById('cert-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function certNext() { if (!certHasNext) return; certPage++; loadCerts(); }
+function certPrev() { if (certPage <= 1) return; certPage--; loadCerts(); }
+
+/* ============== PRODUCTIVITY TAB ============== */
+async function loadProductivity() {
+  const container = document.getElementById('prod-content');
+  container.innerHTML = '<div class="loading">Loading metrics...</div>';
+  try {
+    const d = await apiFetch('/api/wfo/stats/productivity');
+
+    // OT by dept
+    const otDepts = Object.entries(d.otByDept).sort((a, b) => b[1].totalHours - a[1].totalHours);
+    const maxOT = Math.max(...otDepts.map(([, v]) => v.totalHours), 1);
+
+    // OT by reason
+    const otReasons = Object.entries(d.otByReason).sort((a, b) => b[1] - a[1]);
+    const maxReason = Math.max(...otReasons.map(([, v]) => v), 1);
+
+    let html = '<div class="two-col">';
+
+    // OT by department bar chart
+    html += `<div class="card"><h3>Overtime by Department</h3>
+      <div class="bar-chart">${otDepts.map(([dept, v]) =>
+        `<div class="bar-col"><div class="bar-value">${v.totalHours}h</div><div class="bar" style="height:${(v.totalHours / maxOT * 120)}px; background:var(--orange)"></div><div class="bar-label">${dept.split(' ')[0]}</div></div>`
+      ).join('')}</div></div>`;
+
+    // OT by reason bar chart
+    html += `<div class="card"><h3>Overtime by Reason</h3>
+      <div class="bar-chart">${otReasons.map(([reason, hrs]) =>
+        `<div class="bar-col"><div class="bar-value">${hrs}h</div><div class="bar" style="height:${(hrs / maxReason * 120)}px; background:var(--indigo)"></div><div class="bar-label">${reason.split(' ')[0]}</div></div>`
+      ).join('')}</div></div>`;
+
+    html += '</div>';
+
+    // Metrics by department
+    const depts = Object.entries(d.byDept);
+    for (const [dept, metrics] of depts) {
+      html += `<div class="metric-card"><div class="metric-header"><span class="metric-dept">${dept}</span></div>`;
+      html += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">`;
+      for (const m of metrics) {
+        const vNum = Number(m.value);
+        const tNum = Number(m.target);
+        const isGood = vNum >= tNum;
+        html += `<div class="metric-row">
+          <span>${m.type}</span>
+          <span><strong>${m.value}</strong> / ${m.target} ${trendSpan(m.trend)}</span>
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* ============== ANALYTICS TAB ============== */
+const REPORT_TYPES = [
+  { id: 'staffing', name: 'Staffing Report', desc: 'Complete staff roster with positions, tenure, salary, and FTE status' },
+  { id: 'overtime', name: 'Overtime Report', desc: 'Overtime hours, costs, and reasons by staff and department' },
+  { id: 'vacancy', name: 'Vacancy Report', desc: 'Open positions, recruitment pipeline, and days-to-fill tracking' },
+  { id: 'certification', name: 'Certification Compliance', desc: 'Certification status, expiration dates, and CEU completion' },
+  { id: 'productivity', name: 'Productivity Report', desc: 'Department metrics with target vs actual and trend analysis' },
+  { id: 'department', name: 'Department Report', desc: 'Department staffing levels, budgeted vs actual FTEs, and vacancies' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/wfo/report/${type}`);
+
+    if (type === 'staffing') {
+      const csvRows = [['Staff ID', 'Name', 'Department', 'Position', 'Job Family', 'FTE', 'Shift', 'Tenure', 'Salary', 'Status']];
+      d.items.forEach(i => csvRows.push([i.staffId, i.name, i.dept, i.position, i.jobFamily, i.fteStatus, i.shift, i.tenure, i.salary, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} staff)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'staffing-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Position</th><th>Family</th><th>FTE</th><th>Tenure</th><th>Salary</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.staffId}</td><td>${i.name}</td><td>${i.dept}</td><td>${i.position}</td><td>${i.jobFamily}</td><td>${i.fteStatus}</td><td>${i.tenure}y</td><td>$${Number(i.salary).toLocaleString()}</td><td>${badge(i.status)}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'overtime') {
+      const csvRows = [['OT ID', 'Staff', 'Dept', 'Date', 'Reg Hrs', 'OT Hrs', 'DT Hrs', 'Total', 'Reason', 'Cost', 'Status']];
+      d.items.forEach(i => csvRows.push([i.otId, i.staffName, i.dept, i.date, i.regHours, i.otHours, i.dtHours, i.totalHours, i.reason, i.cost, i.status]));
+      const totalCost = d.items.reduce((s, i) => s + (Number(i.cost) || 0), 0);
+      const totalOT = d.items.reduce((s, i) => s + (Number(i.otHours) || 0), 0);
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-orange"><div class="kpi-value">${totalOT}h</div><div class="kpi-label">Total OT Hours</div></div>
+          <div class="kpi-card kpi-red"><div class="kpi-value">$${totalCost.toLocaleString()}</div><div class="kpi-label">Total OT Cost</div></div>
+        </div>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'overtime-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Staff</th><th>Dept</th><th>Date</th><th>OT Hrs</th><th>Reason</th><th>Cost</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.otId}</td><td>${i.staffName}</td><td>${i.dept}</td><td>${i.date}</td><td>${i.otHours}h</td><td>${i.reason}</td><td>$${Number(i.cost).toLocaleString()}</td><td>${badge(i.status)}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'vacancy') {
+      const csvRows = [['Vacancy ID', 'Position', 'Dept', 'Family', 'Priority', 'Posted', 'Target', 'Apps', 'Interviews', 'Status']];
+      d.items.forEach(i => csvRows.push([i.vacId, i.title, i.dept, i.jobFamily, i.priority, i.posted, i.targetFill, i.applicants, i.interviews, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} vacancies)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'vacancy-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Position</th><th>Dept</th><th>Priority</th><th>Posted</th><th>Apps</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.vacId}</td><td>${i.title}</td><td>${i.dept}</td><td>${prioritySpan(i.priority)}</td><td>${i.posted}</td><td>${i.applicants}</td><td>${badge(i.status)}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'certification') {
+      const csvRows = [['Cert ID', 'Staff', 'Certification', 'Body', 'Issued', 'Expires', 'CEU Req', 'CEU Comp', 'Dept', 'Status']];
+      d.items.forEach(i => csvRows.push([i.certId, i.staffName, i.certName, i.body, i.issued, i.expires, i.ceuReq, i.ceuComp, i.dept, i.status]));
+      const current = d.items.filter(i => i.status === 'Current').length;
+      const expiring = d.items.filter(i => i.status === 'Expiring Soon').length;
+      const expired = d.items.filter(i => i.status === 'Expired').length;
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} certifications)</h3>
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-green"><div class="kpi-value">${current}</div><div class="kpi-label">Current</div></div>
+          <div class="kpi-card kpi-orange"><div class="kpi-value">${expiring}</div><div class="kpi-label">Expiring Soon</div></div>
+          <div class="kpi-card kpi-red"><div class="kpi-value">${expired}</div><div class="kpi-label">Expired</div></div>
+        </div>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'certification-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Staff</th><th>Certification</th><th>Dept</th><th>Expires</th><th>CEU</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.certId}</td><td>${i.staffName}</td><td>${i.certName}</td><td>${i.dept}</td><td>${certExpiry(i.expires)}</td><td>${i.ceuComp}/${i.ceuReq}</td><td>${badge(i.status)}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'productivity') {
+      const csvRows = [['Metric ID', 'Dept', 'Period', 'Type', 'Value', 'Target', 'Variance', 'Trend']];
+      d.items.forEach(i => csvRows.push([i.metricId, i.dept, i.period, i.type, i.value, i.target, i.variance, i.trend]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} metrics)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'productivity-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Dept</th><th>Period</th><th>Type</th><th>Value</th><th>Target</th><th>Variance</th><th>Trend</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.metricId}</td><td>${i.dept}</td><td>${i.period}</td><td>${i.type}</td><td>${i.value}</td><td>${i.target}</td><td>${i.variance}</td><td>${trendSpan(i.trend)}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'department') {
+      const csvRows = [['Department', 'Type', 'Manager', 'Budgeted FTEs', 'Current FTEs', 'Active Staff', 'Vacancies']];
+      d.items.forEach(i => csvRows.push([i.name, i.type, i.manager, i.budgetedFTEs, i.currentFTEs, i.staff, i.vacancies]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} departments)</h3>
+        <button class="act-btn act-btn-indigo" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'department-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Department</th><th>Type</th><th>Manager</th><th>Budget FTE</th><th>Current FTE</th><th>Staff</th><th>Vacancies</th></tr></thead><tbody>${
+        d.items.map(i => {
+          const gap = (Number(i.budgetedFTEs) || 0) - (Number(i.currentFTEs) || 0);
+          return `<tr><td><strong>${i.name}</strong></td><td>${i.type}</td><td>${i.manager}</td><td>${i.budgetedFTEs}</td><td>${i.currentFTEs}</td><td>${i.staff}</td><td>${i.vacancies > 0 ? `<span class="days-red">${i.vacancies}</span>` : '0'}</td></tr>`;
+        }).join('')
+        }</tbody></table></div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* ============== UTILITY ============== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

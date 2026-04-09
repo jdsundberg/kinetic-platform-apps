@@ -1,0 +1,299 @@
+{
+  "event-sources": [
+    {
+      "Name": "stripe",
+      "Description": "Stripe payment webhooks",
+      "Auth Type": "HMAC",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "salesforce",
+      "Description": "Salesforce outbound messages and platform events",
+      "Auth Type": "API Key",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "github",
+      "Description": "GitHub repository webhooks",
+      "Auth Type": "HMAC",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "jira",
+      "Description": "Jira issue webhooks",
+      "Auth Type": "None",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "pagerduty",
+      "Description": "PagerDuty incident webhooks",
+      "Auth Type": "API Key",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "custom",
+      "Description": "Custom application events via REST",
+      "Auth Type": "API Key",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "email",
+      "Description": "Inbound email events (parsed by mail gateway)",
+      "Auth Type": "None",
+      "Auth Key": "",
+      "Active": "Yes",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    },
+    {
+      "Name": "iot",
+      "Description": "IoT device telemetry and alerts",
+      "Auth Type": "API Key",
+      "Auth Key": "",
+      "Active": "No",
+      "Webhook Secret": "",
+      "Events Received": "0"
+    }
+  ],
+  "event-types": [
+    {
+      "Name": "payment.completed",
+      "Source": "stripe",
+      "Description": "Payment successfully processed",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"amount\":\"number\",\"currency\":\"string\",\"customer_id\":\"string\"}"
+    },
+    {
+      "Name": "payment.failed",
+      "Source": "stripe",
+      "Description": "Payment attempt failed",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"amount\":\"number\",\"error\":\"string\",\"customer_id\":\"string\"}"
+    },
+    {
+      "Name": "subscription.created",
+      "Source": "stripe",
+      "Description": "New subscription started",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"plan\":\"string\",\"customer_id\":\"string\",\"interval\":\"string\"}"
+    },
+    {
+      "Name": "lead.created",
+      "Source": "salesforce",
+      "Description": "New lead created in Salesforce",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"name\":\"string\",\"email\":\"string\",\"company\":\"string\",\"source\":\"string\"}"
+    },
+    {
+      "Name": "opportunity.closed_won",
+      "Source": "salesforce",
+      "Description": "Deal closed-won",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"name\":\"string\",\"amount\":\"number\",\"account\":\"string\"}"
+    },
+    {
+      "Name": "case.created",
+      "Source": "salesforce",
+      "Description": "Support case opened",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"subject\":\"string\",\"priority\":\"string\",\"contact\":\"string\"}"
+    },
+    {
+      "Name": "push",
+      "Source": "github",
+      "Description": "Code pushed to repository",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"repo\":\"string\",\"branch\":\"string\",\"commits\":\"number\",\"pusher\":\"string\"}"
+    },
+    {
+      "Name": "pull_request.merged",
+      "Source": "github",
+      "Description": "Pull request merged",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"repo\":\"string\",\"pr_number\":\"number\",\"title\":\"string\",\"author\":\"string\"}"
+    },
+    {
+      "Name": "issue.created",
+      "Source": "jira",
+      "Description": "Jira issue created",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"key\":\"string\",\"summary\":\"string\",\"type\":\"string\",\"priority\":\"string\",\"assignee\":\"string\"}"
+    },
+    {
+      "Name": "issue.transitioned",
+      "Source": "jira",
+      "Description": "Jira issue status changed",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"key\":\"string\",\"from_status\":\"string\",\"to_status\":\"string\"}"
+    },
+    {
+      "Name": "incident.triggered",
+      "Source": "pagerduty",
+      "Description": "PagerDuty incident triggered",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"incident_id\":\"string\",\"title\":\"string\",\"service\":\"string\",\"urgency\":\"string\"}"
+    },
+    {
+      "Name": "incident.resolved",
+      "Source": "pagerduty",
+      "Description": "PagerDuty incident resolved",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"incident_id\":\"string\",\"title\":\"string\",\"resolved_by\":\"string\"}"
+    },
+    {
+      "Name": "order.placed",
+      "Source": "custom",
+      "Description": "Customer order placed",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"order_id\":\"string\",\"customer\":\"string\",\"items\":\"array\",\"total\":\"number\"}"
+    },
+    {
+      "Name": "user.signup",
+      "Source": "custom",
+      "Description": "New user registration",
+      "Active": "Yes",
+      "Handler Tree": "",
+      "Schema": "{\"username\":\"string\",\"email\":\"string\",\"plan\":\"string\"}"
+    },
+    {
+      "Name": "alert.threshold",
+      "Source": "iot",
+      "Description": "IoT sensor threshold exceeded",
+      "Active": "No",
+      "Handler Tree": "",
+      "Schema": "{\"device_id\":\"string\",\"metric\":\"string\",\"value\":\"number\",\"threshold\":\"number\"}"
+    }
+  ],
+  "processing-rules": [
+    {
+      "Name": "Payment to Finance",
+      "Event Type Pattern": "payment.*",
+      "Source Pattern": "stripe",
+      "Target Tree": "process-payment",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "Route all Stripe payment events to finance processing"
+    },
+    {
+      "Name": "New Leads to CRM",
+      "Event Type Pattern": "lead.created",
+      "Source Pattern": "salesforce",
+      "Target Tree": "process-new-lead",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "New Salesforce leads trigger intake workflow"
+    },
+    {
+      "Name": "Closed Deals to Billing",
+      "Event Type Pattern": "opportunity.closed_won",
+      "Source Pattern": "salesforce",
+      "Target Tree": "process-closed-deal",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "Won opportunities trigger billing setup"
+    },
+    {
+      "Name": "Support Cases to ITSM",
+      "Event Type Pattern": "case.created",
+      "Source Pattern": "salesforce",
+      "Target Tree": "create-itsm-ticket",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "Salesforce cases create ITSM tickets"
+    },
+    {
+      "Name": "CI/CD Notifications",
+      "Event Type Pattern": "push",
+      "Source Pattern": "github",
+      "Target Tree": "notify-dev-team",
+      "Priority": "20",
+      "Active": "Yes",
+      "Description": "Code pushes trigger dev team notifications"
+    },
+    {
+      "Name": "PR Merged Deploy",
+      "Event Type Pattern": "pull_request.merged",
+      "Source Pattern": "github",
+      "Target Tree": "trigger-deploy",
+      "Priority": "5",
+      "Active": "Yes",
+      "Description": "Merged PRs to main trigger deployment pipeline"
+    },
+    {
+      "Name": "Jira to Kinetic Sync",
+      "Event Type Pattern": "issue.*",
+      "Source Pattern": "jira",
+      "Target Tree": "sync-jira-issue",
+      "Priority": "15",
+      "Active": "Yes",
+      "Description": "Sync Jira issue changes to Kinetic forms"
+    },
+    {
+      "Name": "PagerDuty Incidents",
+      "Event Type Pattern": "incident.*",
+      "Source Pattern": "pagerduty",
+      "Target Tree": "handle-incident",
+      "Priority": "5",
+      "Active": "Yes",
+      "Description": "PagerDuty incidents trigger incident response workflow"
+    },
+    {
+      "Name": "Order Fulfillment",
+      "Event Type Pattern": "order.placed",
+      "Source Pattern": "custom",
+      "Target Tree": "fulfill-order",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "Customer orders trigger fulfillment workflow"
+    },
+    {
+      "Name": "User Onboarding",
+      "Event Type Pattern": "user.signup",
+      "Source Pattern": "custom",
+      "Target Tree": "onboard-user",
+      "Priority": "10",
+      "Active": "Yes",
+      "Description": "New signups trigger onboarding sequence"
+    },
+    {
+      "Name": "Catch-All Logger",
+      "Event Type Pattern": "*",
+      "Source Pattern": "*",
+      "Target Tree": "log-event",
+      "Priority": "999",
+      "Active": "Yes",
+      "Description": "Default catch-all — logs unmatched events for review"
+    }
+  ]
+}

@@ -1,0 +1,501 @@
+{
+  "name": "Supply Chain",
+  "slug": "supply-chain",
+  "description": "Supply chain resilience with suppliers, products, shipments, risks, and disruption tracking.",
+  "forms": [
+    {
+      "slug": "suppliers",
+      "name": "Suppliers",
+      "fields": [
+        {
+          "name": "Supplier ID",
+          "required": true
+        },
+        {
+          "name": "Supplier Name",
+          "required": true
+        },
+        {
+          "name": "Supplier Type"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Primary Contact"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Contract Number"
+        },
+        {
+          "name": "Lead Time Days"
+        },
+        {
+          "name": "Reliability Score"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Supply chain vendor and supplier records",
+      "submissionLabelExpression": "${values('Supplier Name')} (${values('Supplier ID')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Supplier ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "fields": [
+        {
+          "name": "Product ID",
+          "required": true
+        },
+        {
+          "name": "Product Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Manufacturer"
+        },
+        {
+          "name": "Primary Supplier"
+        },
+        {
+          "name": "Unit of Measure"
+        },
+        {
+          "name": "Unit Cost"
+        },
+        {
+          "name": "Par Level"
+        },
+        {
+          "name": "Reorder Point"
+        },
+        {
+          "name": "Critical Item"
+        },
+        {
+          "name": "FDA Regulated"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Medical products and supplies catalog",
+      "submissionLabelExpression": "${values('Product Name')} (${values('Product ID')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Critical Item]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "orders",
+      "name": "Orders",
+      "fields": [
+        {
+          "name": "Order ID",
+          "required": true
+        },
+        {
+          "name": "Supplier ID"
+        },
+        {
+          "name": "Supplier Name"
+        },
+        {
+          "name": "Order Date"
+        },
+        {
+          "name": "Delivery Date"
+        },
+        {
+          "name": "Items Count"
+        },
+        {
+          "name": "Total Amount"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Ordered By"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Tracking Number"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Purchase orders and procurement tracking",
+      "submissionLabelExpression": "${values('Order ID')} - ${values('Supplier Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Order ID]",
+          "values[Status]",
+          "values[Supplier ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "inventory",
+      "name": "Inventory",
+      "fields": [
+        {
+          "name": "Inventory ID",
+          "required": true
+        },
+        {
+          "name": "Product ID"
+        },
+        {
+          "name": "Product Name"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Quantity On Hand"
+        },
+        {
+          "name": "Par Level"
+        },
+        {
+          "name": "Reorder Point"
+        },
+        {
+          "name": "Last Count Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Lot Number"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Current stock levels and inventory tracking",
+      "submissionLabelExpression": "${values('Product Name')} @ ${values('Location')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "disruptions",
+      "name": "Disruptions",
+      "fields": [
+        {
+          "name": "Disruption ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Disruption Type"
+        },
+        {
+          "name": "Affected Products"
+        },
+        {
+          "name": "Affected Suppliers"
+        },
+        {
+          "name": "Impact Level"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Resolution Date"
+        },
+        {
+          "name": "Mitigation Plan",
+          "rows": 3
+        },
+        {
+          "name": "Affected Departments"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Supply chain disruption events and mitigation",
+      "submissionLabelExpression": "${values('Disruption ID')} - ${values('Title')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Disruption ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "substitutions",
+      "name": "Substitutions",
+      "fields": [
+        {
+          "name": "Substitution ID",
+          "required": true
+        },
+        {
+          "name": "Original Product"
+        },
+        {
+          "name": "Original Supplier"
+        },
+        {
+          "name": "Substitute Product"
+        },
+        {
+          "name": "Substitute Supplier"
+        },
+        {
+          "name": "Cost Difference"
+        },
+        {
+          "name": "Clinical Equivalence"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Approval Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Product substitution approvals and tracking",
+      "submissionLabelExpression": "${values('Substitution ID')} - ${values('Original Product')} -> ${values('Substitute Product')}"
+    },
+    {
+      "slug": "warehouses",
+      "name": "Warehouses",
+      "fields": [
+        {
+          "name": "Warehouse ID",
+          "required": true
+        },
+        {
+          "name": "Location Name",
+          "required": true
+        },
+        {
+          "name": "Location Type"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "Manager"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Current Utilization"
+        },
+        {
+          "name": "Temperature Controlled"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Storage locations and warehouse management",
+      "submissionLabelExpression": "${values('Location Name')} (${values('Warehouse ID')})"
+    },
+    {
+      "slug": "shipments",
+      "name": "Shipments",
+      "fields": [
+        {
+          "name": "Shipment ID",
+          "required": true
+        },
+        {
+          "name": "Order ID"
+        },
+        {
+          "name": "Supplier Name"
+        },
+        {
+          "name": "Carrier"
+        },
+        {
+          "name": "Tracking Number"
+        },
+        {
+          "name": "Ship Date"
+        },
+        {
+          "name": "Expected Delivery"
+        },
+        {
+          "name": "Actual Delivery"
+        },
+        {
+          "name": "Items Count"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Shipment tracking and delivery management",
+      "submissionLabelExpression": "${values('Shipment ID')} - ${values('Supplier Name')} (${values('Status')})"
+    },
+    {
+      "slug": "alerts",
+      "name": "Alerts",
+      "fields": [
+        {
+          "name": "Alert ID",
+          "required": true
+        },
+        {
+          "name": "Alert Type"
+        },
+        {
+          "name": "Product Name"
+        },
+        {
+          "name": "Supplier Name"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Message",
+          "rows": 3
+        },
+        {
+          "name": "Created Date"
+        },
+        {
+          "name": "Acknowledged By"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Supply chain alerts and notifications",
+      "submissionLabelExpression": "${values('Alert ID')} - ${values('Alert Type')} (${values('Severity')})"
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Operations"
+}

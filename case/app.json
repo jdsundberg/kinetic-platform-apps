@@ -1,0 +1,127 @@
+{
+  "name": "Case Management",
+  "slug": "case",
+  "description": "General-purpose case management with configurable workflows and SLA tracking.",
+  "forms": [
+    {
+      "slug": "cases",
+      "name": "Cases",
+      "fields": [
+        {
+          "name": "Case Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Case Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Assigned Team"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Resolved Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Resolution",
+          "rows": 3
+        }
+      ],
+      "description": "Case records",
+      "submissionLabelExpression": "${values('Case Title')} - ${values('Case Status')}",
+      "indexes": {
+        "single": [
+          "values[Assigned To]",
+          "values[Case Status]",
+          "values[Category]",
+          "values[Priority]"
+        ],
+        "compound": [
+          [
+            "values[Case Status]",
+            "values[Priority]"
+          ],
+          [
+            "values[Case Status]",
+            "values[Category]"
+          ],
+          [
+            "values[Case Status]",
+            "values[Assigned To]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "case-notes",
+      "name": "Case Notes",
+      "fields": [
+        {
+          "name": "Case ID"
+        },
+        {
+          "name": "Case Title"
+        },
+        {
+          "name": "Note Type"
+        },
+        {
+          "name": "Author"
+        },
+        {
+          "name": "Content",
+          "rows": 3
+        },
+        {
+          "name": "Visibility"
+        }
+      ],
+      "description": "Notes attached to cases",
+      "submissionLabelExpression": "${values('Note Type')} on ${values('Case ID')}",
+      "indexes": {
+        "single": [
+          "values[Case ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "agents",
+      "name": "Agents",
+      "fields": [
+        {
+          "name": "Agent Name"
+        },
+        {
+          "name": "Team"
+        }
+      ],
+      "description": "Agent directory",
+      "submissionLabelExpression": "${values('Agent Name')}"
+    }
+  ],
+  "category": "Operations"
+}

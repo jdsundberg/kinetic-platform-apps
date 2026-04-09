@@ -1,0 +1,200 @@
+Call this app Atlas
+Do this in an app called atlas. 
+Build this in the apps folder.
+With port 3008.
+Read the kinetic.md files for index understanding, data performance hints.
+
+When this is done, Build another process (script) to scan the existing Kinetic Platform and populate this system.
+Have this script be driven by parameters so it can be run against other Kinetic Platforms, or sql databases, or nosql databases, or api systems which all return data structure. 
+
+This app will be uxed to house data structures that are well defined (sql), loosly defined (json,etc...), and undefined (just text). Goal is to know what systms hold data and what structure and what kind.
+
+
+
+
+Prompt for Claude (Kinetic Data Dictionary Application)
+
+You are a senior product engineer and Kinetic Platform expert. Build a production-ready “Data Dictionary & Consistency Intelligence” application in Kinetic Platform. The app’s primary audience is senior management and technical management who need a clear grasp of data consistency, usage, patterns, relationships, and over time identify duplication and recommend consolidation opportunities. A future app (“Data as a Service”) will exist later; design today’s system so it can evolve into that.
+
+1) Product Goals (what success looks like)
+
+Build an application that:
+	•	Creates a single searchable catalog of critical enterprise data assets (tables, views, APIs, files, topics, etc.).
+	•	Provides high-confidence definitions: business meaning, owner, source of truth, lineage, sensitivity, allowed values, data quality expectations.
+	•	Shows relationships (PK/FK, semantic relationships, “same concept” mappings across systems).
+	•	Shows usage patterns (where used, what processes depend on it, frequency/volume if available).
+	•	Enables management-ready dashboards answering:
+	•	“Do we have one definition for Customer / Member / Patient / Employee?”
+	•	“Where are we inconsistent?”
+	•	“Where are we duplicating data and why?”
+	•	“What’s the risk (privacy, compliance, operational)?”
+	•	Establishes a foundation for later “Data as a Service” by enforcing stable IDs, versioning, change logs, and publish-ready APIs.
+
+2) Non-goals (for v1)
+	•	Do not build a full ETL/ELT tool.
+	•	Do not build a full data mesh marketplace.
+	•	Do not attempt deep automated discovery across every system unless stubbed behind connectors.
+
+3) Required Capabilities
+
+3.1 Core Catalog
+Model these as first-class entities:
+	•	Domain (e.g., Customer, Finance, Clinical, HR)
+	•	System (e.g., Salesforce, Epic, Workday, Data Warehouse)
+	•	Dataset (DB schema/table/view OR file set OR topic OR API resource)
+	•	Field / Attribute (column/JSON path/property)
+	•	Metric (optional v1 but design space for it)
+	•	Glossary Term (business definition)
+	•	Policy / Classification (PII/PHI/PCI/GDPR, retention, access classification)
+	•	Owner / Steward (person/team, with escalation path)
+	•	Relationship
+	•	Technical: PK/FK, joins, references
+	•	Semantic: “same-as”, “derived-from”, “depends-on”
+	•	Lineage Link (source → transform/process → target)
+	•	Quality Rule (expectations, constraints, validation checks)
+	•	Issue / Finding (inconsistency, duplication, missing owner, conflicting definitions)
+
+Each entity must support:
+	•	Unique ID
+	•	Name + description
+	•	Status (Draft / Proposed / Approved / Deprecated)
+	•	Versioning (at minimum: version number + effective dates)
+	•	Tags
+	•	Audit trail (created/updated by/time, comments)
+
+3.2 Search + Browse
+	•	Global search across everything with faceted filtering by: Domain, System, Classification, Status, Owner, Tag.
+	•	Browse by domain tree and system tree.
+	•	Field-level search (“show me every place ‘member_id’ exists”).
+
+3.3 Consistency Views (management-grade)
+Create computed “health” signals:
+	•	Definition Consistency Score per Term (how many systems define it differently; how many datasets mapped to it; how many are approved).
+	•	Ownership Coverage (assets missing owner/steward).
+	•	Classification Coverage (assets missing sensitivity labels).
+	•	Quality Coverage (assets missing rules / checks).
+	•	Duplication Signal (heuristics): multiple datasets/fields representing same concept with different names/types/constraints OR same name with different meaning.
+
+Dashboards:
+	•	Executive: top risks, top duplication opportunities, domains with lowest consistency.
+	•	Technical: inconsistent types/constraints, conflicting definitions, missing relationships, “orphan” datasets.
+
+3.4 Relationship Graph
+	•	Interactive graph visualization for an entity (dataset/term/field):
+	•	upstream/downstream lineage links
+	•	semantic links (“same concept”)
+	•	related datasets and fields
+	•	Allow export to PNG/SVG (or printable view) for board decks.
+
+3.5 Workflows (Kinetic Routines)
+Implement workflows for:
+	•	Propose new term/dataset/field
+	•	Review/approve changes (steward approval)
+	•	Deprecation process
+	•	Issue triage: create, assign, resolve
+	•	“Duplication candidate” review: accept/reject, add rationale
+
+Each workflow must:
+	•	Record decisions, timestamps, and approver(s)
+	•	Support comments and attachments
+	•	Be permission-aware (see RBAC)
+
+3.6 Ingestion Strategy (v1 + extensible)
+Provide two ingestion paths:
+	1.	Manual entry UI for high-value assets
+	2.	Bulk import via CSV/JSON upload
+	•	Provide templates
+	•	Validate data, show import preview, error reporting
+
+Also implement “Connector Stubs”:
+	•	Define an interface and placeholders for future connectors (DB introspection, API schema pulls, etc.).
+	•	For now, implement at least one simple connector example (e.g., import Postgres information_schema dump from CSV/JSON).
+
+4) Security & Governance
+
+RBAC roles:
+	•	Viewer (read-only)
+	•	Contributor (create drafts, propose changes)
+	•	Steward (approve, manage issues)
+	•	Admin (manage configuration, RBAC, global settings)
+
+Data sensitivity:
+	•	Allow classification labels
+	•	Allow restricted fields (e.g., hide “notes” or “data examples” unless privileged)
+
+5) Kinetic Implementation Requirements
+
+Build this as a Kinetic application with:
+	•	A clear Space structure
+	•	Forms for CRUD of each entity
+	•	Routines for workflow actions and automation
+	•	A consistent UI pattern (list → detail → related tabs → actions)
+	•	API endpoints:
+	•	Read: search, entity retrieval, relationship graph
+	•	Write: create drafts, propose, approve, resolve issues
+	•	Provide a seed dataset (dummy sample) for demonstration:
+	•	3 domains, 5 systems, 12 datasets, 60 fields, 20 terms, 30 relationships, 10 issues
+
+6) Data Model (must be explicit)
+
+Design a normalized model (Kinetic forms or equivalent) that supports:
+	•	Many-to-many: Term ↔ Field, Dataset ↔ Term, Dataset ↔ Dataset relationships
+	•	Versioned entities (at least for Term and Dataset)
+	•	Change log table
+	•	Tags as a separate join entity (not just a string)
+	•	Relationship table with type + directionality + confidence score
+	•	Optional: “Concept” entity that multiple terms map to (to support semantic dedup later)
+
+7) UX Requirements (board-friendly)
+	•	Dashboard landing page with 5–8 tiles + trend lines (even if dummy)
+	•	Entity detail pages with tabs:
+	•	Overview
+	•	Definitions / Glossary mapping
+	•	Fields
+	•	Relationships
+	•	Lineage
+	•	Quality rules
+	•	Issues
+	•	Change history
+	•	“Explain this” panel: plain-English summary of what the entity is, why it matters, and risk flags.
+	•	Printable “Executive Snapshot” page per Domain and per System.
+
+8) Duplication Detection (v1 heuristic)
+
+Implement a basic scoring algorithm (rule-based) that produces “duplication candidates”:
+Signals can include:
+	•	Similar names (normalized string similarity)
+	•	Same business term mapping to multiple datasets
+	•	Similar field sets (Jaccard similarity)
+	•	Same field name but different type/constraint
+	•	Same type but divergent allowed values
+Output:
+	•	Candidate record with score, evidence, recommended action (merge/rename/clarify/accept divergence)
+
+This must be explainable (show evidence).
+
+9) Deliverables (what you must output)
+
+Produce:
+	1.	A step-by-step build plan (phased: MVP → v1 → v1.5)
+	2.	The full Kinetic build artifacts:
+	•	Form definitions (field lists, validation rules, key attributes)
+	•	Routine definitions (workflow trees)
+	•	API design (routes, request/response examples)
+	•	UI page map (screens + navigation)
+	3.	Seed data generator (JSON or CSV)
+	4.	A short “Operator Guide” for admins/stewards
+	5.	Testing checklist (UAT scenarios + permissions)
+	6.	Documentation for future “Data as a Service” extension points
+
+10) Constraints / Quality Bar
+	•	Must be production-grade: consistent naming, validation, audit trails
+	•	Avoid over-engineering but do not hand-wave: give concrete forms, fields, and routines
+	•	Prefer readable configuration over hard-coded logic
+	•	Make the system evolvable: versioning, change history, stable IDs, connector interfaces
+
+Now build it.
+
+
+
+

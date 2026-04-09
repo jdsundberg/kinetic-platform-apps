@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Safety</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+  --sac1: #C62828;
+  --sac2: #E65100;
+  --sac3: #F9A825;
+  --sac4: #2E7D32;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #00979E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--teal); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtab { background: var(--light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--gray); }
+.subtab.active { background: var(--teal); color: var(--white); }
+.subtab:hover:not(.active) { background: var(--border); }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); cursor: default; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-new, .badge-draft, .badge-under-review, .badge-pending, .badge-ready-for-review, .badge-scheduled { background: #E3F2FD; color: #1565C0; }
+.badge-closed, .badge-complete, .badge-completed, .badge-verified, .badge-acknowledged, .badge-active { background: #E8F5E9; color: #2E7D32; }
+.badge-investigation-ordered, .badge-in-progress, .badge-initiated, .badge-submitted, .badge-follow-up-required { background: #F3E5F5; color: #6A1B9A; }
+.badge-overdue, .badge-findings-pending { background: #FFF3E0; color: #E65100; }
+.badge-void, .badge-cancelled, .badge-ineffective { background: #FFEBEE; color: #C62828; }
+.badge-open { background: #E0F7FA; color: #00838F; }
+
+/* SAC badges */
+.sac-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: var(--white); }
+.sac-1 { background: var(--sac1); }
+.sac-2 { background: var(--sac2); }
+.sac-3 { background: var(--sac3); color: #333; }
+.sac-4 { background: var(--sac4); }
+
+/* Priority badges */
+.priority-critical { color: var(--red); font-weight: 700; }
+.priority-high { color: var(--orange); font-weight: 600; }
+.priority-medium { color: var(--yellow); font-weight: 600; }
+.priority-low { color: var(--green); }
+
+/* Anonymous badge */
+.badge-anon { background: #FCE4EC; color: #AD1457; font-size: 10px; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 900px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--teal); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--teal); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-teal { background: var(--teal); color: var(--white); }
+.act-btn-teal:hover { background: #00979E; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Days remaining */
+.days-green { color: var(--green); font-weight: 600; }
+.days-yellow { color: #F9A825; font-weight: 600; }
+.days-red { color: var(--red); font-weight: 700; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Patient Safety</h1>
+      <p class="subtitle">Incident Reporting & Quality Management</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Patient <span class="accent">Safety</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="events">Events</button>
+      <button class="tab-btn" data-tab="investigations">Investigations</button>
+      <button class="tab-btn" data-tab="capas">CAPAs</button>
+      <button class="tab-btn" data-tab="regulatory">Regulatory</button>
+      <button class="tab-btn" data-tab="committees">Committees</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Quality Dashboard</div>
+      <div class="page-sub">Patient safety overview and key performance indicators</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Event Trend (6 Months)</h3><div id="dash-trend" class="bar-chart"></div></div>
+        <div class="card"><h3>SAC Score Distribution</h3><div id="dash-sac" class="bar-chart"></div></div>
+      </div>
+      <div class="two-col">
+        <div class="card"><h3>Recent Events</h3><div id="dash-recent"></div></div>
+        <div class="card"><h3>Open Investigations</h3><div id="dash-inv"></div></div>
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="tab-panel" id="panel-events">
+      <div class="page-title">Safety Events</div>
+      <div class="page-sub">Near-miss and adverse event reports</div>
+      <div class="subtabs" id="events-subtabs">
+        <button class="subtab active" data-sub="all">All Events</button>
+        <button class="subtab" data-sub="dept">By Department</button>
+        <button class="subtab" data-sub="type">By Type</button>
+      </div>
+      <div class="filter-bar" id="events-filters">
+        <select id="evt-f-status"><option value="">All Statuses</option><option>New</option><option>Under Review</option><option>Investigation Ordered</option><option>Closed</option><option>Void</option></select>
+        <select id="evt-f-type"><option value="">All Types</option><option>Near Miss</option><option>Adverse Event</option><option>Sentinel Event</option><option>No Harm Event</option><option>Unsafe Condition</option></select>
+        <select id="evt-f-cat"><option value="">All Categories</option><option>Medication Error</option><option>Fall</option><option>Surgical</option><option>Infection</option><option>Diagnostic</option><option>Equipment</option><option>Blood Product</option><option>Behavioral</option><option>Communication</option><option>Other</option></select>
+        <select id="evt-f-sac"><option value="">All SAC</option><option value="1">SAC 1</option><option value="2">SAC 2</option><option value="3">SAC 3</option><option value="4">SAC 4</option></select>
+        <input id="evt-f-search" type="text" placeholder="Search events...">
+      </div>
+      <div id="events-table"></div>
+      <div id="events-pag" class="pagination"></div>
+    </div>
+
+    <!-- INVESTIGATIONS -->
+    <div class="tab-panel" id="panel-investigations">
+      <div class="page-title">Investigations</div>
+      <div class="page-sub">Root Cause Analysis and investigation tracking</div>
+      <div class="subtabs" id="inv-subtabs">
+        <button class="subtab active" data-sub="all">All Investigations</button>
+        <button class="subtab" data-sub="active">Active</button>
+        <button class="subtab" data-sub="dept">By Department</button>
+      </div>
+      <div class="filter-bar" id="inv-filters">
+        <select id="inv-f-status"><option value="">All Statuses</option><option>Initiated</option><option>In Progress</option><option>Findings Pending</option><option>Complete</option><option>Closed</option></select>
+        <select id="inv-f-priority"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="inv-f-type"><option value="">All Types</option><option>Root Cause Analysis</option><option>Apparent Cause Analysis</option><option>Common Cause Analysis</option><option>Peer Review</option></select>
+        <input id="inv-f-search" type="text" placeholder="Search investigations...">
+      </div>
+      <div id="inv-table"></div>
+      <div id="inv-pag" class="pagination"></div>
+    </div>
+
+    <!-- CAPAs -->
+    <div class="tab-panel" id="panel-capas">
+      <div class="page-title">Corrective & Preventive Actions</div>
+      <div class="page-sub">CAPA tracking and effectiveness monitoring</div>
+      <div class="subtabs" id="capa-subtabs">
+        <button class="subtab active" data-sub="all">All CAPAs</button>
+        <button class="subtab" data-sub="open">Open / Overdue</button>
+        <button class="subtab" data-sub="dept">By Department</button>
+      </div>
+      <div class="filter-bar" id="capa-filters">
+        <select id="capa-f-status"><option value="">All Statuses</option><option>Open</option><option>In Progress</option><option>Completed</option><option>Verified</option><option>Overdue</option><option>Cancelled</option></select>
+        <select id="capa-f-priority"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="capa-f-type"><option value="">All Types</option><option>Corrective</option><option>Preventive</option></select>
+        <input id="capa-f-search" type="text" placeholder="Search CAPAs...">
+      </div>
+      <div id="capa-table"></div>
+      <div id="capa-pag" class="pagination"></div>
+    </div>
+
+    <!-- REGULATORY -->
+    <div class="tab-panel" id="panel-regulatory">
+      <div class="page-title">Regulatory Reports</div>
+      <div class="page-sub">State, CMS, and Joint Commission filings</div>
+      <div class="subtabs" id="reg-subtabs">
+        <button class="subtab active" data-sub="all">All Reports</button>
+        <button class="subtab" data-sub="pending">Pending</button>
+        <button class="subtab" data-sub="submitted">Submitted</button>
+      </div>
+      <div class="filter-bar" id="reg-filters">
+        <select id="reg-f-status"><option value="">All Statuses</option><option>Draft</option><option>Ready for Review</option><option>Submitted</option><option>Acknowledged</option><option>Follow Up Required</option><option>Closed</option></select>
+        <select id="reg-f-agency"><option value="">All Agencies</option><option>State Health Dept</option><option>CMS</option><option>Joint Commission</option><option>FDA MedWatch</option><option>CDC NHSN</option><option>Internal Only</option></select>
+        <select id="reg-f-type"><option value="">All Types</option><option>Mandatory</option><option>Voluntary</option><option>Inquiry Response</option></select>
+        <input id="reg-f-search" type="text" placeholder="Search reports...">
+      </div>
+      <div id="reg-table"></div>
+      <div id="reg-pag" class="pagination"></div>
+    </div>
+
+    <!-- COMMITTEES -->
+    <div class="tab-panel" id="panel-committees">
+      <div class="page-title">Committee Reviews</div>
+      <div class="page-sub">Quality committee review records</div>
+      <div class="subtabs" id="cmte-subtabs">
+        <button class="subtab active" data-sub="all">All Reviews</button>
+        <button class="subtab" data-sub="committee">By Committee</button>
+        <button class="subtab" data-sub="upcoming">Upcoming</button>
+      </div>
+      <div class="filter-bar" id="cmte-filters">
+        <select id="cmte-f-status"><option value="">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="cmte-f-name"><option value="">All Committees</option><option>Patient Safety Committee</option><option>Quality Improvement</option><option>Pharmacy & Therapeutics</option><option>Morbidity & Mortality</option><option>Infection Control</option><option>Peer Review</option><option>Risk Management</option></select>
+        <input id="cmte-f-search" type="text" placeholder="Search reviews...">
+      </div>
+      <div id="cmte-table"></div>
+      <div id="cmte-pag" class="pagination"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and view trending data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT DETAIL MODAL -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="evt-modal-title">Event Detail</h2>
+      <button class="modal-close" onclick="closeModal('event-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="evt-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="investigations">Investigations</button>
+        <button class="modal-tab" data-sec="capas">CAPAs</button>
+        <button class="modal-tab" data-sec="factors">Contributing Factors</button>
+        <button class="modal-tab" data-sec="notes">Notes</button>
+      </div>
+      <div id="evt-modal-overview" class="modal-section active"></div>
+      <div id="evt-modal-investigations" class="modal-section"></div>
+      <div id="evt-modal-capas" class="modal-section"></div>
+      <div id="evt-modal-factors" class="modal-section"></div>
+      <div id="evt-modal-notes" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════ STATE & AUTH ═══════════════ */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'patient-safety';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* ═══════════════ API HELPERS ═══════════════ */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* ═══════════════ BADGES ═══════════════ */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+
+function sacBadge(score) {
+  return `<span class="sac-badge sac-${score}">SAC ${score}</span>`;
+}
+
+function prioritySpan(p) {
+  const cls = (p || '').toLowerCase();
+  return `<span class="priority-${cls}">${p || ''}</span>`;
+}
+
+function daysRemaining(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="days-red">${Math.abs(days)}d overdue</span>`;
+  if (days <= 7) return `<span class="days-red">${days}d</span>`;
+  if (days <= 14) return `<span class="days-yellow">${days}d</span>`;
+  return `<span class="days-green">${days}d</span>`;
+}
+
+/* ═══════════════ PAGINATION ═══════════════ */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* ═══════════════ TAB NAVIGATION ═══════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'events') loadEvents();
+    else if (tab === 'investigations') loadInvestigations();
+    else if (tab === 'capas') loadCAPAs();
+    else if (tab === 'regulatory') loadRegulatory();
+    else if (tab === 'committees') loadCommittees();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* Subtab handlers */
+function setupSubtabs(containerId, callback) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    if (!e.target.classList.contains('subtab')) return;
+    e.currentTarget.querySelectorAll('.subtab').forEach(s => s.classList.remove('active'));
+    e.target.classList.add('active');
+    callback(e.target.dataset.sub);
+  });
+}
+
+/* ═══════════════ MODAL ═══════════════ */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('evt-modal-tabs', ['evt-modal-overview', 'evt-modal-investigations', 'evt-modal-capas', 'evt-modal-factors', 'evt-modal-notes']);
+
+/* ═══════════════ DASHBOARD ═══════════════ */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/psafe/dashboard');
+
+    // KPIs
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.events30d}</div><div class="kpi-label">Events (30 days)</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.openInvestigations}</div><div class="kpi-label">Open Investigations</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.overdueCAPAs}</div><div class="kpi-label">Overdue CAPAs</div></div>
+      <div class="kpi-card kpi-blue"><div class="kpi-value">${d.pendingReg}</div><div class="kpi-label">Pending Regulatory</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.sac1YTD}</div><div class="kpi-label">SAC 1 Events (YTD)</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${d.avgDaysToClose}</div><div class="kpi-label">Avg Days to Close</div></div>`;
+
+    // Trend chart
+    const trendKeys = Object.keys(d.trend);
+    const trendMax = Math.max(...Object.values(d.trend), 1);
+    document.getElementById('dash-trend').innerHTML = trendKeys.map(k =>
+      `<div class="bar-col"><div class="bar-value">${d.trend[k]}</div><div class="bar" style="height:${(d.trend[k] / trendMax * 120)}px"></div><div class="bar-label">${k.slice(5)}</div></div>`
+    ).join('');
+
+    // SAC chart
+    const sacMax = Math.max(d.sacDist['1'], d.sacDist['2'], d.sacDist['3'], d.sacDist['4'], 1);
+    const sacColors = { '1': 'var(--sac1)', '2': 'var(--sac2)', '3': 'var(--sac3)', '4': 'var(--sac4)' };
+    document.getElementById('dash-sac').innerHTML = ['1','2','3','4'].map(s =>
+      `<div class="bar-col"><div class="bar-value">${d.sacDist[s]}</div><div class="bar" style="height:${(d.sacDist[s] / sacMax * 120)}px; background:${sacColors[s]}"></div><div class="bar-label">SAC ${s}</div></div>`
+    ).join('');
+
+    // Recent events
+    document.getElementById('dash-recent').innerHTML = d.recentEvents.length === 0
+      ? '<div class="loading">No recent events</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>SAC</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+        d.recentEvents.map(e => `<tr onclick="openEventDetail('${e.eventId}')"><td>${e.eventId}</td><td>${e.title}</td><td>${sacBadge(e.sacScore)}</td><td>${badge(e.status)}</td><td>${e.date}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Open investigations
+    document.getElementById('dash-inv').innerHTML = d.openInvList.length === 0
+      ? '<div class="loading">No open investigations</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Event</th><th>Priority</th><th>Status</th><th>Target</th></tr></thead><tbody>${
+        d.openInvList.map(i => `<tr><td>${i.invId}</td><td>${i.eventTitle}</td><td>${prioritySpan(i.priority)}</td><td>${badge(i.status)}</td><td>${daysRemaining(i.target)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* ═══════════════ EVENTS TAB ═══════════════ */
+let evtPage = 1, evtPageKeys = [null], evtHasNext = false;
+let evtSub = 'all';
+
+setupSubtabs('events-subtabs', sub => { evtSub = sub; evtPage = 1; evtPageKeys = [null]; evtHasNext = false; loadEvents(); });
+
+['evt-f-status', 'evt-f-type', 'evt-f-cat', 'evt-f-sac'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { evtPage = 1; evtPageKeys = [null]; evtHasNext = false; loadEvents(); });
+});
+document.getElementById('evt-f-search').addEventListener('input', debounce(() => { evtPage = 1; evtPageKeys = [null]; evtHasNext = false; loadEvents(); }, 300));
+
+async function loadEvents() {
+  const status = document.getElementById('evt-f-status').value;
+  const etype = document.getElementById('evt-f-type').value;
+  const cat = document.getElementById('evt-f-cat').value;
+  const sac = document.getElementById('evt-f-sac').value;
+  const search = document.getElementById('evt-f-search').value.trim().toLowerCase();
+
+  // Build KQL
+  const parts = [];
+  if (status) parts.push(`values[Status] = "${status}"`);
+  if (etype) parts.push(`values[Event Type] = "${etype}"`);
+  if (cat) parts.push(`values[Category] = "${cat}"`);
+  if (sac) parts.push(`values[SAC Score] = "${sac}"`);
+  const kql = parts.length <= 1 ? parts.join('') : null; // multi-field AND needs compound index; fall back to client filter
+
+  try {
+    const data = await kqlFetch('events', kql, 25, evtPageKeys[evtPage - 1]);
+    let subs = data.submissions || [];
+
+    // Client-side filter for multi-field or search
+    if (parts.length > 1) {
+      subs = subs.filter(s => {
+        if (status && vf(s, 'Status') !== status) return false;
+        if (etype && vf(s, 'Event Type') !== etype) return false;
+        if (cat && vf(s, 'Category') !== cat) return false;
+        if (sac && vf(s, 'SAC Score') !== sac) return false;
+        return true;
+      });
+    }
+
+    if (search) {
+      subs = subs.filter(s =>
+        (vf(s, 'Event ID') + ' ' + vf(s, 'Event Title') + ' ' + vf(s, 'Department') + ' ' + vf(s, 'Description')).toLowerCase().includes(search)
+      );
+    }
+
+    // Subtab filter
+    if (evtSub === 'dept') {
+      subs.sort((a, b) => (vf(a, 'Department') || '').localeCompare(vf(b, 'Department') || ''));
+    } else if (evtSub === 'type') {
+      subs.sort((a, b) => (vf(a, 'Event Type') || '').localeCompare(vf(b, 'Event Type') || ''));
+    }
+
+    document.getElementById('events-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No events found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Category</th><th>Department</th><th>SAC</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openEventDetail('${vf(s, 'Event ID')}')">
+          <td>${vf(s, 'Event ID')}${vf(s, 'Anonymous') === 'Yes' ? ' <span class="badge badge-anon">ANON</span>' : ''}</td>
+          <td>${vf(s, 'Event Title')}</td>
+          <td>${vf(s, 'Event Type')}</td>
+          <td>${vf(s, 'Category')}</td>
+          <td>${vf(s, 'Department')}</td>
+          <td>${sacBadge(vf(s, 'SAC Score'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${vf(s, 'Event Date')}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    evtHasNext = !!data.nextPageToken;
+    if (evtHasNext && subs.length) evtPageKeys[evtPage] = subs[subs.length - 1].createdAt;
+    renderPag('events-pag', evtPage, evtHasNext, 'evtPrev()', 'evtNext()');
+  } catch (e) {
+    document.getElementById('events-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function evtNext() { if (!evtHasNext) return; evtPage++; loadEvents(); }
+function evtPrev() { if (evtPage <= 1) return; evtPage--; loadEvents(); }
+
+/* ═══════════════ EVENT DETAIL MODAL ═══════════════ */
+async function openEventDetail(eventId) {
+  openModal('event-modal');
+  document.getElementById('evt-modal-title').textContent = 'Loading...';
+  document.getElementById('evt-modal-overview').innerHTML = '<div class="loading">Loading event details...</div>';
+  ['evt-modal-investigations', 'evt-modal-capas', 'evt-modal-factors', 'evt-modal-notes'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  // Reset to overview tab
+  document.querySelectorAll('#evt-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#evt-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#event-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('evt-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/psafe/event/${encodeURIComponent(eventId)}/summary`);
+    const e = d.event;
+    document.getElementById('evt-modal-title').textContent = `${e['Event ID']} - ${e['Event Title']}`;
+
+    // Transition buttons
+    const transitions = { 'New': ['Under Review', 'Void'], 'Under Review': ['Investigation Ordered', 'Closed', 'Void'], 'Investigation Ordered': ['Under Review', 'Closed'], 'Closed': ['Under Review'] };
+    const allowed = transitions[e.Status] || [];
+    const btns = allowed.map(s => `<button class="act-btn act-btn-teal" onclick="transitionEvent('${eventId}','${s}')">${s}</button>`).join(' ');
+
+    document.getElementById('evt-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${sacBadge(e['SAC Score'])} ${badge(e.Status)} ${e.Anonymous === 'Yes' ? '<span class="badge badge-anon">ANONYMOUS</span>' : ''} ${btns}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Event Type</span><span class="detail-value">${e['Event Type']}</span></div>
+        <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${e.Category}</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${e.Department}</span></div>
+        <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${e.Location}</span></div>
+        <div class="detail-row"><span class="detail-label">Date / Time</span><span class="detail-value">${e['Event Date']} ${e['Event Time']}</span></div>
+        <div class="detail-row"><span class="detail-label">Reported By</span><span class="detail-value">${e['Reported By']}</span></div>
+        <div class="detail-row"><span class="detail-label">Severity</span><span class="detail-value">${e.Severity}</span></div>
+        <div class="detail-row"><span class="detail-label">Likelihood</span><span class="detail-value">${e.Likelihood}</span></div>
+        <div class="detail-row"><span class="detail-label">Harm Level</span><span class="detail-value">${e['Harm Level']}</span></div>
+        <div class="detail-row"><span class="detail-label">Patient</span><span class="detail-value">Age ${e['Patient Age']}, ${e['Patient Gender']}</span></div>
+        <div class="detail-row"><span class="detail-label">Assigned To</span><span class="detail-value">${e['Assigned To']}</span></div>
+        <div class="detail-row"><span class="detail-label">Closed Date</span><span class="detail-value">${e['Closed Date'] || '-'}</span></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Description</h3><p style="font-size:13px; line-height:1.6">${e.Description}</p></div>
+      ${e['Immediate Actions Taken'] ? `<div class="card"><h3>Immediate Actions</h3><p style="font-size:13px">${e['Immediate Actions Taken']}</p></div>` : ''}`;
+
+    // Investigations
+    document.getElementById('evt-modal-investigations').innerHTML = d.investigations.length === 0
+      ? '<div class="loading">No investigations linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Lead</th><th>Status</th><th>Priority</th><th>Target</th></tr></thead><tbody>${
+        d.investigations.map(i => `<tr><td>${i['Investigation ID']}</td><td>${i['Investigation Type']}</td><td>${i['Lead Investigator']}</td><td>${badge(i.Status)}</td><td>${prioritySpan(i.Priority)}</td><td>${daysRemaining(i['Target Completion'])}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // CAPAs
+    document.getElementById('evt-modal-capas').innerHTML = d.capas.length === 0
+      ? '<div class="loading">No CAPAs linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Priority</th><th>Due</th></tr></thead><tbody>${
+        d.capas.map(c => `<tr><td>${c['CAPA ID']}</td><td>${c['CAPA Type']}</td><td>${(c.Description || '').slice(0, 60)}</td><td>${badge(c.Status)}</td><td>${prioritySpan(c.Priority)}</td><td>${daysRemaining(c['Due Date'])}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Factors
+    document.getElementById('evt-modal-factors').innerHTML = d.factors.length === 0
+      ? '<div class="loading">No contributing factors</div>'
+      : `<table class="data-table"><thead><tr><th>Category</th><th>Description</th><th>Mitigation</th></tr></thead><tbody>${
+        d.factors.map(f => `<tr><td>${f['Factor Category']}</td><td>${f['Factor Description']}</td><td>${f['Mitigation Potential']}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Notes
+    document.getElementById('evt-modal-notes').innerHTML = d.notes.length === 0
+      ? '<div class="loading">No notes</div>'
+      : d.notes.map(n => `<div class="card" style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px">
+            <span style="font-weight:600; font-size:13px">${n.Author}</span>
+            <span style="font-size:11px; color:var(--gray)">${badge(n['Note Type'])} ${n.Timestamp ? new Date(n.Timestamp).toLocaleString() : ''}</span>
+          </div>
+          <p style="font-size:13px; line-height:1.5">${n.Content}</p>
+          <div style="font-size:11px; color:var(--gray); margin-top:4px">Visible to: ${n['Visible To']}</div>
+        </div>`).join('');
+  } catch (e) {
+    document.getElementById('evt-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+async function transitionEvent(eventId, newStatus) {
+  try {
+    await apiPost(`/api/psafe/events/${encodeURIComponent(eventId)}/transition`, { status: newStatus, performer: USERNAME });
+    openEventDetail(eventId);
+    loadEvents();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ═══════════════ INVESTIGATIONS TAB ═══════════════ */
+let invPage = 1, invPageKeys = [null], invHasNext = false;
+let invSub = 'all';
+
+setupSubtabs('inv-subtabs', sub => { invSub = sub; invPage = 1; invPageKeys = [null]; invHasNext = false; loadInvestigations(); });
+['inv-f-status', 'inv-f-priority', 'inv-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { invPage = 1; invPageKeys = [null]; invHasNext = false; loadInvestigations(); });
+});
+document.getElementById('inv-f-search').addEventListener('input', debounce(() => { invPage = 1; invPageKeys = [null]; invHasNext = false; loadInvestigations(); }, 300));
+
+async function loadInvestigations() {
+  const status = document.getElementById('inv-f-status').value;
+  const priority = document.getElementById('inv-f-priority').value;
+  const itype = document.getElementById('inv-f-type').value;
+  const search = document.getElementById('inv-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+  if (invSub === 'active') kql = null; // filter client-side
+
+  try {
+    const data = await kqlFetch('investigations', kql, 25, invPageKeys[invPage - 1]);
+    let subs = data.submissions || [];
+
+    if (invSub === 'active') subs = subs.filter(s => !['Complete', 'Closed'].includes(vf(s, 'Status')));
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (itype) subs = subs.filter(s => vf(s, 'Investigation Type') === itype);
+    if (search) subs = subs.filter(s => (vf(s, 'Investigation ID') + ' ' + vf(s, 'Event Title') + ' ' + vf(s, 'Lead Investigator')).toLowerCase().includes(search));
+    if (invSub === 'dept') subs.sort((a, b) => (vf(a, 'Department') || '').localeCompare(vf(b, 'Department') || ''));
+
+    document.getElementById('inv-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No investigations found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Event</th><th>Type</th><th>Lead</th><th>Priority</th><th>Status</th><th>Target</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openEventDetail('${vf(s, 'Event ID')}')">
+          <td>${vf(s, 'Investigation ID')}</td>
+          <td>${vf(s, 'Event Title')}</td>
+          <td>${vf(s, 'Investigation Type')}</td>
+          <td>${vf(s, 'Lead Investigator')}</td>
+          <td>${prioritySpan(vf(s, 'Priority'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${daysRemaining(vf(s, 'Target Completion'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    invHasNext = !!data.nextPageToken;
+    if (invHasNext && subs.length) invPageKeys[invPage] = subs[subs.length - 1].createdAt;
+    renderPag('inv-pag', invPage, invHasNext, 'invPrev()', 'invNext()');
+  } catch (e) {
+    document.getElementById('inv-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function invNext() { if (!invHasNext) return; invPage++; loadInvestigations(); }
+function invPrev() { if (invPage <= 1) return; invPage--; loadInvestigations(); }
+
+/* ═══════════════ CAPAs TAB ═══════════════ */
+let capaPage = 1, capaPageKeys = [null], capaHasNext = false;
+let capaSub = 'all';
+
+setupSubtabs('capa-subtabs', sub => { capaSub = sub; capaPage = 1; capaPageKeys = [null]; capaHasNext = false; loadCAPAs(); });
+['capa-f-status', 'capa-f-priority', 'capa-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { capaPage = 1; capaPageKeys = [null]; capaHasNext = false; loadCAPAs(); });
+});
+document.getElementById('capa-f-search').addEventListener('input', debounce(() => { capaPage = 1; capaPageKeys = [null]; capaHasNext = false; loadCAPAs(); }, 300));
+
+async function loadCAPAs() {
+  const status = document.getElementById('capa-f-status').value;
+  const priority = document.getElementById('capa-f-priority').value;
+  const ctype = document.getElementById('capa-f-type').value;
+  const search = document.getElementById('capa-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+  if (capaSub === 'open') kql = null;
+
+  try {
+    const data = await kqlFetch('capas', kql, 25, capaPageKeys[capaPage - 1]);
+    let subs = data.submissions || [];
+
+    if (capaSub === 'open') subs = subs.filter(s => ['Open', 'In Progress', 'Overdue'].includes(vf(s, 'Status')));
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (ctype) subs = subs.filter(s => vf(s, 'CAPA Type') === ctype);
+    if (search) subs = subs.filter(s => (vf(s, 'CAPA ID') + ' ' + vf(s, 'Description') + ' ' + vf(s, 'Event Title')).toLowerCase().includes(search));
+    if (capaSub === 'dept') subs.sort((a, b) => (vf(a, 'Department') || '').localeCompare(vf(b, 'Department') || ''));
+
+    document.getElementById('capa-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No CAPAs found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Dept</th><th>Priority</th><th>Status</th><th>Due</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const cid = vf(s, 'CAPA ID');
+          let actions = '';
+          if (st === 'Open') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionCAPA('${cid}','In Progress')">Start</button>`;
+          else if (st === 'In Progress') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionCAPA('${cid}','Completed')">Complete</button>`;
+          else if (st === 'Completed') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionCAPA('${cid}','Verified')">Verify</button>`;
+          else if (st === 'Overdue') actions = `<button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionCAPA('${cid}','In Progress')">Resume</button>`;
+          return `<tr>
+            <td>${cid}</td>
+            <td>${vf(s, 'CAPA Type')}</td>
+            <td>${(vf(s, 'Description') || '').slice(0, 50)}</td>
+            <td>${vf(s, 'Department')}</td>
+            <td>${prioritySpan(vf(s, 'Priority'))}</td>
+            <td>${badge(st)}</td>
+            <td>${daysRemaining(vf(s, 'Due Date'))}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    capaHasNext = !!data.nextPageToken;
+    if (capaHasNext && subs.length) capaPageKeys[capaPage] = subs[subs.length - 1].createdAt;
+    renderPag('capa-pag', capaPage, capaHasNext, 'capaPrev()', 'capaNext()');
+  } catch (e) {
+    document.getElementById('capa-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function capaNext() { if (!capaHasNext) return; capaPage++; loadCAPAs(); }
+function capaPrev() { if (capaPage <= 1) return; capaPage--; loadCAPAs(); }
+
+async function transitionCAPA(capaId, newStatus) {
+  try {
+    await apiPost(`/api/psafe/capas/${encodeURIComponent(capaId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadCAPAs();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ═══════════════ REGULATORY TAB ═══════════════ */
+let regPage = 1, regPageKeys = [null], regHasNext = false;
+let regSub = 'all';
+
+setupSubtabs('reg-subtabs', sub => { regSub = sub; regPage = 1; regPageKeys = [null]; regHasNext = false; loadRegulatory(); });
+['reg-f-status', 'reg-f-agency', 'reg-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { regPage = 1; regPageKeys = [null]; regHasNext = false; loadRegulatory(); });
+});
+document.getElementById('reg-f-search').addEventListener('input', debounce(() => { regPage = 1; regPageKeys = [null]; regHasNext = false; loadRegulatory(); }, 300));
+
+async function loadRegulatory() {
+  const status = document.getElementById('reg-f-status').value;
+  const agency = document.getElementById('reg-f-agency').value;
+  const rtype = document.getElementById('reg-f-type').value;
+  const search = document.getElementById('reg-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+  if (regSub === 'pending') kql = null;
+  if (regSub === 'submitted') kql = `values[Status] = "Submitted"`;
+
+  try {
+    const data = await kqlFetch('regulatory-reports', kql, 25, regPageKeys[regPage - 1]);
+    let subs = data.submissions || [];
+
+    if (regSub === 'pending') subs = subs.filter(s => !['Acknowledged', 'Closed'].includes(vf(s, 'Status')));
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (agency) subs = subs.filter(s => vf(s, 'Reporting Agency') === agency);
+    if (rtype) subs = subs.filter(s => vf(s, 'Report Type') === rtype);
+    if (search) subs = subs.filter(s => (vf(s, 'Report ID') + ' ' + vf(s, 'Event Title') + ' ' + vf(s, 'Reporting Agency')).toLowerCase().includes(search));
+
+    document.getElementById('reg-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No regulatory reports found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Agency</th><th>Type</th><th>Event</th><th>Status</th><th>Due</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const rid = vf(s, 'Report ID');
+          let actions = '';
+          if (st === 'Ready for Review') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionReg('${rid}','Submitted')">Submit</button>`;
+          else if (st === 'Submitted') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionReg('${rid}','Acknowledged')">Ack</button>`;
+          else if (st === 'Draft') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionReg('${rid}','Ready for Review')">Ready</button>`;
+          return `<tr>
+            <td>${rid}</td>
+            <td>${vf(s, 'Reporting Agency')}</td>
+            <td>${vf(s, 'Report Type')}</td>
+            <td>${vf(s, 'Event Title')}</td>
+            <td>${badge(st)}</td>
+            <td>${daysRemaining(vf(s, 'Due Date'))}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    regHasNext = !!data.nextPageToken;
+    if (regHasNext && subs.length) regPageKeys[regPage] = subs[subs.length - 1].createdAt;
+    renderPag('reg-pag', regPage, regHasNext, 'regPrev()', 'regNext()');
+  } catch (e) {
+    document.getElementById('reg-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function regNext() { if (!regHasNext) return; regPage++; loadRegulatory(); }
+function regPrev() { if (regPage <= 1) return; regPage--; loadRegulatory(); }
+
+async function transitionReg(reportId, newStatus) {
+  try {
+    await apiPost(`/api/psafe/regulatory/${encodeURIComponent(reportId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadRegulatory();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* ═══════════════ COMMITTEES TAB ═══════════════ */
+let cmtePage = 1, cmtePageKeys = [null], cmteHasNext = false;
+let cmteSub = 'all';
+
+setupSubtabs('cmte-subtabs', sub => { cmteSub = sub; cmtePage = 1; cmtePageKeys = [null]; cmteHasNext = false; loadCommittees(); });
+['cmte-f-status', 'cmte-f-name'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { cmtePage = 1; cmtePageKeys = [null]; cmteHasNext = false; loadCommittees(); });
+});
+document.getElementById('cmte-f-search').addEventListener('input', debounce(() => { cmtePage = 1; cmtePageKeys = [null]; cmteHasNext = false; loadCommittees(); }, 300));
+
+async function loadCommittees() {
+  const status = document.getElementById('cmte-f-status').value;
+  const cmteName = document.getElementById('cmte-f-name').value;
+  const search = document.getElementById('cmte-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+  if (cmteSub === 'upcoming') kql = `values[Status] = "Scheduled"`;
+
+  try {
+    const data = await kqlFetch('committee-reviews', kql, 25, cmtePageKeys[cmtePage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (cmteName) subs = subs.filter(s => vf(s, 'Committee Name') === cmteName);
+    if (search) subs = subs.filter(s => (vf(s, 'Review ID') + ' ' + vf(s, 'Committee Name') + ' ' + vf(s, 'Event Title')).toLowerCase().includes(search));
+    if (cmteSub === 'committee') subs.sort((a, b) => (vf(a, 'Committee Name') || '').localeCompare(vf(b, 'Committee Name') || ''));
+
+    document.getElementById('cmte-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No committee reviews found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Committee</th><th>Event</th><th>Review Date</th><th>Decision</th><th>Status</th><th>Next Review</th></tr></thead><tbody>${
+        subs.map(s => `<tr>
+          <td>${vf(s, 'Review ID')}</td>
+          <td>${vf(s, 'Committee Name')}</td>
+          <td>${vf(s, 'Event Title')}</td>
+          <td>${vf(s, 'Review Date')}</td>
+          <td>${vf(s, 'Decision') || '-'}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${vf(s, 'Next Review Date')}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    cmteHasNext = !!data.nextPageToken;
+    if (cmteHasNext && subs.length) cmtePageKeys[cmtePage] = subs[subs.length - 1].createdAt;
+    renderPag('cmte-pag', cmtePage, cmteHasNext, 'cmtePrev()', 'cmteNext()');
+  } catch (e) {
+    document.getElementById('cmte-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function cmteNext() { if (!cmteHasNext) return; cmtePage++; loadCommittees(); }
+function cmtePrev() { if (cmtePage <= 1) return; cmtePage--; loadCommittees(); }
+
+/* ═══════════════ ANALYTICS TAB ═══════════════ */
+const REPORT_TYPES = [
+  { id: 'event-summary', name: 'Event Summary', desc: 'Complete list of all safety events with severity, category, and disposition' },
+  { id: 'sac-analysis', name: 'SAC Analysis', desc: 'Events grouped by Safety Assessment Code score with severity/likelihood detail' },
+  { id: 'department-comparison', name: 'Department Comparison', desc: 'Side-by-side department event counts, types, and CAPA workload' },
+  { id: 'capa-effectiveness', name: 'CAPA Effectiveness', desc: 'CAPA completion rates, effectiveness results, and overdue tracking' },
+  { id: 'regulatory-compliance', name: 'Regulatory Compliance', desc: 'Regulatory filing status, agency distribution, and submission timeline' },
+  { id: 'contributing-factors', name: 'Contributing Factor Analysis', desc: 'Factor category distribution with mitigation potential assessment' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/psafe/report/${type}`);
+
+    if (type === 'event-summary') {
+      const csvRows = [['Event ID', 'Title', 'Type', 'Category', 'Department', 'Date', 'SAC', 'Severity', 'Harm', 'Status']];
+      d.items.forEach(i => csvRows.push([i.eventId, i.title, i.type, i.category, i.dept, i.date, i.sacScore, i.severity, i.harm, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} events)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'event-summary.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Category</th><th>Dept</th><th>SAC</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.eventId}</td><td>${i.title}</td><td>${i.type}</td><td>${i.category}</td><td>${i.dept}</td><td>${sacBadge(i.sacScore)}</td><td>${badge(i.status)}</td><td>${i.date}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'sac-analysis') {
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>${['1','2','3','4'].map(s => {
+        const items = d.sacGroups[s] || [];
+        return `<h4 style="margin:16px 0 8px">${sacBadge(s)} — ${items.length} events</h4>
+          ${items.length === 0 ? '<p style="font-size:13px;color:var(--gray)">None</p>' :
+          `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Dept</th><th>Status</th></tr></thead><tbody>${
+          items.slice(0, 20).map(i => `<tr><td>${i.eventId}</td><td>${i.title}</td><td>${i.type}</td><td>${i.dept}</td><td>${badge(i.status)}</td></tr>`).join('')
+          }</tbody></table>`}`;
+      }).join('')}</div>`;
+    } else if (type === 'department-comparison') {
+      const depts = Object.entries(d.departments).sort((a, b) => b[1].events - a[1].events);
+      const maxEvt = Math.max(...depts.map(([, v]) => v.events), 1);
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>
+        ${depts.map(([dept, v]) => `<div style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px"><span style="font-weight:600; font-size:13px">${dept}</span><span style="font-size:12px; color:var(--gray)">${v.events} events, ${v.capas} CAPAs</span></div>
+          <div style="background:var(--border); border-radius:4px; height:20px; overflow:hidden; display:flex">
+            <div style="width:${v.nearMiss / maxEvt * 100}%; background:var(--sac4); height:100%" title="Near Miss: ${v.nearMiss}"></div>
+            <div style="width:${v.adverse / maxEvt * 100}%; background:var(--sac2); height:100%" title="Adverse: ${v.adverse}"></div>
+            <div style="width:${v.sentinel / maxEvt * 100}%; background:var(--sac1); height:100%" title="Sentinel: ${v.sentinel}"></div>
+          </div>
+        </div>`).join('')}
+        <div style="display:flex; gap:16px; font-size:11px; color:var(--gray); margin-top:12px">
+          <span><span style="display:inline-block; width:12px; height:12px; background:var(--sac4); border-radius:2px; vertical-align:middle"></span> Near Miss</span>
+          <span><span style="display:inline-block; width:12px; height:12px; background:var(--sac2); border-radius:2px; vertical-align:middle"></span> Adverse</span>
+          <span><span style="display:inline-block; width:12px; height:12px; background:var(--sac1); border-radius:2px; vertical-align:middle"></span> Sentinel</span>
+        </div></div>`;
+    } else if (type === 'capa-effectiveness') {
+      const total = d.items.length;
+      const verified = d.items.filter(i => i.status === 'Verified').length;
+      const effective = d.items.filter(i => i.effectivenessResult === 'Effective').length;
+      const overdue = d.items.filter(i => i.status === 'Overdue').length;
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-teal"><div class="kpi-value">${total}</div><div class="kpi-label">Total CAPAs</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${verified}</div><div class="kpi-label">Verified</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${effective}</div><div class="kpi-label">Effective</div></div>
+          <div class="kpi-card kpi-red"><div class="kpi-value">${overdue}</div><div class="kpi-label">Overdue</div></div>
+        </div>
+        <table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Dept</th><th>Category</th><th>Status</th><th>Priority</th><th>Result</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.capaId}</td><td>${i.type}</td><td>${i.dept}</td><td>${i.category}</td><td>${badge(i.status)}</td><td>${prioritySpan(i.priority)}</td><td>${i.effectivenessResult}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'regulatory-compliance') {
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} reports)</h3>
+        <table class="data-table"><thead><tr><th>ID</th><th>Agency</th><th>Type</th><th>Event</th><th>Status</th><th>Report Date</th><th>Due</th><th>Submitted</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.reportId}</td><td>${i.agency}</td><td>${i.type}</td><td>${i.eventId}</td><td>${badge(i.status)}</td><td>${i.reportDate}</td><td>${i.dueDate}</td><td>${i.submittedDate || '-'}</td></tr>`).join('')
+        }</tbody></table></div>`;
+    } else if (type === 'contributing-factors') {
+      const cats = Object.entries(d.categories).sort((a, b) => b[1].count - a[1].count);
+      const maxCat = Math.max(...cats.map(([, v]) => v.count), 1);
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.totalFactors} factors)</h3>
+        ${cats.map(([cat, v]) => `<div style="margin-bottom:12px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px"><span style="font-weight:600; font-size:13px">${cat}</span><span style="font-size:12px">${v.count} factors</span></div>
+          <div style="background:var(--border); border-radius:4px; height:16px; overflow:hidden">
+            <div style="width:${v.count / maxCat * 100}%; background:var(--teal); height:100%"></div>
+          </div>
+          <div style="font-size:11px; color:var(--gray); margin-top:2px">High mit: ${v.highMit} | Medium: ${v.medMit} | Low: ${v.lowMit}</div>
+        </div>`).join('')}</div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* ═══════════════ UTILITY ═══════════════ */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

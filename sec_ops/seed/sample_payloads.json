@@ -1,0 +1,223 @@
+{
+  "alert_ingest": {
+    "endpoint": "POST /api/secops/alerts/ingest",
+    "description": "Ingest security alerts from SIEM/EDR/scanner sources. Accepts single object or array.",
+    "single_alert_example": {
+      "source": "CrowdStrike",
+      "external_alert_id": "CS-2026-88431",
+      "severity": "High",
+      "category": "Malware",
+      "title": "Suspicious PowerShell execution detected",
+      "description": "PowerShell process spawned with encoded command line arguments, potential fileless malware execution on endpoint laptop-sales-01.",
+      "asset_id": "laptop-sales-01",
+      "hostname": "laptop-sales-01",
+      "ip_address": "10.20.5.44",
+      "environment": "Prod",
+      "asset_criticality": 3,
+      "user_id": "m.johnson",
+      "indicators": ["powershell.exe", "encoded_command", "10.20.5.44", "c2-callback.evil.com"],
+      "raw_payload": {
+        "detection_id": "ldt:abc123:88431",
+        "process_name": "powershell.exe",
+        "command_line": "powershell -enc UwB0AGEAcgB0AC0A...",
+        "parent_process": "outlook.exe",
+        "severity_score": 75
+      }
+    },
+    "batch_example": [
+      {
+        "source": "Splunk",
+        "external_alert_id": "SPL-ALERT-99281",
+        "severity": "Critical",
+        "category": "Data Exfiltration",
+        "title": "Unusual outbound data transfer from database server",
+        "description": "db-prod-01 transferred 2.3GB to external IP 45.33.32.156 over port 443 in the last hour.",
+        "asset_id": "db-prod-01",
+        "hostname": "db-prod-01",
+        "ip_address": "10.10.1.20",
+        "environment": "Prod",
+        "asset_criticality": 5,
+        "indicators": ["45.33.32.156", "db-prod-01", "port-443", "large-transfer"]
+      },
+      {
+        "source": "Sentinel",
+        "external_alert_id": "SENT-2026-44120",
+        "severity": "Medium",
+        "category": "Identity",
+        "title": "Failed login attempts from unusual location",
+        "description": "User j.smith had 15 failed login attempts from IP 185.220.101.34 (TOR exit node).",
+        "user_id": "j.smith",
+        "hostname": "azure-ad",
+        "indicators": ["185.220.101.34", "tor-exit-node", "j.smith"]
+      }
+    ],
+    "phishing_example": {
+      "source": "Sentinel",
+      "external_alert_id": "SENT-2026-44200",
+      "severity": "High",
+      "category": "Phishing",
+      "title": "Phishing email with credential harvesting link",
+      "description": "User r.williams received email from spoofed sender with link to fake O365 login page.",
+      "user_id": "r.williams",
+      "hostname": "mail-prod-01",
+      "indicators": ["phish-domain.com", "fake-o365-login", "r.williams@company.com"],
+      "asset_criticality": 2
+    },
+    "response_example": {
+      "success": true,
+      "results": [
+        {
+          "action": "created",
+          "id": "abc123-def456-...",
+          "dedupe_hash": "a1b2c3d4e5f6g7h8",
+          "auto_action": {
+            "type": "incident_created",
+            "incident_id": "xyz789-...",
+            "severity": "S2"
+          }
+        },
+        {
+          "action": "deduplicated",
+          "id": "existing-id-...",
+          "count": 3
+        }
+      ]
+    }
+  },
+  "vuln_ingest": {
+    "endpoint": "POST /api/secops/vulns/ingest",
+    "description": "Ingest vulnerability findings from scanners. Accepts single object or array.",
+    "single_vuln_example": {
+      "source": "Tenable",
+      "external_vuln_id": "TEN-2026-119432",
+      "asset_id": "web-prod-01",
+      "hostname": "web-prod-01",
+      "package": "openssl",
+      "component": "libssl3",
+      "cve": "CVE-2024-3094",
+      "cvss": "10.0",
+      "epss": "0.97",
+      "cisa_kev": true,
+      "severity": "Critical",
+      "title": "XZ Utils Backdoor (CVE-2024-3094)",
+      "description": "Malicious code was discovered in the upstream tarballs of xz, starting with version 5.6.0. Through a series of complex obfuscations, the liblzma build process extracts a prebuilt object file from a disguised test file.",
+      "environment": "Prod",
+      "asset_criticality": "5",
+      "owner_team": "Infra"
+    },
+    "batch_example": [
+      {
+        "source": "Snyk",
+        "external_vuln_id": "SNYK-JS-2026-001",
+        "asset_id": "web-prod-03",
+        "hostname": "web-prod-03",
+        "package": "lodash",
+        "component": "lodash@4.17.20",
+        "cve": "CVE-2024-28849",
+        "cvss": "7.5",
+        "epss": "0.15",
+        "severity": "High",
+        "title": "Prototype Pollution in lodash",
+        "environment": "Prod",
+        "asset_criticality": "4",
+        "owner_team": "AppSec"
+      },
+      {
+        "source": "Qualys",
+        "external_vuln_id": "QID-379234",
+        "asset_id": "db-prod-02",
+        "hostname": "db-prod-02",
+        "package": "postgresql",
+        "cve": "CVE-2023-39417",
+        "cvss": "8.8",
+        "epss": "0.08",
+        "severity": "High",
+        "title": "PostgreSQL SQL Injection via pg_cancel_backend",
+        "environment": "Prod",
+        "asset_criticality": "5",
+        "owner_team": "Infra"
+      }
+    ],
+    "response_example": {
+      "success": true,
+      "results": [
+        {
+          "action": "created",
+          "id": "abc123-...",
+          "risk_score": 21.5,
+          "due_date": "2026-02-23"
+        },
+        {
+          "action": "updated",
+          "id": "existing-id-...",
+          "risk_score": 18.0
+        }
+      ]
+    }
+  },
+  "incident_transition": {
+    "endpoint": "POST /api/secops/incidents/{submission_id}/transition",
+    "description": "Transition an incident to the next lifecycle state.",
+    "valid_transitions": {
+      "New": ["In Progress"],
+      "In Progress": ["Contained"],
+      "Contained": ["Eradicated"],
+      "Eradicated": ["Recovered"],
+      "Recovered": ["Closed"]
+    },
+    "request_example": {
+      "new_status": "Contained",
+      "notes": "Isolated affected servers web-prod-01 and web-prod-02 from network. Blocked egress to C2 IP 45.33.32.156 at firewall. All credentials on affected systems queued for rotation.",
+      "user": "s.chen"
+    },
+    "response_example": {
+      "success": true,
+      "previous_status": "In Progress",
+      "new_status": "Contained"
+    },
+    "error_example": {
+      "error": "Cannot transition from New to Contained"
+    }
+  },
+  "risk_acceptance": {
+    "endpoint": "POST /api/secops/vulns/{submission_id}/accept-risk",
+    "description": "Accept risk for a vulnerability finding. Requires GRC approval.",
+    "request_example": {
+      "reason": "Legacy system scheduled for decommission in Q2 2026. Compensating controls in place: network segmentation, enhanced monitoring, WAF rules deployed.",
+      "expiry": "2026-06-30",
+      "approved_by": "l.thompson"
+    },
+    "response_example": {
+      "success": true
+    }
+  },
+  "playbook_run": {
+    "endpoint": "POST /api/secops/playbooks/{playbook_submission_id}/run",
+    "description": "Execute a playbook against a target entity.",
+    "request_example": {
+      "target_type": "Incident",
+      "target_id": "incident-submission-id-here",
+      "executed_by": "s.chen"
+    },
+    "response_example": {
+      "success": true,
+      "run_id": "run-submission-id-here"
+    }
+  },
+  "audit_event": {
+    "endpoint": "POST /api/secops/audit",
+    "description": "Create an audit trail event.",
+    "request_example": {
+      "entity_type": "Incident",
+      "entity_id": "incident-submission-id",
+      "actor": "s.chen",
+      "action": "Assigned commander to j.martinez",
+      "details": "Changed commander from unassigned to j.martinez for SEC-00001",
+      "entity_title": "SEC-00001"
+    },
+    "response_example": {
+      "success": true,
+      "id": "audit-event-submission-id"
+    }
+  }
+}

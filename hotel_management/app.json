@@ -1,0 +1,295 @@
+{
+  "name": "Hotel Management",
+  "slug": "hotel-mgmt",
+  "description": "Hotel operations with rooms, guests, reservations, and billing.",
+  "forms": [
+    {
+      "slug": "rooms",
+      "name": "Rooms",
+      "fields": [
+        {
+          "name": "Room Number",
+          "required": true
+        },
+        {
+          "name": "Floor",
+          "required": true
+        },
+        {
+          "name": "Room Type",
+          "required": true
+        },
+        {
+          "name": "Bed Config"
+        },
+        {
+          "name": "Max Occupancy"
+        },
+        {
+          "name": "Base Rate"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Condition"
+        },
+        {
+          "name": "Amenities"
+        },
+        {
+          "name": "View"
+        },
+        {
+          "name": "Current Guest"
+        },
+        {
+          "name": "Current Reservation ID"
+        },
+        {
+          "name": "Last Cleaned"
+        },
+        {
+          "name": "Last Cleaned By"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Hotel room inventory and status tracking",
+      "submissionLabelExpression": "Room ${values('Room Number')} - ${values('Room Type')} (${values('Status')})"
+    },
+    {
+      "slug": "guests",
+      "name": "Guests",
+      "fields": [
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "ID Type"
+        },
+        {
+          "name": "ID Number"
+        },
+        {
+          "name": "VIP Status"
+        },
+        {
+          "name": "Loyalty Tier"
+        },
+        {
+          "name": "Loyalty Points"
+        },
+        {
+          "name": "Total Stays"
+        },
+        {
+          "name": "Preferences"
+        },
+        {
+          "name": "Special Needs"
+        },
+        {
+          "name": "Company"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Guest profiles and loyalty tracking",
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} (${values('VIP Status')})",
+      "indexes": {
+        "single": [
+          "values[VIP Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "reservations",
+      "name": "Reservations",
+      "fields": [
+        {
+          "name": "Confirmation Number",
+          "required": true
+        },
+        {
+          "name": "Guest Name",
+          "required": true
+        },
+        {
+          "name": "Guest ID"
+        },
+        {
+          "name": "Room Number"
+        },
+        {
+          "name": "Room ID"
+        },
+        {
+          "name": "Room Type Requested"
+        },
+        {
+          "name": "Check In",
+          "required": true
+        },
+        {
+          "name": "Check Out",
+          "required": true
+        },
+        {
+          "name": "Nights"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Adults"
+        },
+        {
+          "name": "Children"
+        },
+        {
+          "name": "Rate"
+        },
+        {
+          "name": "Total Amount"
+        },
+        {
+          "name": "Payment Method"
+        },
+        {
+          "name": "Payment Status"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Special Requests",
+          "rows": 3
+        },
+        {
+          "name": "Checked In At"
+        },
+        {
+          "name": "Checked In By"
+        },
+        {
+          "name": "Checked Out At"
+        },
+        {
+          "name": "Checked Out By"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Reservation booking and lifecycle management",
+      "submissionLabelExpression": "${values('Confirmation Number')} - ${values('Guest Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Check In]",
+          "values[Check Out]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Check In]"
+          ],
+          [
+            "values[Status]",
+            "values[Check Out]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "housekeeping",
+      "name": "Housekeeping",
+      "fields": [
+        {
+          "name": "Task ID",
+          "required": true
+        },
+        {
+          "name": "Room Number",
+          "required": true
+        },
+        {
+          "name": "Room ID"
+        },
+        {
+          "name": "Task Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Requested At"
+        },
+        {
+          "name": "Started At"
+        },
+        {
+          "name": "Completed At"
+        },
+        {
+          "name": "Verified By"
+        },
+        {
+          "name": "Verified At"
+        },
+        {
+          "name": "Checklist"
+        },
+        {
+          "name": "Issues Found"
+        },
+        {
+          "name": "Supplies Used"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Housekeeping task management and tracking",
+      "submissionLabelExpression": "${values('Task ID')} - Room ${values('Room Number')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    }
+  ],
+  "category": "Hospitality"
+}

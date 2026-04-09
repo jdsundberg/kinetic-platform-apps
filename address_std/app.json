@@ -1,0 +1,72 @@
+{
+  "name": "Address Standardizer",
+  "slug": "address-std",
+  "description": "USPS address standardization and validation with state lookup tables.",
+  "forms": [
+    {
+      "slug": "addresses",
+      "name": "Addresses",
+      "fields": [
+        {
+          "name": "Address ID"
+        },
+        {
+          "name": "Raw Input",
+          "rows": 2
+        },
+        {
+          "name": "Street"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Zip"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Standardized"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Standardized postal addresses",
+      "submissionLabelExpression": "${values('Address ID')} - ${values('Standardized')}",
+      "indexes": {
+        "single": [
+          "values[Standardized]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "state-lookup",
+      "name": "State Lookup",
+      "fields": [
+        {
+          "name": "State Name"
+        },
+        {
+          "name": "Abbreviation"
+        },
+        {
+          "name": "FIPS Code"
+        }
+      ],
+      "description": "US states and territories reference data",
+      "submissionLabelExpression": "${values('Abbreviation')} - ${values('State Name')}"
+    }
+  ],
+  "category": "Operations"
+}

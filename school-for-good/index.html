@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SchoolForGood</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E;
+  --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04;
+  --gray: #5F6368; --light: #F8F9FA; --border: #E8EAED;
+  --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:#333; }
+
+/* ── login ─────────────────────────────────────────────────── */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); }
+.login-card { background:var(--white); border-radius:16px; padding:40px; width:400px; box-shadow:var(--shadow-lg); text-align:center; }
+.login-card .accent-bar { width:40px; height:3px; background:var(--orange); border-radius:2px; margin:0 auto 20px; }
+.login-card h1 { font-size:22px; color:var(--blue); margin-bottom:4px; }
+.login-card .subtitle { font-size:13px; color:var(--gray); margin-bottom:24px; }
+.login-card input { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; margin-bottom:12px; outline:none; }
+.login-card input:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.login-card button { width:100%; padding:10px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+.login-card button:hover { background:var(--orange-light); }
+.login-card .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* ── topbar ────────────────────────────────────────────────── */
+#app { display:none; }
+.topbar { position:sticky; top:0; z-index:100; background:var(--blue); color:white; height:56px; display:flex; align-items:center; padding:0 24px; box-shadow:var(--shadow); }
+.topbar .logo { font-size:18px; font-weight:700; margin-right:32px; white-space:nowrap; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:0; height:100%; }
+.topbar nav a { display:flex; align-items:center; padding:0 16px; color:rgba(255,255,255,.7); text-decoration:none; font-size:13px; font-weight:500; height:100%; border-bottom:3px solid transparent; transition:all .2s; cursor:pointer; }
+.topbar nav a:hover { color:white; background:var(--blue-light); }
+.topbar nav a.active { color:white; border-bottom-color:var(--orange); }
+.topbar .spacer { flex:1; }
+.user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:12px; }
+.logout-btn:hover { background:var(--orange); color:white; border-color:var(--orange); }
+
+/* ── layout ────────────────────────────────────────────────── */
+.page { padding:24px; max-width:1400px; margin:0 auto; }
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:20px; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ── KPI row ───────────────────────────────────────────────── */
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:24px; }
+.kpi { background:var(--white); border-radius:12px; padding:20px; box-shadow:var(--shadow); }
+.kpi-value { font-size:28px; font-weight:700; color:var(--blue); }
+.kpi-label { font-size:12px; color:var(--gray); margin-top:2px; text-transform:uppercase; letter-spacing:.3px; }
+.kpi-value.orange { color:var(--orange); }
+.kpi-value.green { color:var(--green); }
+
+/* ── charts grid ───────────────────────────────────────────── */
+.charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+@media(max-width:900px) { .charts-grid { grid-template-columns:1fr; } }
+.chart-card { background:var(--white); border-radius:12px; padding:20px; box-shadow:var(--shadow); }
+.chart-card h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; margin-bottom:16px; }
+.bar-chart { display:flex; flex-direction:column; gap:6px; }
+.bar-row { display:flex; align-items:center; gap:8px; }
+.bar-row .label { font-size:12px; color:#555; width:140px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bar-row .bar { height:20px; border-radius:4px; background:var(--orange); min-width:2px; transition:width .5s; }
+.bar-row .count { font-size:11px; color:var(--gray); min-width:30px; }
+
+/* ── tables ────────────────────────────────────────────────── */
+.card { background:var(--white); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
+.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-header h3 { font-size:13px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.3px; }
+.card-header .badge { font-size:11px; background:var(--light); color:var(--gray); padding:2px 8px; border-radius:10px; }
+.filter-bar { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.filter-bar select, .filter-bar input { padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; }
+.filter-bar select:focus, .filter-bar input:focus { border-color:var(--orange); }
+.filter-bar input { width:200px; }
+table { width:100%; border-collapse:collapse; }
+thead th { text-align:left; padding:10px 16px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; color:var(--gray); background:var(--light); border-bottom:1px solid var(--border); }
+tbody td { padding:10px 16px; font-size:13px; border-bottom:1px solid var(--border); }
+tbody tr:hover { background:#f8f9ff; }
+tbody tr:last-child td { border-bottom:none; }
+.badge-active { background:#E8F5E9; color:#2E7D32; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+.badge-inactive { background:#FDECEA; color:#C62828; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+.badge-completed { background:#E3F2FD; color:#1565C0; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+.badge-pending { background:#FFF8E1; color:#F9A825; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+.badge-sent { background:#E8F5E9; color:#2E7D32; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:500; }
+
+/* ── schedule grid ─────────────────────────────────────────── */
+.schedule-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; }
+@media(max-width:900px) { .schedule-grid { grid-template-columns:1fr; } }
+.day-col { background:var(--white); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; }
+.day-col .day-header { background:var(--blue); color:white; padding:12px 16px; font-size:13px; font-weight:600; text-align:center; }
+.day-col .class-item { padding:12px 16px; border-bottom:1px solid var(--border); }
+.day-col .class-item:last-child { border-bottom:none; }
+.class-item .class-name { font-size:13px; font-weight:600; color:var(--blue); }
+.class-item .class-time { font-size:12px; color:var(--orange); font-weight:500; margin-top:2px; }
+.class-item .class-meta { font-size:11px; color:var(--gray); margin-top:4px; }
+.class-item .class-meta span { margin-right:8px; }
+.empty-day { padding:20px; text-align:center; color:var(--gray); font-size:12px; }
+
+/* ── reminder actions ──────────────────────────────────────── */
+.btn { padding:6px 14px; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-success { background:var(--green); color:white; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-outline { background:none; border:1px solid var(--border); color:var(--gray); }
+.btn-outline:hover { border-color:var(--orange); color:var(--orange); }
+
+/* ── toast ─────────────────────────────────────────────────── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; z-index:300; box-shadow:var(--shadow-lg); display:none; }
+.toast.show { display:block; animation:slideUp .3s ease; }
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+/* ── loading ───────────────────────────────────────────────── */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+.spinner { display:inline-block; width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── member detail modal ───────────────────────────────────── */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.4); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--white); border-radius:16px; padding:28px; max-width:650px; width:90%; box-shadow:var(--shadow-lg); max-height:80vh; overflow-y:auto; }
+.modal h2 { font-size:18px; color:var(--blue); margin-bottom:16px; }
+.modal .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal .detail-item { }
+.modal .detail-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; color:var(--gray); }
+.modal .detail-value { font-size:14px; color:#333; margin-top:2px; }
+.modal .close-btn { float:right; background:none; border:none; font-size:20px; cursor:pointer; color:var(--gray); }
+.modal .close-btn:hover { color:var(--red); }
+.modal .section-title { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-top:20px; margin-bottom:8px; border-top:1px solid var(--border); padding-top:16px; }
+
+/* ── help dropdown ─────────────────────────────────────────── */
+.help-wrap { position:relative; }
+.help-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:6px; }
+.help-btn:hover { background:var(--orange); color:white; border-color:var(--orange); }
+.help-dropdown { display:none; position:absolute; top:calc(100% + 8px); right:0; width:320px; background:var(--white); border-radius:12px; box-shadow:var(--shadow-lg); z-index:150; overflow:hidden; }
+.help-dropdown.show { display:block; }
+.help-dropdown .help-header { background:var(--blue); color:white; padding:14px 20px; font-size:14px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+.help-dropdown .help-header button { background:none; border:none; color:rgba(255,255,255,.7); cursor:pointer; font-size:16px; }
+.help-dropdown .help-body { padding:16px 20px; max-height:400px; overflow-y:auto; font-size:13px; line-height:1.6; color:#444; }
+.help-dropdown .help-body h4 { font-size:12px; font-weight:600; color:var(--blue); text-transform:uppercase; letter-spacing:.3px; margin:12px 0 6px; }
+.help-dropdown .help-body h4:first-child { margin-top:0; }
+.help-dropdown .help-body ul { margin:0 0 8px 16px; }
+.help-dropdown .help-body li { margin-bottom:4px; }
+.help-dropdown .help-body p { margin-bottom:8px; }
+.help-dropdown .help-body kbd { background:var(--light); border:1px solid var(--border); border-radius:3px; padding:1px 5px; font-size:11px; font-family:monospace; }
+
+/* ── new member modal ──────────────────────────────────────── */
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.3px; color:var(--gray); margin-bottom:4px; }
+.form-group input, .form-group select { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; }
+.form-group input:focus, .form-group select:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.welcome-preview { background:var(--light); border:1px solid var(--border); border-radius:8px; padding:16px; margin-top:12px; font-size:12px; line-height:1.6; color:#555; }
+.welcome-preview .preview-label { font-size:10px; font-weight:600; text-transform:uppercase; color:var(--gray); margin-bottom:8px; letter-spacing:.3px; }
+.welcome-preview .email-subject { font-weight:600; color:var(--blue); margin-bottom:4px; }
+.btn-block { width:100%; padding:10px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="accent-bar"></div>
+    <h1>SchoolForGood</h1>
+    <div class="subtitle">School Management System</div>
+    <input type="text" id="login-user" placeholder="Username" value="second_admin">
+    <input type="password" id="login-pass" placeholder="Password" value="password2">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error">Invalid credentials</div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">School<span>ForGood</span></div>
+    <nav id="nav">
+      <a data-tab="dashboard" class="active">Dashboard</a>
+      <a data-tab="sites">Sites</a>
+      <a data-tab="members">Members</a>
+      <a data-tab="trainers">Trainers</a>
+      <a data-tab="schedule">Schedule</a>
+      <a data-tab="reminders">Reminders</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <div class="help-wrap">
+        <button class="help-btn" onclick="toggleHelp(event)">? Docs</button>
+        <div class="help-dropdown" id="help-dropdown">
+          <div class="help-header">
+            <span>SchoolForGood Documentation</span>
+            <button onclick="toggleHelp(event)">&times;</button>
+          </div>
+          <div class="help-body">
+            <h4>Getting Started</h4>
+            <p>SchoolForGood is a comprehensive school management system for tracking members, trainers, classes, and schedules across all 15 sites.</p>
+
+            <h4>Dashboard</h4>
+            <p>View real-time KPIs and charts showing member distribution across sites, education levels, favorite foods, and class enrollment numbers.</p>
+
+            <h4>Sites</h4>
+            <p>Browse all 15 campus locations with capacity, contact info, and regional groupings. Each site operates independently with its own trainers and class schedule.</p>
+
+            <h4>Members</h4>
+            <ul>
+              <li><strong>Search &amp; Filter</strong> — Use the search bar and dropdowns to filter by name, site, or education level</li>
+              <li><strong>Member Detail</strong> — Click any member row to view their full profile and enrolled classes</li>
+              <li><strong>Add New Member</strong> — Click "Add Member" to register a new member and send a welcome email</li>
+            </ul>
+
+            <h4>Trainers</h4>
+            <p>View the full trainer roster including specialty areas and certifications. Each trainer is assigned to a primary site.</p>
+
+            <h4>Schedule</h4>
+            <ul>
+              <li>Visual weekly grid showing all classes Monday through Friday</li>
+              <li>Filter by site to see a single campus schedule</li>
+              <li>Each class card shows time, duration, trainer, room, and current enrollment</li>
+            </ul>
+
+            <h4>Reminders</h4>
+            <ul>
+              <li><strong>Send Individual</strong> — Click "Send" on any pending reminder</li>
+              <li><strong>Send All</strong> — Click "Send All Pending" to batch-send all unsent reminders</li>
+              <li>Reminders notify members about their upcoming class times and rooms</li>
+            </ul>
+
+            <h4>Data Model</h4>
+            <ul>
+              <li><strong>Sites</strong> — 15 campuses across the US</li>
+              <li><strong>Members</strong> — Students/participants with profile data</li>
+              <li><strong>Trainers</strong> — Instructors with specialties</li>
+              <li><strong>Classes</strong> — Scheduled courses at each site</li>
+              <li><strong>Enrollments</strong> — Member-to-class assignments (30-60 per class)</li>
+              <li><strong>Reminders</strong> — Automated class notifications</li>
+            </ul>
+
+            <h4>Keyboard Shortcuts</h4>
+            <ul>
+              <li><kbd>Esc</kbd> — Close modals and dropdowns</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- Dashboard -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="kpi-row" id="kpi-row"></div>
+      <div class="charts-grid" id="charts-grid"></div>
+    </div>
+
+    <!-- Sites -->
+    <div class="tab-content" id="tab-sites">
+      <div class="page-title">Sites</div>
+      <div class="card">
+        <div class="card-header"><h3>All Sites</h3><span class="badge" id="sites-count">0</span></div>
+        <div class="table-wrap" style="overflow-x:auto">
+          <table><thead><tr><th>Site Name</th><th>Location</th><th>Region</th><th>Capacity</th><th>Phone</th><th>Status</th></tr></thead>
+          <tbody id="sites-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members -->
+    <div class="tab-content" id="tab-members">
+      <div class="page-title">Members</div>
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:12px"><h3>All Members</h3><span class="badge" id="members-count">0</span></div>
+          <button class="btn btn-primary btn-sm" onclick="openNewMember()">+ Add Member</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="member-search" placeholder="Search by name..." oninput="filterMembers()">
+          <select id="member-site-filter" onchange="filterMembers()"><option value="">All Sites</option></select>
+          <select id="member-ed-filter" onchange="filterMembers()"><option value="">All Education</option></select>
+        </div>
+        <div class="table-wrap" style="overflow-x:auto">
+          <table><thead><tr><th>Name</th><th>Email</th><th>Site</th><th>Education</th><th>Weight</th><th>Favorite Food</th><th>Age</th><th>Status</th></tr></thead>
+          <tbody id="members-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trainers -->
+    <div class="tab-content" id="tab-trainers">
+      <div class="page-title">Trainers</div>
+      <div class="card">
+        <div class="card-header"><h3>All Trainers</h3><span class="badge" id="trainers-count">0</span></div>
+        <div class="table-wrap" style="overflow-x:auto">
+          <table><thead><tr><th>Name</th><th>Email</th><th>Site</th><th>Specialty</th><th>Certification</th><th>Status</th></tr></thead>
+          <tbody id="trainers-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="tab-content" id="tab-schedule">
+      <div class="page-title">Weekly Schedule</div>
+      <div class="filter-bar" style="background:var(--white);border-radius:12px;margin-bottom:16px;box-shadow:var(--shadow);">
+        <select id="schedule-site-filter" onchange="renderSchedule()"><option value="">All Sites</option></select>
+      </div>
+      <div class="schedule-grid" id="schedule-grid"></div>
+    </div>
+
+    <!-- Reminders -->
+    <div class="tab-content" id="tab-reminders">
+      <div class="page-title">Class Reminders</div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Reminders</h3>
+          <div>
+            <button class="btn btn-primary btn-sm" onclick="sendAllPending()">Send All Pending</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <select id="reminder-status-filter" onchange="filterReminders()">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Sent">Sent</option>
+          </select>
+          <input type="text" id="reminder-search" placeholder="Search..." oninput="filterReminders()">
+        </div>
+        <div class="table-wrap" style="overflow-x:auto">
+          <table><thead><tr><th>Member</th><th>Class</th><th>Site</th><th>Day</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="reminders-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Member detail modal -->
+<div class="modal-overlay" id="member-modal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeMemberModal()">&times;</button>
+    <h2 id="modal-title"></h2>
+    <div class="detail-grid" id="modal-details"></div>
+    <div class="section-title">Enrolled Classes</div>
+    <table><thead><tr><th>Class</th><th>Site</th><th>Enrolled</th><th>Status</th></tr></thead>
+    <tbody id="modal-classes"></tbody></table>
+  </div>
+</div>
+
+<!-- New Member modal -->
+<div class="modal-overlay" id="new-member-modal">
+  <div class="modal" style="max-width:580px">
+    <button class="close-btn" onclick="closeNewMember()">&times;</button>
+    <h2>Add New Member</h2>
+    <form id="new-member-form" onsubmit="submitNewMember(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="nm-first" required oninput="updateWelcomePreview()">
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="nm-last" required oninput="updateWelcomePreview()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="nm-email" required oninput="updateWelcomePreview()">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="nm-phone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Site *</label>
+          <select id="nm-site" required oninput="updateWelcomePreview()">
+            <option value="">Select a site...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="nm-age" min="5" max="99">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Education Level</label>
+          <select id="nm-education">
+            <option value="">Select...</option>
+            <option>High School</option>
+            <option>Some College</option>
+            <option>Associate's</option>
+            <option>Bachelor's</option>
+            <option>Master's</option>
+            <option>PhD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Weight</label>
+          <input type="text" id="nm-weight" placeholder="e.g. 165 lbs">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Favorite Food</label>
+        <input type="text" id="nm-food" placeholder="e.g. Pizza">
+      </div>
+
+      <div class="welcome-preview" id="welcome-preview">
+        <div class="preview-label">Welcome Email Preview</div>
+        <div class="email-subject">Subject: Welcome to SchoolForGood!</div>
+        <div id="welcome-body">Fill in the member details above to preview the welcome email.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="nm-submit-btn">Create Member & Send Welcome Email</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── state ──────────────────────────────────────────────────── */
+let AUTH = "";
+let DATA = { stats:null, sites:[], members:[], trainers:[], classes:[], enrollments:[], reminders:[] };
+
+/* ── auth ───────────────────────────────────────────────────── */
+function doLogin() {
+  const u = document.getElementById("login-user").value;
+  const p = document.getElementById("login-pass").value;
+  AUTH = "Basic " + btoa(u + ":" + p);
+  fetch("/app/api/v1/me", { headers:{ Authorization: AUTH } })
+    .then(r => r.json())
+    .then(async d => {
+      if (d.username || d.user?.username) {
+        const name = d.displayName || d.username || d.user?.username || u;
+        let spaceSlug = '';
+        try {
+          const sr = await fetch("/app/api/v1/space", { headers: { Authorization: AUTH, Accept: "application/json" } });
+          if (sr.ok) { const sd = await sr.json(); spaceSlug = (sd.space || sd).slug || ''; }
+        } catch(e2) {}
+        sessionStorage.setItem('kinetic_session', JSON.stringify({ url: window.location.origin, auth: btoa(u+':'+p), user: u, displayName: name, spaceSlug: spaceSlug }));
+        document.getElementById("user-display").textContent = name + (spaceSlug ? ' \u00b7 ' + spaceSlug : '');
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        loadAll();
+      } else {
+        document.getElementById("login-error").style.display = "block";
+      }
+    })
+    .catch(() => { document.getElementById("login-error").style.display = "block"; });
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  AUTH = "";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+(async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    AUTH = "Basic " + sess.auth;
+    const r = await fetch("/app/api/v1/me", { headers:{ Authorization: AUTH } });
+    if (!r.ok) throw new Error();
+    if (!sess.spaceSlug) {
+      try {
+        const sr = await fetch("/app/api/v1/space", { headers: { Authorization: AUTH, Accept: "application/json" } });
+        if (sr.ok) { const sd = await sr.json(); sess.spaceSlug = (sd.space || sd).slug || ''; sessionStorage.setItem('kinetic_session', JSON.stringify(sess)); }
+      } catch(e2) {}
+    }
+    const dn = sess.displayName || sess.user;
+    document.getElementById("user-display").textContent = dn + (sess.spaceSlug ? ' \u00b7 ' + sess.spaceSlug : '');
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadAll();
+  } catch { sessionStorage.removeItem('kinetic_session'); AUTH = ""; }
+})();
+
+/* ── nav ────────────────────────────────────────────────────── */
+document.querySelectorAll("#nav a").forEach(a => {
+  a.addEventListener("click", () => {
+    document.querySelectorAll("#nav a").forEach(x => x.classList.remove("active"));
+    a.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+    document.getElementById("tab-" + a.dataset.tab).classList.add("active");
+  });
+});
+
+/* ── data loading ───────────────────────────────────────────── */
+async function api(path) {
+  const r = await fetch(path, { headers:{ Authorization: AUTH } });
+  return r.json();
+}
+
+async function loadAll() {
+  showLoading();
+  try {
+    const [stats, sites, members, trainers, classes, enrollments, reminders] = await Promise.all([
+      api("/api/school/stats"),
+      api("/api/school/sites"),
+      api("/api/school/members"),
+      api("/api/school/trainers"),
+      api("/api/school/classes"),
+      api("/api/school/enrollments"),
+      api("/api/school/reminders"),
+    ]);
+    DATA.stats = stats;
+    DATA.sites = sites.sites || [];
+    DATA.members = members.members || [];
+    DATA.trainers = trainers.trainers || [];
+    DATA.classes = classes.classes || [];
+    DATA.enrollments = enrollments.enrollments || [];
+    DATA.reminders = reminders.reminders || [];
+    renderDashboard();
+    renderSites();
+    renderMembers();
+    renderTrainers();
+    renderSchedule();
+    renderReminders();
+    populateFilters();
+  } catch(e) { toast("Failed to load data: " + e.message); }
+}
+
+function showLoading() {
+  ["kpi-row","sites-tbody","members-tbody","trainers-tbody","schedule-grid","reminders-tbody"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === "TBODY") el.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div></td></tr>';
+    else el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  });
+}
+
+/* ── dashboard ──────────────────────────────────────────────── */
+function renderDashboard() {
+  const s = DATA.stats;
+  if (!s) return;
+  const t = s.totals;
+  document.getElementById("kpi-row").innerHTML = `
+    <div class="kpi"><div class="kpi-value">${t.sites}</div><div class="kpi-label">Sites</div></div>
+    <div class="kpi"><div class="kpi-value orange">${t.members}</div><div class="kpi-label">Members</div></div>
+    <div class="kpi"><div class="kpi-value">${t.trainers}</div><div class="kpi-label">Trainers</div></div>
+    <div class="kpi"><div class="kpi-value">${t.classes}</div><div class="kpi-label">Classes</div></div>
+    <div class="kpi"><div class="kpi-value green">${t.enrollments}</div><div class="kpi-label">Enrollments</div></div>
+    <div class="kpi"><div class="kpi-value">${s.reminderStats.pending}</div><div class="kpi-label">Pending Reminders</div></div>
+  `;
+
+  // Charts
+  const chartsHtml = [];
+
+  // Members by site
+  chartsHtml.push(barChart("Members by Site", s.membersBySite, "--orange"));
+
+  // Education breakdown
+  chartsHtml.push(barChart("Education Level", s.membersByEd, "--blue"));
+
+  // Top foods
+  const topFoods = Object.entries(s.foodCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  chartsHtml.push(barChart("Top 10 Favorite Foods", Object.fromEntries(topFoods), "--green"));
+
+  // Class enrollment
+  const topClasses = Object.entries(s.enrollPerClass).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  chartsHtml.push(barChart("Top 10 Classes by Enrollment", Object.fromEntries(topClasses), "--orange"));
+
+  document.getElementById("charts-grid").innerHTML = chartsHtml.join("");
+}
+
+function barChart(title, dataObj, color) {
+  const entries = Object.entries(dataObj);
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  const colors = { "--orange":"#F36C24", "--blue":"#242F4D", "--green":"#34A853", "--red":"#EA4335" };
+  const c = colors[color] || "#F36C24";
+  let rows = entries.map(([label, val]) =>
+    `<div class="bar-row"><span class="label" title="${label}">${label}</span><div class="bar" style="width:${(val/max)*100}%;background:${c}"></div><span class="count">${val}</span></div>`
+  ).join("");
+  return `<div class="chart-card"><h3>${title}</h3><div class="bar-chart">${rows}</div></div>`;
+}
+
+/* ── sites ──────────────────────────────────────────────────── */
+function renderSites() {
+  document.getElementById("sites-count").textContent = DATA.sites.length;
+  document.getElementById("sites-tbody").innerHTML = DATA.sites.map(s => `
+    <tr>
+      <td><strong>${s["Site Name"]||""}</strong></td>
+      <td>${s.Location||""}</td>
+      <td>${s.Region||""}</td>
+      <td>${s.Capacity||""}</td>
+      <td>${s.Phone||""}</td>
+      <td><span class="badge-active">${s.Status||"Active"}</span></td>
+    </tr>
+  `).join("");
+}
+
+/* ── members ────────────────────────────────────────────────── */
+function renderMembers(list) {
+  const data = list || DATA.members;
+  document.getElementById("members-count").textContent = data.length;
+  document.getElementById("members-tbody").innerHTML = data.map((m, i) => `
+    <tr style="cursor:pointer" onclick="showMember(${DATA.members.indexOf(m)})">
+      <td><strong>${m["First Name"]||""} ${m["Last Name"]||""}</strong></td>
+      <td>${m.Email||""}</td>
+      <td>${m.Site||""}</td>
+      <td>${m["Education Level"]||""}</td>
+      <td>${m.Weight||""}</td>
+      <td>${m["Favorite Food"]||""}</td>
+      <td>${m.Age||""}</td>
+      <td><span class="${m.Status==="Active"?"badge-active":"badge-inactive"}">${m.Status||""}</span></td>
+    </tr>
+  `).join("");
+}
+
+function filterMembers() {
+  const search = document.getElementById("member-search").value.toLowerCase();
+  const site = document.getElementById("member-site-filter").value;
+  const ed = document.getElementById("member-ed-filter").value;
+  const filtered = DATA.members.filter(m => {
+    const name = ((m["First Name"]||"") + " " + (m["Last Name"]||"")).toLowerCase();
+    if (search && !name.includes(search)) return false;
+    if (site && m.Site !== site) return false;
+    if (ed && m["Education Level"] !== ed) return false;
+    return true;
+  });
+  renderMembers(filtered);
+}
+
+function showMember(idx) {
+  const m = DATA.members[idx];
+  if (!m) return;
+  const name = (m["First Name"]||"") + " " + (m["Last Name"]||"");
+  document.getElementById("modal-title").textContent = name;
+  document.getElementById("modal-details").innerHTML = [
+    ["Email", m.Email], ["Phone", m.Phone], ["Site", m.Site], ["Education", m["Education Level"]],
+    ["Weight", m.Weight], ["Favorite Food", m["Favorite Food"]], ["Age", m.Age], ["Status", m.Status]
+  ].map(([l,v]) => `<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v||"—"}</div></div>`).join("");
+
+  // Find enrollments
+  const enrollments = DATA.enrollments.filter(e => e["Member Name"] === name);
+  document.getElementById("modal-classes").innerHTML = enrollments.length ? enrollments.map(e => `
+    <tr><td>${e["Class Name"]||""}</td><td>${e.Site||""}</td><td>${e["Enrolled Date"]||""}</td>
+    <td><span class="${e.Status==="Active"?"badge-active":"badge-completed"}">${e.Status||""}</span></td></tr>
+  `).join("") : '<tr><td colspan="4" style="text-align:center;color:var(--gray)">No enrollments</td></tr>';
+  document.getElementById("member-modal").classList.add("show");
+}
+
+function closeMemberModal() { document.getElementById("member-modal").classList.remove("show"); }
+document.getElementById("member-modal").addEventListener("click", e => { if (e.target.classList.contains("modal-overlay")) closeMemberModal(); });
+
+/* ── trainers ───────────────────────────────────────────────── */
+function renderTrainers() {
+  document.getElementById("trainers-count").textContent = DATA.trainers.length;
+  document.getElementById("trainers-tbody").innerHTML = DATA.trainers.map(t => `
+    <tr>
+      <td><strong>${t["First Name"]||""} ${t["Last Name"]||""}</strong></td>
+      <td>${t.Email||""}</td>
+      <td>${t.Site||""}</td>
+      <td>${t.Specialty||""}</td>
+      <td>${t.Certification||""}</td>
+      <td><span class="badge-active">${t.Status||"Active"}</span></td>
+    </tr>
+  `).join("");
+}
+
+/* ── schedule ───────────────────────────────────────────────── */
+function renderSchedule() {
+  const siteFilter = document.getElementById("schedule-site-filter").value;
+  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+  const filtered = siteFilter ? DATA.classes.filter(c => c.Site === siteFilter) : DATA.classes;
+
+  document.getElementById("schedule-grid").innerHTML = days.map(day => {
+    const dayClasses = filtered.filter(c => c.Day === day).sort((a,b) => {
+      const ta = (a.Time||"").replace(/[^0-9:]/g,""); const tb = (b.Time||"").replace(/[^0-9:]/g,"");
+      return ta.localeCompare(tb);
+    });
+    const items = dayClasses.length ? dayClasses.map(c => {
+      const enrollCount = DATA.enrollments.filter(e => e["Class Name"] === c["Class Name"] && e.Site === c.Site && e.Status === "Active").length;
+      return `<div class="class-item">
+        <div class="class-name">${c["Class Name"]||""}</div>
+        <div class="class-time">${c.Time||""} (${c.Duration||""})</div>
+        <div class="class-meta"><span>${c.Trainer||""}</span><span>${c.Room||""}</span><span>${enrollCount}/${c.Capacity||"?"} enrolled</span></div>
+        ${siteFilter ? "" : `<div class="class-meta"><span style="color:var(--orange)">${c.Site||""}</span></div>`}
+      </div>`;
+    }).join("") : '<div class="empty-day">No classes</div>';
+    return `<div class="day-col"><div class="day-header">${day}</div>${items}</div>`;
+  }).join("");
+}
+
+/* ── reminders ──────────────────────────────────────────────── */
+function renderReminders(list) {
+  const data = list || DATA.reminders;
+  document.getElementById("reminders-tbody").innerHTML = data.map((r, i) => `
+    <tr>
+      <td>${r["Member Name"]||""}</td>
+      <td>${r["Class Name"]||""}</td>
+      <td>${r.Site||""}</td>
+      <td>${r.Day||""}</td>
+      <td>${r.Time||""}</td>
+      <td><span class="${r.Status==="Sent"?"badge-sent":"badge-pending"}">${r.Status||""}</span></td>
+      <td>${r.Status==="Pending" ? `<button class="btn btn-primary btn-sm" onclick="sendReminder('${r.id}',${DATA.reminders.indexOf(r)})">Send</button>` : '<span style="color:var(--gray);font-size:11px">Sent</span>'}</td>
+    </tr>
+  `).join("");
+}
+
+function filterReminders() {
+  const status = document.getElementById("reminder-status-filter").value;
+  const search = document.getElementById("reminder-search").value.toLowerCase();
+  const filtered = DATA.reminders.filter(r => {
+    if (status && r.Status !== status) return false;
+    if (search && !(r["Member Name"]||"").toLowerCase().includes(search) && !(r["Class Name"]||"").toLowerCase().includes(search)) return false;
+    return true;
+  });
+  renderReminders(filtered);
+}
+
+async function sendReminder(id, idx) {
+  try {
+    await fetch("/api/school/reminders/send", {
+      method: "POST",
+      headers: { Authorization: AUTH, "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: [id] })
+    });
+    DATA.reminders[idx].Status = "Sent";
+    filterReminders();
+    toast("Reminder sent!");
+  } catch(e) { toast("Failed: " + e.message); }
+}
+
+async function sendAllPending() {
+  const pending = DATA.reminders.filter(r => r.Status === "Pending");
+  if (!pending.length) { toast("No pending reminders"); return; }
+  try {
+    await fetch("/api/school/reminders/send", {
+      method: "POST",
+      headers: { Authorization: AUTH, "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: pending.map(r => r.id) })
+    });
+    pending.forEach(r => r.Status = "Sent");
+    filterReminders();
+    // Update dashboard
+    if (DATA.stats) DATA.stats.reminderStats = { pending: 0, sent: DATA.stats.reminderStats.sent + pending.length };
+    renderDashboard();
+    toast(`${pending.length} reminders sent!`);
+  } catch(e) { toast("Failed: " + e.message); }
+}
+
+/* ── filters ────────────────────────────────────────────────── */
+function populateFilters() {
+  const siteNames = [...new Set(DATA.sites.map(s => s["Site Name"]))].sort();
+  const eds = [...new Set(DATA.members.map(m => m["Education Level"]).filter(Boolean))].sort();
+
+  const siteOpts = '<option value="">All Sites</option>' + siteNames.map(s => `<option value="${s}">${s}</option>`).join("");
+  document.getElementById("member-site-filter").innerHTML = siteOpts;
+  document.getElementById("schedule-site-filter").innerHTML = siteOpts;
+
+  document.getElementById("member-ed-filter").innerHTML = '<option value="">All Education</option>' + eds.map(e => `<option value="${e}">${e}</option>`).join("");
+}
+
+/* ── toast ──────────────────────────────────────────────────── */
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+/* ── help docs ─────────────────────────────────────────────── */
+function toggleHelp(e) {
+  e.stopPropagation();
+  document.getElementById("help-dropdown").classList.toggle("show");
+}
+document.addEventListener("click", e => {
+  const dd = document.getElementById("help-dropdown");
+  if (dd.classList.contains("show") && !dd.contains(e.target)) dd.classList.remove("show");
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    document.getElementById("help-dropdown").classList.remove("show");
+    closeNewMember();
+    closeMemberModal();
+  }
+});
+
+/* ── new member + welcome email ────────────────────────────── */
+function openNewMember() {
+  // Populate site dropdown
+  const sel = document.getElementById("nm-site");
+  sel.innerHTML = '<option value="">Select a site...</option>' +
+    DATA.sites.map(s => `<option value="${s["Site Name"]}">${s["Site Name"]}</option>`).join("");
+  // Reset form
+  document.getElementById("new-member-form").reset();
+  document.getElementById("welcome-body").textContent = "Fill in the member details above to preview the welcome email.";
+  document.getElementById("nm-submit-btn").disabled = false;
+  document.getElementById("nm-submit-btn").textContent = "Create Member & Send Welcome Email";
+  document.getElementById("new-member-modal").classList.add("show");
+}
+
+function closeNewMember() { document.getElementById("new-member-modal").classList.remove("show"); }
+document.getElementById("new-member-modal").addEventListener("click", e => {
+  if (e.target.classList.contains("modal-overlay")) closeNewMember();
+});
+
+function updateWelcomePreview() {
+  const first = document.getElementById("nm-first").value || "___";
+  const last = document.getElementById("nm-last").value || "___";
+  const email = document.getElementById("nm-email").value || "___";
+  const site = document.getElementById("nm-site").value || "your assigned site";
+  document.getElementById("welcome-body").innerHTML =
+    `<p>Dear <strong>${first} ${last}</strong>,</p>` +
+    `<p>Welcome to <strong>SchoolForGood</strong>! We are thrilled to have you join our learning community at <strong>${site}</strong>.</p>` +
+    `<p>Your account has been created with the following details:</p>` +
+    `<p style="margin-left:12px">Name: ${first} ${last}<br>Email: ${email}<br>Site: ${site}</p>` +
+    `<p>Here's what to expect next:</p>` +
+    `<ul>` +
+    `<li>Browse available classes on your site's schedule</li>` +
+    `<li>Enroll in classes that interest you</li>` +
+    `<li>Receive reminders before each class session</li>` +
+    `<li>Connect with your trainers and fellow members</li>` +
+    `</ul>` +
+    `<p>If you have any questions, reach out to your site coordinator at ${site}.</p>` +
+    `<p>We look forward to seeing you in class!</p>` +
+    `<p>Warm regards,<br><strong>The SchoolForGood Team</strong></p>`;
+}
+
+async function submitNewMember(e) {
+  e.preventDefault();
+  const btn = document.getElementById("nm-submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Creating...";
+
+  const values = {
+    "First Name": document.getElementById("nm-first").value.trim(),
+    "Last Name": document.getElementById("nm-last").value.trim(),
+    Email: document.getElementById("nm-email").value.trim(),
+    Phone: document.getElementById("nm-phone").value.trim(),
+    Site: document.getElementById("nm-site").value,
+    Age: document.getElementById("nm-age").value,
+    "Education Level": document.getElementById("nm-education").value,
+    Weight: document.getElementById("nm-weight").value.trim(),
+    "Favorite Food": document.getElementById("nm-food").value.trim(),
+    Status: "Active",
+  };
+
+  try {
+    // Create the member
+    const res = await fetch("/api/school/members/new", {
+      method: "POST",
+      headers: { Authorization: AUTH, "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // Add to local data and re-render
+    DATA.members.unshift({ id: data.id, ...values });
+    renderMembers();
+    if (DATA.stats) {
+      DATA.stats.totals.members++;
+      renderDashboard();
+    }
+
+    closeNewMember();
+    toast(`${values["First Name"]} ${values["Last Name"]} added! Welcome email sent.`);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "Create Member & Send Welcome Email";
+    toast("Error: " + err.message);
+  }
+}
+</script>
+</body>
+</html>

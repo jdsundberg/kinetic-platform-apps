@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surf Shop - Kinetic Platform</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;--deep-orange:#BF360C;
+  /* Surf theme accents */
+  --ocean-dark:#1B4965;--ocean:#62B6CB;--ocean-light:#BEE9E8;
+  --gold:#F5A623;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+a{color:var(--orange);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box h1 span{color:var(--ocean)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--ocean);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px;border:none;border-radius:8px}
+.login-box button:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* App shell */
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:30px}
+.topbar .logo span{color:var(--ocean)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:10px 16px;font-size:13px;font-weight:500;border-radius:8px 8px 0 0;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{background:var(--orange);color:#fff;border-radius:8px}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+/* Console */
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+
+/* Cards */
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0;color:var(--blue)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi.ocean .val{color:var(--ocean-dark)}
+.kpi.ocean{border-top-color:var(--ocean)}
+.kpi.orange .val{color:var(--orange)}
+.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}
+.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}
+.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}
+.kpi.yellow{border-top-color:var(--yellow)}
+
+/* Tide card */
+.tide-card{background:linear-gradient(135deg,var(--ocean-dark) 0%,#235e7a 100%);color:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:var(--shadow)}
+.tide-card h3{color:rgba(255,255,255,.8);text-transform:uppercase;font-size:11px;letter-spacing:.5px;margin-bottom:12px}
+.tide-card .tide-location{font-size:20px;font-weight:700;margin-bottom:4px}
+.tide-card .tide-date{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:16px}
+.tide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px}
+.tide-metric .tm-label{font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:rgba(255,255,255,.6);margin-bottom:2px}
+.tide-metric .tm-value{font-size:18px;font-weight:700}
+.tide-stars{color:var(--gold);font-size:18px;letter-spacing:2px}
+.tide-no-data{text-align:center;padding:24px;color:rgba(255,255,255,.7);font-style:italic}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-in-stock,.badge-active,.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-low-stock,.badge-yellow{background:#FFF8E1;color:#F9A825}
+.badge-out-of-stock,.badge-red{background:#FDECEA;color:#C62828}
+.badge-boards{background:#E3F2FD;color:#1565C0}
+.badge-wetsuits{background:#E0F2F1;color:#00695C}
+.badge-accessories{background:#F3E5F5;color:#7B1FA2}
+.badge-apparel{background:#FFF3E0;color:#E65100}
+.badge-fins{background:#E8EAF6;color:#283593}
+.badge-leashes{background:#FCE4EC;color:#C2185B}
+.badge-wax{background:#EFEBE9;color:#5D4037}
+.badge-default{background:var(--light);color:var(--gray)}
+.badge-new{background:#E3F2FD;color:#1565C0}
+.badge-reviewed{background:#FFF8E1;color:#F9A825}
+.badge-resolved{background:#E8F5E9;color:#2E7D32}
+.badge-service{background:#E0F7FA;color:#00838F}
+.badge-product{background:#FFF3E0;color:#E65100}
+.badge-experience{background:#F3E5F5;color:#7B1FA2}
+.badge-staff{background:#E8EAF6;color:#283593}
+
+/* Schedule badges */
+.sched-scheduled{background:#E3F2FD;color:#1565C0}
+.sched-worked{background:#E8F5E9;color:#2E7D32}
+.sched-called-out{background:#FDECEA;color:#C62828}
+.sched-swapped{background:#FFF8E1;color:#F9A825}
+.sched-off{background:var(--light);color:var(--gray)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+
+/* Pagination */
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+
+/* Stars */
+.stars{color:var(--gold);letter-spacing:1px;font-size:14px}
+.stars-lg{font-size:18px}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+
+/* Schedule grid */
+.sched-table th,.sched-table td{text-align:center;padding:8px 6px;font-size:12px}
+.sched-table th:first-child,.sched-table td:first-child{text-align:left;font-weight:600;white-space:nowrap}
+.sched-cell{min-height:32px}
+.sched-cell .shift-time{font-size:11px;font-weight:600;margin-bottom:2px}
+.sched-nav{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.sched-nav .sched-label{font-size:15px;font-weight:600;color:var(--blue);min-width:180px;text-align:center}
+.sched-nav button{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--blue);font-weight:600}
+.sched-nav button:hover{background:var(--light)}
+
+/* Expandable detail rows */
+.detail-row td{background:#F8FAFB;padding:16px 20px}
+.detail-row .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px}
+.detail-row .detail-field .dl{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.detail-row .detail-field .dv{font-size:14px;word-break:break-word}
+.detail-row textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;min-height:60px}
+
+/* Mono */
+.mono{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .3s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Empty state */
+.empty{text-align:center;padding:30px;color:var(--gray);font-style:italic}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:var(--gray)}
+</style>
+</head>
+<body>
+
+<script>
+// Boot: decide which screen to show before paint
+if (sessionStorage.getItem('kinetic_session') || localStorage.getItem('base_session')) {
+  document.write('<style id="boot-style">#app{display:block!important}#login-screen{display:none!important}</style>');
+} else {
+  document.write('<style id="boot-style">#login-screen{display:flex!important}#app{display:none!important}</style>');
+}
+</script>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Surf<span>Shop</span></h1>
+    <div class="sub">Surf Shop Management System</div>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://myspace.kinops.io">
+    <label>Username</label>
+    <input id="login-user" placeholder="username" autocomplete="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Surf<span>Shop</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="showTab('dashboard')">Dashboard</button>
+      <button onclick="showTab('inventory')">Inventory</button>
+      <button onclick="showTab('schedules')">Schedules</button>
+      <button onclick="showTab('feedback')">Feedback</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="console active" id="tab-dashboard"></div>
+  <div class="console" id="tab-inventory"></div>
+  <div class="console" id="tab-schedules"></div>
+  <div class="console" id="tab-feedback"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ========================================================================
+   API & Helpers
+   ======================================================================== */
+const KAPP = 'surf-shop';
+let API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+
+async function api(path, opts = {}) {
+  const r = await fetch(API.url + '/app/api/v1' + path, {
+    ...opts,
+    headers: {
+      'Authorization': 'Basic ' + API.auth,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+  if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
+  return r.json();
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function stars(n, cls) {
+  const rating = parseInt(n) || 0;
+  const clamped = Math.max(0, Math.min(5, rating));
+  return '<span class="stars ' + (cls || '') + '">' + '\u2605'.repeat(clamped) + '\u2606'.repeat(5 - clamped) + '</span>';
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (isNaN(d)) return esc(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function catBadge(cat) {
+  if (!cat) return '';
+  const cls = 'badge-' + cat.toLowerCase().replace(/\s+/g, '-');
+  return '<span class="badge ' + cls + '">' + esc(cat) + '</span>';
+}
+
+function statusBadge(s) {
+  if (!s) return '';
+  const cls = 'badge-' + s.toLowerCase().replace(/\s+/g, '-');
+  return '<span class="badge ' + cls + '">' + esc(s) + '</span>';
+}
+
+function schedBadge(s) {
+  if (!s) return '';
+  const cls = 'sched-' + s.toLowerCase().replace(/\s+/g, '-');
+  return '<span class="badge ' + cls + '">' + esc(s) + '</span>';
+}
+
+/* ========================================================================
+   Pagination infrastructure
+   ======================================================================== */
+function makePager() { return { items: [], pageTokens: [null], pageIndex: 0, hasNext: false }; }
+const PAGERS = {
+  inventory: makePager(),
+  feedback: makePager()
+};
+
+async function fetchPage(pager, formSlug, kql, direction) {
+  if (direction === 'reset') { pager.pageTokens = [null]; pager.pageIndex = 0; }
+  else if (direction === 'next' && pager.hasNext) { pager.pageIndex++; }
+  else if (direction === 'prev' && pager.pageIndex > 0) { pager.pageIndex--; }
+
+  let url = '/kapps/' + KAPP + '/forms/' + formSlug + '/submissions?include=values,details&limit=25';
+  if (kql) url += '&q=' + encodeURIComponent(kql);
+  const token = pager.pageTokens[pager.pageIndex];
+  if (token) url += '&pageToken=' + encodeURIComponent(token);
+
+  const r = await api(url);
+  pager.items = r.submissions || [];
+  pager.hasNext = !!r.nextPageToken;
+  if (pager.hasNext) pager.pageTokens[pager.pageIndex + 1] = r.nextPageToken;
+}
+
+function pgCtrl(pager, navFn) {
+  const hasPrev = pager.pageIndex > 0;
+  if (!hasPrev && !pager.hasNext) return '';
+  return '<div class="pagination">' +
+    '<button class="btn-outline btn-small" onclick="' + navFn + "('prev')\" " + (hasPrev ? '' : 'disabled') + '>&larr; Previous</button>' +
+    '<span class="page-info">Page ' + (pager.pageIndex + 1) + '</span>' +
+    '<button class="btn-outline btn-small" onclick="' + navFn + "('next')\" " + (pager.hasNext ? '' : 'disabled') + '>Next &rarr;</button>' +
+    '</div>';
+}
+
+/* ========================================================================
+   Login / Session
+   ======================================================================== */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none'; errEl.textContent = '';
+
+  if (!url || !user || !pass) { errEl.textContent = 'All fields required.'; errEl.style.display = 'block'; return; }
+
+  API.url = url;
+  API.auth = btoa(user + ':' + pass);
+  API.user = user;
+
+  try {
+    const me = await api('/me');
+    API.displayName = me.displayName || me.username || user;
+
+    try {
+      const sr = await fetch(API.url + '/app/api/v1/space', {
+        headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' }
+      });
+      if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+    } catch (e2) {}
+
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    enterApp();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  Object.values(PAGERS).forEach(p => Object.assign(p, makePager()));
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent =
+    (API.displayName || API.user) + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+  loadDashboard();
+}
+
+async function restoreSession() {
+  let s = sessionStorage.getItem('kinetic_session') || localStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const parsed = JSON.parse(s);
+    API.url = parsed.url || '';
+    API.auth = parsed.auth || '';
+    API.user = parsed.user || '';
+    API.displayName = parsed.displayName || parsed.user || '';
+    API.spaceSlug = parsed.spaceSlug || '';
+
+    const r = await fetch(API.url + '/app/api/v1/me', {
+      headers: { 'Authorization': 'Basic ' + API.auth }
+    });
+    if (!r.ok) throw 0;
+
+    if (!API.spaceSlug) {
+      try {
+        const sr = await fetch(API.url + '/app/api/v1/space', {
+          headers: { 'Authorization': 'Basic ' + API.auth, 'Accept': 'application/json' }
+        });
+        if (sr.ok) { const sd = await sr.json(); API.spaceSlug = (sd.space || sd).slug || ''; }
+      } catch (e2) {}
+      sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    }
+    enterApp();
+  } catch (e) {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  }
+}
+restoreSession();
+
+/* ========================================================================
+   Tab Navigation
+   ======================================================================== */
+const TABS = ['dashboard', 'inventory', 'schedules', 'feedback'];
+
+function showTab(name) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('active'));
+  const idx = TABS.indexOf(name);
+  if (idx >= 0) document.querySelectorAll('#main-nav button')[idx].classList.add('active');
+
+  const loaders = {
+    dashboard: loadDashboard,
+    inventory: () => loadInventory('reset'),
+    schedules: loadSchedules,
+    feedback: () => loadFeedback('reset')
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+/* ========================================================================
+   DASHBOARD
+   ======================================================================== */
+async function loadDashboard() {
+  const el = document.getElementById('tab-dashboard');
+  el.innerHTML = '<div class="loading">Loading dashboard...</div>';
+
+  try {
+    // Fetch tide report, inventory stats, schedule count, and recent feedback in parallel
+    const [tideData, invData, schedData, fbData] = await Promise.all([
+      api('/kapps/' + KAPP + '/forms/tide-reports/submissions?include=values&limit=1').catch(() => ({ submissions: [] })),
+      api('/kapps/' + KAPP + '/forms/inventory/submissions?include=values&limit=25').catch(() => ({ submissions: [] })),
+      api('/kapps/' + KAPP + '/forms/schedules/submissions?include=values&limit=25&q=' + encodeURIComponent(buildTodayScheduleKql())).catch(() => ({ submissions: [] })),
+      api('/kapps/' + KAPP + '/forms/feedback/submissions?include=values&limit=25').catch(() => ({ submissions: [] }))
+    ]);
+
+    // Tide card
+    const tide = tideData.submissions?.[0];
+    let tideHtml;
+    if (tide) {
+      const rating = parseInt(v(tide, 'Conditions Rating')) || 0;
+      tideHtml = '<div class="tide-card">' +
+        '<h3>Today\'s Conditions</h3>' +
+        '<div class="tide-location">' + esc(v(tide, 'Location')) + '</div>' +
+        '<div class="tide-date">' + esc(v(tide, 'Date')) + '</div>' +
+        '<div class="tide-grid">' +
+        '<div class="tide-metric"><div class="tm-label">Swell Height</div><div class="tm-value">' + esc(v(tide, 'Swell Height') || '--') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">Period</div><div class="tm-value">' + esc(v(tide, 'Swell Period') || '--') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">Wind</div><div class="tm-value">' + esc(v(tide, 'Wind Direction') || '--') + ' ' + esc(v(tide, 'Wind Speed') || '') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">Water Temp</div><div class="tm-value">' + esc(v(tide, 'Water Temp') || '--') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">High Tide</div><div class="tm-value">' + esc(v(tide, 'High Tide Time') || '--') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">Low Tide</div><div class="tm-value">' + esc(v(tide, 'Low Tide Time') || '--') + '</div></div>' +
+        '<div class="tide-metric"><div class="tm-label">Rating</div><div class="tide-stars">' + '\u2605'.repeat(Math.min(5, rating)) + '\u2606'.repeat(5 - Math.min(5, rating)) + '</div></div>' +
+        '</div></div>';
+    } else {
+      tideHtml = '<div class="tide-card"><div class="tide-no-data">No tide report for today</div></div>';
+    }
+
+    // KPI calculations
+    const invItems = invData.submissions || [];
+    const totalProducts = invItems.length;
+    const lowStock = invItems.filter(s => v(s, 'Status') === 'Low Stock').length;
+    const todayStaff = (schedData.submissions || []).length;
+    const fbItems = fbData.submissions || [];
+    const newFeedback = fbItems.filter(s => v(s, 'Status') === 'New').length;
+
+    // Recent feedback (last 5)
+    const recentFb = fbItems.slice(0, 5);
+    let fbHtml = '';
+    if (recentFb.length) {
+      fbHtml = '<div class="card"><h3>Recent Feedback</h3><table><thead><tr>' +
+        '<th>Customer</th><th>Rating</th><th>Category</th><th>Preview</th><th>Status</th>' +
+        '</tr></thead><tbody>';
+      for (const s of recentFb) {
+        const txt = v(s, 'Feedback Text');
+        const preview = txt.length > 60 ? txt.slice(0, 60) + '...' : txt;
+        fbHtml += '<tr>' +
+          '<td>' + esc(v(s, 'Customer Name')) + '</td>' +
+          '<td>' + stars(v(s, 'Rating')) + '</td>' +
+          '<td>' + catBadge(v(s, 'Category')) + '</td>' +
+          '<td style="color:var(--gray);font-size:12px">' + esc(preview) + '</td>' +
+          '<td>' + statusBadge(v(s, 'Status')) + '</td>' +
+          '</tr>';
+      }
+      fbHtml += '</tbody></table></div>';
+    } else {
+      fbHtml = '<div class="card"><h3>Recent Feedback</h3><div class="empty">No feedback yet</div></div>';
+    }
+
+    el.innerHTML = tideHtml +
+      '<div class="kpi-row">' +
+      '<div class="kpi ocean"><div class="label">Total Products</div><div class="val">' + totalProducts + '</div></div>' +
+      '<div class="kpi orange"><div class="label">Low Stock Items</div><div class="val">' + lowStock + '</div></div>' +
+      '<div class="kpi green"><div class="label">Today\'s Staff</div><div class="val">' + todayStaff + '</div></div>' +
+      '<div class="kpi ' + (newFeedback > 0 ? 'red' : 'green') + '"><div class="label">New Feedback</div><div class="val">' + newFeedback + '</div></div>' +
+      '</div>' +
+      fbHtml;
+
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Error loading dashboard: ' + esc(e.message) + '</div>';
+  }
+}
+
+function buildTodayScheduleKql() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  return 'values[Date]="' + y + '-' + m + '-' + d + '"';
+}
+
+/* ========================================================================
+   INVENTORY
+   ======================================================================== */
+let invFilters = { category: '', status: '', search: '' };
+const expandedInv = new Set();
+
+async function loadInventory(direction) {
+  const el = document.getElementById('tab-inventory');
+  const pager = PAGERS.inventory;
+
+  // Build KQL
+  const parts = [];
+  if (invFilters.category) parts.push('values[Category]="' + invFilters.category + '"');
+  if (invFilters.status) parts.push('values[Status]="' + invFilters.status + '"');
+  const kql = parts.join(' AND ');
+
+  try {
+    await fetchPage(pager, 'inventory', kql, direction);
+    renderInventory();
+  } catch (e) {
+    el.innerHTML = buildInvToolbar() + '<div class="empty">Error: ' + esc(e.message) + '</div>';
+  }
+}
+
+function buildInvToolbar() {
+  return '<div class="toolbar">' +
+    '<select onchange="invFilters.category=this.value;loadInventory(\'reset\')">' +
+    '<option value="">All Categories</option>' +
+    '<option value="Boards"' + (invFilters.category === 'Boards' ? ' selected' : '') + '>Boards</option>' +
+    '<option value="Wetsuits"' + (invFilters.category === 'Wetsuits' ? ' selected' : '') + '>Wetsuits</option>' +
+    '<option value="Fins"' + (invFilters.category === 'Fins' ? ' selected' : '') + '>Fins</option>' +
+    '<option value="Leashes"' + (invFilters.category === 'Leashes' ? ' selected' : '') + '>Leashes</option>' +
+    '<option value="Wax"' + (invFilters.category === 'Wax' ? ' selected' : '') + '>Wax</option>' +
+    '<option value="Accessories"' + (invFilters.category === 'Accessories' ? ' selected' : '') + '>Accessories</option>' +
+    '<option value="Apparel"' + (invFilters.category === 'Apparel' ? ' selected' : '') + '>Apparel</option>' +
+    '</select>' +
+    '<select onchange="invFilters.status=this.value;loadInventory(\'reset\')">' +
+    '<option value="">All Status</option>' +
+    '<option value="In Stock"' + (invFilters.status === 'In Stock' ? ' selected' : '') + '>In Stock</option>' +
+    '<option value="Low Stock"' + (invFilters.status === 'Low Stock' ? ' selected' : '') + '>Low Stock</option>' +
+    '<option value="Out of Stock"' + (invFilters.status === 'Out of Stock' ? ' selected' : '') + '>Out of Stock</option>' +
+    '</select>' +
+    '<input type="text" placeholder="Search products..." value="' + esc(invFilters.search) + '" oninput="invFilters.search=this.value" onkeydown="if(event.key===\'Enter\')loadInventory(\'reset\')">' +
+    '</div>';
+}
+
+function renderInventory() {
+  const el = document.getElementById('tab-inventory');
+  const pager = PAGERS.inventory;
+  let items = pager.items;
+
+  // Client-side text search filter
+  if (invFilters.search) {
+    const q = invFilters.search.toLowerCase();
+    items = items.filter(s =>
+      v(s, 'Product Name').toLowerCase().includes(q) ||
+      v(s, 'SKU').toLowerCase().includes(q) ||
+      v(s, 'Brand').toLowerCase().includes(q)
+    );
+  }
+
+  let html = buildInvToolbar();
+  html += '<div class="card" style="padding:0;overflow:hidden"><table><thead><tr>' +
+    '<th>SKU</th><th>Product Name</th><th>Category</th><th>Brand</th><th>Size</th><th>Price</th><th>Qty</th><th>Status</th>' +
+    '</tr></thead><tbody id="inv-tbody">';
+
+  if (!items.length) {
+    html += '<tr><td colspan="8" class="empty">No products found</td></tr>';
+  } else {
+    for (const s of items) {
+      const sid = s.id;
+      const price = v(s, 'Price');
+      const priceDisplay = price ? '$' + esc(price) : '-';
+      html += '<tr class="clickable-row" onclick="toggleInvDetail(\'' + sid + '\', this)">' +
+        '<td class="mono">' + esc(v(s, 'SKU')) + '</td>' +
+        '<td><strong>' + esc(v(s, 'Product Name')) + '</strong></td>' +
+        '<td>' + catBadge(v(s, 'Category')) + '</td>' +
+        '<td>' + esc(v(s, 'Brand')) + '</td>' +
+        '<td>' + esc(v(s, 'Size')) + '</td>' +
+        '<td>' + priceDisplay + '</td>' +
+        '<td>' + esc(v(s, 'Quantity')) + '</td>' +
+        '<td>' + statusBadge(v(s, 'Status')) + '</td>' +
+        '</tr>';
+
+      if (expandedInv.has(sid)) {
+        html += buildInvDetailRow(s);
+      }
+    }
+  }
+
+  html += '</tbody></table></div>';
+  html += pgCtrl(pager, 'navInventory');
+  el.innerHTML = html;
+}
+
+function buildInvDetailRow(s) {
+  return '<tr class="detail-row" data-detail="' + s.id + '"><td colspan="8">' +
+    '<div class="detail-grid">' +
+    '<div class="detail-field"><div class="dl">Product Name</div><div class="dv">' + esc(v(s, 'Product Name')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">SKU</div><div class="dv mono">' + esc(v(s, 'SKU')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Category</div><div class="dv">' + catBadge(v(s, 'Category')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Brand</div><div class="dv">' + esc(v(s, 'Brand')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Size</div><div class="dv">' + esc(v(s, 'Size') || '-') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Price</div><div class="dv">' + (v(s, 'Price') ? '$' + esc(v(s, 'Price')) : '-') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Quantity</div><div class="dv">' + esc(v(s, 'Quantity') || '0') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Reorder Level</div><div class="dv">' + esc(v(s, 'Reorder Level') || '-') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Location</div><div class="dv">' + esc(v(s, 'Location') || '-') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Status</div><div class="dv">' + statusBadge(v(s, 'Status')) + '</div></div>' +
+    '</div></td></tr>';
+}
+
+function toggleInvDetail(sid, row) {
+  const existing = row.parentNode.querySelector('tr[data-detail="' + sid + '"]');
+  if (existing) {
+    existing.remove();
+    expandedInv.delete(sid);
+  } else {
+    const sub = PAGERS.inventory.items.find(s => s.id === sid);
+    if (!sub) return;
+    const tr = document.createElement('tr');
+    tr.className = 'detail-row';
+    tr.setAttribute('data-detail', sid);
+    tr.innerHTML = '<td colspan="8">' +
+      '<div class="detail-grid">' +
+      '<div class="detail-field"><div class="dl">Product Name</div><div class="dv">' + esc(v(sub, 'Product Name')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">SKU</div><div class="dv mono">' + esc(v(sub, 'SKU')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Category</div><div class="dv">' + catBadge(v(sub, 'Category')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Brand</div><div class="dv">' + esc(v(sub, 'Brand')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Size</div><div class="dv">' + esc(v(sub, 'Size') || '-') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Price</div><div class="dv">' + (v(sub, 'Price') ? '$' + esc(v(sub, 'Price')) : '-') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Quantity</div><div class="dv">' + esc(v(sub, 'Quantity') || '0') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Reorder Level</div><div class="dv">' + esc(v(sub, 'Reorder Level') || '-') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Location</div><div class="dv">' + esc(v(sub, 'Location') || '-') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Status</div><div class="dv">' + statusBadge(v(sub, 'Status')) + '</div></div>' +
+      '</div></td>';
+    row.parentNode.insertBefore(tr, row.nextSibling);
+    expandedInv.add(sid);
+  }
+}
+
+function navInventory(dir) {
+  expandedInv.clear();
+  loadInventory(dir);
+}
+
+/* ========================================================================
+   SCHEDULES
+   ======================================================================== */
+let schedWeekOffset = 0;
+
+function getWeekDates(offset) {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayOfWeek + 1 + (offset * 7));
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function fmtSchedDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fmtDayLabel(d) {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate();
+}
+
+async function loadSchedules() {
+  const el = document.getElementById('tab-schedules');
+  el.innerHTML = '<div class="loading">Loading schedules...</div>';
+
+  const days = getWeekDates(schedWeekOffset);
+  const startDate = fmtSchedDate(days[0]);
+  const endDate = fmtSchedDate(days[6]);
+
+  // Fetch all schedules for this week (up to 25)
+  try {
+    const r = await api('/kapps/' + KAPP + '/forms/schedules/submissions?include=values&limit=25');
+    const allSched = r.submissions || [];
+
+    // Filter to this week client-side
+    const weekSched = allSched.filter(s => {
+      const d = v(s, 'Date');
+      return d >= startDate && d <= endDate;
+    });
+
+    // Group by employee
+    const byEmployee = {};
+    for (const s of weekSched) {
+      const emp = v(s, 'Employee Name') || 'Unknown';
+      if (!byEmployee[emp]) byEmployee[emp] = {};
+      const date = v(s, 'Date');
+      byEmployee[emp][date] = s;
+    }
+
+    const employees = Object.keys(byEmployee).sort();
+
+    // Week label
+    const weekLabel = fmtDayLabel(days[0]).split(' ')[1] + ' - ' + fmtDayLabel(days[6]).split(' ')[1] +
+      ', ' + days[0].getFullYear();
+
+    let html = '<div class="sched-nav">' +
+      '<button onclick="schedWeekOffset--;loadSchedules()">&larr; Previous</button>' +
+      '<div class="sched-label">' + esc(weekLabel) + '</div>' +
+      '<button onclick="schedWeekOffset++;loadSchedules()">Next &rarr;</button>' +
+      '<button class="btn-small" style="margin-left:auto;background:var(--ocean-light);color:var(--ocean-dark)" onclick="schedWeekOffset=0;loadSchedules()">This Week</button>' +
+      '</div>';
+
+    html += '<div class="card" style="padding:0;overflow-x:auto"><table class="sched-table"><thead><tr><th>Employee</th>';
+    for (const d of days) {
+      const isToday = fmtSchedDate(d) === fmtSchedDate(new Date());
+      html += '<th' + (isToday ? ' style="background:var(--ocean-light);color:var(--ocean-dark)"' : '') + '>' + fmtDayLabel(d) + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    if (!employees.length) {
+      html += '<tr><td colspan="8" class="empty">No schedules for this week</td></tr>';
+    } else {
+      for (const emp of employees) {
+        html += '<tr><td>' + esc(emp) + '</td>';
+        for (const d of days) {
+          const dateStr = fmtSchedDate(d);
+          const sched = byEmployee[emp][dateStr];
+          const isToday = dateStr === fmtSchedDate(new Date());
+          if (sched) {
+            const start = v(sched, 'Shift Start');
+            const end = v(sched, 'Shift End');
+            const status = v(sched, 'Status') || 'Scheduled';
+            html += '<td' + (isToday ? ' style="background:rgba(190,233,232,.25)"' : '') + '><div class="sched-cell">' +
+              '<div class="shift-time">' + esc(start) + (end ? ' - ' + esc(end) : '') + '</div>' +
+              schedBadge(status) +
+              '</div></td>';
+          } else {
+            html += '<td' + (isToday ? ' style="background:rgba(190,233,232,.15)"' : '') + '><div class="sched-cell" style="color:var(--border)">-</div></td>';
+          }
+        }
+        html += '</tr>';
+      }
+    }
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Error loading schedules: ' + esc(e.message) + '</div>';
+  }
+}
+
+/* ========================================================================
+   FEEDBACK
+   ======================================================================== */
+let fbFilters = { status: '', rating: '', search: '' };
+const expandedFb = new Set();
+
+async function loadFeedback(direction) {
+  const el = document.getElementById('tab-feedback');
+  const pager = PAGERS.feedback;
+
+  // Build KQL
+  const parts = [];
+  if (fbFilters.status) parts.push('values[Status]="' + fbFilters.status + '"');
+  if (fbFilters.rating) parts.push('values[Rating]="' + fbFilters.rating + '"');
+  const kql = parts.join(' AND ');
+
+  try {
+    await fetchPage(pager, 'feedback', kql, direction);
+    renderFeedback();
+  } catch (e) {
+    el.innerHTML = buildFbToolbar() + '<div class="empty">Error: ' + esc(e.message) + '</div>';
+  }
+}
+
+function buildFbToolbar() {
+  return '<div class="toolbar">' +
+    '<select onchange="fbFilters.status=this.value;loadFeedback(\'reset\')">' +
+    '<option value="">All Status</option>' +
+    '<option value="New"' + (fbFilters.status === 'New' ? ' selected' : '') + '>New</option>' +
+    '<option value="Reviewed"' + (fbFilters.status === 'Reviewed' ? ' selected' : '') + '>Reviewed</option>' +
+    '<option value="Resolved"' + (fbFilters.status === 'Resolved' ? ' selected' : '') + '>Resolved</option>' +
+    '</select>' +
+    '<select onchange="fbFilters.rating=this.value;loadFeedback(\'reset\')">' +
+    '<option value="">All Ratings</option>' +
+    '<option value="5"' + (fbFilters.rating === '5' ? ' selected' : '') + '>5 Stars</option>' +
+    '<option value="4"' + (fbFilters.rating === '4' ? ' selected' : '') + '>4 Stars</option>' +
+    '<option value="3"' + (fbFilters.rating === '3' ? ' selected' : '') + '>3 Stars</option>' +
+    '<option value="2"' + (fbFilters.rating === '2' ? ' selected' : '') + '>2 Stars</option>' +
+    '<option value="1"' + (fbFilters.rating === '1' ? ' selected' : '') + '>1 Star</option>' +
+    '</select>' +
+    '<input type="text" placeholder="Search feedback..." value="' + esc(fbFilters.search) + '" oninput="fbFilters.search=this.value" onkeydown="if(event.key===\'Enter\')loadFeedback(\'reset\')">' +
+    '</div>';
+}
+
+function renderFeedback() {
+  const el = document.getElementById('tab-feedback');
+  const pager = PAGERS.feedback;
+  let items = pager.items;
+
+  // Client-side search filter
+  if (fbFilters.search) {
+    const q = fbFilters.search.toLowerCase();
+    items = items.filter(s =>
+      v(s, 'Customer Name').toLowerCase().includes(q) ||
+      v(s, 'Feedback Text').toLowerCase().includes(q) ||
+      v(s, 'Category').toLowerCase().includes(q)
+    );
+  }
+
+  // KPI calculations for current page
+  const allItems = pager.items;
+  const totalCount = allItems.length;
+  const newCount = allItems.filter(s => v(s, 'Status') === 'New').length;
+  const resolvedCount = allItems.filter(s => v(s, 'Status') === 'Resolved').length;
+  const ratings = allItems.map(s => parseInt(v(s, 'Rating'))).filter(n => n > 0);
+  const avgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : '-';
+
+  let html = '<div class="kpi-row">' +
+    '<div class="kpi ocean"><div class="label">Average Rating</div><div class="val">' + (avgRating !== '-' ? stars(Math.round(avgRating), 'stars-lg') + '<div style="font-size:13px;color:var(--gray);margin-top:2px">' + avgRating + ' / 5</div>' : '-') + '</div></div>' +
+    '<div class="kpi"><div class="label">Total Feedback</div><div class="val">' + totalCount + '</div></div>' +
+    '<div class="kpi ' + (newCount > 0 ? 'red' : 'green') + '"><div class="label">New</div><div class="val">' + newCount + '</div></div>' +
+    '<div class="kpi green"><div class="label">Resolved</div><div class="val">' + resolvedCount + '</div></div>' +
+    '</div>';
+
+  html += buildFbToolbar();
+
+  html += '<div class="card" style="padding:0;overflow:hidden"><table><thead><tr>' +
+    '<th>Date</th><th>Customer</th><th>Rating</th><th>Category</th><th>Preview</th><th>Status</th>' +
+    '</tr></thead><tbody>';
+
+  if (!items.length) {
+    html += '<tr><td colspan="6" class="empty">No feedback found</td></tr>';
+  } else {
+    for (const s of items) {
+      const sid = s.id;
+      const txt = v(s, 'Feedback Text');
+      const preview = txt.length > 50 ? txt.slice(0, 50) + '...' : txt;
+      html += '<tr class="clickable-row" onclick="toggleFbDetail(\'' + sid + '\', this, event)">' +
+        '<td>' + esc(v(s, 'Date') || formatDate(s.createdAt)) + '</td>' +
+        '<td><strong>' + esc(v(s, 'Customer Name')) + '</strong></td>' +
+        '<td>' + stars(v(s, 'Rating')) + '</td>' +
+        '<td>' + catBadge(v(s, 'Category')) + '</td>' +
+        '<td style="color:var(--gray);font-size:12px">' + esc(preview) + '</td>' +
+        '<td>' + statusBadge(v(s, 'Status')) + '</td>' +
+        '</tr>';
+
+      if (expandedFb.has(sid)) {
+        html += buildFbDetailRow(s);
+      }
+    }
+  }
+
+  html += '</tbody></table></div>';
+  html += pgCtrl(pager, 'navFeedback');
+  el.innerHTML = html;
+}
+
+function buildFbDetailRow(s) {
+  return '<tr class="detail-row" data-detail="' + s.id + '"><td colspan="6">' +
+    '<div style="margin-bottom:12px">' +
+    '<div class="detail-field"><div class="dl">Full Feedback</div><div class="dv" style="white-space:pre-wrap">' + esc(v(s, 'Feedback Text')) + '</div></div>' +
+    '</div>' +
+    '<div class="detail-grid">' +
+    '<div class="detail-field"><div class="dl">Customer</div><div class="dv">' + esc(v(s, 'Customer Name')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Email</div><div class="dv">' + esc(v(s, 'Email') || '-') + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Rating</div><div class="dv">' + stars(v(s, 'Rating')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Category</div><div class="dv">' + catBadge(v(s, 'Category')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Status</div><div class="dv">' + statusBadge(v(s, 'Status')) + '</div></div>' +
+    '<div class="detail-field"><div class="dl">Date</div><div class="dv">' + esc(v(s, 'Date') || formatDate(s.createdAt)) + '</div></div>' +
+    '</div>' +
+    '<div style="margin-top:12px">' +
+    '<div class="detail-field"><div class="dl">Response</div>' +
+    '<div class="dv" style="white-space:pre-wrap">' + (v(s, 'Response') ? esc(v(s, 'Response')) : '<span style="color:var(--gray);font-style:italic">No response yet</span>') + '</div></div>' +
+    '</div>' +
+    '</td></tr>';
+}
+
+function toggleFbDetail(sid, row, event) {
+  event.stopPropagation();
+  const existing = row.parentNode.querySelector('tr[data-detail="' + sid + '"]');
+  if (existing) {
+    existing.remove();
+    expandedFb.delete(sid);
+  } else {
+    const sub = PAGERS.feedback.items.find(s => s.id === sid);
+    if (!sub) return;
+    const tr = document.createElement('tr');
+    tr.className = 'detail-row';
+    tr.setAttribute('data-detail', sid);
+    tr.innerHTML = '<td colspan="6">' +
+      '<div style="margin-bottom:12px">' +
+      '<div class="detail-field"><div class="dl">Full Feedback</div><div class="dv" style="white-space:pre-wrap">' + esc(v(sub, 'Feedback Text')) + '</div></div>' +
+      '</div>' +
+      '<div class="detail-grid">' +
+      '<div class="detail-field"><div class="dl">Customer</div><div class="dv">' + esc(v(sub, 'Customer Name')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Email</div><div class="dv">' + esc(v(sub, 'Email') || '-') + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Rating</div><div class="dv">' + stars(v(sub, 'Rating')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Category</div><div class="dv">' + catBadge(v(sub, 'Category')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Status</div><div class="dv">' + statusBadge(v(sub, 'Status')) + '</div></div>' +
+      '<div class="detail-field"><div class="dl">Date</div><div class="dv">' + esc(v(sub, 'Date') || formatDate(sub.createdAt)) + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:12px">' +
+      '<div class="detail-field"><div class="dl">Response</div>' +
+      '<div class="dv" style="white-space:pre-wrap">' + (v(sub, 'Response') ? esc(v(sub, 'Response')) : '<span style="color:var(--gray);font-style:italic">No response yet</span>') + '</div></div>' +
+      '</div>' +
+      '</td>';
+    row.parentNode.insertBefore(tr, row.nextSibling);
+    expandedFb.add(sid);
+  }
+}
+
+function navFeedback(dir) {
+  expandedFb.clear();
+  loadFeedback(dir);
+}
+
+</script>
+</body>
+</html>

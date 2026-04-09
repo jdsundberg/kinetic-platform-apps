@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Assets</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00838F;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #00979E; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: var(--teal); }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-open, .badge-scheduled, .badge-proposed, .badge-draft, .badge-active { background: #E3F2FD; color: #1565C0; }
+.badge-completed, .badge-closed, .badge-pass, .badge-approved { background: #E8F5E9; color: #2E7D32; }
+.badge-in-progress, .badge-in-service, .badge-assigned, .badge-commissioning { background: #F3E5F5; color: #6A1B9A; }
+.badge-on-hold, .badge-conditional, .badge-suspended, .badge-deferred { background: #FFF3E0; color: #E65100; }
+.badge-overdue, .badge-fail, .badge-over-budget, .badge-follow-up-required { background: #FFEBEE; color: #C62828; }
+.badge-cancelled, .badge-disposed, .badge-decommissioned, .badge-fully-depreciated { background: #ECEFF1; color: #546E7A; }
+.badge-maintenance, .badge-repair, .badge-storage, .badge-on-order { background: #E0F7FA; color: #00838F; }
+.badge-under-renovation, .badge-planned, .badge-construction, .badge-design, .badge-procurement, .badge-planning { background: #FFF9C4; color: #F57F17; }
+.badge-out-of-service { background: #FCE4EC; color: #AD1457; }
+
+/* Priority */
+.priority-critical { color: var(--red); font-weight: 700; }
+.priority-high { color: var(--orange); font-weight: 600; }
+.priority-medium { color: var(--yellow); font-weight: 600; }
+.priority-low { color: var(--green); }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 960px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--teal); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--teal); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-teal { background: var(--teal); color: var(--white); }
+.act-btn-teal:hover { background: #00979E; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 160px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Budget bar */
+.budget-bar { background: var(--border); border-radius: 4px; height: 18px; overflow: hidden; position: relative; }
+.budget-fill { height: 100%; border-radius: 4px; }
+.budget-fill.green { background: var(--green); }
+.budget-fill.yellow { background: var(--yellow); }
+.budget-fill.red { background: var(--red); }
+
+/* Days */
+.days-green { color: var(--green); font-weight: 600; }
+.days-yellow { color: #F9A825; font-weight: 600; }
+.days-red { color: var(--red); font-weight: 700; }
+
+/* Condition score */
+.score-high { color: var(--green); font-weight: 700; }
+.score-mid { color: var(--orange); font-weight: 700; }
+.score-low { color: var(--red); font-weight: 700; }
+
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+
+/* Facility cards */
+.facility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.facility-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.facility-card:hover { box-shadow: var(--shadow-lg); }
+.facility-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 4px; }
+.facility-card .fac-meta { font-size: 12px; color: var(--gray); margin-bottom: 10px; }
+.facility-card .fac-stats { display: flex; gap: 16px; font-size: 12px; }
+.facility-card .fac-stat { text-align: center; }
+.facility-card .fac-stat-val { font-size: 18px; font-weight: 700; color: var(--blue); }
+.facility-card .fac-stat-lbl { font-size: 10px; color: var(--gray); text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Capital Assets</h1>
+      <p class="subtitle">Facilities Lifecycle Management</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Capital <span class="accent">Assets</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="assets">Assets</button>
+      <button class="tab-btn" data-tab="facilities">Facilities</button>
+      <button class="tab-btn" data-tab="work-orders">Work Orders</button>
+      <button class="tab-btn" data-tab="inspections">Inspections</button>
+      <button class="tab-btn" data-tab="projects">Projects</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Facilities Dashboard</div>
+      <div class="page-sub">Capital asset and facility management overview</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Work Order Pipeline</h3><div id="dash-pipeline" class="bar-chart"></div></div>
+        <div class="card"><h3>Project Status</h3><div id="dash-projects"></div></div>
+      </div>
+      <div class="card"><h3>Recent Work Orders</h3><div id="dash-recent-wo"></div></div>
+    </div>
+
+    <!-- ASSETS -->
+    <div class="tab-panel" id="panel-assets">
+      <div class="page-title">Asset Inventory</div>
+      <div class="page-sub">Capital equipment and building systems</div>
+      <div class="filter-bar" id="asset-filters">
+        <select id="ast-f-status"><option value="">All Statuses</option><option>In Service</option><option>Maintenance</option><option>Repair</option><option>Storage</option><option>Disposed</option><option>On Order</option></select>
+        <select id="ast-f-type"><option value="">All Types</option><option>Medical Equipment</option><option>HVAC</option><option>Electrical</option><option>Plumbing</option><option>IT Infrastructure</option><option>Furniture</option><option>Vehicle</option><option>Safety System</option></select>
+        <select id="ast-f-cat"><option value="">All Categories</option><option>Imaging</option><option>Surgical</option><option>Lab</option><option>Monitoring</option><option>Diagnostic</option><option>Building Systems</option><option>IT</option><option>Transport</option></select>
+        <select id="ast-f-fac"><option value="">All Facilities</option></select>
+        <input id="ast-f-search" type="text" placeholder="Search assets...">
+      </div>
+      <div id="asset-table"></div>
+      <div id="asset-pag" class="pagination"></div>
+    </div>
+
+    <!-- FACILITIES -->
+    <div class="tab-panel" id="panel-facilities">
+      <div class="page-title">Facilities</div>
+      <div class="page-sub">Hospital campuses and buildings</div>
+      <div id="facility-grid" class="facility-grid"></div>
+    </div>
+
+    <!-- WORK ORDERS -->
+    <div class="tab-panel" id="panel-work-orders">
+      <div class="page-title">Work Orders</div>
+      <div class="page-sub">Maintenance and repair work orders</div>
+      <div class="filter-bar" id="wo-filters">
+        <select id="wo-f-status"><option value="">All Statuses</option><option>Open</option><option>Assigned</option><option>In Progress</option><option>On Hold</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="wo-f-priority"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="wo-f-type"><option value="">All Types</option><option>Corrective</option><option>Preventive</option><option>Emergency</option><option>Inspection</option><option>Upgrade</option><option>Installation</option></select>
+        <select id="wo-f-trade"><option value="">All Trades</option><option>Electrical</option><option>HVAC</option><option>Plumbing</option><option>Biomedical</option><option>General</option><option>IT</option><option>Structural</option></select>
+        <input id="wo-f-search" type="text" placeholder="Search work orders...">
+      </div>
+      <div id="wo-table"></div>
+      <div id="wo-pag" class="pagination"></div>
+    </div>
+
+    <!-- INSPECTIONS -->
+    <div class="tab-panel" id="panel-inspections">
+      <div class="page-title">Inspections</div>
+      <div class="page-sub">Facility and equipment inspection records</div>
+      <div class="filter-bar" id="insp-filters">
+        <select id="insp-f-status"><option value="">All Statuses</option><option>Scheduled</option><option>Completed</option><option>Overdue</option><option>Follow Up Required</option></select>
+        <select id="insp-f-type"><option value="">All Types</option><option>Fire Safety</option><option>Life Safety</option><option>Environmental</option><option>Equipment</option><option>ADA Compliance</option><option>Structural</option><option>Electrical</option><option>HVAC</option></select>
+        <select id="insp-f-result"><option value="">All Results</option><option>Pass</option><option>Fail</option><option>Conditional</option><option>Deferred</option></select>
+        <input id="insp-f-search" type="text" placeholder="Search inspections...">
+      </div>
+      <div id="insp-table"></div>
+      <div id="insp-pag" class="pagination"></div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="tab-panel" id="panel-projects">
+      <div class="page-title">Capital Projects</div>
+      <div class="page-sub">Construction, renovation, and upgrade projects</div>
+      <div class="filter-bar" id="proj-filters">
+        <select id="proj-f-status"><option value="">All Statuses</option><option>Proposed</option><option>Approved</option><option>In Progress</option><option>On Hold</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="proj-f-phase"><option value="">All Phases</option><option>Planning</option><option>Design</option><option>Procurement</option><option>Construction</option><option>Commissioning</option><option>Closeout</option></select>
+        <select id="proj-f-type"><option value="">All Types</option><option>New Construction</option><option>Renovation</option><option>Expansion</option><option>Equipment Replacement</option><option>Technology Upgrade</option><option>Demolition</option></select>
+        <input id="proj-f-search" type="text" placeholder="Search projects...">
+      </div>
+      <div id="proj-table"></div>
+      <div id="proj-pag" class="pagination"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSET DETAIL MODAL -->
+<div class="modal-overlay" id="asset-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="ast-modal-title">Asset Detail</h2>
+      <button class="modal-close" onclick="closeModal('asset-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="ast-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="workorders">Work Orders</button>
+        <button class="modal-tab" data-sec="inspections">Inspections</button>
+        <button class="modal-tab" data-sec="maintenance">Maintenance</button>
+        <button class="modal-tab" data-sec="depreciation">Depreciation</button>
+      </div>
+      <div id="ast-modal-overview" class="modal-section active"></div>
+      <div id="ast-modal-workorders" class="modal-section"></div>
+      <div id="ast-modal-inspections" class="modal-section"></div>
+      <div id="ast-modal-maintenance" class="modal-section"></div>
+      <div id="ast-modal-depreciation" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD DETAIL MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =============== STATE & AUTH =============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'capital-assets';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* =============== API HELPERS =============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+
+/* =============== BADGES & HELPERS =============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+function prioritySpan(p) {
+  return `<span class="priority-${(p || '').toLowerCase()}">${p || ''}</span>`;
+}
+function daysRemaining(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="days-red">${Math.abs(days)}d overdue</span>`;
+  if (days <= 7) return `<span class="days-red">${days}d</span>`;
+  if (days <= 30) return `<span class="days-yellow">${days}d</span>`;
+  return `<span class="days-green">${days}d</span>`;
+}
+function fmtMoney(val) {
+  const n = parseInt(val || '0');
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
+  return '$' + n.toLocaleString();
+}
+function conditionScore(score) {
+  const n = parseInt(score || '0');
+  if (n >= 85) return `<span class="score-high">${n}</span>`;
+  if (n >= 70) return `<span class="score-mid">${n}</span>`;
+  return `<span class="score-low">${n}</span>`;
+}
+function budgetBar(spent, approved) {
+  const s = parseInt(spent || '0'), a = parseInt(approved || '1');
+  const pct = Math.min(100, Math.round(s / a * 100));
+  const cls = pct > 95 ? 'red' : pct > 75 ? 'yellow' : 'green';
+  return `<div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--gray)">${pct}% of ${fmtMoney(approved)}</span>`;
+}
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+
+/* =============== PAGINATION =============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* =============== TAB NAVIGATION =============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'assets') loadAssets();
+    else if (tab === 'facilities') loadFacilities();
+    else if (tab === 'work-orders') loadWorkOrders();
+    else if (tab === 'inspections') loadInspections();
+    else if (tab === 'projects') loadProjects();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+/* =============== MODAL =============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('ast-modal-tabs', ['ast-modal-overview', 'ast-modal-workorders', 'ast-modal-inspections', 'ast-modal-maintenance', 'ast-modal-depreciation']);
+
+/* =============== DASHBOARD =============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/cafm/dashboard');
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.totalAssets}</div><div class="kpi-label">Total Assets</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.activeWOs}</div><div class="kpi-label">Active Work Orders</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.overduePMs}</div><div class="kpi-label">Overdue PMs</div></div>
+      <div class="kpi-card kpi-blue"><div class="kpi-value">${d.activeProjects}</div><div class="kpi-label">Capital Projects</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${fmtMoney(d.totalAssetValue)}</div><div class="kpi-label">Total Asset Value</div></div>
+      <div class="kpi-card kpi-yellow"><div class="kpi-value">${d.avgConditionScore}</div><div class="kpi-label">Avg Condition Score</div></div>`;
+
+    // WO Pipeline
+    const pipe = d.woPipeline;
+    const pipeKeys = ['Open', 'Assigned', 'In Progress', 'On Hold', 'Completed'];
+    const pipeMax = Math.max(...pipeKeys.map(k => pipe[k] || 0), 1);
+    const pipeColors = { Open: '#1565C0', Assigned: '#6A1B9A', 'In Progress': '#00838F', 'On Hold': '#E65100', Completed: '#2E7D32' };
+    document.getElementById('dash-pipeline').innerHTML = pipeKeys.map(k =>
+      `<div class="bar-col"><div class="bar-value">${pipe[k] || 0}</div><div class="bar" style="height:${((pipe[k] || 0) / pipeMax * 120)}px; background:${pipeColors[k]}"></div><div class="bar-label">${k}</div></div>`
+    ).join('');
+
+    // Projects
+    document.getElementById('dash-projects').innerHTML = d.projectStatus.length === 0
+      ? '<div class="loading">No projects</div>'
+      : `<table class="data-table"><thead><tr><th>Project</th><th>Phase</th><th>Budget</th><th>Status</th></tr></thead><tbody>${
+        d.projectStatus.slice(0, 8).map(p => {
+          const budget = parseInt(p.budget || '0'), spent = parseInt(p.spent || '0');
+          const pct = budget > 0 ? Math.round(spent / budget * 100) : 0;
+          return `<tr><td>${p.name}</td><td>${badge(p.phase)}</td><td>${fmtMoney(p.spent)} / ${fmtMoney(p.budget)} (${pct}%)</td><td>${badge(p.status)}</td></tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    // Recent WOs
+    document.getElementById('dash-recent-wo').innerHTML = d.recentWOs.length === 0
+      ? '<div class="loading">No work orders</div>'
+      : `<table class="data-table"><thead><tr><th>WO</th><th>Asset</th><th>Type</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+        d.recentWOs.map(w => `<tr><td>${w.woId}</td><td>${w.assetName}</td><td>${w.type}</td><td>${prioritySpan(w.priority)}</td><td>${badge(w.status)}</td><td>${w.date}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== ASSETS TAB =============== */
+let astPage = 1, astPageKeys = [null], astHasNext = false;
+let facListLoaded = false;
+
+async function loadFacilityDropdown() {
+  if (facListLoaded) return;
+  try {
+    const data = await kqlFetch('facilities', null, 25);
+    const sel = document.getElementById('ast-f-fac');
+    (data.submissions || []).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = vf(s, 'Facility ID');
+      opt.textContent = vf(s, 'Facility Name');
+      sel.appendChild(opt);
+    });
+    facListLoaded = true;
+  } catch {}
+}
+
+['ast-f-status', 'ast-f-type', 'ast-f-cat', 'ast-f-fac'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { astPage = 1; astPageKeys = [null]; astHasNext = false; loadAssets(); });
+});
+document.getElementById('ast-f-search').addEventListener('input', debounce(() => { astPage = 1; astPageKeys = [null]; astHasNext = false; loadAssets(); }, 300));
+
+async function loadAssets() {
+  await loadFacilityDropdown();
+  const status = document.getElementById('ast-f-status').value;
+  const atype = document.getElementById('ast-f-type').value;
+  const cat = document.getElementById('ast-f-cat').value;
+  const facId = document.getElementById('ast-f-fac').value;
+  const search = document.getElementById('ast-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('assets', kql, 25, astPageKeys[astPage - 1]);
+    let subs = data.submissions || [];
+
+    if (atype) subs = subs.filter(s => vf(s, 'Asset Type') === atype);
+    if (cat) subs = subs.filter(s => vf(s, 'Category') === cat);
+    if (facId) subs = subs.filter(s => vf(s, 'Facility ID') === facId);
+    if (search) subs = subs.filter(s => (vf(s, 'Asset ID') + ' ' + vf(s, 'Asset Name') + ' ' + vf(s, 'Manufacturer') + ' ' + vf(s, 'Model')).toLowerCase().includes(search));
+
+    document.getElementById('asset-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No assets found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Category</th><th>Facility</th><th>Value</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openAssetDetail('${vf(s, 'Asset ID')}')">
+          <td>${vf(s, 'Asset ID')}</td>
+          <td>${vf(s, 'Asset Name')}</td>
+          <td>${vf(s, 'Asset Type')}</td>
+          <td>${vf(s, 'Category')}</td>
+          <td>${vf(s, 'Facility Name')}</td>
+          <td>${fmtMoney(vf(s, 'Current Value'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    astHasNext = !!data.nextPageToken;
+    if (astHasNext && subs.length) astPageKeys[astPage] = subs[subs.length - 1].createdAt;
+    renderPag('asset-pag', astPage, astHasNext, 'astPrev()', 'astNext()');
+  } catch (e) {
+    document.getElementById('asset-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function astNext() { if (!astHasNext) return; astPage++; loadAssets(); }
+function astPrev() { if (astPage <= 1) return; astPage--; loadAssets(); }
+
+/* =============== ASSET DETAIL MODAL =============== */
+async function openAssetDetail(assetId) {
+  openModal('asset-modal');
+  document.getElementById('ast-modal-title').textContent = 'Loading...';
+  document.getElementById('ast-modal-overview').innerHTML = '<div class="loading">Loading asset details...</div>';
+  ['ast-modal-workorders', 'ast-modal-inspections', 'ast-modal-maintenance', 'ast-modal-depreciation'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  document.querySelectorAll('#ast-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#ast-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#asset-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('ast-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/cafm/asset/${encodeURIComponent(assetId)}/history`);
+    const a = d.asset;
+    document.getElementById('ast-modal-title').textContent = `${a['Asset ID']} - ${a['Asset Name']}`;
+
+    document.getElementById('ast-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${badge(a.Status)}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Asset Type</span><span class="detail-value">${a['Asset Type']}</span></div>
+        <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${a['Category']}</span></div>
+        <div class="detail-row"><span class="detail-label">Manufacturer</span><span class="detail-value">${a['Manufacturer']}</span></div>
+        <div class="detail-row"><span class="detail-label">Model</span><span class="detail-value">${a['Model']}</span></div>
+        <div class="detail-row"><span class="detail-label">Serial Number</span><span class="detail-value">${a['Serial Number']}</span></div>
+        <div class="detail-row"><span class="detail-label">Facility</span><span class="detail-value">${a['Facility Name']}</span></div>
+        <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${a['Location']}</span></div>
+        <div class="detail-row"><span class="detail-label">Purchase Date</span><span class="detail-value">${a['Purchase Date']}</span></div>
+        <div class="detail-row"><span class="detail-label">Purchase Cost</span><span class="detail-value">${fmtMoney(a['Purchase Cost'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Current Value</span><span class="detail-value">${fmtMoney(a['Current Value'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Useful Life</span><span class="detail-value">${a['Useful Life Years']} years</span></div>
+        <div class="detail-row"><span class="detail-label">Warranty Expiration</span><span class="detail-value">${a['Warranty Expiration'] || '-'}</span></div>
+      </div>`;
+
+    // Work Orders
+    document.getElementById('ast-modal-workorders').innerHTML = d.workOrders.length === 0
+      ? '<div class="loading">No work orders for this asset</div>'
+      : `<table class="data-table"><thead><tr><th>WO</th><th>Type</th><th>Priority</th><th>Trade</th><th>Status</th><th>Date</th></tr></thead><tbody>${
+        d.workOrders.map(w => `<tr><td>${w['WO ID']}</td><td>${w['WO Type']}</td><td>${prioritySpan(w['Priority'])}</td><td>${w['Trade']}</td><td>${badge(w['Status'])}</td><td>${w['Requested Date']}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Inspections
+    document.getElementById('ast-modal-inspections').innerHTML = d.inspections.length === 0
+      ? '<div class="loading">No inspections for this asset</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Inspector</th><th>Date</th><th>Result</th><th>Status</th></tr></thead><tbody>${
+        d.inspections.map(i => `<tr><td>${i['Inspection ID']}</td><td>${i['Inspection Type']}</td><td>${i['Inspector']}</td><td>${i['Inspection Date']}</td><td>${badge(i['Result'] || '-')}</td><td>${badge(i['Status'])}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Maintenance
+    document.getElementById('ast-modal-maintenance').innerHTML = d.maintenance.length === 0
+      ? '<div class="loading">No maintenance schedules</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Task</th><th>Frequency</th><th>Next Due</th><th>Trade</th><th>Status</th></tr></thead><tbody>${
+        d.maintenance.map(m => `<tr><td>${m['Schedule ID']}</td><td>${(m['Task Description'] || '').slice(0, 40)}</td><td>${m['Frequency']}</td><td>${daysRemaining(m['Next Due'])}</td><td>${m['Assigned Trade']}</td><td>${badge(m['Status'])}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Depreciation
+    document.getElementById('ast-modal-depreciation').innerHTML = d.depreciation.length === 0
+      ? '<div class="loading">No depreciation records</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Method</th><th>Original</th><th>Accumulated</th><th>Book Value</th><th>Annual</th><th>Life Remaining</th><th>Status</th></tr></thead><tbody>${
+        d.depreciation.map(dep => `<tr><td>${dep['Depreciation ID']}</td><td>${dep['Method']}</td><td>${fmtMoney(dep['Original Cost'])}</td><td>${fmtMoney(dep['Accumulated Depreciation'])}</td><td>${fmtMoney(dep['Book Value'])}</td><td>${fmtMoney(dep['Annual Depreciation'])}</td><td>${dep['Useful Life Remaining']} yrs</td><td>${badge(dep['Status'])}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('ast-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== RECORD DETAIL (generic) =============== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* =============== FACILITIES TAB =============== */
+async function loadFacilities() {
+  const container = document.getElementById('facility-grid');
+  container.innerHTML = '<div class="loading">Loading facilities...</div>';
+  try {
+    const data = await kqlFetch('facilities', null, 25);
+    const facs = data.submissions || [];
+    // For each facility, get location count
+    const locData = await kqlFetch('locations', null, 25);
+    const locs = locData.submissions || [];
+    const locCounts = {};
+    for (const l of locs) {
+      const fid = vf(l, 'Facility ID');
+      locCounts[fid] = (locCounts[fid] || 0) + 1;
+    }
+
+    container.innerHTML = facs.length === 0
+      ? '<div class="loading">No facilities found</div>'
+      : facs.map(f => {
+        const fid = vf(f, 'Facility ID');
+        const score = vf(f, 'Condition Score');
+        return `<div class="facility-card">
+          <h4>${vf(f, 'Facility Name')}</h4>
+          <div class="fac-meta">${vf(f, 'Facility Type')} | ${vf(f, 'Address')}, ${vf(f, 'City')}, ${vf(f, 'State')}</div>
+          <div class="fac-stats">
+            <div class="fac-stat"><div class="fac-stat-val">${conditionScore(score)}</div><div class="fac-stat-lbl">Condition</div></div>
+            <div class="fac-stat"><div class="fac-stat-val">${locCounts[fid] || 0}</div><div class="fac-stat-lbl">Locations</div></div>
+            <div class="fac-stat"><div class="fac-stat-val">${vf(f, 'Square Footage') ? parseInt(vf(f, 'Square Footage')).toLocaleString() : '-'}</div><div class="fac-stat-lbl">Sq Ft</div></div>
+            <div class="fac-stat"><div class="fac-stat-val">${vf(f, 'Floors')}</div><div class="fac-stat-lbl">Floors</div></div>
+            <div class="fac-stat"><div class="fac-stat-val">${vf(f, 'Year Built')}</div><div class="fac-stat-lbl">Built</div></div>
+          </div>
+          <div style="margin-top:10px; font-size:12px; color:var(--gray)">Manager: ${vf(f, 'Manager')} | ${badge(vf(f, 'Status'))} | Last Inspection: ${vf(f, 'Last Inspection')}</div>
+        </div>`;
+      }).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== WORK ORDERS TAB =============== */
+let woPage = 1, woPageKeys = [null], woHasNext = false;
+
+['wo-f-status', 'wo-f-priority', 'wo-f-type', 'wo-f-trade'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { woPage = 1; woPageKeys = [null]; woHasNext = false; loadWorkOrders(); });
+});
+document.getElementById('wo-f-search').addEventListener('input', debounce(() => { woPage = 1; woPageKeys = [null]; woHasNext = false; loadWorkOrders(); }, 300));
+
+async function loadWorkOrders() {
+  const status = document.getElementById('wo-f-status').value;
+  const priority = document.getElementById('wo-f-priority').value;
+  const wtype = document.getElementById('wo-f-type').value;
+  const trade = document.getElementById('wo-f-trade').value;
+  const search = document.getElementById('wo-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('work-orders', kql, 25, woPageKeys[woPage - 1]);
+    let subs = data.submissions || [];
+
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (wtype) subs = subs.filter(s => vf(s, 'WO Type') === wtype);
+    if (trade) subs = subs.filter(s => vf(s, 'Trade') === trade);
+    if (search) subs = subs.filter(s => (vf(s, 'WO ID') + ' ' + vf(s, 'Asset Name') + ' ' + vf(s, 'Description') + ' ' + vf(s, 'Assigned To')).toLowerCase().includes(search));
+
+    document.getElementById('wo-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No work orders found</div>'
+      : `<table class="data-table"><thead><tr><th>WO</th><th>Asset</th><th>Type</th><th>Priority</th><th>Trade</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const wid = vf(s, 'WO ID');
+          let actions = '';
+          if (st === 'Open') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionWO('${wid}','Assigned')">Assign</button>`;
+          else if (st === 'Assigned') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionWO('${wid}','In Progress')">Start</button>`;
+          else if (st === 'In Progress') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionWO('${wid}','Completed')">Complete</button>`;
+          else if (st === 'On Hold') actions = `<button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionWO('${wid}','In Progress')">Resume</button>`;
+          return `<tr onclick="showRecord('work-orders','WO ID','${wid}','Work Order Details')">
+            <td>${wid}</td>
+            <td>${vf(s, 'Asset Name')}</td>
+            <td>${vf(s, 'WO Type')}</td>
+            <td>${prioritySpan(vf(s, 'Priority'))}</td>
+            <td>${vf(s, 'Trade')}</td>
+            <td>${badge(st)}</td>
+            <td>${vf(s, 'Requested Date')}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    woHasNext = !!data.nextPageToken;
+    if (woHasNext && subs.length) woPageKeys[woPage] = subs[subs.length - 1].createdAt;
+    renderPag('wo-pag', woPage, woHasNext, 'woPrev()', 'woNext()');
+  } catch (e) {
+    document.getElementById('wo-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function woNext() { if (!woHasNext) return; woPage++; loadWorkOrders(); }
+function woPrev() { if (woPage <= 1) return; woPage--; loadWorkOrders(); }
+
+async function transitionWO(woId, newStatus) {
+  try {
+    await apiPost(`/api/cafm/work-orders/${encodeURIComponent(woId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadWorkOrders();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== INSPECTIONS TAB =============== */
+let inspPage = 1, inspPageKeys = [null], inspHasNext = false;
+
+['insp-f-status', 'insp-f-type', 'insp-f-result'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { inspPage = 1; inspPageKeys = [null]; inspHasNext = false; loadInspections(); });
+});
+document.getElementById('insp-f-search').addEventListener('input', debounce(() => { inspPage = 1; inspPageKeys = [null]; inspHasNext = false; loadInspections(); }, 300));
+
+async function loadInspections() {
+  const status = document.getElementById('insp-f-status').value;
+  const itype = document.getElementById('insp-f-type').value;
+  const result = document.getElementById('insp-f-result').value;
+  const search = document.getElementById('insp-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('inspections', kql, 25, inspPageKeys[inspPage - 1]);
+    let subs = data.submissions || [];
+
+    if (itype) subs = subs.filter(s => vf(s, 'Inspection Type') === itype);
+    if (result) subs = subs.filter(s => vf(s, 'Result') === result);
+    if (search) subs = subs.filter(s => (vf(s, 'Inspection ID') + ' ' + vf(s, 'Facility Name') + ' ' + vf(s, 'Inspector') + ' ' + vf(s, 'Inspection Type')).toLowerCase().includes(search));
+
+    document.getElementById('insp-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No inspections found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Facility</th><th>Type</th><th>Inspector</th><th>Date</th><th>Result</th><th>Findings</th><th>Status</th><th>Next Due</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const resultVal = vf(s, 'Result');
+          return `<tr onclick="showRecord('inspections','Inspection ID','${vf(s, 'Inspection ID')}','Inspection Details')">
+            <td>${vf(s, 'Inspection ID')}</td>
+            <td>${vf(s, 'Facility Name')}</td>
+            <td>${vf(s, 'Inspection Type')}</td>
+            <td>${vf(s, 'Inspector')}</td>
+            <td>${vf(s, 'Inspection Date')}</td>
+            <td>${resultVal ? badge(resultVal) : '-'}</td>
+            <td>${vf(s, 'Findings Count')}${parseInt(vf(s, 'Critical Findings') || '0') > 0 ? ' <span class="days-red">(' + vf(s, 'Critical Findings') + ' critical)</span>' : ''}</td>
+            <td>${badge(st)}</td>
+            <td>${daysRemaining(vf(s, 'Next Due Date'))}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    inspHasNext = !!data.nextPageToken;
+    if (inspHasNext && subs.length) inspPageKeys[inspPage] = subs[subs.length - 1].createdAt;
+    renderPag('insp-pag', inspPage, inspHasNext, 'inspPrev()', 'inspNext()');
+  } catch (e) {
+    document.getElementById('insp-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function inspNext() { if (!inspHasNext) return; inspPage++; loadInspections(); }
+function inspPrev() { if (inspPage <= 1) return; inspPage--; loadInspections(); }
+
+/* =============== PROJECTS TAB =============== */
+let projPage = 1, projPageKeys = [null], projHasNext = false;
+
+['proj-f-status', 'proj-f-phase', 'proj-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { projPage = 1; projPageKeys = [null]; projHasNext = false; loadProjects(); });
+});
+document.getElementById('proj-f-search').addEventListener('input', debounce(() => { projPage = 1; projPageKeys = [null]; projHasNext = false; loadProjects(); }, 300));
+
+async function loadProjects() {
+  const status = document.getElementById('proj-f-status').value;
+  const phase = document.getElementById('proj-f-phase').value;
+  const ptype = document.getElementById('proj-f-type').value;
+  const search = document.getElementById('proj-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('projects', kql, 25, projPageKeys[projPage - 1]);
+    let subs = data.submissions || [];
+
+    if (phase) subs = subs.filter(s => vf(s, 'Phase') === phase);
+    if (ptype) subs = subs.filter(s => vf(s, 'Project Type') === ptype);
+    if (search) subs = subs.filter(s => (vf(s, 'Project ID') + ' ' + vf(s, 'Project Name') + ' ' + vf(s, 'Contractor')).toLowerCase().includes(search));
+
+    document.getElementById('proj-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No projects found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Project</th><th>Type</th><th>Facility</th><th>Phase</th><th>Budget</th><th>Status</th><th>Target</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const pid = vf(s, 'Project ID');
+          let actions = '';
+          if (st === 'Proposed') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionProject('${pid}','Approved')">Approve</button>`;
+          else if (st === 'Approved') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionProject('${pid}','In Progress')">Start</button>`;
+          else if (st === 'In Progress') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionProject('${pid}','Completed')">Complete</button>`;
+          else if (st === 'On Hold') actions = `<button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionProject('${pid}','In Progress')">Resume</button>`;
+          return `<tr onclick="showRecord('projects','Project ID','${pid}','Project Details')">
+            <td>${pid}</td>
+            <td>${vf(s, 'Project Name')}</td>
+            <td>${vf(s, 'Project Type')}</td>
+            <td>${vf(s, 'Facility Name')}</td>
+            <td>${badge(vf(s, 'Phase'))}</td>
+            <td>${budgetBar(vf(s, 'Spent'), vf(s, 'Budget'))}</td>
+            <td>${badge(st)}</td>
+            <td>${daysRemaining(vf(s, 'Target Completion'))}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    projHasNext = !!data.nextPageToken;
+    if (projHasNext && subs.length) projPageKeys[projPage] = subs[subs.length - 1].createdAt;
+    renderPag('proj-pag', projPage, projHasNext, 'projPrev()', 'projNext()');
+  } catch (e) {
+    document.getElementById('proj-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function projNext() { if (!projHasNext) return; projPage++; loadProjects(); }
+function projPrev() { if (projPage <= 1) return; projPage--; loadProjects(); }
+
+async function transitionProject(projId, newStatus) {
+  try {
+    await apiPost(`/api/cafm/projects/${encodeURIComponent(projId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadProjects();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== ANALYTICS TAB =============== */
+const REPORT_TYPES = [
+  { id: 'asset-inventory', name: 'Asset Inventory', desc: 'Complete asset register with values, locations, and status breakdown' },
+  { id: 'maintenance', name: 'Maintenance Report', desc: 'Work order history, PM schedules, and compliance metrics' },
+  { id: 'depreciation', name: 'Depreciation Schedule', desc: 'Asset depreciation tracking with book values and remaining useful life' },
+  { id: 'project', name: 'Capital Projects', desc: 'Project status, budget utilization, and timeline tracking' },
+  { id: 'inspection', name: 'Inspection Report', desc: 'Inspection results, findings, and compliance status' },
+  { id: 'budget', name: 'Budget Report', desc: 'Budget allocation, spending, and availability by department' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/cafm/report/${type}`);
+
+    if (type === 'asset-inventory') {
+      const csvRows = [['Asset ID', 'Name', 'Type', 'Category', 'Facility', 'Location', 'Cost', 'Current Value', 'Status', 'Manufacturer', 'Model']];
+      d.items.forEach(i => csvRows.push([i.assetId, i.name, i.type, i.category, i.facility, i.location, i.cost, i.currentValue, i.status, i.manufacturer, i.model]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} assets)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'asset-inventory.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Facility</th><th>Cost</th><th>Value</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.assetId}</td><td>${i.name}</td><td>${i.type}</td><td>${i.facility}</td><td>${fmtMoney(i.cost)}</td><td>${fmtMoney(i.currentValue)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'maintenance') {
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>
+        <h4 style="margin:12px 0 8px">Work Orders (${d.workOrders.length})</h4>
+        <table class="data-table"><thead><tr><th>WO</th><th>Asset</th><th>Type</th><th>Priority</th><th>Trade</th><th>Status</th><th>Est Cost</th><th>Act Cost</th></tr></thead><tbody>${
+        d.workOrders.slice(0, 30).map(w => `<tr><td>${w.woId}</td><td>${w.asset}</td><td>${w.type}</td><td>${prioritySpan(w.priority)}</td><td>${w.trade}</td><td>${badge(w.status)}</td><td>${fmtMoney(w.estCost)}</td><td>${w.actCost ? fmtMoney(w.actCost) : '-'}</td></tr>`).join('')
+      }</tbody></table>
+        <h4 style="margin:16px 0 8px">PM Schedules (${d.schedules.length})</h4>
+        <table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Task</th><th>Frequency</th><th>Next Due</th><th>Status</th></tr></thead><tbody>${
+        d.schedules.slice(0, 20).map(s => `<tr><td>${s.scheduleId}</td><td>${s.asset}</td><td>${(s.task || '').slice(0, 40)}</td><td>${s.frequency}</td><td>${daysRemaining(s.nextDue)}</td><td>${badge(s.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'depreciation') {
+      const csvRows = [['ID', 'Asset', 'Method', 'Original', 'Accumulated', 'Book Value', 'Annual', 'Life Remaining', 'Status']];
+      d.items.forEach(i => csvRows.push([i.deprId, i.asset, i.method, i.original, i.accumulated, i.bookValue, i.annual, i.remaining, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} records)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'depreciation.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Asset</th><th>Method</th><th>Original</th><th>Accumulated</th><th>Book Value</th><th>Annual</th><th>Remaining</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.deprId}</td><td>${i.asset}</td><td>${i.method}</td><td>${fmtMoney(i.original)}</td><td>${fmtMoney(i.accumulated)}</td><td>${fmtMoney(i.bookValue)}</td><td>${fmtMoney(i.annual)}</td><td>${i.remaining} yrs</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'project') {
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} projects)</h3>
+        <table class="data-table"><thead><tr><th>ID</th><th>Project</th><th>Type</th><th>Facility</th><th>Phase</th><th>Budget</th><th>Spent</th><th>Status</th><th>Contractor</th></tr></thead><tbody>${
+        d.items.map(p => `<tr><td>${p.projectId}</td><td>${p.name}</td><td>${p.type}</td><td>${p.facility}</td><td>${badge(p.phase)}</td><td>${fmtMoney(p.budget)}</td><td>${fmtMoney(p.spent)}</td><td>${badge(p.status)}</td><td>${p.contractor}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'inspection') {
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} inspections)</h3>
+        <table class="data-table"><thead><tr><th>ID</th><th>Facility</th><th>Type</th><th>Inspector</th><th>Date</th><th>Result</th><th>Findings</th><th>Critical</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.inspId}</td><td>${i.facility}</td><td>${i.type}</td><td>${i.inspector}</td><td>${i.date}</td><td>${i.result ? badge(i.result) : '-'}</td><td>${i.findings}</td><td>${parseInt(i.critical || '0') > 0 ? '<span class="days-red">' + i.critical + '</span>' : i.critical}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'budget') {
+      const csvRows = [['Budget ID', 'Department', 'FY', 'Category', 'Budgeted', 'Approved', 'Spent', 'Committed', 'Available', 'Status']];
+      d.items.forEach(i => csvRows.push([i.budgetId, i.dept, i.fy, i.category, i.budgeted, i.approved, i.spent, i.committed, i.available, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} budgets)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'budget-report.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Department</th><th>FY</th><th>Category</th><th>Approved</th><th>Spent</th><th>Available</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(b => `<tr><td>${b.budgetId}</td><td>${b.dept}</td><td>${b.fy}</td><td>${b.category}</td><td>${fmtMoney(b.approved)}</td><td>${fmtMoney(b.spent)}</td><td>${fmtMoney(b.available)}</td><td>${badge(b.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+</script>
+</body>
+</html>

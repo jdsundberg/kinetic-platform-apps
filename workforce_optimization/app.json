@@ -1,0 +1,523 @@
+{
+  "name": "Workforce Optimization",
+  "slug": "workforce-optimization",
+  "description": "Workforce optimization with departments, positions, shifts, schedules, and productivity metrics.",
+  "forms": [
+    {
+      "slug": "departments",
+      "name": "Departments",
+      "fields": [
+        {
+          "name": "Department ID",
+          "required": true
+        },
+        {
+          "name": "Department Name",
+          "required": true
+        },
+        {
+          "name": "Department Type"
+        },
+        {
+          "name": "Cost Center"
+        },
+        {
+          "name": "Manager"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Budgeted FTEs"
+        },
+        {
+          "name": "Current FTEs"
+        },
+        {
+          "name": "Target Patient Ratio"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Hospital departments and units",
+      "submissionLabelExpression": "${values('Department Name')} (${values('Department ID')})",
+      "indexes": {
+        "single": [
+          "values[Department ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "positions",
+      "name": "Positions",
+      "fields": [
+        {
+          "name": "Position ID",
+          "required": true
+        },
+        {
+          "name": "Position Title",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Job Family"
+        },
+        {
+          "name": "Pay Grade"
+        },
+        {
+          "name": "Min Salary"
+        },
+        {
+          "name": "Max Salary"
+        },
+        {
+          "name": "Required Certifications"
+        },
+        {
+          "name": "Minimum Experience"
+        },
+        {
+          "name": "FTE Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Job positions and classification",
+      "submissionLabelExpression": "${values('Position Title')} (${values('Position ID')})"
+    },
+    {
+      "slug": "staff-roster",
+      "name": "Staff Roster",
+      "fields": [
+        {
+          "name": "Staff ID",
+          "required": true
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Employee Number"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Position"
+        },
+        {
+          "name": "Job Family"
+        },
+        {
+          "name": "Hire Date"
+        },
+        {
+          "name": "Tenure Years"
+        },
+        {
+          "name": "FTE Status"
+        },
+        {
+          "name": "Shift Preference"
+        },
+        {
+          "name": "Base Salary"
+        },
+        {
+          "name": "Overtime Eligible"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Employee staffing records",
+      "submissionLabelExpression": "${values('Last Name')}, ${values('First Name')} (${values('Staff ID')})",
+      "indexes": {
+        "single": [
+          "values[Department]",
+          "values[Staff ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "shifts",
+      "name": "Shifts",
+      "fields": [
+        {
+          "name": "Shift ID",
+          "required": true
+        },
+        {
+          "name": "Shift Name",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Shift Type"
+        },
+        {
+          "name": "Start Time"
+        },
+        {
+          "name": "End Time"
+        },
+        {
+          "name": "Duration Hours"
+        },
+        {
+          "name": "Minimum Staff"
+        },
+        {
+          "name": "Optimal Staff"
+        },
+        {
+          "name": "Differential Rate"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Shift definitions",
+      "submissionLabelExpression": "${values('Shift Name')} (${values('Shift ID')})"
+    },
+    {
+      "slug": "schedules",
+      "name": "Schedules",
+      "fields": [
+        {
+          "name": "Schedule ID",
+          "required": true
+        },
+        {
+          "name": "Staff ID"
+        },
+        {
+          "name": "Staff Name"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Shift ID"
+        },
+        {
+          "name": "Shift Name"
+        },
+        {
+          "name": "Schedule Date"
+        },
+        {
+          "name": "Start Time"
+        },
+        {
+          "name": "End Time"
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Schedule Type"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Staff scheduling records",
+      "submissionLabelExpression": "${values('Staff Name')} - ${values('Schedule Date')} (${values('Schedule ID')})",
+      "indexes": {
+        "single": [
+          "values[Department]",
+          "values[Schedule ID]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "overtime-records",
+      "name": "Overtime Records",
+      "fields": [
+        {
+          "name": "OT ID",
+          "required": true
+        },
+        {
+          "name": "Staff ID"
+        },
+        {
+          "name": "Staff Name"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "OT Date"
+        },
+        {
+          "name": "Regular Hours"
+        },
+        {
+          "name": "OT Hours"
+        },
+        {
+          "name": "Double Time Hours"
+        },
+        {
+          "name": "Total Hours"
+        },
+        {
+          "name": "Reason"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Cost"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Overtime tracking and approval",
+      "submissionLabelExpression": "${values('Staff Name')} - ${values('OT Date')} (${values('OT ID')})"
+    },
+    {
+      "slug": "vacancies",
+      "name": "Vacancies",
+      "fields": [
+        {
+          "name": "Vacancy ID",
+          "required": true
+        },
+        {
+          "name": "Position Title",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Job Family"
+        },
+        {
+          "name": "FTE Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Posted Date"
+        },
+        {
+          "name": "Target Fill Date"
+        },
+        {
+          "name": "Recruiter"
+        },
+        {
+          "name": "Applicants"
+        },
+        {
+          "name": "Interviews"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Open position tracking and recruitment pipeline",
+      "submissionLabelExpression": "${values('Position Title')} - ${values('Department')} (${values('Vacancy ID')})",
+      "indexes": {
+        "single": [
+          "values[Department]",
+          "values[Status]",
+          "values[Vacancy ID]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "certifications",
+      "name": "Certifications",
+      "fields": [
+        {
+          "name": "Cert ID",
+          "required": true
+        },
+        {
+          "name": "Staff ID"
+        },
+        {
+          "name": "Staff Name"
+        },
+        {
+          "name": "Certification Name"
+        },
+        {
+          "name": "Certifying Body"
+        },
+        {
+          "name": "Issue Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "CEU Required"
+        },
+        {
+          "name": "CEU Completed"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Staff certification and compliance tracking",
+      "submissionLabelExpression": "${values('Staff Name')} - ${values('Certification Name')} (${values('Cert ID')})",
+      "indexes": {
+        "single": [
+          "values[Department]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "productivity-metrics",
+      "name": "Productivity Metrics",
+      "fields": [
+        {
+          "name": "Metric ID",
+          "required": true
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Period"
+        },
+        {
+          "name": "Metric Type"
+        },
+        {
+          "name": "Value"
+        },
+        {
+          "name": "Target"
+        },
+        {
+          "name": "Variance"
+        },
+        {
+          "name": "Trend"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Department productivity and performance metrics",
+      "submissionLabelExpression": "${values('Department')} - ${values('Metric Type')} (${values('Metric ID')})",
+      "indexes": {
+        "single": [
+          "values[Department]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "fields": [
+        {
+          "name": "Log ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Previous Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Performed By"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details",
+          "rows": 3
+        }
+      ],
+      "description": "Immutable audit trail",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
+    }
+  ],
+  "category": "Operations"
+}

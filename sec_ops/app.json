@@ -1,0 +1,576 @@
+{
+  "name": "Security Operations",
+  "slug": "sec-ops",
+  "description": "SOC console with alert triage, incident management, vulnerability tracking, and playbook automation.",
+  "forms": [
+    {
+      "slug": "security-alert",
+      "name": "Security Alert",
+      "fields": [
+        {
+          "name": "Source"
+        },
+        {
+          "name": "External Alert ID"
+        },
+        {
+          "name": "Received At"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Hostname"
+        },
+        {
+          "name": "IP Address"
+        },
+        {
+          "name": "User ID"
+        },
+        {
+          "name": "Indicators"
+        },
+        {
+          "name": "Correlation Key"
+        },
+        {
+          "name": "Dedupe Hash"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Alert Count"
+        },
+        {
+          "name": "Triage Notes",
+          "rows": 3
+        },
+        {
+          "name": "Triaged By"
+        },
+        {
+          "name": "Related Incident ID"
+        }
+      ],
+      "description": "Security alerts from monitoring sources",
+      "submissionLabelExpression": "${values('Title')} - ${values('Severity')}",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Hostname]",
+          "values[Severity]",
+          "values[Source]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Severity]"
+          ],
+          [
+            "values[Status]",
+            "values[Source]"
+          ],
+          [
+            "values[Status]",
+            "values[Category]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "security-incident",
+      "name": "Security Incident",
+      "fields": [
+        {
+          "name": "Incident Number"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Summary",
+          "rows": 3
+        },
+        {
+          "name": "Impact",
+          "rows": 3
+        },
+        {
+          "name": "Commander"
+        },
+        {
+          "name": "Assignee"
+        },
+        {
+          "name": "Watchers"
+        },
+        {
+          "name": "Respond By"
+        },
+        {
+          "name": "Contain By"
+        },
+        {
+          "name": "Resolve By"
+        },
+        {
+          "name": "Response SLA Breached"
+        },
+        {
+          "name": "Containment SLA Breached"
+        },
+        {
+          "name": "Resolution SLA Breached"
+        },
+        {
+          "name": "Affected Assets"
+        },
+        {
+          "name": "Opened At"
+        },
+        {
+          "name": "Linked Alerts"
+        },
+        {
+          "name": "Contained At"
+        },
+        {
+          "name": "Eradication Notes",
+          "rows": 3
+        },
+        {
+          "name": "Containment Notes",
+          "rows": 3
+        },
+        {
+          "name": "Root Cause",
+          "rows": 3
+        },
+        {
+          "name": "Lessons Learned",
+          "rows": 3
+        },
+        {
+          "name": "Recovery Notes",
+          "rows": 3
+        },
+        {
+          "name": "Resolved At"
+        },
+        {
+          "name": "Closed At"
+        }
+      ],
+      "description": "Security incidents tracked through lifecycle",
+      "submissionLabelExpression": "${values('Incident Number')} - ${values('Summary')}",
+      "indexes": {
+        "single": [
+          "values[Severity]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Severity]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "vulnerability-finding",
+      "name": "Vulnerability Finding",
+      "fields": [
+        {
+          "name": "Source"
+        },
+        {
+          "name": "External Vuln ID"
+        },
+        {
+          "name": "Hostname"
+        },
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Package"
+        },
+        {
+          "name": "Component"
+        },
+        {
+          "name": "CVE"
+        },
+        {
+          "name": "CVSS"
+        },
+        {
+          "name": "EPSS"
+        },
+        {
+          "name": "CISA KEV"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "First Seen"
+        },
+        {
+          "name": "Last Seen"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Risk Score"
+        },
+        {
+          "name": "Remediation Owner Team"
+        },
+        {
+          "name": "Assignee"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Asset Criticality"
+        },
+        {
+          "name": "Remediation Notes",
+          "rows": 3
+        },
+        {
+          "name": "Verification Notes",
+          "rows": 3
+        },
+        {
+          "name": "Exception Reason",
+          "rows": 3
+        },
+        {
+          "name": "Exception Expiry"
+        },
+        {
+          "name": "Exception Approved By"
+        }
+      ],
+      "description": "Vulnerability scan findings and remediation tracking",
+      "submissionLabelExpression": "${values('CVE')} - ${values('Hostname')}",
+      "indexes": {
+        "single": [
+          "values[Hostname]",
+          "values[Severity]",
+          "values[Source]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Severity]",
+            "values[Source]"
+          ],
+          [
+            "values[Severity]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "asset",
+      "name": "Asset",
+      "fields": [
+        {
+          "name": "Hostname"
+        },
+        {
+          "name": "FQDN"
+        },
+        {
+          "name": "IP Address"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "App Name"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "OS"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Service Name"
+        },
+        {
+          "name": "Service Tier"
+        },
+        {
+          "name": "Asset Type"
+        }
+      ],
+      "description": "IT asset inventory",
+      "submissionLabelExpression": "${values('Hostname')} - ${values('Environment')}",
+      "indexes": {
+        "single": [
+          "values[Criticality]",
+          "values[Environment]",
+          "values[Owner Team]"
+        ],
+        "compound": [
+          [
+            "values[Environment]",
+            "values[Criticality]"
+          ],
+          [
+            "values[Environment]",
+            "values[Owner Team]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audit-event",
+      "name": "Audit Event",
+      "fields": [
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Actor"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Details"
+        },
+        {
+          "name": "Entity Title"
+        }
+      ],
+      "description": "Audit trail of actions on entities",
+      "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')}",
+      "indexes": {
+        "single": [
+          "values[Entity ID]",
+          "values[Entity Type]"
+        ],
+        "compound": [
+          [
+            "values[Entity Type]",
+            "values[Entity ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "playbook",
+      "name": "Playbook",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Trigger Type"
+        },
+        {
+          "name": "Steps",
+          "rows": 5
+        },
+        {
+          "name": "Automation Level"
+        },
+        {
+          "name": "Required Roles"
+        },
+        {
+          "name": "Estimated Duration"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Severity Applicability"
+        },
+        {
+          "name": "Active"
+        }
+      ],
+      "description": "Security response playbooks",
+      "submissionLabelExpression": "${values('Name')}"
+    },
+    {
+      "slug": "playbook-run",
+      "name": "Playbook Run",
+      "fields": [
+        {
+          "name": "Playbook Name"
+        },
+        {
+          "name": "Target Type"
+        },
+        {
+          "name": "Target ID"
+        },
+        {
+          "name": "Started At"
+        },
+        {
+          "name": "Ended At"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Step Results",
+          "rows": 5
+        },
+        {
+          "name": "Executed By"
+        }
+      ],
+      "description": "Playbook execution records",
+      "submissionLabelExpression": "${values('Playbook Name')} - ${values('Status')}",
+      "indexes": {
+        "single": [
+          "values[Playbook Name]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "sla-policy",
+      "name": "SLA Policy",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Applies To"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Response Minutes"
+        },
+        {
+          "name": "Containment Minutes"
+        },
+        {
+          "name": "Resolution Minutes"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Asset Criticality Min"
+        },
+        {
+          "name": "Active"
+        }
+      ],
+      "description": "SLA policy definitions for incident response",
+      "submissionLabelExpression": "${values('Name')} - ${values('Applies To')}"
+    },
+    {
+      "slug": "suppression-rule",
+      "name": "Suppression Rule",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Match Field"
+        },
+        {
+          "name": "Match Pattern"
+        },
+        {
+          "name": "Source Filter"
+        },
+        {
+          "name": "Severity Filter"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Created By"
+        },
+        {
+          "name": "Suppression Count"
+        },
+        {
+          "name": "Expires At"
+        }
+      ],
+      "description": "Alert suppression rules",
+      "submissionLabelExpression": "${values('Name')}"
+    }
+  ],
+  "category": "Security"
+}

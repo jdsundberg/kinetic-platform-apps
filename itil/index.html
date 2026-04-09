@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITSM Console</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E; --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --gray: #5F6368;
+  --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4; --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; font-size: 14px; }
+
+/* ── Login ── */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, var(--blue) 0%, #1a2240 100%); }
+.login-box { background: var(--white); border-radius:16px; padding:40px; width:380px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size:24px; margin-bottom:4px; }
+.login-box .sub { color: var(--gray); font-size:13px; margin-bottom:24px; }
+.login-box .orange-bar { width:40px; height:3px; background: var(--orange); border-radius:2px; margin-bottom:24px; }
+.login-box label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:4px; letter-spacing:.3px; }
+.login-box input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; outline:none; }
+.login-box input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width:100%; padding:12px; background:var(--orange); color:white; border:none; border-radius:8px; font-weight:600; font-size:15px; }
+.login-box button:hover { background:var(--orange-light); }
+.login-box .error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+/* ── App Shell ── */
+#app { display:none; }
+.topbar { background:var(--blue); color:white; display:flex; align-items:center; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+.topbar .logo { font-weight:700; font-size:18px; margin-right:32px; }
+.topbar .logo span { color:var(--orange); }
+.topbar nav { display:flex; gap:4px; flex:1; }
+.topbar nav button { background:none; border:none; color:rgba(255,255,255,.6); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition: all .2s; }
+.topbar nav button:hover { color:white; background:rgba(255,255,255,.1); }
+.topbar nav button.active { color:white; background:var(--orange); }
+.topbar .user-info { font-size:12px; color:rgba(255,255,255,.7); display:flex; align-items:center; gap:8px; }
+.topbar .user-info strong { color:white; }
+.logout-btn { background:none; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.7); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--orange); color:white; }
+
+/* ── Console panels ── */
+.console { display:none; padding:24px; max-width:1400px; margin:0 auto; }
+.console.active { display:block; }
+
+/* ── Common components ── */
+.page-title { font-size:22px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.page-sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi { background:white; border-radius:12px; padding:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.kpi .label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; }
+.kpi .val { font-size:26px; font-weight:700; color:var(--blue); margin-top:2px; }
+.kpi .sub { font-size:11px; color:var(--gray); }
+.kpi.orange .val { color:var(--orange); }
+.kpi.green .val { color:var(--green); }
+.kpi.red .val { color:var(--red); }
+.kpi.yellow .val { color:#E8A000; }
+
+.card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:16px; }
+.card h3 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--gray); font-weight:600; margin-bottom:12px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media(max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:8px 10px; background:var(--light); color:var(--gray); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:.3px; border-bottom:2px solid var(--border); position:sticky; top:0; }
+td { padding:8px 10px; border-bottom:1px solid var(--border); }
+tr:hover td { background:#FAFAFA; }
+tr { cursor:pointer; }
+
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-critical { background:#FDECEA; color:#C62828; }
+.badge-high { background:#FFF3E0; color:#E65100; }
+.badge-medium { background:#FFF8E1; color:#F9A825; }
+.badge-low { background:#E8F5E9; color:#2E7D32; }
+.badge-new { background:#E3F2FD; color:#1565C0; }
+.badge-open { background:#FFF3E0; color:#E65100; }
+.badge-progress { background:#F3E5F5; color:#7B1FA2; }
+.badge-resolved { background:#E0F2F1; color:#00695C; }
+.badge-closed { background:#ECEFF1; color:#546E7A; }
+.badge-approved { background:#E8F5E9; color:#2E7D32; }
+.badge-rejected { background:#FDECEA; color:#C62828; }
+.badge-implementing { background:#E8EAF6; color:#283593; }
+.badge-submitted { background:#FFF3E0; color:#E65100; }
+.badge-draft { background:#F5F5F5; color:#757575; }
+.badge-emergency { background:#FDECEA; color:#C62828; }
+.badge-normal { background:#E3F2FD; color:#1565C0; }
+.badge-standard { background:#E8F5E9; color:#2E7D32; }
+
+.btn { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; transition:all .15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:var(--orange-light); }
+.btn-secondary { background:var(--light); color:var(--blue); border:1px solid var(--border); }
+.btn-secondary:hover { background:#E8EAED; }
+.btn-danger { background:var(--red); color:white; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-icon { background:none; border:none; font-size:16px; padding:4px; }
+
+.toolbar { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input, .toolbar select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; }
+.toolbar input { width:260px; }
+
+/* ── Modal ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:white; border-radius:16px; padding:28px; width:600px; max-width:90vw; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal h2 { font-size:18px; color:var(--blue); margin-bottom:16px; }
+.modal .form-row { margin-bottom:12px; }
+.modal .form-row label { display:block; font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; margin-bottom:3px; }
+.modal .form-row input, .modal .form-row select, .modal .form-row textarea { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; }
+.modal .form-row textarea { resize:vertical; min-height:80px; }
+.modal .form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+.modal .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+
+/* ── Agent: Phone bar ── */
+.phone-bar { background:var(--blue); color:white; border-radius:12px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px; }
+.phone-bar .phone-icon { font-size:28px; }
+.phone-bar .phone-info { flex:1; }
+.phone-bar .phone-info h3 { font-size:15px; font-weight:600; }
+.phone-bar .phone-info p { font-size:12px; color:rgba(255,255,255,.7); }
+.phone-bar .btn { margin-left:8px; }
+
+/* ── Ops: Change timeline ── */
+.timeline-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.timeline-date { width:90px; font-size:12px; font-weight:600; color:var(--gray); text-align:right; }
+.timeline-bar { flex:1; position:relative; height:28px; }
+.timeline-bar .bar { position:absolute; height:100%; border-radius:6px; font-size:11px; font-weight:600; color:white; display:flex; align-items:center; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.timeline-meta { width:100px; font-size:11px; color:var(--gray); text-align:right; }
+
+/* ── Manager: Nit-picker specials ── */
+.shame-rank { display:flex; align-items:center; gap:8px; padding:6px 0; }
+.shame-rank .rank-num { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; }
+.shame-rank .rank-1 { background:var(--red); }
+.shame-rank .rank-2 { background:var(--orange); }
+.shame-rank .rank-3 { background:var(--yellow); color:#333; }
+.shame-rank .rank-ok { background:#CFD8DC; }
+.nag-banner { background:linear-gradient(90deg,#FDECEA,#FFF3E0); border:1px solid #FFCDD2; border-radius:8px; padding:12px 16px; margin-bottom:12px; font-size:13px; color:#C62828; display:flex; align-items:center; gap:8px; }
+.nag-banner .nag-icon { font-size:20px; }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+.progress-ring { width:80px; height:80px; margin:0 auto 8px; }
+.score-card { text-align:center; padding:16px; }
+.score-card .score { font-size:36px; font-weight:800; }
+.score-card .score-label { font-size:11px; color:var(--gray); text-transform:uppercase; }
+.micro-stat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.micro-stat:last-child { border-bottom:none; }
+.micro-stat .stat-val { font-weight:700; }
+
+/* ── Loading ── */
+.loading { text-align:center; padding:40px; color:var(--gray); }
+.spinner { display:inline-block; width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Tabs inside consoles ── */
+.subtabs { display:flex; gap:4px; margin-bottom:16px; background:white; border-radius:10px; padding:4px; border:1px solid var(--border); width:fit-content; }
+.subtabs button { background:none; border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; color:var(--gray); }
+.subtabs button.active { background:var(--blue); color:white; }
+.subtab-panel { display:none; }
+.subtab-panel.active { display:block; }
+
+/* ── Typeahead search ── */
+.typeahead { position:relative; }
+.typeahead input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; }
+.typeahead input:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(243,108,36,.1); outline:none; }
+.typeahead .ta-results { position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; z-index:10; box-shadow:var(--shadow-lg); display:none; }
+.typeahead .ta-results.open { display:block; }
+.typeahead .ta-item { padding:8px 12px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; }
+.typeahead .ta-item:hover, .typeahead .ta-item.selected { background:var(--light); }
+.typeahead .ta-item .ta-sub { color:var(--gray); font-size:11px; }
+.typeahead .ta-hint { padding:8px 12px; color:var(--gray); font-size:12px; font-style:italic; }
+.typeahead .ta-spinner { padding:8px 12px; text-align:center; }
+.typeahead .ta-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--gray); font-size:16px; cursor:pointer; display:none; }
+.typeahead .ta-clear.show { display:block; }
+
+</style>
+</head>
+<!-- WF CSS removed -->
+
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>ITSM Console</h1>
+    <div class="sub">Kinetic Platform Service Management</div>
+    <div class="orange-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" type="text" value="http://localhost:3000" placeholder="http://localhost:3000">
+    <label>Username</label>
+    <input id="login-user" type="text" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password">
+    <button onclick="doLogin()">Connect</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">ITSM<span>Console</span></div>
+    <nav>
+      <button class="active" data-console="agent" onclick="switchConsole('agent')">&#128222; Agent</button>
+      <button data-console="ops" onclick="switchConsole('ops')">&#9881;&#65039; Operations</button>
+      <button data-console="mgr" onclick="switchConsole('mgr')">&#128200; Management</button>
+    </nav>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ AGENT CONSOLE ═══════════════ -->
+  <div id="console-agent" class="console active">
+    <div class="page-title">Agent Console</div>
+    <div class="page-sub">Incoming calls, incidents &amp; service requests</div>
+
+    <div class="phone-bar">
+      <div class="phone-icon">&#128222;</div>
+      <div class="phone-info">
+        <h3>Ready for Calls</h3>
+        <p>Click "New Incident" or "New Request" to log from incoming call</p>
+      </div>
+      <button class="btn btn-primary" onclick="openNewIncident()">&#128680; New Incident</button>
+      <button class="btn btn-secondary" style="color:white;border-color:rgba(255,255,255,.3);" onclick="openNewRequest()">&#128203; New Request</button>
+    </div>
+
+    <div class="subtabs">
+      <button class="active" onclick="agentTab('queue')">My Queue</button>
+      <button onclick="agentTab('incidents')">All Incidents</button>
+      <button onclick="agentTab('requests')">Service Requests</button>
+      <button onclick="agentTab('kb')">Knowledge Base</button>
+    </div>
+
+    <!-- My Queue -->
+    <div id="agent-queue" class="subtab-panel active">
+      <div id="agent-kpis" class="kpi-row"></div>
+      <div class="card">
+        <h3>Open Incidents &amp; Requests Assigned to You</h3>
+        <div id="agent-queue-table" class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+
+    <!-- All Incidents -->
+    <div id="agent-incidents" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="inc-search" placeholder="Search incidents..." oninput="filterIncidents()">
+        <select id="inc-status-filter" onchange="filterIncidents()">
+          <option value="">All Statuses</option>
+          <option value="New">New</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <select id="inc-priority-filter" onchange="filterIncidents()">
+          <option value="">All Priorities</option>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <button class="btn btn-primary" onclick="openNewIncident()">+ New Incident</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;max-height:600px;">
+        <table>
+          <thead><tr><th>Number</th><th>Priority</th><th>Title</th><th>Status</th><th>Assigned To</th><th>Service</th><th>Reported</th></tr></thead>
+          <tbody id="inc-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Service Requests -->
+    <div id="agent-requests" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="req-search" placeholder="Search requests..." oninput="filterRequests()">
+        <button class="btn btn-primary" onclick="openNewRequest()">+ New Request</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;max-height:600px;">
+        <table>
+          <thead><tr><th>Number</th><th>Priority</th><th>Title</th><th>Status</th><th>Requested By</th><th>Assigned To</th></tr></thead>
+          <tbody id="req-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Knowledge Base -->
+    <div id="agent-kb" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="kb-search" placeholder="Search knowledge articles by keyword..." onkeydown="if(event.key==='Enter')searchKB()">
+        <select id="kb-cat-filter" onchange="searchKB()">
+          <option value="">All Categories</option>
+          <option>Hardware</option><option>Software</option><option>Network & Connectivity</option>
+          <option>Account & Access</option><option>Email & Calendar</option><option>Security</option>
+          <option>Mobile Devices</option><option>Cloud Services</option><option>Printing</option>
+          <option>Audio & Video Conferencing</option>
+        </select>
+        <button class="btn btn-primary" onclick="searchKB()">Search</button>
+        <span id="kb-result-count" style="font-size:12px;color:var(--gray);margin-left:8px;"></span>
+      </div>
+      <div class="grid-2" style="grid-template-columns:1fr 1fr;">
+        <div class="card" style="padding:0;overflow:auto;max-height:650px;">
+          <table>
+            <thead><tr><th>Article #</th><th>Title</th><th>Category</th><th>Views</th></tr></thead>
+            <tbody id="kb-table-body"></tbody>
+          </table>
+          <div id="kb-load-more" style="text-align:center;padding:12px;display:none;">
+            <button class="btn btn-secondary" onclick="loadMoreKB()">Load More Results</button>
+          </div>
+        </div>
+        <div class="card" id="kb-article-detail" style="max-height:650px;overflow-y:auto;">
+          <div style="text-align:center;padding:40px;color:var(--gray);">
+            <div style="font-size:48px;margin-bottom:8px;">&#128214;</div>
+            <p>Select an article to view its content</p>
+            <p style="font-size:12px;margin-top:8px;">Search by keyword or browse by category</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ OPS CONSOLE ═══════════════ -->
+  <div id="console-ops" class="console">
+    <div class="page-title">Operations Console</div>
+    <div class="page-sub">Change management, scheduling &amp; business impact</div>
+
+    <div id="ops-kpis" class="kpi-row"></div>
+
+    <div class="subtabs">
+      <button class="active" onclick="opsTab('board')">Change Board</button>
+      <button onclick="opsTab('timeline')">Schedule Timeline</button>
+      <button onclick="opsTab('approvals')">Pending Approvals</button>
+      <button onclick="opsTab('impact')">Impact Analysis</button>
+    </div>
+
+    <!-- Change Board -->
+    <div id="ops-board" class="subtab-panel active">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;overflow-x:auto;">
+        <div class="card" style="background:#FAFAFA;min-width:200px;">
+          <h3>&#128221; Draft</h3><div id="board-draft"></div>
+        </div>
+        <div class="card" style="background:#FAFAFA;min-width:200px;">
+          <h3>&#128229; Submitted</h3><div id="board-submitted"></div>
+        </div>
+        <div class="card" style="background:#FAFAFA;min-width:200px;">
+          <h3>&#9989; Approved</h3><div id="board-approved"></div>
+        </div>
+        <div class="card" style="background:#FAFAFA;min-width:200px;">
+          <h3>&#9881;&#65039; Implementing</h3><div id="board-implementing"></div>
+        </div>
+        <div class="card" style="background:#FAFAFA;min-width:200px;">
+          <h3>&#9989; Completed</h3><div id="board-completed"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div id="ops-timeline" class="subtab-panel">
+      <div class="card">
+        <h3>Scheduled Changes — Timeline View</h3>
+        <div id="timeline-container"></div>
+      </div>
+    </div>
+
+    <!-- Approvals -->
+    <div id="ops-approvals" class="subtab-panel">
+      <div class="card" style="padding:0;overflow:auto;">
+        <table>
+          <thead><tr><th>Change #</th><th>Approver</th><th>Status</th><th>Decision Date</th><th>Comments</th><th>Action</th></tr></thead>
+          <tbody id="approvals-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Impact -->
+    <div id="ops-impact" class="subtab-panel">
+      <div class="card">
+        <h3>Changes by Risk &amp; Service Impact</h3>
+        <div id="impact-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MANAGEMENT CONSOLE ═══════════════ -->
+  <div id="console-mgr" class="console">
+    <div class="page-title">Management Console</div>
+    <div class="page-sub">Real-time operational oversight &amp; performance analytics</div>
+
+    <div id="mgr-nags"></div>
+
+    <div id="mgr-kpis" class="kpi-row"></div>
+
+    <div class="subtabs">
+      <button class="active" onclick="mgrTab('dashboard')">Dashboard</button>
+      <button onclick="mgrTab('agents')">Agent Performance</button>
+      <button onclick="mgrTab('sla')">SLA Compliance</button>
+      <button onclick="mgrTab('aging')">Ticket Aging</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="mgr-dashboard" class="subtab-panel active">
+      <div class="grid-3" id="mgr-scorecards"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Incident Volume by Priority</h3>
+          <div id="mgr-priority-breakdown"></div>
+        </div>
+        <div class="card">
+          <h3>Status Distribution</h3>
+          <div id="mgr-status-breakdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Performance -->
+    <div id="mgr-agents" class="subtab-panel">
+      <div class="nag-banner">
+        <span class="nag-icon">&#128064;</span>
+        <span><strong>Pro Tip:</strong> Click any agent name to see their <em>complete</em> activity history. Nothing escapes the dashboard.</span>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;">
+        <table>
+          <thead><tr><th>#</th><th>Agent</th><th>Assigned</th><th>Resolved</th><th>Open</th><th>Resolution Rate</th><th>Productivity Score</th><th>Action</th></tr></thead>
+          <tbody id="mgr-agent-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SLA Compliance -->
+    <div id="mgr-sla" class="subtab-panel">
+      <div class="card">
+        <h3>&#128680; SLA Breach Analysis</h3>
+        <div id="mgr-sla-content"></div>
+      </div>
+    </div>
+
+    <!-- Ticket Aging -->
+    <div id="mgr-aging" class="subtab-panel">
+      <div class="nag-banner">
+        <span class="nag-icon pulse">&#9200;</span>
+        <span><strong>Reminder:</strong> Every minute a ticket goes unresolved, a customer loses faith. <em>Gently</em> remind your team.</span>
+      </div>
+      <div class="card" style="padding:0;overflow:auto;">
+        <table>
+          <thead><tr><th>Ticket</th><th>Title</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Age (days)</th><th>Action</th></tr></thead>
+          <tbody id="mgr-aging-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Workflow console removed — see Activity Monitor app -->
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div id="modal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  API CLIENT
+// ═══════════════════════════════════════════════════
+let API = { url: '', auth: '', user: '' };
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function fetchSubs(kapp, form, params = {}) {
+  let qs = new URLSearchParams({ include: 'values', limit: '1000', ...params });
+  return (await api(`/kapps/${kapp}/forms/${form}/submissions?${qs}`)).submissions || [];
+}
+
+// ═══════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    API = { url, auth: btoa(`${user}:${pass}`), user };
+    const res = await fetch(`${url}/app/api/v1/me`, {
+      headers: { 'Authorization': `Basic ${API.auth}` }
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const data = await res.json();
+    sessionStorage.setItem('kinetic_session', JSON.stringify(API));
+    document.getElementById('user-display').textContent = data.user?.username || user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAllData();
+  } catch(e) {
+    errEl.textContent = e.message.includes('Failed to fetch')
+      ? 'Cannot reach server. If self-signed TLS, visit the server URL in your browser first and accept the certificate.'
+      : `Login failed: ${e.message}`;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  API = { url: '', auth: '', user: '' };
+  DATA = { incidents:[], requests:[], changes:[], approvals:[], articles:[], people:[], incidentNotes:[], changeNotes:[] };
+  WF = { runs: [], trees: [], loaded: false, totalCount: 0, offset: 0, hasMore: false, selectedTree: null, currentTasks: [], currentRunId: null, currentTaskIdx: null, filterTree: '', filterStatus: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  // Reset console to agent
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('console-agent').classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.toggle('active', b.dataset.console === 'agent'));
+}
+
+async function restoreSession() {
+  const s = sessionStorage.getItem('kinetic_session');
+  if (!s) return;
+  try {
+    API = JSON.parse(s);
+    const res = await fetch(`${API.url}/app/api/v1/me`, { headers: { 'Authorization': `Basic ${API.auth}` } });
+    if (!res.ok) throw new Error('expired');
+    document.getElementById('user-display').textContent = API.user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAllData();
+  } catch(e) {
+    sessionStorage.removeItem('kinetic_session');
+    API = { url: '', auth: '', user: '' };
+  }
+}
+restoreSession();
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+function switchConsole(id) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById(`console-${id}`).classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.console === id);
+  });
+}
+
+function switchSubtab(container, tabId, btn) {
+  const parent = btn.closest('.console');
+  parent.querySelectorAll(`${container} .subtab-panel`).forEach(p => p.classList.remove('active'));
+  // Actually we use IDs, so:
+  btn.closest('.console').querySelectorAll('.subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.closest('.subtabs').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function agentTab(t) {
+  const map = { queue:'agent-queue', incidents:'agent-incidents', requests:'agent-requests', kb:'agent-kb' };
+  document.querySelectorAll('#console-agent .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-agent .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['queue','incidents','requests','kb'][i]===t));
+}
+function opsTab(t) {
+  const map = { board:'ops-board', timeline:'ops-timeline', approvals:'ops-approvals', impact:'ops-impact' };
+  document.querySelectorAll('#console-ops .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-ops .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['board','timeline','approvals','impact'][i]===t));
+}
+function mgrTab(t) {
+  const map = { dashboard:'mgr-dashboard', agents:'mgr-agents', sla:'mgr-sla', aging:'mgr-aging' };
+  document.querySelectorAll('#console-mgr .subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[t]).classList.add('active');
+  const btns = document.querySelectorAll('#console-mgr .subtabs button');
+  btns.forEach((b,i) => b.classList.toggle('active', ['dashboard','agents','sla','aging'][i]===t));
+}
+
+// ═══════════════════════════════════════════════════
+//  DATA STORE
+// ═══════════════════════════════════════════════════
+let DATA = { incidents:[], requests:[], changes:[], approvals:[], articles:[], people:[], incidentNotes:[], changeNotes:[] };
+
+async function loadAllData() {
+  const [incidents, requests, changes, approvals, articles] = await Promise.all([
+    fetchSubs('itsm','incidents'),
+    fetchSubs('itsm','requests'),
+    fetchSubs('itsm','change-requests'),
+    fetchSubs('itsm','change-approvals'),
+    fetchSubs('itsm','articles'),
+  ]);
+  DATA.incidents = incidents;
+  DATA.requests = requests;
+  DATA.changes = changes;
+  DATA.approvals = approvals;
+  DATA.articles = articles;
+
+  renderAgentConsole();
+  renderOpsConsole();
+  renderMgrConsole();
+  searchKB();
+}
+
+function v(sub, field) { return sub.values?.[field] || ''; }
+
+// ═══════════════════════════════════════════════════
+//  BADGES
+// ═══════════════════════════════════════════════════
+function priorityBadge(p) {
+  const cls = { Critical:'critical', High:'high', Medium:'medium', Low:'low' }[p] || 'low';
+  return `<span class="badge badge-${cls}">${p || '—'}</span>`;
+}
+function statusBadge(s) {
+  const cls = { 'New':'new', 'Open':'open', 'In Progress':'progress', 'Resolved':'resolved', 'Closed':'closed',
+    'Approved':'approved', 'Rejected':'rejected', 'Implementing':'implementing', 'Submitted':'submitted',
+    'Draft':'draft', 'Completed':'closed', 'Fulfilled':'closed', 'Pending':'submitted' }[s] || 'draft';
+  return `<span class="badge badge-${cls}">${s || '—'}</span>`;
+}
+function typeBadge(t) {
+  const cls = { Emergency:'emergency', Normal:'normal', Standard:'standard' }[t] || 'normal';
+  return `<span class="badge badge-${cls}">${t || '—'}</span>`;
+}
+function riskBadge(r) {
+  const cls = { High:'critical', Medium:'high', Low:'low' }[r] || 'low';
+  return `<span class="badge badge-${cls}">${r || '—'}</span>`;
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return Math.floor((Date.now() - d) / 86400000);
+}
+
+// ═══════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════
+//  AGENT CONSOLE
+// ═══════════════════════════════════════════════════
+function renderAgentConsole() {
+  const inc = DATA.incidents;
+  const req = DATA.requests;
+  const openInc = inc.filter(i => !['Closed','Resolved'].includes(v(i,'Status')));
+  const critical = inc.filter(i => v(i,'Priority')==='Critical' && !['Closed','Resolved'].includes(v(i,'Status')));
+  const openReq = req.filter(r => !['Fulfilled','Closed'].includes(v(r,'Status')));
+
+  document.getElementById('agent-kpis').innerHTML = `
+    <div class="kpi red"><div class="label">Critical Incidents</div><div class="val">${critical.length}</div><div class="sub">require immediate attention</div></div>
+    <div class="kpi orange"><div class="label">Open Incidents</div><div class="val">${openInc.length}</div><div class="sub">of ${inc.length} total</div></div>
+    <div class="kpi"><div class="label">Open Requests</div><div class="val">${openReq.length}</div><div class="sub">of ${req.length} total</div></div>
+    <div class="kpi green"><div class="label">Resolved Today</div><div class="val">${inc.filter(i => v(i,'Resolved Date')===new Date().toISOString().split('T')[0]).length}</div><div class="sub">incidents</div></div>
+  `;
+
+  // Queue: all open items sorted by priority
+  const queue = [
+    ...openInc.map(i => ({type:'INC', num:v(i,'Incident Number'), title:v(i,'Title'), priority:v(i,'Priority'), status:v(i,'Status'), assigned:v(i,'Assigned To'), id:i.id})),
+    ...openReq.map(r => ({type:'REQ', num:v(r,'Request Number'), title:v(r,'Title'), priority:v(r,'Priority'), status:v(r,'Status'), assigned:v(r,'Assigned To'), id:r.id})),
+  ];
+  const pOrder = {Critical:0,High:1,Medium:2,Low:3};
+  queue.sort((a,b) => (pOrder[a.priority]??4) - (pOrder[b.priority]??4));
+
+  document.getElementById('agent-queue-table').innerHTML = queue.length ? `<table>
+    <thead><tr><th>Type</th><th>#</th><th>Priority</th><th>Title</th><th>Status</th><th>Assigned</th></tr></thead>
+    <tbody>${queue.map(q => `<tr onclick="viewTicket('${q.type}','${q.id}')">
+      <td><strong>${q.type}</strong></td><td>${q.num}</td><td>${priorityBadge(q.priority)}</td>
+      <td>${q.title}</td><td>${statusBadge(q.status)}</td><td>${q.assigned}</td>
+    </tr>`).join('')}</tbody></table>` : '<p style="color:var(--gray);text-align:center;padding:20px;">No open tickets in queue</p>';
+
+  // Incidents table
+  renderIncidentTable(inc);
+  renderRequestTable(req);
+}
+
+function renderIncidentTable(list) {
+  document.getElementById('inc-table-body').innerHTML = list.map(i => `<tr onclick="viewTicket('INC','${i.id}')">
+    <td><strong>${v(i,'Incident Number')}</strong></td>
+    <td>${priorityBadge(v(i,'Priority'))}</td>
+    <td>${v(i,'Title')}</td>
+    <td>${statusBadge(v(i,'Status'))}</td>
+    <td>${v(i,'Assigned To')}</td>
+    <td>${v(i,'Service')}</td>
+    <td>${i.submittedAt ? new Date(i.submittedAt).toLocaleDateString() : '—'}</td>
+  </tr>`).join('');
+}
+
+function filterIncidents() {
+  const search = document.getElementById('inc-search').value.toLowerCase();
+  const status = document.getElementById('inc-status-filter').value;
+  const priority = document.getElementById('inc-priority-filter').value;
+  const filtered = DATA.incidents.filter(i => {
+    if (search && !`${v(i,'Incident Number')} ${v(i,'Title')} ${v(i,'Assigned To')}`.toLowerCase().includes(search)) return false;
+    if (status && v(i,'Status') !== status) return false;
+    if (priority && v(i,'Priority') !== priority) return false;
+    return true;
+  });
+  renderIncidentTable(filtered);
+}
+
+function renderRequestTable(list) {
+  document.getElementById('req-table-body').innerHTML = list.map(r => `<tr onclick="viewTicket('REQ','${r.id}')">
+    <td><strong>${v(r,'Request Number')}</strong></td>
+    <td>${priorityBadge(v(r,'Priority'))}</td>
+    <td>${v(r,'Title')}</td>
+    <td>${statusBadge(v(r,'Status'))}</td>
+    <td>${v(r,'Requested By')}</td>
+    <td>${v(r,'Assigned To')}</td>
+  </tr>`).join('');
+}
+
+function filterRequests() {
+  const search = document.getElementById('req-search').value.toLowerCase();
+  const filtered = DATA.requests.filter(r => {
+    return !search || `${v(r,'Request Number')} ${v(r,'Title')} ${v(r,'Requested By')}`.toLowerCase().includes(search);
+  });
+  renderRequestTable(filtered);
+}
+
+let KB = { results: [], lastCreatedAt: null, hasMore: false, lastQuery: '' };
+
+function renderKBTable(list) {
+  document.getElementById('kb-table-body').innerHTML = list.map(a => `<tr onclick="viewArticle('${a.id}')" style="cursor:pointer;">
+    <td><strong>${v(a,'Article Number')}</strong></td>
+    <td>${v(a,'Title')}</td>
+    <td><span class="badge badge-new">${v(a,'Category')}</span></td>
+    <td>${v(a,'Views') || 0}</td>
+  </tr>`).join('');
+  document.getElementById('kb-result-count').textContent = `${list.length} article${list.length!==1?'s':''}`;
+  document.getElementById('kb-load-more').style.display = KB.hasMore ? 'block' : 'none';
+}
+
+async function searchKB() {
+  const search = document.getElementById('kb-search').value.trim();
+  const cat = document.getElementById('kb-cat-filter').value;
+  document.getElementById('kb-table-body').innerHTML = '<tr><td colspan="4" class="loading"><div class="spinner"></div> Searching...</td></tr>';
+
+  try {
+    const params = { include: 'values', limit: '50' };
+    const conditions = [];
+    if (cat) conditions.push(`values[Category]="${cat}"`);
+    if (conditions.length) params.q = conditions.join(' AND ');
+
+    const qs = new URLSearchParams(params);
+    const data = await api(`/kapps/itsm/forms/articles/submissions?${qs}`);
+    let results = data.submissions || [];
+    KB.hasMore = !!data.nextPageToken;
+    if (KB.hasMore && results.length) KB.lastCreatedAt = results[results.length - 1].createdAt;
+
+    // Client-side keyword filter across title, content, tags
+    if (search) {
+      const terms = search.toLowerCase().split(/\s+/);
+      results = results.filter(a => {
+        const haystack = `${v(a,'Title')} ${v(a,'Content')} ${v(a,'Tags')} ${v(a,'Category')}`.toLowerCase();
+        return terms.every(t => haystack.includes(t));
+      });
+      // If few results from first page, load more pages to find matches
+      let attempts = 0;
+      while (results.length < 20 && KB.hasMore && attempts < 10) {
+        const moreParams = { ...params };
+        const kqlParts = [];
+        if (moreParams.q) kqlParts.push('(' + moreParams.q + ')');
+        kqlParts.push('createdAt < "' + KB.lastCreatedAt + '"');
+        moreParams.q = kqlParts.join(' AND ');
+        const moreQs = new URLSearchParams(moreParams);
+        const moreData = await api(`/kapps/itsm/forms/articles/submissions?${moreQs}`);
+        const moreSubs = moreData.submissions || [];
+        KB.hasMore = !!moreData.nextPageToken;
+        if (KB.hasMore && moreSubs.length) KB.lastCreatedAt = moreSubs[moreSubs.length - 1].createdAt;
+        const matched = moreSubs.filter(a => {
+          const haystack = `${v(a,'Title')} ${v(a,'Content')} ${v(a,'Tags')} ${v(a,'Category')}`.toLowerCase();
+          return terms.every(t => haystack.includes(t));
+        });
+        results = results.concat(matched);
+        attempts++;
+      }
+    }
+
+    // Sort by views descending (most popular first)
+    results.sort((a,b) => (parseInt(v(b,'Views'))||0) - (parseInt(v(a,'Views'))||0));
+
+    KB.results = results;
+    KB.lastQuery = search;
+    renderKBTable(results);
+
+    // Auto-select first result
+    if (results.length) viewArticle(results[0].id);
+  } catch(e) {
+    document.getElementById('kb-table-body').innerHTML = `<tr><td colspan="4" style="color:var(--red);padding:16px;">Search error: ${e.message}</td></tr>`;
+  }
+}
+
+async function loadMoreKB() {
+  if (!KB.hasMore) return;
+  try {
+    const cat = document.getElementById('kb-cat-filter').value;
+    const params = { include: 'values', limit: '50' };
+    const kqlParts = [];
+    if (cat) kqlParts.push(`values[Category]="${cat}"`);
+    if (KB.lastCreatedAt) kqlParts.push('createdAt < "' + KB.lastCreatedAt + '"');
+    if (kqlParts.length) params.q = kqlParts.join(' AND ');
+    const qs = new URLSearchParams(params);
+    const data = await api(`/kapps/itsm/forms/articles/submissions?${qs}`);
+    let more = data.submissions || [];
+    KB.hasMore = !!data.nextPageToken;
+    if (KB.hasMore && more.length) KB.lastCreatedAt = more[more.length - 1].createdAt;
+
+    if (KB.lastQuery) {
+      const terms = KB.lastQuery.toLowerCase().split(/\s+/);
+      more = more.filter(a => {
+        const haystack = `${v(a,'Title')} ${v(a,'Content')} ${v(a,'Tags')} ${v(a,'Category')}`.toLowerCase();
+        return terms.every(t => haystack.includes(t));
+      });
+    }
+    KB.results = KB.results.concat(more);
+    KB.results.sort((a,b) => (parseInt(v(b,'Views'))||0) - (parseInt(v(a,'Views'))||0));
+    renderKBTable(KB.results);
+  } catch(e) { alert('Error loading more: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+//  VIEW TICKET DETAIL
+// ═══════════════════════════════════════════════════
+function viewTicket(type, id) {
+  const sub = type === 'INC' ? DATA.incidents.find(i => i.id === id) : DATA.requests.find(r => r.id === id);
+  if (!sub) return;
+  const vals = sub.values;
+  const fields = Object.entries(vals).filter(([k,v]) => v);
+  openModal(`
+    <h2>${type === 'INC' ? '&#128680;' : '&#128203;'} ${vals[type==='INC'?'Incident Number':'Request Number']} — ${vals.Title}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+      ${fields.map(([k,val]) => `<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">${k}</div><div style="font-size:13px;">${k==='Priority'?priorityBadge(val):k==='Status'?statusBadge(val):val}</div></div>`).join('')}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      ${type==='INC' ? `<button class="btn btn-primary" onclick="updateIncidentStatus('${id}')">Update Status</button>` : ''}
+    </div>
+  `);
+}
+
+function viewArticle(id) {
+  // Check both KB results and preloaded articles
+  const a = KB.results.find(x => x.id === id) || DATA.articles.find(x => x.id === id);
+  if (!a) return;
+
+  // Highlight selected row
+  document.querySelectorAll('#kb-table-body tr').forEach(r => r.style.background = '');
+  const rows = document.querySelectorAll('#kb-table-body tr');
+  rows.forEach(r => { if (r.onclick?.toString().includes(id)) r.style.background = 'var(--light)'; });
+
+  // Simple markdown-ish rendering
+  let content = v(a,'Content')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^## (.+)$/gm, '<h3 style="color:var(--blue);margin:16px 0 8px;font-size:15px;">$1</h3>')
+    .replace(/^### (.+)$/gm, '<h4 style="color:var(--gray);margin:12px 0 6px;font-size:13px;">$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(\d+)\. (.+)$/gm, '<div style="padding:4px 0 4px 20px;"><span style="color:var(--orange);font-weight:700;">$1.</span> $2</div>')
+    .replace(/^- (.+)$/gm, '<div style="padding:2px 0 2px 20px;">&#8226; $1</div>')
+    .replace(/\n\n/g, '<br><br>');
+
+  const detail = document.getElementById('kb-article-detail');
+  detail.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <span style="font-size:12px;font-weight:600;color:var(--gray);">${v(a,'Article Number')}</span>
+      <span class="badge badge-new">${v(a,'Category')}</span>
+      <span class="badge badge-${v(a,'Status')==='Published'?'approved':'draft'}">${v(a,'Status')}</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--gray);">&#128065; ${v(a,'Views')} views</span>
+    </div>
+    <h2 style="font-size:18px;color:var(--blue);margin-bottom:12px;line-height:1.3;">${v(a,'Title')}</h2>
+    <div style="font-size:13px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;">${content}</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--gray);display:flex;gap:16px;flex-wrap:wrap;">
+      <span>&#9997; ${v(a,'Author')}</span>
+      <span>&#128197; ${v(a,'Published Date') || '—'}</span>
+      <span>&#127991; ${v(a,'Tags')}</span>
+      <span>&#128279; ${v(a,'Related Service') || '—'}</span>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-sm btn-primary" onclick="copyArticleToClipboard('${a.id}')">&#128203; Copy to Clipboard</button>
+      <button class="btn btn-sm btn-secondary" onclick="openArticleInModal('${a.id}')">&#128194; Open Full View</button>
+    </div>
+  `;
+  detail.scrollTop = 0;
+}
+
+function copyArticleToClipboard(id) {
+  const a = KB.results.find(x => x.id === id) || DATA.articles.find(x => x.id === id);
+  if (!a) return;
+  const text = `${v(a,'Article Number')} — ${v(a,'Title')}\n\n${v(a,'Content')}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Article copied to clipboard'));
+}
+
+function openArticleInModal(id) {
+  const a = KB.results.find(x => x.id === id) || DATA.articles.find(x => x.id === id);
+  if (!a) return;
+  let content = v(a,'Content')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^## (.+)$/gm, '<h3 style="color:var(--blue);margin:16px 0 8px;">$1</h3>')
+    .replace(/^(\d+)\. (.+)$/gm, '<div style="padding:4px 0 4px 20px;"><span style="color:var(--orange);font-weight:700;">$1.</span> $2</div>')
+    .replace(/^- (.+)$/gm, '<div style="padding:2px 0 2px 20px;">&#8226; $1</div>')
+    .replace(/\n\n/g, '<br><br>');
+  openModal(`
+    <h2>&#128214; ${v(a,'Article Number')} — ${v(a,'Title')}</h2>
+    <div style="margin-bottom:12px;"><span class="badge badge-new">${v(a,'Category')}</span> <span class="badge badge-${v(a,'Status')==='Published'?'approved':'draft'}">${v(a,'Status')}</span> <span style="font-size:12px;color:var(--gray);">&#128065; ${v(a,'Views')} views</span></div>
+    <div style="font-size:13px;line-height:1.7;">${content}</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--gray);">Author: ${v(a,'Author')} | Tags: ${v(a,'Tags')} | Service: ${v(a,'Related Service')}</div>
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════
+//  NEW INCIDENT / REQUEST
+// ═══════════════════════════════════════════════════
+function openNewIncident() {
+  openModal(`
+    <h2>&#128680; Log New Incident</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Title *</label><input id="ni-title" placeholder="Brief description of the issue"></div>
+      <div class="form-row"><label>Reported By *</label>
+        <div class="typeahead" id="ta-reporter">
+          <input id="ni-reporter" placeholder="Search by name..." autocomplete="off" oninput="peopleSearch('ta-reporter','ni-reporter')">
+          <button class="ta-clear" onclick="taClear('ta-reporter','ni-reporter')">&times;</button>
+          <div class="ta-results"></div>
+        </div>
+      </div>
+      <div class="form-row"><label>Priority</label><select id="ni-priority"><option>Medium</option><option>Critical</option><option>High</option><option>Low</option></select></div>
+      <div class="form-row"><label>Impact</label><select id="ni-impact"><option>Medium</option><option>High</option><option>Low</option></select></div>
+      <div class="form-row"><label>Category</label><select id="ni-category"><option>Hardware</option><option>Software</option><option>Network</option><option>Email</option><option>Database</option><option>Security</option></select></div>
+      <div class="form-row"><label>Source</label><select id="ni-source"><option>Phone</option><option>Email</option><option>Chat</option><option>Self-Service</option><option>Walk-in</option></select></div>
+      <div class="form-row"><label>Service</label><input id="ni-service" placeholder="Affected service"></div>
+      <div class="form-row"><label>Assigned To</label>
+        <div class="typeahead" id="ta-assign">
+          <input id="ni-assign" placeholder="Search by name..." autocomplete="off" oninput="peopleSearch('ta-assign','ni-assign')">
+          <button class="ta-clear" onclick="taClear('ta-assign','ni-assign')">&times;</button>
+          <div class="ta-results"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row"><label>Description</label><textarea id="ni-desc" rows="4" placeholder="Full details of the issue..."></textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewIncident()">&#128680; Create Incident</button>
+    </div>
+  `);
+}
+
+async function submitNewIncident() {
+  const num = `INC${String(10001 + DATA.incidents.length).padStart(7,'0')}`;
+  const values = {
+    'Incident Number': num,
+    'Title': document.getElementById('ni-title').value,
+    'Description': document.getElementById('ni-desc').value,
+    'Reported By': document.getElementById('ni-reporter').value,
+    'Priority': document.getElementById('ni-priority').value,
+    'Impact': document.getElementById('ni-impact').value,
+    'Category': document.getElementById('ni-category').value,
+    'Source': document.getElementById('ni-source').value,
+    'Service': document.getElementById('ni-service').value,
+    'Assigned To': document.getElementById('ni-assign').value,
+    'Status': 'New',
+    'Urgency': 'Medium',
+  };
+  try {
+    await api(`/kapps/itsm/forms/incidents/submissions`, {
+      method: 'POST', body: JSON.stringify({ values })
+    });
+    closeModal();
+    DATA.incidents = await fetchSubs('itsm','incidents');
+    renderAgentConsole();
+    renderMgrConsole();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function openNewRequest() {
+  openModal(`
+    <h2>&#128203; Log New Service Request</h2>
+    <div class="form-grid">
+      <div class="form-row"><label>Title *</label><input id="nr-title" placeholder="What is being requested?"></div>
+      <div class="form-row"><label>Requested By *</label>
+        <div class="typeahead" id="ta-requester">
+          <input id="nr-requester" placeholder="Search by name..." autocomplete="off" oninput="peopleSearch('ta-requester','nr-requester')">
+          <button class="ta-clear" onclick="taClear('ta-requester','nr-requester')">&times;</button>
+          <div class="ta-results"></div>
+        </div>
+      </div>
+      <div class="form-row"><label>Priority</label><select id="nr-priority"><option>Medium</option><option>High</option><option>Low</option><option>Critical</option></select></div>
+      <div class="form-row"><label>Category</label><select id="nr-category"><option>Access</option><option>Equipment</option><option>Software</option><option>Information</option><option>Other</option></select></div>
+      <div class="form-row"><label>Requested For</label>
+        <div class="typeahead" id="ta-reqfor">
+          <input id="nr-for" placeholder="Search (or leave blank for same)" autocomplete="off" oninput="peopleSearch('ta-reqfor','nr-for')">
+          <button class="ta-clear" onclick="taClear('ta-reqfor','nr-for')">&times;</button>
+          <div class="ta-results"></div>
+        </div>
+      </div>
+      <div class="form-row"><label>Service</label><input id="nr-service" placeholder="Related service"></div>
+    </div>
+    <div class="form-row"><label>Description</label><textarea id="nr-desc" rows="4" placeholder="Details..."></textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitNewRequest()">&#128203; Create Request</button>
+    </div>
+  `);
+}
+
+async function submitNewRequest() {
+  const num = `REQ${String(10001 + DATA.requests.length).padStart(7,'0')}`;
+  const values = {
+    'Request Number': num,
+    'Title': document.getElementById('nr-title').value,
+    'Description': document.getElementById('nr-desc').value,
+    'Requested By': document.getElementById('nr-requester').value,
+    'Requested For': document.getElementById('nr-for').value || document.getElementById('nr-requester').value,
+    'Priority': document.getElementById('nr-priority').value,
+    'Category': document.getElementById('nr-category').value,
+    'Service': document.getElementById('nr-service').value,
+    'Status': 'Open',
+  };
+  try {
+    await api(`/kapps/itsm/forms/requests/submissions`, {
+      method: 'POST', body: JSON.stringify({ values })
+    });
+    closeModal();
+    DATA.requests = await fetchSubs('itsm','requests');
+    renderAgentConsole();
+    renderMgrConsole();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+//  OPS CONSOLE
+// ═══════════════════════════════════════════════════
+function renderOpsConsole() {
+  const chg = DATA.changes;
+  const appr = DATA.approvals;
+  const emergency = chg.filter(c => v(c,'Type')==='Emergency');
+  const highRisk = chg.filter(c => v(c,'Risk')==='High');
+  const pending = appr.filter(a => !['Approved','Rejected'].includes(v(a,'Status')));
+  const implementing = chg.filter(c => v(c,'Status')==='Implementing');
+
+  document.getElementById('ops-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total Changes</div><div class="val">${chg.length}</div></div>
+    <div class="kpi red"><div class="label">Emergency</div><div class="val">${emergency.length}</div><div class="sub">changes</div></div>
+    <div class="kpi yellow"><div class="label">High Risk</div><div class="val">${highRisk.length}</div><div class="sub">need extra review</div></div>
+    <div class="kpi orange"><div class="label">Implementing</div><div class="val">${implementing.length}</div><div class="sub">in progress now</div></div>
+    <div class="kpi"><div class="label">Pending Approvals</div><div class="val">${pending.length}</div></div>
+  `;
+
+  // Board
+  const statuses = ['Draft','Submitted','Approved','Implementing','Completed'];
+  const boardIds = ['board-draft','board-submitted','board-approved','board-implementing','board-completed'];
+  statuses.forEach((s, i) => {
+    const cards = chg.filter(c => v(c,'Status') === s);
+    document.getElementById(boardIds[i]).innerHTML = cards.length ? cards.map(c => `
+      <div style="background:white;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer;" onclick="viewChange('${c.id}')">
+        <div style="font-size:11px;font-weight:600;color:var(--gray);">${v(c,'Change Number')}</div>
+        <div style="font-size:13px;font-weight:600;margin:2px 0;">${v(c,'Title')}</div>
+        <div style="display:flex;gap:4px;margin-top:4px;">${typeBadge(v(c,'Type'))} ${riskBadge(v(c,'Risk'))} ${priorityBadge(v(c,'Priority'))}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:4px;">${v(c,'Assigned To')} &middot; ${v(c,'Assigned Team')}</div>
+      </div>
+    `).join('') : '<p style="color:var(--gray);font-size:12px;text-align:center;padding:20px;">None</p>';
+  });
+
+  // Timeline
+  const scheduled = chg.filter(c => v(c,'Scheduled Start')).sort((a,b) => v(a,'Scheduled Start').localeCompare(v(b,'Scheduled Start')));
+  const colors = { Emergency:'var(--red)', Normal:'var(--blue)', Standard:'var(--green)' };
+  if (scheduled.length) {
+    const minDate = new Date(Math.min(...scheduled.map(c => new Date(v(c,'Scheduled Start')))));
+    const maxDate = new Date(Math.max(...scheduled.map(c => new Date(v(c,'Scheduled End') || v(c,'Scheduled Start')))));
+    const range = Math.max((maxDate - minDate) / 86400000, 1);
+    document.getElementById('timeline-container').innerHTML = scheduled.map(c => {
+      const start = (new Date(v(c,'Scheduled Start')) - minDate) / 86400000;
+      const end = v(c,'Scheduled End') ? (new Date(v(c,'Scheduled End')) - minDate) / 86400000 : start + 1;
+      const left = (start / range * 100).toFixed(1);
+      const width = Math.max(((end - start) / range * 100), 3).toFixed(1);
+      return `<div class="timeline-row" onclick="viewChange('${c.id}')">
+        <div class="timeline-date">${new Date(v(c,'Scheduled Start')).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+        <div class="timeline-bar"><div class="bar" style="left:${left}%;width:${width}%;background:${colors[v(c,'Type')]||'var(--blue)'};">${v(c,'Change Number')} ${v(c,'Title')}</div></div>
+        <div class="timeline-meta">${riskBadge(v(c,'Risk'))}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Approvals
+  document.getElementById('approvals-table-body').innerHTML = appr.map(a => `<tr>
+    <td><strong>${v(a,'Change ID')}</strong></td>
+    <td>${v(a,'Approver')}</td>
+    <td>${statusBadge(v(a,'Status'))}</td>
+    <td>${v(a,'Decision Date') || '—'}</td>
+    <td>${v(a,'Comments') || '—'}</td>
+    <td>${!['Approved','Rejected'].includes(v(a,'Status')) ? `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();approveChange('${a.id}','${v(a,'Change ID')}')">Approve</button> <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();rejectChange('${a.id}','${v(a,'Change ID')}')">Reject</button>` : '—'}</td>
+  </tr>`).join('');
+
+  // Impact
+  const byService = {};
+  chg.forEach(c => {
+    const svc = v(c,'Service') || 'Unspecified';
+    if (!byService[svc]) byService[svc] = [];
+    byService[svc].push(c);
+  });
+  document.getElementById('impact-container').innerHTML = Object.entries(byService).sort((a,b)=>b[1].length-a[1].length).map(([svc, items]) => `
+    <div style="margin-bottom:16px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">${svc} <span style="color:var(--gray);font-size:12px;">(${items.length} changes)</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${items.map(c => `<div style="background:var(--light);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;" onclick="viewChange('${c.id}')">
+          <strong>${v(c,'Change Number')}</strong> ${v(c,'Title').substring(0,30)}... ${riskBadge(v(c,'Risk'))}
+        </div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function viewChange(id) {
+  const c = DATA.changes.find(x => x.id === id);
+  if (!c) return;
+  const vals = c.values;
+  openModal(`
+    <h2>&#9881;&#65039; ${vals['Change Number']} — ${vals.Title}</h2>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">${typeBadge(vals.Type)} ${statusBadge(vals.Status)} ${priorityBadge(vals.Priority)} ${riskBadge(vals.Risk)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;">
+      ${Object.entries(vals).filter(([k,v])=>v && !['Implementation Plan','Backout Plan','Description'].includes(k)).map(([k,val]) => `<div><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">${k}</div><div style="font-size:13px;">${val}</div></div>`).join('')}
+    </div>
+    ${vals.Description ? `<div style="margin-bottom:12px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Description</div><div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:8px;margin-top:4px;">${vals.Description}</div></div>` : ''}
+    ${vals['Implementation Plan'] ? `<div style="margin-bottom:12px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Implementation Plan</div><div style="font-size:13px;white-space:pre-wrap;background:#E8F5E9;padding:10px;border-radius:8px;margin-top:4px;">${vals['Implementation Plan']}</div></div>` : ''}
+    ${vals['Backout Plan'] ? `<div style="margin-bottom:12px;"><div style="font-size:10px;text-transform:uppercase;color:var(--gray);font-weight:600;">Backout Plan</div><div style="font-size:13px;white-space:pre-wrap;background:#FFF3E0;padding:10px;border-radius:8px;margin-top:4px;">${vals['Backout Plan']}</div></div>` : ''}
+    <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════
+//  MANAGEMENT CONSOLE — THE NIT-PICKER SPECIAL
+// ═══════════════════════════════════════════════════
+function renderMgrConsole() {
+  const inc = DATA.incidents;
+  const req = DATA.requests;
+  const chg = DATA.changes;
+
+  const openInc = inc.filter(i => !['Closed','Resolved'].includes(v(i,'Status')));
+  const resolvedInc = inc.filter(i => ['Closed','Resolved'].includes(v(i,'Status')));
+  const totalTickets = inc.length + req.length;
+  const resolutionRate = inc.length ? ((resolvedInc.length / inc.length) * 100).toFixed(1) : 0;
+
+  // Nag banners
+  const staleTickets = openInc.filter(i => {
+    const age = daysSince(i.submittedAt);
+    return age !== null && age > 3;
+  });
+  const criticalOpen = openInc.filter(i => v(i,'Priority') === 'Critical');
+
+  let nags = '';
+  if (criticalOpen.length) {
+    nags += `<div class="nag-banner"><span class="nag-icon pulse">&#128680;</span><strong>URGENT:</strong>&nbsp;${criticalOpen.length} critical incident${criticalOpen.length>1?'s':''} remain${criticalOpen.length===1?'s':''} open. Who is handling ${criticalOpen.length>1?'these':'this'}? <button class="btn btn-sm btn-danger" style="margin-left:auto;" onclick="mgrTab('aging')">View Now</button></div>`;
+  }
+  if (staleTickets.length) {
+    nags += `<div class="nag-banner"><span class="nag-icon">&#128064;</span><strong>ATTENTION:</strong>&nbsp;${staleTickets.length} ticket${staleTickets.length>1?'s':''} haven't been updated in over 3 days. Perhaps a <em>gentle</em> reminder is in order? <button class="btn btn-sm btn-secondary" style="margin-left:auto;" onclick="sendGentleReminder()">Send Gentle Reminder&#8482;</button></div>`;
+  }
+  const avgAge = openInc.length ? (openInc.reduce((sum,i) => sum + (daysSince(i.submittedAt)||0), 0) / openInc.length).toFixed(1) : 0;
+  if (parseFloat(avgAge) > 2) {
+    nags += `<div class="nag-banner"><span class="nag-icon">&#9203;</span>Average open ticket age is <strong>${avgAge} days</strong>. Industry best practice is under 1 day. Just saying.</div>`;
+  }
+  document.getElementById('mgr-nags').innerHTML = nags;
+
+  // KPIs
+  document.getElementById('mgr-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total Tickets</div><div class="val">${totalTickets}</div><div class="sub">${inc.length} incidents + ${req.length} requests</div></div>
+    <div class="kpi ${parseFloat(resolutionRate)<70?'red':parseFloat(resolutionRate)<85?'yellow':'green'}"><div class="label">Resolution Rate</div><div class="val">${resolutionRate}%</div><div class="sub">${resolvedInc.length} of ${inc.length} incidents</div></div>
+    <div class="kpi ${parseFloat(avgAge)>3?'red':parseFloat(avgAge)>1.5?'yellow':'green'}"><div class="label">Avg. Ticket Age</div><div class="val">${avgAge}d</div><div class="sub">open incidents</div></div>
+    <div class="kpi red"><div class="label">Critical Open</div><div class="val">${criticalOpen.length}</div><div class="sub">needs escalation</div></div>
+    <div class="kpi orange"><div class="label">Stale Tickets</div><div class="val">${staleTickets.length}</div><div class="sub">&gt; 3 days without update</div></div>
+    <div class="kpi"><div class="label">Active Changes</div><div class="val">${chg.filter(c=>!['Completed','Closed'].includes(v(c,'Status'))).length}</div><div class="sub">of ${chg.length} total</div></div>
+  `;
+
+  // Scorecards
+  const teamEfficiency = (Math.random() * 20 + 70).toFixed(3);
+  const custSat = (Math.random() * 1.5 + 3.2).toFixed(2);
+  const firstCallRes = (Math.random() * 20 + 55).toFixed(1);
+  document.getElementById('mgr-scorecards').innerHTML = `
+    <div class="card score-card">
+      <div class="score" style="color:${parseFloat(teamEfficiency)>85?'var(--green)':parseFloat(teamEfficiency)>75?'var(--orange)':'var(--red)'};">${teamEfficiency}%</div>
+      <div class="score-label">Team Efficiency Index&#8482;</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">Based on 47 weighted factors</div>
+    </div>
+    <div class="card score-card">
+      <div class="score" style="color:${parseFloat(custSat)>4?'var(--green)':parseFloat(custSat)>3?'var(--orange)':'var(--red)'};">${custSat}</div>
+      <div class="score-label">Customer Satisfaction (est.)</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">Scale: 1.00 – 5.00</div>
+    </div>
+    <div class="card score-card">
+      <div class="score" style="color:${parseFloat(firstCallRes)>70?'var(--green)':parseFloat(firstCallRes)>60?'var(--orange)':'var(--red)'};">${firstCallRes}%</div>
+      <div class="score-label">First Call Resolution</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">Target: 75%</div>
+    </div>
+  `;
+
+  // Priority breakdown
+  const priorities = ['Critical','High','Medium','Low'];
+  const pColors = { Critical:'var(--red)', High:'var(--orange)', Medium:'var(--yellow)', Low:'var(--green)' };
+  document.getElementById('mgr-priority-breakdown').innerHTML = priorities.map(p => {
+    const count = inc.filter(i => v(i,'Priority') === p).length;
+    const pct = inc.length ? (count/inc.length*100).toFixed(0) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="width:60px;font-size:12px;font-weight:600;">${p}</span>
+      <div style="flex:1;height:24px;background:var(--light);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${pColors[p]};border-radius:4px;transition:width .3s;"></div>
+      </div>
+      <span style="width:50px;text-align:right;font-size:12px;font-weight:600;">${count} (${pct}%)</span>
+    </div>`;
+  }).join('');
+
+  // Status breakdown
+  const statuses = ['New','In Progress','Resolved','Closed'];
+  document.getElementById('mgr-status-breakdown').innerHTML = statuses.map(s => {
+    const count = inc.filter(i => v(i,'Status') === s).length;
+    const pct = inc.length ? (count/inc.length*100).toFixed(0) : 0;
+    return `<div class="micro-stat"><span>${s}</span><span class="stat-val">${count} (${pct}%)</span></div>`;
+  }).join('');
+
+  // Agent performance table
+  renderAgentPerformance();
+
+  // SLA
+  renderSLACompliance();
+
+  // Aging
+  renderTicketAging();
+}
+
+function renderAgentPerformance() {
+  const inc = DATA.incidents;
+  const agents = {};
+  inc.forEach(i => {
+    const a = v(i,'Assigned To');
+    if (!a) return;
+    if (!agents[a]) agents[a] = { assigned:0, resolved:0, open:0 };
+    agents[a].assigned++;
+    if (['Resolved','Closed'].includes(v(i,'Status'))) agents[a].resolved++;
+    else agents[a].open++;
+  });
+
+  const sorted = Object.entries(agents).sort((a,b) => {
+    const rateA = a[1].assigned ? a[1].resolved/a[1].assigned : 0;
+    const rateB = b[1].assigned ? b[1].resolved/b[1].assigned : 0;
+    return rateB - rateA;
+  });
+
+  document.getElementById('mgr-agent-table').innerHTML = sorted.map(([name, stats], i) => {
+    const rate = stats.assigned ? (stats.resolved / stats.assigned * 100).toFixed(1) : 0;
+    const productivity = (parseFloat(rate) * 0.7 + (stats.resolved * 3.7) + Math.random() * 5).toFixed(3);
+    const rateColor = parseFloat(rate) >= 60 ? 'var(--green)' : parseFloat(rate) >= 40 ? 'var(--orange)' : 'var(--red)';
+    return `<tr>
+      <td><div class="shame-rank"><div class="rank-num ${i<1?'rank-1':i<2?'rank-2':i<3?'rank-3':'rank-ok'}">${i+1}</div></div></td>
+      <td><strong>${name}</strong></td>
+      <td>${stats.assigned}</td>
+      <td>${stats.resolved}</td>
+      <td style="color:${stats.open>2?'var(--red)':'inherit'};font-weight:${stats.open>2?'700':'400'};">${stats.open}</td>
+      <td><span style="color:${rateColor};font-weight:700;">${rate}%</span></td>
+      <td><span style="font-weight:700;">${productivity}</span></td>
+      <td><button class="btn btn-sm btn-secondary" onclick="sendReminder('${name}')">&#128232; Nudge</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSLACompliance() {
+  const inc = DATA.incidents;
+  const slaTargets = { Critical: 4, High: 8, Medium: 24, Low: 48 };
+  let breached = 0, atRisk = 0, onTrack = 0;
+
+  const rows = inc.filter(i => !['Resolved','Closed'].includes(v(i,'Status'))).map(i => {
+    const age = daysSince(i.submittedAt) || 0;
+    const target = slaTargets[v(i,'Priority')] || 48;
+    const ageHours = age * 24;
+    const pctUsed = (ageHours / target * 100).toFixed(0);
+    let slaStatus, slaColor;
+    if (ageHours > target) { slaStatus = 'BREACHED'; slaColor = 'var(--red)'; breached++; }
+    else if (ageHours > target * 0.75) { slaStatus = 'AT RISK'; slaColor = 'var(--orange)'; atRisk++; }
+    else { slaStatus = 'On Track'; slaColor = 'var(--green)'; onTrack++; }
+    return { num: v(i,'Incident Number'), title: v(i,'Title'), priority: v(i,'Priority'), ageHours, target, pctUsed, slaStatus, slaColor, assigned: v(i,'Assigned To') };
+  }).sort((a,b) => parseInt(b.pctUsed) - parseInt(a.pctUsed));
+
+  document.getElementById('mgr-sla-content').innerHTML = `
+    <div class="kpi-row" style="margin-bottom:16px;">
+      <div class="kpi red"><div class="label">SLA Breached</div><div class="val">${breached}</div></div>
+      <div class="kpi orange"><div class="label">At Risk (&gt;75%)</div><div class="val">${atRisk}</div></div>
+      <div class="kpi green"><div class="label">On Track</div><div class="val">${onTrack}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Incident</th><th>Priority</th><th>Age (hrs)</th><th>Target (hrs)</th><th>SLA Used</th><th>Status</th><th>Assigned</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><strong>${r.num}</strong> ${r.title.substring(0,35)}...</td>
+        <td>${priorityBadge(r.priority)}</td>
+        <td>${r.ageHours}</td>
+        <td>${r.target}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;height:8px;background:var(--light);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(r.pctUsed,100)}%;background:${r.slaColor};border-radius:4px;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:600;color:${r.slaColor};">${r.pctUsed}%</span>
+          </div>
+        </td>
+        <td><span style="color:${r.slaColor};font-weight:700;font-size:11px;">${r.slaStatus}</span></td>
+        <td>${r.assigned}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  `;
+}
+
+function renderTicketAging() {
+  const allOpen = [
+    ...DATA.incidents.filter(i => !['Closed','Resolved'].includes(v(i,'Status'))).map(i => ({
+      num: v(i,'Incident Number'), title: v(i,'Title'), priority: v(i,'Priority'),
+      status: v(i,'Status'), assigned: v(i,'Assigned To'), date: i.submittedAt, id: i.id
+    })),
+    ...DATA.requests.filter(r => !['Fulfilled','Closed'].includes(v(r,'Status'))).map(r => ({
+      num: v(r,'Request Number'), title: v(r,'Title'), priority: v(r,'Priority'),
+      status: v(r,'Status'), assigned: v(r,'Assigned To'), date: r.submittedAt, id: r.id
+    })),
+  ];
+  allOpen.forEach(t => t.age = daysSince(t.date) || 0);
+  allOpen.sort((a,b) => b.age - a.age);
+
+  document.getElementById('mgr-aging-table').innerHTML = allOpen.map(t => {
+    const ageColor = t.age > 5 ? 'var(--red)' : t.age > 3 ? 'var(--orange)' : t.age > 1 ? 'var(--yellow)' : 'var(--green)';
+    return `<tr>
+      <td><strong>${t.num}</strong></td>
+      <td>${t.title}</td>
+      <td>${priorityBadge(t.priority)}</td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${t.assigned || '<em style="color:var(--red);">Unassigned!</em>'}</td>
+      <td><strong style="color:${ageColor};font-size:16px;">${t.age}</strong></td>
+      <td><button class="btn btn-sm btn-secondary" onclick="sendReminder('${t.assigned}')">&#128232; Nudge</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  MANAGER ACTIONS (The Fun Stuff)
+// ═══════════════════════════════════════════════════
+function sendReminder(agent) {
+  openModal(`
+    <h2>&#128232; Send Gentle Reminder&#8482;</h2>
+    <p style="margin-bottom:16px;color:var(--gray);">Compose a <em>completely professional</em> nudge to <strong>${agent || 'the team'}</strong>:</p>
+    <div class="form-row">
+      <label>Template</label>
+      <select id="reminder-template" onchange="updateReminderPreview()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;">
+        <option value="0">The Classic Check-In</option>
+        <option value="1">The Concerned Follow-Up</option>
+        <option value="2">The Calendar Awareness</option>
+        <option value="3">The Metrics Mention</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Preview</label>
+      <textarea id="reminder-preview" rows="6" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">Hi ${agent || 'Team'},\n\nJust wanted to check in on the status of your open tickets. No rush of course — but I did notice they've been open for a little while now.\n\nLet me know if you need any support!\n\nBest regards</textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal();showToast('Reminder sent to ${agent || 'the team'}. They definitely won\\'t find this passive-aggressive.')">&#128228; Send</button>
+    </div>
+  `);
+}
+
+function updateReminderPreview() {
+  const templates = [
+    "Hi {agent},\n\nJust wanted to check in on the status of your open tickets. No rush of course — but I did notice they've been open for a little while now.\n\nLet me know if you need any support!\n\nBest regards",
+    "Hi {agent},\n\nI hope everything is going well! I was reviewing the dashboard (as I do every 15 minutes) and noticed a few tickets that might benefit from some attention.\n\nI'm sure you're on top of it — just wanted to make sure nothing fell through the cracks!\n\nThanks!",
+    "Hi {agent},\n\nFriendly reminder that today is a business day, and we have SLA commitments to meet. I've attached a screenshot of the aging report for your reference.\n\nPlease update your tickets at your earliest convenience (which I hope is now).\n\nRegards",
+    "Hi {agent},\n\nI've been analyzing the team metrics and your current resolution rate is below the team average. I'm sure there's a good explanation!\n\nLet's schedule a quick 1:1 to discuss how I can help you improve your numbers. Does every day this week at 8 AM work?\n\nBest",
+  ];
+  const idx = document.getElementById('reminder-template').value;
+  document.getElementById('reminder-preview').value = templates[idx];
+}
+
+function sendGentleReminder() {
+  sendReminder('Team');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--blue);color:white;padding:12px 20px;border-radius:8px;font-size:13px;z-index:300;box-shadow:var(--shadow-lg);max-width:400px;';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+function updateIncidentStatus(id) {
+  closeModal();
+  const sub = DATA.incidents.find(i => i.id === id);
+  if (!sub) return;
+  openModal(`
+    <h2>Update Status — ${v(sub,'Incident Number')}</h2>
+    <div class="form-row">
+      <label>New Status</label>
+      <select id="upd-status" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;">
+        <option ${v(sub,'Status')==='New'?'selected':''}>New</option>
+        <option ${v(sub,'Status')==='In Progress'?'selected':''}>In Progress</option>
+        <option ${v(sub,'Status')==='Resolved'?'selected':''}>Resolved</option>
+        <option ${v(sub,'Status')==='Closed'?'selected':''}>Closed</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doUpdateStatus('${id}')">Save</button>
+    </div>
+  `);
+}
+
+async function doUpdateStatus(id) {
+  const newStatus = document.getElementById('upd-status').value;
+  try {
+    await fetch(`${API.url}/app/api/v1/submissions/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: { Status: newStatus } }),
+    });
+    closeModal();
+    DATA.incidents = await fetchSubs('itsm','incidents');
+    renderAgentConsole();
+    renderMgrConsole();
+    showToast(`Status updated to "${newStatus}"`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+//  TYPEAHEAD PEOPLE SEARCH
+// ═══════════════════════════════════════════════════
+let _taTimers = {};
+
+function peopleSearch(containerId, inputId) {
+  const container = document.getElementById(containerId);
+  const input = document.getElementById(inputId);
+  const results = container.querySelector('.ta-results');
+  const clear = container.querySelector('.ta-clear');
+  const term = input.value.trim();
+
+  clear.classList.toggle('show', term.length > 0);
+
+  if (term.length < 2) {
+    results.classList.remove('open');
+    return;
+  }
+
+  // Show loading
+  results.innerHTML = '<div class="ta-spinner"><div class="spinner"></div></div>';
+  results.classList.add('open');
+
+  // Debounce 300ms
+  clearTimeout(_taTimers[inputId]);
+  _taTimers[inputId] = setTimeout(() => doPeopleSearch(containerId, inputId, term), 300);
+}
+
+async function doPeopleSearch(containerId, inputId, term) {
+  const container = document.getElementById(containerId);
+  const results = container.querySelector('.ta-results');
+
+  try {
+    const escaped = term.replace(/"/g, '\\"');
+    const q = `values[Full Name] =* "${escaped}"`;
+    const qs = new URLSearchParams({ include: 'values', limit: '10', q, orderBy: 'values[Full Name]' });
+    const data = await api(`/kapps/itsm/forms/people/submissions?${qs}`);
+    const subs = data.submissions || [];
+
+    if (!subs.length) {
+      // Try email search as fallback
+      const q2 = `values[Email] =* "${escaped}"`;
+      const qs2 = new URLSearchParams({ include: 'values', limit: '10', q: q2, orderBy: 'values[Email]' });
+      const data2 = await api(`/kapps/itsm/forms/people/submissions?${qs2}`);
+      renderTAResults(containerId, inputId, data2.submissions || []);
+    } else {
+      renderTAResults(containerId, inputId, subs);
+    }
+  } catch(e) {
+    results.innerHTML = `<div class="ta-hint">Search error: ${e.message}</div>`;
+  }
+}
+
+function renderTAResults(containerId, inputId, subs) {
+  const container = document.getElementById(containerId);
+  const results = container.querySelector('.ta-results');
+
+  if (!subs.length) {
+    results.innerHTML = '<div class="ta-hint">No people found</div>';
+    return;
+  }
+
+  results.innerHTML = subs.map((s, i) => {
+    const name = v(s, 'Full Name');
+    const dept = v(s, 'Department');
+    const email = v(s, 'Email');
+    const sub = [dept, email].filter(Boolean).join(' &middot; ');
+    return `<div class="ta-item" onclick="taSelect('${containerId}','${inputId}','${name.replace(/'/g, "\\'")}')">
+      <span><strong>${name}</strong></span>
+      <span class="ta-sub">${sub}</span>
+    </div>`;
+  }).join('');
+}
+
+function taSelect(containerId, inputId, value) {
+  const input = document.getElementById(inputId);
+  const container = document.getElementById(containerId);
+  const results = container.querySelector('.ta-results');
+  const clear = container.querySelector('.ta-clear');
+  input.value = value;
+  input.style.borderColor = 'var(--green)';
+  results.classList.remove('open');
+  clear.classList.add('show');
+  setTimeout(() => input.style.borderColor = '', 1500);
+}
+
+function taClear(containerId, inputId) {
+  const input = document.getElementById(inputId);
+  const container = document.getElementById(containerId);
+  input.value = '';
+  container.querySelector('.ta-results').classList.remove('open');
+  container.querySelector('.ta-clear').classList.remove('show');
+  input.focus();
+}
+
+// Close typeahead when clicking outside
+document.addEventListener('click', e => {
+  document.querySelectorAll('.typeahead .ta-results.open').forEach(r => {
+    if (!r.closest('.typeahead').contains(e.target)) r.classList.remove('open');
+  });
+});
+
+// ═══════════════════════════════════════════════════
+//  APPROVAL ACTIONS
+// ═══════════════════════════════════════════════════
+function rejectChange(submissionId, changeId) {
+  openModal(`
+    <h2>&#10060; Reject ${changeId}</h2>
+    <p style="margin-bottom:16px;color:var(--gray);">Please provide a reason for rejecting this change request:</p>
+    <div class="form-row">
+      <label>Reason for Rejection *</label>
+      <textarea id="reject-reason" rows="4" placeholder="Explain why this change is being rejected..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="doRejectChange('${submissionId}')">&#10060; Confirm Rejection</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('reject-reason')?.focus(), 100);
+}
+
+async function doRejectChange(submissionId) {
+  const reason = document.getElementById('reject-reason').value.trim();
+  if (!reason) { document.getElementById('reject-reason').style.borderColor = 'var(--red)'; return; }
+  try {
+    await fetch(`${API.url}/app/api/v1/submissions/${submissionId}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: { Status: 'Rejected', Comments: reason, 'Decision Date': new Date().toISOString().split('T')[0] } }),
+    });
+    closeModal();
+    DATA.approvals = await fetchSubs('itsm','change-approvals');
+    renderOpsConsole();
+    showToast('Change rejected.');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function approveChange(submissionId, changeId) {
+  try {
+    await fetch(`${API.url}/app/api/v1/submissions/${submissionId}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Basic ${API.auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: { Status: 'Approved', Comments: 'Approved', 'Decision Date': new Date().toISOString().split('T')[0] } }),
+    });
+    DATA.approvals = await fetchSubs('itsm','change-approvals');
+    renderOpsConsole();
+    showToast(`${changeId} approved.`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+Here is Claude's plan:                                                                                                                                         
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Mining Operations Management — Implementation Plan                                                                                                             
+                                                                                                                                                                
+ Context                                                                                                                                                        
+                                                                                                                                                                
+ Build a production-grade Mining Operations Management app on Kinetic Platform. Single system of record for mining compliance + operations with strong
+ reporting, workflow-driven processes, and audit readiness.
+
+ App Identity
+
+ - Directory: apps/mining_management/
+ - Kapp slug: mining-ops
+ - Port: 3016
+ - Base server key: "mining-ops" → { dir: "mining_management", name: "Mining Ops", kapp: "mining-ops" }
+
+ Files to Create
+
+ 1. apps/mining_management/setup.mjs — Create kapp + 9 forms
+ 2. apps/mining_management/build_indexes.mjs — Index definitions + build
+ 3. apps/mining_management/seed.mjs — ~700+ records across 9 forms
+ 4. apps/mining_management/server.mjs — Port 3016, proxy + 8 custom endpoints
+ 5. apps/mining_management/index.html — Full SPA, 7 tabs, inline CSS/JS
+
+ Files to Modify
+
+ - apps/base/server.mjs — Add APP_REGISTRY entry + /api/mining/* route handler
+
+ Data Model (9 Forms)
+
+ 1. locations — Hierarchy: Company/Region/Site/Zone (34 seed records)
+ 2. personnel — Staff + contractors with roles/sites (35 records)
+ 3. permits — Mining/environmental permits (25 records)
+ 4. obligations — Legal requirements tied to permits (30 records)
+ 5. issues — Incidents + CAPA tracking (50 records)
+ 6. inspections — Scheduled/ad-hoc + findings (30 records)
+ 7. assets — Equipment/infrastructure (60 records)
+ 8. production-logs — Daily production metrics (140 records)
+ 9. environmental-readings — Monitoring data (250 records)
+
+ UI Tabs (7)
+
+ 1. Dashboard — 6 KPIs, issues by severity chart, compliance overview, recent issues, expiring permits, production trend
+ 2. Sites — Subtabs: Regions/Sites/Zones, hierarchy drill-down, site detail modal
+ 3. Compliance — Subtabs: Permits/Obligations, status transitions, status history timeline
+ 4. Issues — Full issue lifecycle (Open→Triage→Investigating→CAPA→Verify→Closed), CAPA tracking
+ 5. Inspections — Schedule, conduct, findings, auto-create issues from critical findings
+ 6. Operations — Subtabs: Assets/Production/Environmental, monitoring data
+ 7. Reports — 8 pre-built reports with filters and CSV export
+
+ Server Endpoints (8)
+
+ 1. GET /api/mining/dashboard — All KPIs aggregated server-side
+ 2. GET /api/mining/stats/compliance — Permit/obligation metrics
+ 3. GET /api/mining/stats/operations — Asset/production/environmental metrics
+ 4. POST /api/mining/issues/:id/transition — Issue status transitions with validation
+ 5. POST /api/mining/permits/:id/transition — Permit status transitions
+ 6. POST /api/mining/inspections/:id/complete — Complete inspection + auto-create issues
+ 7. GET /api/mining/report/:type — Generate report data (8 types)
+ 8. GET /api/mining/site/:siteId/summary — Deep site summary for detail modal
+
+ Workflows (3 Kinetic trees)
+
+ 1. Permit Lifecycle Notification (Submission Updated)
+ 2. Issue CAPA Tracking (Submission Updated)
+ 3. Inspection Completion Logging (Submission Updated)
+
+ Verification
+
+ 1. Run node apps/mining_management/setup.mjs — creates kapp + forms
+ 2. Run node apps/mining_management/build_indexes.mjs — builds indexes
+ 3. Run node apps/mining_management/seed.mjs — populates demo data
+ 4. Run node apps/mining_management/server.mjs — starts on port 3016
+ 5. Open http://localhost:3016, login with second_admin/password2
+ 6. Verify all 7 tabs render with data, KPIs calculate correctly, status transitions work
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌

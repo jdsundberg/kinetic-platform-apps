@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grants & Funding</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --orange: #F36C24;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --teal: #00695C;
+  --indigo: #283593;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ===== LOGIN ===== */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { background: var(--white); border-radius: 16px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); overflow: hidden; }
+.login-accent { height: 4px; background: var(--teal); }
+.login-body { padding: 40px; }
+.login-body h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-body .subtitle { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.login-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 14px; }
+.login-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 14px; }
+.login-body input:focus { border-color: var(--teal); }
+.login-btn { width: 100%; padding: 11px; margin-top: 20px; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.login-btn:hover { background: #00796B; }
+.login-error { color: var(--red); font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; }
+.topbar { background: var(--blue); color: var(--white); display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-size: 18px; font-weight: 700; margin-right: 24px; white-space: nowrap; }
+.topbar-logo .accent { color: #4DB6AC; }
+.topbar-nav { display: flex; gap: 2px; flex: 1; overflow-x: auto; }
+.tab-btn { background: none; border: none; color: rgba(255,255,255,.7); padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; white-space: nowrap; }
+.tab-btn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.tab-btn.active { background: var(--teal); color: var(--white); }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ===== CONSOLE ===== */
+.console { padding: 24px; max-width: 1440px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtab { background: var(--light); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--gray); }
+.subtab.active { background: var(--teal); color: var(--white); }
+.subtab:hover:not(.active) { background: var(--border); }
+
+/* ===== CARDS & KPIs ===== */
+.card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; color: var(--gray); margin-bottom: 14px; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); border-left: 4px solid var(--gray); cursor: default; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi-label { font-size: 10px; color: var(--gray); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card.kpi-green { border-left-color: var(--green); }
+.kpi-card.kpi-red { border-left-color: var(--red); }
+.kpi-card.kpi-orange { border-left-color: var(--orange); }
+.kpi-card.kpi-teal { border-left-color: var(--teal); }
+.kpi-card.kpi-yellow { border-left-color: var(--yellow); }
+.kpi-card.kpi-blue { border-left-color: #1565C0; }
+.kpi-card.kpi-indigo { border-left-color: var(--indigo); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ===== TABLES ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--gray); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:hover { background: var(--light); }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-awarded, .badge-accepted, .badge-processed, .badge-completed, .badge-on-track { background: #E8F5E9; color: #2E7D32; }
+.badge-pre-award, .badge-drafting, .badge-new, .badge-draft, .badge-upcoming, .badge-pending { background: #E3F2FD; color: #1565C0; }
+.badge-submitted, .badge-under-review, .badge-internal-review, .badge-in-progress { background: #F3E5F5; color: #6A1B9A; }
+.badge-no-cost-extension, .badge-at-risk, .badge-revision-required, .badge-returned, .badge-under-review { background: #FFF3E0; color: #E65100; }
+.badge-closed, .badge-closeout, .badge-waived { background: #ECEFF1; color: #546E7A; }
+.badge-suspended, .badge-terminated, .badge-declined, .badge-denied, .badge-withdrawn, .badge-delayed { background: #FFEBEE; color: #C62828; }
+.badge-modified, .badge-revised, .badge-approved { background: #E0F7FA; color: #00838F; }
+
+/* Priority badges */
+.priority-high { color: var(--red); font-weight: 700; }
+.priority-medium { color: var(--orange); font-weight: 600; }
+.priority-low { color: var(--green); }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--white); }
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--teal); }
+
+/* ===== PAGINATION ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.pagination button { background: var(--light); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.pagination button:hover:not(:disabled) { background: var(--border); }
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* ===== MODAL ===== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-start; justify-content: center; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 16px; width: 960px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; border-radius: 16px 16px 0 0; }
+.modal-header h2 { font-size: 18px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 4px 8px; border-radius: 4px; }
+.modal-close:hover { background: var(--light); }
+.modal-body { padding: 24px; }
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+.modal-tab { background: none; border: none; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--gray); border-radius: 6px; }
+.modal-tab.active { background: var(--teal); color: var(--white); }
+.modal-section { display: none; }
+.modal-section.active { display: block; }
+
+/* ===== BAR CHART ===== */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--teal); min-height: 4px; transition: height .3s; }
+.bar-label { font-size: 10px; color: var(--gray); margin-top: 6px; text-align: center; }
+.bar-value { font-size: 10px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+
+/* ===== ACTION BUTTONS ===== */
+.act-btn { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+.act-btn-teal { background: var(--teal); color: var(--white); }
+.act-btn-teal:hover { background: #00796B; }
+.act-btn-green { background: var(--green); color: var(--white); }
+.act-btn-green:hover { opacity: .9; }
+.act-btn-orange { background: var(--orange); color: var(--white); }
+.act-btn-orange:hover { opacity: .9; }
+.act-btn-red { background: var(--red); color: var(--white); }
+.act-btn-red:hover { opacity: .9; }
+
+/* Detail rows */
+.detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.detail-label { font-size: 12px; color: var(--gray); min-width: 140px; font-weight: 600; }
+.detail-value { font-size: 13px; color: #333; flex: 1; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Days remaining */
+.days-green { color: var(--green); font-weight: 600; }
+.days-yellow { color: #F9A825; font-weight: 600; }
+.days-red { color: var(--red); font-weight: 700; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* Report cards */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .2s; }
+.report-card:hover { box-shadow: var(--shadow-lg); }
+.report-card h4 { font-size: 15px; color: var(--blue); margin-bottom: 6px; }
+.report-card p { font-size: 12px; color: var(--gray); }
+
+/* Budget bar */
+.budget-bar { height: 18px; border-radius: 4px; background: var(--border); overflow: hidden; display: flex; }
+.budget-bar-spent { background: var(--teal); height: 100%; }
+.budget-bar-committed { background: #4DB6AC; height: 100%; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-accent"></div>
+    <div class="login-body">
+      <h1>Grants & Funding</h1>
+      <p class="subtitle">Enterprise Grant Management for Healthcare</p>
+      <label>Server URL</label>
+      <input id="login-url" placeholder="https://your-server.kinops.io" value="">
+      <label>Username</label>
+      <input id="login-user" placeholder="username">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="password">
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Grants <span class="accent">& Funding</span></div>
+    <div class="topbar-nav">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="grants">Grants</button>
+      <button class="tab-btn" data-tab="applications">Applications</button>
+      <button class="tab-btn" data-tab="awards">Awards</button>
+      <button class="tab-btn" data-tab="budgets">Budgets</button>
+      <button class="tab-btn" data-tab="compliance">Compliance</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <!-- DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="page-title">Funding Dashboard</div>
+      <div class="page-sub">Grant portfolio overview and key performance indicators</div>
+      <div id="dash-kpis" class="kpi-grid"></div>
+      <div class="two-col">
+        <div class="card"><h3>Budget Overview by Category</h3><div id="dash-budget"></div></div>
+        <div class="card"><h3>Upcoming Deadlines</h3><div id="dash-deadlines"></div></div>
+      </div>
+      <div class="card"><h3>Recent Applications</h3><div id="dash-apps"></div></div>
+    </div>
+
+    <!-- GRANTS -->
+    <div class="tab-panel" id="panel-grants">
+      <div class="page-title">Grant Portfolio</div>
+      <div class="page-sub">Active grants and funding awards</div>
+      <div class="filter-bar" id="grants-filters">
+        <select id="grt-f-status"><option value="">All Statuses</option><option>Pre-Award</option><option>Active</option><option>No Cost Extension</option><option>Closeout</option><option>Closed</option><option>Suspended</option></select>
+        <select id="grt-f-type"><option value="">All Types</option><option>Research</option><option>Training</option><option>Equipment</option><option>Program</option><option>Construction</option><option>Fellowship</option><option>Planning</option></select>
+        <select id="grt-f-dept"><option value="">All Departments</option><option>Cardiology</option><option>Oncology</option><option>Pediatrics</option><option>Emergency Medicine</option><option>Internal Medicine</option><option>Surgery</option><option>Psychiatry</option><option>Nursing</option><option>Radiology</option><option>Pharmacy</option><option>Pathology</option><option>Public Health</option></select>
+        <input id="grt-f-search" type="text" placeholder="Search grants...">
+      </div>
+      <div id="grants-table"></div>
+      <div id="grants-pag" class="pagination"></div>
+    </div>
+
+    <!-- APPLICATIONS -->
+    <div class="tab-panel" id="panel-applications">
+      <div class="page-title">Grant Applications</div>
+      <div class="page-sub">Application pipeline and deadline tracking</div>
+      <div class="subtabs" id="app-subtabs">
+        <button class="subtab active" data-sub="all">All Applications</button>
+        <button class="subtab" data-sub="pipeline">Pipeline</button>
+        <button class="subtab" data-sub="deadlines">Upcoming Deadlines</button>
+      </div>
+      <div class="filter-bar" id="app-filters">
+        <select id="app-f-status"><option value="">All Statuses</option><option>Drafting</option><option>Internal Review</option><option>Submitted</option><option>Under Review</option><option>Awarded</option><option>Declined</option><option>Withdrawn</option></select>
+        <select id="app-f-priority"><option value="">All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <select id="app-f-type"><option value="">All Types</option><option>New</option><option>Renewal</option><option>Supplement</option><option>Resubmission</option><option>Continuation</option></select>
+        <input id="app-f-search" type="text" placeholder="Search applications...">
+      </div>
+      <div id="app-table"></div>
+      <div id="app-pag" class="pagination"></div>
+    </div>
+
+    <!-- AWARDS -->
+    <div class="tab-panel" id="panel-awards">
+      <div class="page-title">Award Management</div>
+      <div class="page-sub">Award notices, modifications, and terms</div>
+      <div class="filter-bar" id="awards-filters">
+        <select id="awd-f-status"><option value="">All Statuses</option><option>Active</option><option>Modified</option><option>Suspended</option><option>Terminated</option><option>Closed</option></select>
+        <select id="awd-f-type"><option value="">All Types</option><option>Original</option><option>Supplement</option><option>No Cost Extension</option><option>Carryover</option></select>
+        <input id="awd-f-search" type="text" placeholder="Search awards...">
+      </div>
+      <div id="awards-table"></div>
+      <div id="awards-pag" class="pagination"></div>
+    </div>
+
+    <!-- BUDGETS -->
+    <div class="tab-panel" id="panel-budgets">
+      <div class="page-title">Budget Management</div>
+      <div class="page-sub">Budget vs actual tracking by category</div>
+      <div class="subtabs" id="bdg-subtabs">
+        <button class="subtab active" data-sub="all">All Budgets</button>
+        <button class="subtab" data-sub="category">By Category</button>
+        <button class="subtab" data-sub="grant">By Grant</button>
+      </div>
+      <div class="filter-bar" id="budgets-filters">
+        <select id="bdg-f-status"><option value="">All Statuses</option><option>Active</option><option>Under Review</option><option>Revised</option><option>Closed</option></select>
+        <select id="bdg-f-cat"><option value="">All Categories</option><option>Personnel</option><option>Equipment</option><option>Supplies</option><option>Travel</option><option>Consultants</option><option>Subcontracts</option><option>Patient Care</option><option>Other Direct</option><option>Indirect</option></select>
+        <input id="bdg-f-search" type="text" placeholder="Search budgets...">
+      </div>
+      <div id="budgets-table"></div>
+      <div id="budgets-pag" class="pagination"></div>
+    </div>
+
+    <!-- COMPLIANCE -->
+    <div class="tab-panel" id="panel-compliance">
+      <div class="page-title">Compliance & Reporting</div>
+      <div class="page-sub">Report tracking, milestone compliance, and expenditure allowability</div>
+      <div class="subtabs" id="comp-subtabs">
+        <button class="subtab active" data-sub="overview">Overview</button>
+        <button class="subtab" data-sub="reports">Reports</button>
+        <button class="subtab" data-sub="milestones">Milestones</button>
+        <button class="subtab" data-sub="expenditures">Expenditures</button>
+      </div>
+      <div id="comp-content"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel" id="panel-analytics">
+      <div class="page-title">Analytics & Reports</div>
+      <div class="page-sub">Generate reports and export data</div>
+      <div class="report-grid" id="analytics-grid"></div>
+      <div id="analytics-result" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GRANT DETAIL MODAL -->
+<div class="modal-overlay" id="grant-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="grt-modal-title">Grant Detail</h2>
+      <button class="modal-close" onclick="closeModal('grant-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="grt-modal-tabs">
+        <button class="modal-tab active" data-sec="overview">Overview</button>
+        <button class="modal-tab" data-sec="awards">Awards</button>
+        <button class="modal-tab" data-sec="budget">Budget</button>
+        <button class="modal-tab" data-sec="expenditures">Expenditures</button>
+        <button class="modal-tab" data-sec="milestones">Milestones</button>
+        <button class="modal-tab" data-sec="personnel">Personnel</button>
+      </div>
+      <div id="grt-modal-overview" class="modal-section active"></div>
+      <div id="grt-modal-awards" class="modal-section"></div>
+      <div id="grt-modal-budget" class="modal-section"></div>
+      <div id="grt-modal-expenditures" class="modal-section"></div>
+      <div id="grt-modal-milestones" class="modal-section"></div>
+      <div id="grt-modal-personnel" class="modal-section"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD MODAL -->
+<div class="modal-overlay" id="record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="rec-modal-title">Details</h2>
+      <button class="modal-close" onclick="closeModal('record-modal')">&times;</button>
+    </div>
+    <div class="modal-body" id="rec-modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =============== STATE & AUTH =============== */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'grants-funding';
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = SPACE_SLUG ? USERNAME + ' \u00b7 ' + SPACE_SLUG : USERNAME;
+  loadDashboard();
+}
+
+// Session restore
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      enterApp();
+    } catch {}
+  }
+})();
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const serverUrl = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = 'Username and password required'; return; }
+  try {
+    API = serverUrl;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const r = await fetch((API || '') + '/app/api/v1/me', { headers: { Authorization: AUTH } });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const me = await r.json();
+    USERNAME = me.displayName || me.username || user;
+    try {
+      const sp = await fetch((API || '') + '/app/api/v1/space', { headers: { Authorization: AUTH } });
+      if (sp.ok) { const sd = await sp.json(); SPACE_SLUG = sd.space?.slug || sd.slug || ''; }
+    } catch {}
+    enterApp();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+
+/* =============== API HELPERS =============== */
+async function apiFetch(path) {
+  const r = await fetch((API || '') + path, { headers: { Authorization: AUTH } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch((API || '') + path, {
+    method: 'POST',
+    headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  return r.json();
+}
+
+async function kqlFetch(formSlug, kql, limit = 25, lastCreatedAt = null) {
+  let q = kql || '';
+  if (lastCreatedAt) {
+    const dateClause = `createdAt < "${lastCreatedAt}"`;
+    q = q ? `(${q}) AND ${dateClause}` : dateClause;
+  }
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${formSlug}/submissions?include=values,details&limit=${limit}`;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  return apiFetch(url);
+}
+
+const vf = (s, f) => (s.values && s.values[f]) || '';
+const fmtMoney = (v) => { const n = parseInt(v); return isNaN(n) ? '$0' : '$' + n.toLocaleString(); };
+
+/* =============== BADGES =============== */
+function badge(val) {
+  const cls = (val || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `<span class="badge badge-${cls}">${val || ''}</span>`;
+}
+
+function prioritySpan(p) {
+  const cls = (p || '').toLowerCase();
+  return `<span class="priority-${cls}">${p || ''}</span>`;
+}
+
+function daysRemaining(dateStr) {
+  if (!dateStr) return '';
+  const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 864e5);
+  if (days < 0) return `<span class="days-red">${Math.abs(days)}d overdue</span>`;
+  if (days <= 7) return `<span class="days-red">${days}d</span>`;
+  if (days <= 14) return `<span class="days-yellow">${days}d</span>`;
+  return `<span class="days-green">${days}d</span>`;
+}
+
+/* =============== PAGINATION =============== */
+function renderPag(containerId, page, hasNext, onPrev, onNext) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">&#9664; Prev</button>
+    <span>Page ${page}</span>
+    <button ${!hasNext ? 'disabled' : ''} onclick="${onNext}">Next &#9654;</button>`;
+}
+
+/* =============== TAB NAVIGATION =============== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    const tab = btn.dataset.tab;
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'grants') loadGrants();
+    else if (tab === 'applications') loadApplications();
+    else if (tab === 'awards') loadAwards();
+    else if (tab === 'budgets') loadBudgets();
+    else if (tab === 'compliance') loadCompliance();
+    else if (tab === 'analytics') loadAnalytics();
+  });
+});
+
+function setupSubtabs(containerId, callback) {
+  document.getElementById(containerId).addEventListener('click', e => {
+    if (!e.target.classList.contains('subtab')) return;
+    e.currentTarget.querySelectorAll('.subtab').forEach(s => s.classList.remove('active'));
+    e.target.classList.add('active');
+    callback(e.target.dataset.sub);
+  });
+}
+
+/* =============== MODAL =============== */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+function setupModalTabs(tabsId, sections) {
+  document.getElementById(tabsId).addEventListener('click', e => {
+    if (!e.target.classList.contains('modal-tab')) return;
+    e.currentTarget.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sections.forEach(s => document.getElementById(s).classList.remove('active'));
+    document.getElementById(sections.find(s => s.endsWith(e.target.dataset.sec))).classList.add('active');
+  });
+}
+setupModalTabs('grt-modal-tabs', ['grt-modal-overview', 'grt-modal-awards', 'grt-modal-budget', 'grt-modal-expenditures', 'grt-modal-milestones', 'grt-modal-personnel']);
+
+/* =============== DASHBOARD =============== */
+async function loadDashboard() {
+  try {
+    const d = await apiFetch('/api/grants/dashboard');
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi-card kpi-teal"><div class="kpi-value">${d.activeGrants}</div><div class="kpi-label">Active Grants</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-value">${fmtMoney(d.totalFunding)}</div><div class="kpi-label">Total Funding</div></div>
+      <div class="kpi-card kpi-blue"><div class="kpi-value">${d.pendingApps}</div><div class="kpi-label">Pending Applications</div></div>
+      <div class="kpi-card kpi-indigo"><div class="kpi-value">${d.budgetUtil}%</div><div class="kpi-label">Budget Utilization</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-value">${d.upcomingDeadlines.length}</div><div class="kpi-label">Upcoming Deadlines</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-value">${d.expiringGrants}</div><div class="kpi-label">Expiring Grants (90d)</div></div>`;
+
+    // Budget overview chart
+    const cats = Object.entries(d.budgetOverview || {}).sort((a, b) => b[1].budgeted - a[1].budgeted);
+    const maxBdg = Math.max(...cats.map(([, v]) => v.budgeted), 1);
+    document.getElementById('dash-budget').innerHTML = cats.length === 0
+      ? '<div class="loading">No budget data</div>'
+      : cats.map(([cat, v]) => {
+        const spentPct = v.budgeted > 0 ? (v.spent / v.budgeted * 100).toFixed(0) : 0;
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex; justify-content:space-between; margin-bottom:3px"><span style="font-size:12px; font-weight:600">${cat}</span><span style="font-size:11px; color:var(--gray)">${fmtMoney(v.spent)} / ${fmtMoney(v.budgeted)} (${spentPct}%)</span></div>
+          <div class="budget-bar"><div class="budget-bar-spent" style="width:${spentPct}%"></div></div>
+        </div>`;
+      }).join('');
+
+    // Deadlines
+    document.getElementById('dash-deadlines').innerHTML = d.upcomingDeadlines.length === 0
+      ? '<div class="loading">No upcoming deadlines</div>'
+      : `<table class="data-table"><thead><tr><th>Type</th><th>Item</th><th>Due</th><th>Status</th></tr></thead><tbody>${
+        d.upcomingDeadlines.map(dl => `<tr><td>${dl.type}</td><td>${dl.name}</td><td>${daysRemaining(dl.due)}</td><td>${badge(dl.status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Recent apps
+    document.getElementById('dash-apps').innerHTML = d.recentApps.length === 0
+      ? '<div class="loading">No recent applications</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Funder</th><th>Amount</th><th>Priority</th><th>Status</th><th>Deadline</th></tr></thead><tbody>${
+        d.recentApps.map(a => `<tr><td>${a.appId}</td><td>${a.title}</td><td>${a.funder}</td><td>${fmtMoney(a.amount)}</td><td>${prioritySpan(a.priority)}</td><td>${badge(a.status)}</td><td>${daysRemaining(a.deadline)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+/* =============== GRANTS TAB =============== */
+let grtPage = 1, grtPageKeys = [null], grtHasNext = false;
+
+['grt-f-status', 'grt-f-type', 'grt-f-dept'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { grtPage = 1; grtPageKeys = [null]; grtHasNext = false; loadGrants(); });
+});
+document.getElementById('grt-f-search').addEventListener('input', debounce(() => { grtPage = 1; grtPageKeys = [null]; grtHasNext = false; loadGrants(); }, 300));
+
+async function loadGrants() {
+  const status = document.getElementById('grt-f-status').value;
+  const gtype = document.getElementById('grt-f-type').value;
+  const dept = document.getElementById('grt-f-dept').value;
+  const search = document.getElementById('grt-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('grants', kql, 25, grtPageKeys[grtPage - 1]);
+    let subs = data.submissions || [];
+
+    if (gtype) subs = subs.filter(s => vf(s, 'Grant Type') === gtype);
+    if (dept) subs = subs.filter(s => vf(s, 'Department') === dept);
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (search) subs = subs.filter(s => (vf(s, 'Grant ID') + ' ' + vf(s, 'Grant Title') + ' ' + vf(s, 'PI Name') + ' ' + vf(s, 'Funder Name')).toLowerCase().includes(search));
+
+    document.getElementById('grants-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No grants found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Funder</th><th>PI</th><th>Department</th><th>Award</th><th>Status</th><th>End Date</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openGrantDetail('${vf(s, 'Grant ID')}')">
+          <td>${vf(s, 'Grant ID')}</td>
+          <td>${vf(s, 'Grant Title')}</td>
+          <td>${vf(s, 'Funder Name')}</td>
+          <td>${vf(s, 'PI Name')}</td>
+          <td>${vf(s, 'Department')}</td>
+          <td>${fmtMoney(vf(s, 'Award Amount'))}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+          <td>${daysRemaining(vf(s, 'End Date'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    grtHasNext = !!data.nextPageToken;
+    if (grtHasNext && subs.length) grtPageKeys[grtPage] = subs[subs.length - 1].createdAt;
+    renderPag('grants-pag', grtPage, grtHasNext, 'grtPrev()', 'grtNext()');
+  } catch (e) {
+    document.getElementById('grants-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function grtNext() { if (!grtHasNext) return; grtPage++; loadGrants(); }
+function grtPrev() { if (grtPage <= 1) return; grtPage--; loadGrants(); }
+
+/* =============== GRANT DETAIL MODAL =============== */
+async function openGrantDetail(grantId) {
+  openModal('grant-modal');
+  document.getElementById('grt-modal-title').textContent = 'Loading...';
+  document.getElementById('grt-modal-overview').innerHTML = '<div class="loading">Loading grant details...</div>';
+  ['grt-modal-awards', 'grt-modal-budget', 'grt-modal-expenditures', 'grt-modal-milestones', 'grt-modal-personnel'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+  document.querySelectorAll('#grt-modal-tabs .modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#grt-modal-tabs .modal-tab[data-sec="overview"]').classList.add('active');
+  document.querySelectorAll('#grant-modal .modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('grt-modal-overview').classList.add('active');
+
+  try {
+    const d = await apiFetch(`/api/grants/grant/${encodeURIComponent(grantId)}/summary`);
+    const g = d.grant;
+    document.getElementById('grt-modal-title').textContent = `${g['Grant ID']} - ${g['Grant Title']}`;
+
+    // Transition buttons
+    const transitions = { 'Pre-Award': ['Active'], 'Active': ['No Cost Extension', 'Closeout', 'Suspended'], 'No Cost Extension': ['Closeout'], 'Closeout': ['Closed'], 'Suspended': ['Active', 'Closeout'] };
+    const allowed = transitions[g.Status] || [];
+    const btns = allowed.map(s => `<button class="act-btn act-btn-teal" onclick="transitionGrant('${grantId}','${s}')">${s}</button>`).join(' ');
+
+    document.getElementById('grt-modal-overview').innerHTML = `
+      <div style="margin-bottom:16px">${badge(g.Status)} ${btns}</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-label">Grant Number</span><span class="detail-value">${g['Grant Number']}</span></div>
+        <div class="detail-row"><span class="detail-label">Grant Type</span><span class="detail-value">${g['Grant Type']}</span></div>
+        <div class="detail-row"><span class="detail-label">Funder</span><span class="detail-value">${g['Funder Name']}</span></div>
+        <div class="detail-row"><span class="detail-label">PI</span><span class="detail-value">${g['PI Name']}</span></div>
+        <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${g['Department']}</span></div>
+        <div class="detail-row"><span class="detail-label">Award Amount</span><span class="detail-value">${fmtMoney(g['Award Amount'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Total Budget</span><span class="detail-value">${fmtMoney(g['Total Budget'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Remaining Balance</span><span class="detail-value">${fmtMoney(g['Remaining Balance'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Indirect Rate</span><span class="detail-value">${g['Indirect Rate']}%</span></div>
+        <div class="detail-row"><span class="detail-label">Start Date</span><span class="detail-value">${g['Start Date']}</span></div>
+        <div class="detail-row"><span class="detail-label">End Date</span><span class="detail-value">${g['End Date']} ${daysRemaining(g['End Date'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Funder ID</span><span class="detail-value">${g['Funder ID']}</span></div>
+      </div>`;
+
+    // Awards
+    document.getElementById('grt-modal-awards').innerHTML = d.awards.length === 0
+      ? '<div class="loading">No awards linked</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Date</th><th>Officer</th><th>Status</th></tr></thead><tbody>${
+        d.awards.map(a => `<tr><td>${a['Award ID']}</td><td>${a['Award Type']}</td><td>${fmtMoney(a['Award Amount'])}</td><td>${a['Award Date']}</td><td>${a['Project Officer']}</td><td>${badge(a.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Budget
+    const totalBdg = d.budgets.reduce((s, b) => s + (parseInt(b['Budgeted Amount']) || 0), 0);
+    const totalSpt = d.budgets.reduce((s, b) => s + (parseInt(b['Spent Amount']) || 0), 0);
+    document.getElementById('grt-modal-budget').innerHTML = d.budgets.length === 0
+      ? '<div class="loading">No budget items</div>'
+      : `<div class="kpi-grid" style="margin-bottom:16px">
+          <div class="kpi-card kpi-teal"><div class="kpi-value">${fmtMoney(totalBdg)}</div><div class="kpi-label">Total Budgeted</div></div>
+          <div class="kpi-card kpi-orange"><div class="kpi-value">${fmtMoney(totalSpt)}</div><div class="kpi-label">Total Spent</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${totalBdg > 0 ? ((totalSpt / totalBdg) * 100).toFixed(1) : 0}%</div><div class="kpi-label">Utilization</div></div>
+        </div>
+        <table class="data-table"><thead><tr><th>Category</th><th>Period</th><th>Budgeted</th><th>Spent</th><th>Available</th><th>Status</th></tr></thead><tbody>${
+        d.budgets.map(b => `<tr><td>${b['Budget Category']}</td><td>${b['Budget Period']}</td><td>${fmtMoney(b['Budgeted Amount'])}</td><td>${fmtMoney(b['Spent Amount'])}</td><td>${fmtMoney(b['Available Amount'])}</td><td>${badge(b.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Expenditures
+    document.getElementById('grt-modal-expenditures').innerHTML = d.expenditures.length === 0
+      ? '<div class="loading">No expenditures</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Amount</th><th>Vendor</th><th>Allowable</th><th>Status</th></tr></thead><tbody>${
+        d.expenditures.slice(0, 25).map(e => `<tr><td>${e['Expenditure ID']}</td><td>${(e.Description || '').slice(0, 40)}</td><td>${e['Budget Category']}</td><td>${fmtMoney(e.Amount)}</td><td>${e.Vendor}</td><td>${e.Allowable === 'No' ? '<span class="days-red">No</span>' : e.Allowable}</td><td>${badge(e.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Milestones
+    document.getElementById('grt-modal-milestones').innerHTML = d.milestones.length === 0
+      ? '<div class="loading">No milestones</div>'
+      : `<table class="data-table"><thead><tr><th>Name</th><th>Category</th><th>Planned</th><th>Actual</th><th>Responsible</th><th>Status</th></tr></thead><tbody>${
+        d.milestones.map(m => `<tr><td>${m['Milestone Name']}</td><td>${m.Category}</td><td>${m['Planned Date']}</td><td>${m['Actual Date'] || '-'}</td><td>${m['Responsible Person']}</td><td>${badge(m.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Personnel
+    document.getElementById('grt-modal-personnel').innerHTML = d.personnel.length === 0
+      ? '<div class="loading">No personnel</div>'
+      : `<table class="data-table"><thead><tr><th>Name</th><th>Role</th><th>FTE%</th><th>Salary</th><th>Funded</th><th>Status</th></tr></thead><tbody>${
+        d.personnel.map(p => `<tr><td>${p['Staff Name']}</td><td>${p.Role}</td><td>${p['FTE Percentage']}%</td><td>${fmtMoney(p['Annual Salary'])}</td><td>${fmtMoney(p['Grant Funded Amount'])}</td><td>${badge(p.Status)}</td></tr>`).join('')
+      }</tbody></table>`;
+  } catch (e) {
+    document.getElementById('grt-modal-overview').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+async function transitionGrant(grantId, newStatus) {
+  try {
+    await apiPost(`/api/grants/grants/${encodeURIComponent(grantId)}/transition`, { status: newStatus, performer: USERNAME });
+    openGrantDetail(grantId);
+    loadGrants();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== RECORD DETAIL MODAL =============== */
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function showRecord(form, idField, idVal, title) {
+  openModal('record-modal');
+  document.getElementById('rec-modal-title').textContent = title || 'Details';
+  const body = document.getElementById('rec-modal-body');
+  body.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
+    const s = (d.submissions || [])[0];
+    if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
+    const v = s.values || {};
+    let h = '<div class="detail-grid">';
+    for (const [k, val] of Object.entries(v)) {
+      if (val) h += '<div class="detail-label">' + esc(k) + '</div><div class="detail-value">' + (String(val).length > 100 ? '<div style="white-space:pre-wrap">' + esc(val) + '</div>' : esc(val)) + '</div>';
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:20px;color:var(--red)">Error: ' + esc(e.message) + '</p>';
+  }
+}
+
+/* =============== APPLICATIONS TAB =============== */
+let appPage = 1, appPageKeys = [null], appHasNext = false;
+let appSub = 'all';
+
+setupSubtabs('app-subtabs', sub => { appSub = sub; appPage = 1; appPageKeys = [null]; appHasNext = false; loadApplications(); });
+['app-f-status', 'app-f-priority', 'app-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { appPage = 1; appPageKeys = [null]; appHasNext = false; loadApplications(); });
+});
+document.getElementById('app-f-search').addEventListener('input', debounce(() => { appPage = 1; appPageKeys = [null]; appHasNext = false; loadApplications(); }, 300));
+
+async function loadApplications() {
+  const status = document.getElementById('app-f-status').value;
+  const priority = document.getElementById('app-f-priority').value;
+  const atype = document.getElementById('app-f-type').value;
+  const search = document.getElementById('app-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+  if (appSub === 'pipeline') kql = null;
+  if (appSub === 'deadlines') kql = null;
+
+  try {
+    const data = await kqlFetch('applications', kql, 25, appPageKeys[appPage - 1]);
+    let subs = data.submissions || [];
+
+    if (appSub === 'pipeline') subs = subs.filter(s => ['Drafting', 'Internal Review', 'Submitted', 'Under Review'].includes(vf(s, 'Status')));
+    if (appSub === 'deadlines') {
+      const today = new Date().toISOString().slice(0, 10);
+      const d60 = new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10);
+      subs = subs.filter(s => {
+        const dl = vf(s, 'Submission Deadline');
+        return dl && dl >= today && dl <= d60 && ['Drafting', 'Internal Review'].includes(vf(s, 'Status'));
+      });
+      subs.sort((a, b) => (vf(a, 'Submission Deadline') || '').localeCompare(vf(b, 'Submission Deadline') || ''));
+    }
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (priority) subs = subs.filter(s => vf(s, 'Priority') === priority);
+    if (atype) subs = subs.filter(s => vf(s, 'Application Type') === atype);
+    if (search) subs = subs.filter(s => (vf(s, 'Application ID') + ' ' + vf(s, 'Grant Title') + ' ' + vf(s, 'PI Name') + ' ' + vf(s, 'Funder Name')).toLowerCase().includes(search));
+
+    document.getElementById('app-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No applications found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Funder</th><th>PI</th><th>Amount</th><th>Priority</th><th>Status</th><th>Deadline</th><th>Actions</th></tr></thead><tbody>${
+        subs.map(s => {
+          const st = vf(s, 'Status');
+          const aid = vf(s, 'Application ID');
+          let actions = '';
+          if (st === 'Drafting') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionApp('${aid}','Internal Review')">Review</button>`;
+          else if (st === 'Internal Review') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionApp('${aid}','Submitted')">Submit</button>`;
+          else if (st === 'Submitted') actions = `<button class="act-btn act-btn-teal" onclick="event.stopPropagation(); transitionApp('${aid}','Under Review')">In Review</button>`;
+          else if (st === 'Under Review') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionApp('${aid}','Awarded')">Award</button>`;
+          return `<tr onclick="showRecord('applications','Application ID','${aid}','Application Details')">
+            <td>${aid}</td>
+            <td>${vf(s, 'Grant Title')}</td>
+            <td>${vf(s, 'Funder Name')}</td>
+            <td>${vf(s, 'PI Name')}</td>
+            <td>${fmtMoney(vf(s, 'Requested Amount'))}</td>
+            <td>${prioritySpan(vf(s, 'Priority'))}</td>
+            <td>${badge(st)}</td>
+            <td>${daysRemaining(vf(s, 'Submission Deadline'))}</td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    appHasNext = !!data.nextPageToken;
+    if (appHasNext && subs.length) appPageKeys[appPage] = subs[subs.length - 1].createdAt;
+    renderPag('app-pag', appPage, appHasNext, 'appPrev()', 'appNext()');
+  } catch (e) {
+    document.getElementById('app-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function appNext() { if (!appHasNext) return; appPage++; loadApplications(); }
+function appPrev() { if (appPage <= 1) return; appPage--; loadApplications(); }
+
+async function transitionApp(appId, newStatus) {
+  try {
+    await apiPost(`/api/grants/applications/${encodeURIComponent(appId)}/transition`, { status: newStatus, performer: USERNAME });
+    loadApplications();
+  } catch (e) { alert('Transition failed: ' + e.message); }
+}
+
+/* =============== AWARDS TAB =============== */
+let awdPage = 1, awdPageKeys = [null], awdHasNext = false;
+
+['awd-f-status', 'awd-f-type'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { awdPage = 1; awdPageKeys = [null]; awdHasNext = false; loadAwards(); });
+});
+document.getElementById('awd-f-search').addEventListener('input', debounce(() => { awdPage = 1; awdPageKeys = [null]; awdHasNext = false; loadAwards(); }, 300));
+
+async function loadAwards() {
+  const status = document.getElementById('awd-f-status').value;
+  const atype = document.getElementById('awd-f-type').value;
+  const search = document.getElementById('awd-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('awards', kql, 25, awdPageKeys[awdPage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (atype) subs = subs.filter(s => vf(s, 'Award Type') === atype);
+    if (search) subs = subs.filter(s => (vf(s, 'Award ID') + ' ' + vf(s, 'Grant Title') + ' ' + vf(s, 'Funder Name') + ' ' + vf(s, 'Award Number')).toLowerCase().includes(search));
+
+    document.getElementById('awards-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No awards found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Funder</th><th>Type</th><th>Amount</th><th>Date</th><th>Officer</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => `<tr onclick="openGrantDetail('${vf(s, 'Grant ID')}')">
+          <td>${vf(s, 'Award ID')}</td>
+          <td>${vf(s, 'Grant Title')}</td>
+          <td>${vf(s, 'Funder Name')}</td>
+          <td>${vf(s, 'Award Type')}</td>
+          <td>${fmtMoney(vf(s, 'Award Amount'))}</td>
+          <td>${vf(s, 'Award Date')}</td>
+          <td>${vf(s, 'Project Officer')}</td>
+          <td>${badge(vf(s, 'Status'))}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+
+    awdHasNext = !!data.nextPageToken;
+    if (awdHasNext && subs.length) awdPageKeys[awdPage] = subs[subs.length - 1].createdAt;
+    renderPag('awards-pag', awdPage, awdHasNext, 'awdPrev()', 'awdNext()');
+  } catch (e) {
+    document.getElementById('awards-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function awdNext() { if (!awdHasNext) return; awdPage++; loadAwards(); }
+function awdPrev() { if (awdPage <= 1) return; awdPage--; loadAwards(); }
+
+/* =============== BUDGETS TAB =============== */
+let bdgPage = 1, bdgPageKeys = [null], bdgHasNext = false;
+let bdgSub = 'all';
+
+setupSubtabs('bdg-subtabs', sub => { bdgSub = sub; bdgPage = 1; bdgPageKeys = [null]; bdgHasNext = false; loadBudgets(); });
+['bdg-f-status', 'bdg-f-cat'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { bdgPage = 1; bdgPageKeys = [null]; bdgHasNext = false; loadBudgets(); });
+});
+document.getElementById('bdg-f-search').addEventListener('input', debounce(() => { bdgPage = 1; bdgPageKeys = [null]; bdgHasNext = false; loadBudgets(); }, 300));
+
+async function loadBudgets() {
+  const status = document.getElementById('bdg-f-status').value;
+  const cat = document.getElementById('bdg-f-cat').value;
+  const search = document.getElementById('bdg-f-search').value.trim().toLowerCase();
+
+  let kql = status ? `values[Status] = "${status}"` : null;
+
+  try {
+    const data = await kqlFetch('budgets', kql, 25, bdgPageKeys[bdgPage - 1]);
+    let subs = data.submissions || [];
+
+    if (!kql && status) subs = subs.filter(s => vf(s, 'Status') === status);
+    if (cat) subs = subs.filter(s => vf(s, 'Budget Category') === cat);
+    if (search) subs = subs.filter(s => (vf(s, 'Budget ID') + ' ' + vf(s, 'Grant Title') + ' ' + vf(s, 'Budget Category')).toLowerCase().includes(search));
+
+    if (bdgSub === 'category') subs.sort((a, b) => (vf(a, 'Budget Category') || '').localeCompare(vf(b, 'Budget Category') || ''));
+    if (bdgSub === 'grant') subs.sort((a, b) => (vf(a, 'Grant Title') || '').localeCompare(vf(b, 'Grant Title') || ''));
+
+    document.getElementById('budgets-table').innerHTML = subs.length === 0
+      ? '<div class="loading">No budget items found</div>'
+      : `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Category</th><th>Period</th><th>Budgeted</th><th>Spent</th><th>Available</th><th>Burn Rate</th><th>Status</th></tr></thead><tbody>${
+        subs.map(s => {
+          const bdg = parseInt(vf(s, 'Budgeted Amount')) || 0;
+          const spt = parseInt(vf(s, 'Spent Amount')) || 0;
+          const pct = bdg > 0 ? ((spt / bdg) * 100).toFixed(0) : 0;
+          const pctCls = pct > 90 ? 'days-red' : pct > 70 ? 'days-yellow' : 'days-green';
+          return `<tr onclick="openGrantDetail('${vf(s, 'Grant ID')}')">
+            <td>${vf(s, 'Budget ID')}</td>
+            <td>${vf(s, 'Grant Title')}</td>
+            <td>${vf(s, 'Budget Category')}</td>
+            <td>${vf(s, 'Budget Period')}</td>
+            <td>${fmtMoney(vf(s, 'Budgeted Amount'))}</td>
+            <td>${fmtMoney(vf(s, 'Spent Amount'))}</td>
+            <td>${fmtMoney(vf(s, 'Available Amount'))}</td>
+            <td><span class="${pctCls}">${pct}%</span></td>
+            <td>${badge(vf(s, 'Status'))}</td>
+          </tr>`;
+        }).join('')
+      }</tbody></table>`;
+
+    bdgHasNext = !!data.nextPageToken;
+    if (bdgHasNext && subs.length) bdgPageKeys[bdgPage] = subs[subs.length - 1].createdAt;
+    renderPag('budgets-pag', bdgPage, bdgHasNext, 'bdgPrev()', 'bdgNext()');
+  } catch (e) {
+    document.getElementById('budgets-table').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+function bdgNext() { if (!bdgHasNext) return; bdgPage++; loadBudgets(); }
+function bdgPrev() { if (bdgPage <= 1) return; bdgPage--; loadBudgets(); }
+
+/* =============== COMPLIANCE TAB =============== */
+let compSub = 'overview';
+let compRptPage = 1, compRptLastCreated = null;
+let compMsPage = 1, compMsLastCreated = null;
+let compExpPage = 1, compExpLastCreated = null;
+
+setupSubtabs('comp-subtabs', sub => { compSub = sub; loadCompliance(); });
+
+async function loadCompliance() {
+  const el = document.getElementById('comp-content');
+
+  if (compSub === 'overview') {
+    el.innerHTML = '<div class="loading">Loading compliance data...</div>';
+    try {
+      const d = await apiFetch('/api/grants/stats/compliance');
+      const rt = d.reportTimeliness;
+      const ea = d.expenditureAllowability;
+      const mc = d.milestoneCompletion;
+      el.innerHTML = `
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-green"><div class="kpi-value">${rt.onTime}</div><div class="kpi-label">Reports On Time</div></div>
+          <div class="kpi-card kpi-red"><div class="kpi-value">${rt.late}</div><div class="kpi-label">Reports Late</div></div>
+          <div class="kpi-card kpi-blue"><div class="kpi-value">${rt.pending}</div><div class="kpi-label">Reports Pending</div></div>
+          <div class="kpi-card kpi-green"><div class="kpi-value">${ea.allowable}</div><div class="kpi-label">Allowable Expenses</div></div>
+          <div class="kpi-card kpi-red"><div class="kpi-value">${ea.notAllowable}</div><div class="kpi-label">Disallowed Expenses</div></div>
+          <div class="kpi-card kpi-orange"><div class="kpi-value">${ea.underReview}</div><div class="kpi-label">Under Review</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card"><h3>Milestone Completion</h3>
+            <div class="bar-chart" style="height:100px">
+              <div class="bar-col"><div class="bar-value">${mc.completed}</div><div class="bar" style="height:${mc.total > 0 ? mc.completed / mc.total * 90 : 0}px; background:var(--green)"></div><div class="bar-label">Done</div></div>
+              <div class="bar-col"><div class="bar-value">${mc.onTrack}</div><div class="bar" style="height:${mc.total > 0 ? mc.onTrack / mc.total * 90 : 0}px; background:var(--teal)"></div><div class="bar-label">On Track</div></div>
+              <div class="bar-col"><div class="bar-value">${mc.atRisk}</div><div class="bar" style="height:${mc.total > 0 ? mc.atRisk / mc.total * 90 : 0}px; background:var(--orange)"></div><div class="bar-label">At Risk</div></div>
+              <div class="bar-col"><div class="bar-value">${mc.delayed}</div><div class="bar" style="height:${mc.total > 0 ? mc.delayed / mc.total * 90 : 0}px; background:var(--red)"></div><div class="bar-label">Delayed</div></div>
+            </div>
+          </div>
+          <div class="card"><h3>Report Timeliness</h3>
+            <div class="bar-chart" style="height:100px">
+              <div class="bar-col"><div class="bar-value">${rt.onTime}</div><div class="bar" style="height:${rt.total > 0 ? rt.onTime / rt.total * 90 : 0}px; background:var(--green)"></div><div class="bar-label">On Time</div></div>
+              <div class="bar-col"><div class="bar-value">${rt.late}</div><div class="bar" style="height:${rt.total > 0 ? rt.late / rt.total * 90 : 0}px; background:var(--red)"></div><div class="bar-label">Late</div></div>
+              <div class="bar-col"><div class="bar-value">${rt.pending}</div><div class="bar" style="height:${rt.total > 0 ? rt.pending / rt.total * 90 : 0}px; background:var(--teal)"></div><div class="bar-label">Pending</div></div>
+            </div>
+          </div>
+        </div>`;
+    } catch (e) { el.innerHTML = `<div class="loading">Error: ${e.message}</div>`; }
+    return;
+  }
+
+  if (compSub === 'reports') {
+    try {
+      const data = await kqlFetch('reports', null, 25, compRptLastCreated);
+      const subs = data.submissions || [];
+      el.innerHTML = subs.length === 0 ? '<div class="loading">No reports</div>'
+        : `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Type</th><th>Period</th><th>Due</th><th>Submitted</th><th>Reviewer</th><th>Status</th></tr></thead><tbody>${
+          subs.map(s => `<tr onclick="showRecord('reports','Report ID','${vf(s, 'Report ID')}','Compliance Report Details')"><td>${vf(s, 'Report ID')}</td><td>${vf(s, 'Grant Title')}</td><td>${vf(s, 'Report Type')}</td><td>${vf(s, 'Period Start')} to ${vf(s, 'Period End')}</td><td>${daysRemaining(vf(s, 'Due Date'))}</td><td>${vf(s, 'Submitted Date') || '-'}</td><td>${vf(s, 'Reviewer')}</td><td>${badge(vf(s, 'Status'))}</td></tr>`).join('')
+        }</tbody></table><div id="comp-rpt-pag" class="pagination"></div>`;
+      if (data.nextPageToken && subs.length) compRptLastCreated = subs[subs.length - 1].createdAt;
+    } catch (e) { el.innerHTML = `<div class="loading">Error: ${e.message}</div>`; }
+    return;
+  }
+
+  if (compSub === 'milestones') {
+    try {
+      const data = await kqlFetch('milestones', null, 25, compMsLastCreated);
+      const subs = data.submissions || [];
+      el.innerHTML = subs.length === 0 ? '<div class="loading">No milestones</div>'
+        : `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Milestone</th><th>Category</th><th>Planned</th><th>Actual</th><th>Responsible</th><th>Status</th></tr></thead><tbody>${
+          subs.map(s => `<tr onclick="showRecord('milestones','Milestone ID','${vf(s, 'Milestone ID')}','Milestone Details')"><td>${vf(s, 'Milestone ID')}</td><td>${vf(s, 'Grant Title')}</td><td>${vf(s, 'Milestone Name')}</td><td>${vf(s, 'Category')}</td><td>${daysRemaining(vf(s, 'Planned Date'))}</td><td>${vf(s, 'Actual Date') || '-'}</td><td>${vf(s, 'Responsible Person')}</td><td>${badge(vf(s, 'Status'))}</td></tr>`).join('')
+        }</tbody></table>`;
+      if (data.nextPageToken && subs.length) compMsLastCreated = subs[subs.length - 1].createdAt;
+    } catch (e) { el.innerHTML = `<div class="loading">Error: ${e.message}</div>`; }
+    return;
+  }
+
+  if (compSub === 'expenditures') {
+    try {
+      const data = await kqlFetch('expenditures', null, 25, compExpLastCreated);
+      const subs = data.submissions || [];
+      el.innerHTML = subs.length === 0 ? '<div class="loading">No expenditures</div>'
+        : `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Description</th><th>Category</th><th>Amount</th><th>Vendor</th><th>Allowable</th><th>Status</th></tr></thead><tbody>${
+          subs.map(s => `<tr onclick="showRecord('expenditures','Expenditure ID','${vf(s, 'Expenditure ID')}','Expenditure Details')"><td>${vf(s, 'Expenditure ID')}</td><td>${vf(s, 'Grant Title')}</td><td>${(vf(s, 'Description') || '').slice(0, 35)}</td><td>${vf(s, 'Budget Category')}</td><td>${fmtMoney(vf(s, 'Amount'))}</td><td>${vf(s, 'Vendor')}</td><td>${vf(s, 'Allowable') === 'No' ? '<span class="days-red">No</span>' : vf(s, 'Allowable')}</td><td>${badge(vf(s, 'Status'))}</td></tr>`).join('')
+        }</tbody></table>`;
+      if (data.nextPageToken && subs.length) compExpLastCreated = subs[subs.length - 1].createdAt;
+    } catch (e) { el.innerHTML = `<div class="loading">Error: ${e.message}</div>`; }
+  }
+}
+
+/* =============== ANALYTICS TAB =============== */
+const REPORT_TYPES = [
+  { id: 'funding-summary', name: 'Funding Summary', desc: 'Complete grant portfolio with award amounts, PI, department, and status' },
+  { id: 'budget', name: 'Budget Analysis', desc: 'Budget vs actual by category, period, and grant with utilization rates' },
+  { id: 'expenditure', name: 'Expenditure Detail', desc: 'All expenditure transactions with vendor, allowability, and approval status' },
+  { id: 'milestone', name: 'Milestone Tracking', desc: 'Milestone completion status, planned vs actual dates, responsible parties' },
+  { id: 'personnel', name: 'Personnel Effort', desc: 'Grant-funded personnel with FTE percentages, salaries, and funded amounts' },
+  { id: 'compliance', name: 'Compliance Summary', desc: 'Overdue reports, disallowed expenditures, and delayed milestones' },
+];
+
+function loadAnalytics() {
+  document.getElementById('analytics-grid').innerHTML = REPORT_TYPES.map(r =>
+    `<div class="report-card" onclick="generateReport('${r.id}')"><h4>${r.name}</h4><p>${r.desc}</p></div>`
+  ).join('');
+  document.getElementById('analytics-result').style.display = 'none';
+}
+
+async function generateReport(type) {
+  const result = document.getElementById('analytics-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="loading">Generating report...</div>';
+
+  try {
+    const d = await apiFetch(`/api/grants/report/${type}`);
+
+    if (type === 'funding-summary') {
+      const csvRows = [['Grant ID', 'Title', 'Funder', 'Type', 'PI', 'Dept', 'Award', 'Remaining', 'Status', 'Start', 'End']];
+      d.items.forEach(i => csvRows.push([i.grantId, i.title, i.funder, i.type, i.pi, i.dept, i.award, i.remaining, i.status, i.start, i.end]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} grants)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'funding-summary.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Title</th><th>Funder</th><th>PI</th><th>Award</th><th>Remaining</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.grantId}</td><td>${i.title}</td><td>${i.funder}</td><td>${i.pi}</td><td>${fmtMoney(i.award)}</td><td>${fmtMoney(i.remaining)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'budget') {
+      const csvRows = [['Budget ID', 'Grant ID', 'Grant', 'Category', 'Period', 'Budgeted', 'Spent', 'Committed', 'Available', 'Status']];
+      d.items.forEach(i => csvRows.push([i.budgetId, i.grantId, i.title, i.category, i.period, i.budgeted, i.spent, i.committed, i.available, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} items)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'budget-analysis.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Grant</th><th>Category</th><th>Period</th><th>Budgeted</th><th>Spent</th><th>Available</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.title}</td><td>${i.category}</td><td>${i.period}</td><td>${fmtMoney(i.budgeted)}</td><td>${fmtMoney(i.spent)}</td><td>${fmtMoney(i.available)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'expenditure') {
+      const csvRows = [['Exp ID', 'Grant ID', 'Grant', 'Category', 'Description', 'Amount', 'Vendor', 'Date', 'Allowable', 'Status']];
+      d.items.forEach(i => csvRows.push([i.expId, i.grantId, i.title, i.category, i.desc, i.amount, i.vendor, i.date, i.allowable, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} items)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'expenditure-detail.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Description</th><th>Amount</th><th>Vendor</th><th>Allowable</th><th>Status</th></tr></thead><tbody>${
+        d.items.slice(0, 50).map(i => `<tr><td>${i.expId}</td><td>${i.title}</td><td>${i.desc}</td><td>${fmtMoney(i.amount)}</td><td>${i.vendor}</td><td>${i.allowable === 'No' ? '<span class="days-red">No</span>' : i.allowable}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'milestone') {
+      const csvRows = [['ID', 'Grant ID', 'Grant', 'Name', 'Category', 'Planned', 'Actual', 'Responsible', 'Status']];
+      d.items.forEach(i => csvRows.push([i.msId, i.grantId, i.title, i.name, i.category, i.planned, i.actual, i.responsible, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} items)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'milestone-tracking.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Name</th><th>Category</th><th>Planned</th><th>Actual</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.msId}</td><td>${i.title}</td><td>${i.name}</td><td>${i.category}</td><td>${i.planned}</td><td>${i.actual || '-'}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'personnel') {
+      const csvRows = [['ID', 'Grant ID', 'Grant', 'Name', 'Role', 'Dept', 'FTE%', 'Salary', 'Funded', 'Status']];
+      d.items.forEach(i => csvRows.push([i.perId, i.grantId, i.title, i.name, i.role, i.dept, i.fte, i.salary, i.funded, i.status]));
+      result.innerHTML = `<div class="card"><h3>${d.report} (${d.items.length} items)</h3>
+        <button class="act-btn act-btn-teal" onclick="downloadCSV(${JSON.stringify(JSON.stringify(csvRows))}, 'personnel-effort.csv')" style="margin-bottom:12px">Export CSV</button>
+        <table class="data-table"><thead><tr><th>Name</th><th>Grant</th><th>Role</th><th>Dept</th><th>FTE%</th><th>Salary</th><th>Funded</th><th>Status</th></tr></thead><tbody>${
+        d.items.map(i => `<tr><td>${i.name}</td><td>${i.title}</td><td>${i.role}</td><td>${i.dept}</td><td>${i.fte}%</td><td>${fmtMoney(i.salary)}</td><td>${fmtMoney(i.funded)}</td><td>${badge(i.status)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if (type === 'compliance') {
+      result.innerHTML = `<div class="card"><h3>${d.report}</h3>
+        <h4 style="margin:16px 0 8px; color:var(--red)">Overdue Reports (${d.overdueReports.length})</h4>
+        ${d.overdueReports.length === 0 ? '<p style="font-size:13px; color:var(--gray)">None</p>' :
+        `<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Grant</th><th>Due</th><th>Status</th></tr></thead><tbody>${
+        d.overdueReports.map(r => `<tr><td>${r.id}</td><td>${r.type}</td><td>${r.grant}</td><td>${daysRemaining(r.due)}</td><td>${badge(r.status)}</td></tr>`).join('')
+        }</tbody></table>`}
+        <h4 style="margin:16px 0 8px; color:var(--red)">Disallowed Expenditures (${d.disallowedExpenditures.length})</h4>
+        ${d.disallowedExpenditures.length === 0 ? '<p style="font-size:13px; color:var(--gray)">None</p>' :
+        `<table class="data-table"><thead><tr><th>ID</th><th>Grant</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody>${
+        d.disallowedExpenditures.map(e => `<tr><td>${e.id}</td><td>${e.grant}</td><td>${e.desc}</td><td>${fmtMoney(e.amount)}</td><td>${badge(e.status)}</td></tr>`).join('')
+        }</tbody></table>`}
+        <h4 style="margin:16px 0 8px; color:var(--orange)">Delayed Milestones (${d.delayedMilestones.length})</h4>
+        ${d.delayedMilestones.length === 0 ? '<p style="font-size:13px; color:var(--gray)">None</p>' :
+        `<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Grant</th><th>Planned</th><th>Status</th></tr></thead><tbody>${
+        d.delayedMilestones.map(m => `<tr><td>${m.id}</td><td>${m.name}</td><td>${m.grant}</td><td>${daysRemaining(m.planned)}</td><td>${badge(m.status)}</td></tr>`).join('')
+        }</tbody></table>`}
+      </div>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+function downloadCSV(jsonStr, filename) {
+  const rows = JSON.parse(jsonStr);
+  const csv = rows.map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+/* =============== UTILITY =============== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+{
+  "name": "Surf Shop",
+  "slug": "surf-shop",
+  "description": "Surf shop management with tide reports, inventory, employee schedules, and customer feedback.",
+  "forms": [
+    {
+      "slug": "tide-reports",
+      "name": "Tide Reports",
+      "fields": [
+        {
+          "name": "Location",
+          "required": true
+        },
+        {
+          "name": "Date",
+          "required": true
+        },
+        {
+          "name": "High Tide Time"
+        },
+        {
+          "name": "Low Tide Time"
+        },
+        {
+          "name": "Swell Height"
+        },
+        {
+          "name": "Swell Period"
+        },
+        {
+          "name": "Wind Direction"
+        },
+        {
+          "name": "Wind Speed"
+        },
+        {
+          "name": "Water Temp"
+        },
+        {
+          "name": "Conditions Rating"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "description": "Tide, swell, wind, and water conditions by location",
+      "submissionLabelExpression": "${values('Location')} - ${values('Date')} (${values('Conditions Rating')})"
+    },
+    {
+      "slug": "inventory",
+      "name": "Inventory",
+      "fields": [
+        {
+          "name": "SKU",
+          "required": true
+        },
+        {
+          "name": "Product Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Brand"
+        },
+        {
+          "name": "Size"
+        },
+        {
+          "name": "Price"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Reorder Level"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Location"
+        }
+      ],
+      "description": "Surf shop product inventory and stock levels",
+      "submissionLabelExpression": "${values('Product Name')} - ${values('SKU')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Category]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "schedules",
+      "name": "Schedules",
+      "fields": [
+        {
+          "name": "Employee Name",
+          "required": true
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Date",
+          "required": true
+        },
+        {
+          "name": "Shift Start"
+        },
+        {
+          "name": "Shift End"
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Employee shift schedules",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Date')} (${values('Role')})",
+      "indexes": {
+        "single": [
+          "values[Date]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "fields": [
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Rating"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Feedback Text",
+          "rows": 4
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Response",
+          "rows": 3
+        }
+      ],
+      "description": "Customer feedback and reviews",
+      "submissionLabelExpression": "${values('Customer Name')} - ${values('Rating')} (${values('Category')})",
+      "indexes": {
+        "single": [
+          "values[Rating]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Rating]"
+          ]
+        ]
+      }
+    }
+  ],
+  "category": "Retail"
+}
