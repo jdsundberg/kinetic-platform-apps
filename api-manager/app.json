@@ -8,66 +8,186 @@
       "name": "APIs",
       "description": "Enterprise API Registry",
       "fields": [
-        { "name": "API ID" },
-        { "name": "Name" },
-        { "name": "Short Description" },
-        { "name": "Detailed Description", "rows": 3 },
-        { "name": "Business Capability" },
-        { "name": "Domain" },
-        { "name": "API Type" },
-        { "name": "Exposure Type" },
-        { "name": "Hosting Model" },
-        { "name": "Lifecycle Status" },
-        { "name": "Criticality" },
-        { "name": "Data Classification" },
-        { "name": "Compliance Tags" },
-        { "name": "Deprecation Policy" },
-        { "name": "Retirement Date" },
-        { "name": "Last Reviewed" },
-        { "name": "Next Review Date" },
-        { "name": "Auth Method" },
-        { "name": "Protocol" },
-        { "name": "Current Version" },
-        { "name": "Base URL" },
-        { "name": "Documentation URL" },
-        { "name": "OpenAPI URL" },
-        { "name": "SLA Summary" },
-        { "name": "Rate Limit" },
-        { "name": "Business Owner" },
-        { "name": "Technical Owner" },
-        { "name": "Support Team" },
-        { "name": "Architect" },
-        { "name": "Security Contact" },
-        { "name": "AI Usable" },
-        { "name": "AI Usage Notes", "rows": 3 },
-        { "name": "AI Reliability Rating" },
-        { "name": "AI Recommended Use Cases", "rows": 3 },
-        { "name": "AI Prohibited Use Cases", "rows": 3 }
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Short Description"
+        },
+        {
+          "name": "Detailed Description",
+          "rows": 3
+        },
+        {
+          "name": "Business Capability"
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "API Type"
+        },
+        {
+          "name": "Exposure Type"
+        },
+        {
+          "name": "Hosting Model"
+        },
+        {
+          "name": "Lifecycle Status"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Data Classification"
+        },
+        {
+          "name": "Compliance Tags"
+        },
+        {
+          "name": "Deprecation Policy"
+        },
+        {
+          "name": "Retirement Date"
+        },
+        {
+          "name": "Last Reviewed"
+        },
+        {
+          "name": "Next Review Date"
+        },
+        {
+          "name": "Auth Method"
+        },
+        {
+          "name": "Protocol"
+        },
+        {
+          "name": "Current Version"
+        },
+        {
+          "name": "Base URL"
+        },
+        {
+          "name": "Documentation URL"
+        },
+        {
+          "name": "OpenAPI URL"
+        },
+        {
+          "name": "SLA Summary"
+        },
+        {
+          "name": "Rate Limit"
+        },
+        {
+          "name": "Business Owner"
+        },
+        {
+          "name": "Technical Owner"
+        },
+        {
+          "name": "Support Team"
+        },
+        {
+          "name": "Architect"
+        },
+        {
+          "name": "Security Contact"
+        },
+        {
+          "name": "AI Usable"
+        },
+        {
+          "name": "AI Usage Notes",
+          "rows": 3
+        },
+        {
+          "name": "AI Reliability Rating"
+        },
+        {
+          "name": "AI Recommended Use Cases",
+          "rows": 3
+        },
+        {
+          "name": "AI Prohibited Use Cases",
+          "rows": 3
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]", "values[Lifecycle Status]", "values[Domain]", "values[API Type]"],
+        "single": [
+          "values[API ID]",
+          "values[Lifecycle Status]",
+          "values[Domain]",
+          "values[API Type]"
+        ],
         "compound": []
-      }
+      },
+      "workflows": [
+        {
+          "name": "Apis Submitted Validation",
+          "event": "Submission Submitted",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Submission\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">apis submitted: &lt;%= @values.to_a.map{|k,v| k.to_s + &apos;: &apos; + v.to_s}.join(&apos;, &apos;) %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        },
+        {
+          "name": "Apis Status Logger",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">apis closed at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Log Status\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">apis status: &lt;%= @values[&apos;Status&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "consumers",
       "name": "Consumers",
       "description": "Systems and applications that consume APIs",
       "fields": [
-        { "name": "Consumer ID" },
-        { "name": "API ID" },
-        { "name": "API Name" },
-        { "name": "Application Name" },
-        { "name": "Team" },
-        { "name": "Purpose" },
-        { "name": "Environment" },
-        { "name": "Dependency Criticality" },
-        { "name": "Usage Pattern" },
-        { "name": "Volume Estimate" },
-        { "name": "Notes", "rows": 3 }
+        {
+          "name": "Consumer ID"
+        },
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "API Name"
+        },
+        {
+          "name": "Application Name"
+        },
+        {
+          "name": "Team"
+        },
+        {
+          "name": "Purpose"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Dependency Criticality"
+        },
+        {
+          "name": "Usage Pattern"
+        },
+        {
+          "name": "Volume Estimate"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]"],
+        "single": [
+          "values[API ID]"
+        ],
         "compound": []
       }
     },
@@ -76,43 +196,105 @@
       "name": "Contracts",
       "description": "Vendor and partner API contracts",
       "fields": [
-        { "name": "Contract ID" },
-        { "name": "API ID" },
-        { "name": "API Name" },
-        { "name": "Vendor Name" },
-        { "name": "Contract Owner" },
-        { "name": "Renewal Date" },
-        { "name": "Pricing Model" },
-        { "name": "Annual Cost" },
-        { "name": "SLA Terms" },
-        { "name": "License Constraints", "rows": 3 },
-        { "name": "Legal Review" },
-        { "name": "Procurement Status" },
-        { "name": "Risk Notes", "rows": 3 }
+        {
+          "name": "Contract ID"
+        },
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "API Name"
+        },
+        {
+          "name": "Vendor Name"
+        },
+        {
+          "name": "Contract Owner"
+        },
+        {
+          "name": "Renewal Date"
+        },
+        {
+          "name": "Pricing Model"
+        },
+        {
+          "name": "Annual Cost"
+        },
+        {
+          "name": "SLA Terms"
+        },
+        {
+          "name": "License Constraints",
+          "rows": 3
+        },
+        {
+          "name": "Legal Review"
+        },
+        {
+          "name": "Procurement Status"
+        },
+        {
+          "name": "Risk Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]"],
+        "single": [
+          "values[API ID]"
+        ],
         "compound": []
-      }
+      },
+      "workflows": [
+        {
+          "name": "Contracts Status Logger",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">contracts closed at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Log Status\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">contracts status: &lt;%= @values[&apos;Status&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "environments",
       "name": "Environments",
       "description": "API environment endpoints and configuration",
       "fields": [
-        { "name": "Environment ID" },
-        { "name": "API ID" },
-        { "name": "API Name" },
-        { "name": "Environment" },
-        { "name": "Endpoint URL" },
-        { "name": "Auth Method" },
-        { "name": "Region" },
-        { "name": "Status" },
-        { "name": "Certificate Expiry" },
-        { "name": "Notes", "rows": 3 }
+        {
+          "name": "Environment ID"
+        },
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "API Name"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Endpoint URL"
+        },
+        {
+          "name": "Auth Method"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Certificate Expiry"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]"],
+        "single": [
+          "values[API ID]"
+        ],
         "compound": []
       }
     },
@@ -121,21 +303,49 @@
       "name": "Changes",
       "description": "API change requests and review records",
       "fields": [
-        { "name": "Change ID" },
-        { "name": "API ID" },
-        { "name": "API Name" },
-        { "name": "Change Type" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Impact Level" },
-        { "name": "Impacted Consumers" },
-        { "name": "Requested By" },
-        { "name": "Architecture Review" },
-        { "name": "Security Review" },
-        { "name": "Status" },
-        { "name": "Review Date" }
+        {
+          "name": "Change ID"
+        },
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "API Name"
+        },
+        {
+          "name": "Change Type"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Impact Level"
+        },
+        {
+          "name": "Impacted Consumers"
+        },
+        {
+          "name": "Requested By"
+        },
+        {
+          "name": "Architecture Review"
+        },
+        {
+          "name": "Security Review"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Review Date"
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]", "values[Status]"],
+        "single": [
+          "values[API ID]",
+          "values[Status]"
+        ],
         "compound": []
       }
     },
@@ -144,21 +354,50 @@
       "name": "Reuse Requests",
       "description": "Capability requests and reuse opportunity tracking",
       "fields": [
-        { "name": "Request ID" },
-        { "name": "Requested Capability" },
-        { "name": "Requesting Team" },
-        { "name": "Business Context", "rows": 3 },
-        { "name": "Matched API ID" },
-        { "name": "Matched API Name" },
-        { "name": "Match Score" },
-        { "name": "Gap Analysis", "rows": 3 },
-        { "name": "Recommendation" },
-        { "name": "Decision Outcome" },
-        { "name": "Decision Reason", "rows": 3 },
-        { "name": "Status" }
+        {
+          "name": "Request ID"
+        },
+        {
+          "name": "Requested Capability"
+        },
+        {
+          "name": "Requesting Team"
+        },
+        {
+          "name": "Business Context",
+          "rows": 3
+        },
+        {
+          "name": "Matched API ID"
+        },
+        {
+          "name": "Matched API Name"
+        },
+        {
+          "name": "Match Score"
+        },
+        {
+          "name": "Gap Analysis",
+          "rows": 3
+        },
+        {
+          "name": "Recommendation"
+        },
+        {
+          "name": "Decision Outcome"
+        },
+        {
+          "name": "Decision Reason",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
-        "single": ["values[Status]"],
+        "single": [
+          "values[Status]"
+        ],
         "compound": []
       }
     },
@@ -167,20 +406,54 @@
       "name": "API Endpoints",
       "description": "Individual endpoint definitions within APIs",
       "fields": [
-        { "name": "Endpoint ID" },
-        { "name": "API ID" },
-        { "name": "Method" },
-        { "name": "Path" },
-        { "name": "Description" },
-        { "name": "Auth Required" },
-        { "name": "Rate Limit" },
-        { "name": "Status" }
+        {
+          "name": "Endpoint ID"
+        },
+        {
+          "name": "API ID"
+        },
+        {
+          "name": "Method"
+        },
+        {
+          "name": "Path"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Auth Required"
+        },
+        {
+          "name": "Rate Limit"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
-        "single": ["values[API ID]"],
+        "single": [
+          "values[API ID]"
+        ],
         "compound": []
       }
     }
   ],
-  "category": "Operations"
+  "category": "Operations",
+  "workflows": [
+    {
+      "name": "Auto Timestamp",
+      "event": "Submission Created",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Created\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">Record created at &lt;%= Time.now.utc.iso8601 %&gt; by &lt;%= @created_by %&gt; on form &lt;%= @form_slug %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    },
+    {
+      "name": "Submission Notification",
+      "event": "Submission Submitted",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Format Notification\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">New submission by &lt;%= @submitted_by %&gt; on form &lt;%= @form_slug %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    }
+  ]
 }

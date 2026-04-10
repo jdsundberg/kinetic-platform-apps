@@ -213,5 +213,21 @@
       ]
     }
   ],
-  "category": "Education"
+  "category": "Education",
+  "workflows": [
+    {
+      "name": "Auto Timestamp",
+      "event": "Submission Created",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Created\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">Record created at &lt;%= Time.now.utc.iso8601 %&gt; by &lt;%= @created_by %&gt; on form &lt;%= @form_slug %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    },
+    {
+      "name": "Submission Notification",
+      "event": "Submission Submitted",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Format Notification\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">New submission by &lt;%= @submitted_by %&gt; on form &lt;%= @form_slug %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    }
+  ]
 }

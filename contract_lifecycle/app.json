@@ -135,7 +135,23 @@
             "values[Risk Level]"
           ]
         ]
-      }
+      },
+      "workflows": [
+        {
+          "name": "Contracts Submitted Validation",
+          "event": "Submission Submitted",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Submission\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">contracts submitted: &lt;%= @values.to_a.map{|k,v| k.to_s + &apos;: &apos; + v.to_s}.join(&apos;, &apos;) %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        },
+        {
+          "name": "Contracts Status Logger",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">contracts closed at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Log Status\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">contracts status: &lt;%= @values[&apos;Status&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "fee-schedules",
@@ -294,7 +310,16 @@
           "values[Status]"
         ],
         "compound": []
-      }
+      },
+      "workflows": [
+        {
+          "name": "Amendments Submitted Validation",
+          "event": "Submission Submitted",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Submission\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">amendments submitted: &lt;%= @values.to_a.map{|k,v| k.to_s + &apos;: &apos; + v.to_s}.join(&apos;, &apos;) %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "renewals",
@@ -341,7 +366,16 @@
         }
       ],
       "description": "Contract renewal tracking",
-      "submissionLabelExpression": "${values('Contract Name')} - ${values('Status')} (${values('Renewal ID')})"
+      "submissionLabelExpression": "${values('Contract Name')} - ${values('Status')} (${values('Renewal ID')})",
+      "workflows": [
+        {
+          "name": "Renewals Escalation Check",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Critical\" value=\"@values[&apos;Priority&apos;] == &apos;Critical&apos; || @values[&apos;Severity&apos;] == &apos;Critical&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Normal\" value=\"@values[&apos;Priority&apos;] != &apos;Critical&apos; &amp;&amp; @values[&apos;Severity&apos;] != &apos;Critical&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Escalation Alert\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">ESCALATION: renewals priority=&lt;%= @values[&apos;Priority&apos;] %&gt; severity=&lt;%= @values[&apos;Severity&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Normal\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">renewals updated, priority normal</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "compliance-checks",
@@ -523,5 +557,21 @@
       "submissionLabelExpression": "${values('Action')} - ${values('Entity Type')} (${values('Timestamp')})"
     }
   ],
-  "category": "Legal"
+  "category": "Legal",
+  "workflows": [
+    {
+      "name": "Auto Timestamp",
+      "event": "Submission Created",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Created\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">Record created at &lt;%= Time.now.utc.iso8601 %&gt; by &lt;%= @created_by %&gt; on form &lt;%= @form_slug %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    },
+    {
+      "name": "Submission Notification",
+      "event": "Submission Submitted",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Format Notification\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">New submission by &lt;%= @submitted_by %&gt; on form &lt;%= @form_slug %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    }
+  ]
 }

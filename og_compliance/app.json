@@ -10,18 +10,44 @@
       "description": "Compliance events from monitoring sources",
       "submissionLabelExpression": "${values('Event ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Event ID" },
-        { "name": "Title" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Severity" },
-        { "name": "Status" },
-        { "name": "Source System" },
-        { "name": "Site" },
-        { "name": "Asset" },
-        { "name": "Event Timestamp" },
-        { "name": "Normalized Category" },
-        { "name": "Related Case ID" },
-        { "name": "Processing Notes", "rows": 3 }
+        {
+          "name": "Event ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Source System"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Asset"
+        },
+        {
+          "name": "Event Timestamp"
+        },
+        {
+          "name": "Normalized Category"
+        },
+        {
+          "name": "Related Case ID"
+        },
+        {
+          "name": "Processing Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
         "single": [
@@ -31,7 +57,10 @@
           "values[Source System]"
         ],
         "compound": [
-          ["values[Status]", "values[Severity]"]
+          [
+            "values[Status]",
+            "values[Severity]"
+          ]
         ]
       }
     },
@@ -41,28 +70,77 @@
       "description": "Compliance cases with full lifecycle management",
       "submissionLabelExpression": "${values('Case ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Case ID" },
-        { "name": "Title" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Case Type" },
-        { "name": "Severity" },
-        { "name": "Priority" },
-        { "name": "Status" },
-        { "name": "Site" },
-        { "name": "Asset" },
-        { "name": "Owner" },
-        { "name": "Assigned To" },
-        { "name": "Due Date" },
-        { "name": "SLA Target Date" },
-        { "name": "Regulatory Domain" },
-        { "name": "Business Unit" },
-        { "name": "Root Cause", "rows": 3 },
-        { "name": "Root Cause Category" },
-        { "name": "Remediation Plan", "rows": 3 },
-        { "name": "Closure Date" },
-        { "name": "Closure Approved By" },
-        { "name": "Closure Summary", "rows": 3 },
-        { "name": "Reopen Reason", "rows": 3 }
+        {
+          "name": "Case ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Case Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Asset"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "SLA Target Date"
+        },
+        {
+          "name": "Regulatory Domain"
+        },
+        {
+          "name": "Business Unit"
+        },
+        {
+          "name": "Root Cause",
+          "rows": 3
+        },
+        {
+          "name": "Root Cause Category"
+        },
+        {
+          "name": "Remediation Plan",
+          "rows": 3
+        },
+        {
+          "name": "Closure Date"
+        },
+        {
+          "name": "Closure Approved By"
+        },
+        {
+          "name": "Closure Summary",
+          "rows": 3
+        },
+        {
+          "name": "Reopen Reason",
+          "rows": 3
+        }
       ],
       "indexes": {
         "single": [
@@ -72,10 +150,32 @@
           "values[Case Type]"
         ],
         "compound": [
-          ["values[Status]", "values[Severity]"],
-          ["values[Status]", "values[Site]"]
+          [
+            "values[Status]",
+            "values[Severity]"
+          ],
+          [
+            "values[Status]",
+            "values[Site]"
+          ]
         ]
-      }
+      },
+      "workflows": [
+        {
+          "name": "Case Submitted Validation",
+          "event": "Submission Submitted",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Submission\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">case submitted: &lt;%= @values.to_a.map{|k,v| k.to_s + &apos;: &apos; + v.to_s}.join(&apos;, &apos;) %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        },
+        {
+          "name": "Case Status Logger",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">case closed at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Log Status\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">case status: &lt;%= @values[&apos;Status&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "capa",
@@ -83,25 +183,68 @@
       "description": "Corrective and preventive actions",
       "submissionLabelExpression": "${values('CAPA ID')} - ${values('Title')}",
       "fields": [
-        { "name": "CAPA ID" },
-        { "name": "Title" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Type" },
-        { "name": "Priority" },
-        { "name": "Status" },
-        { "name": "Site" },
-        { "name": "Owner" },
-        { "name": "Assigned To" },
-        { "name": "Due Date" },
-        { "name": "Related Case ID" },
-        { "name": "Action Plan", "rows": 3 },
-        { "name": "Recurrence Prevention", "rows": 3 },
-        { "name": "Verification Date" },
-        { "name": "Verified By" },
-        { "name": "Verification Notes", "rows": 3 },
-        { "name": "Effectiveness Rating" },
-        { "name": "Completion Date" },
-        { "name": "Completion Notes", "rows": 3 }
+        {
+          "name": "CAPA ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Related Case ID"
+        },
+        {
+          "name": "Action Plan",
+          "rows": 3
+        },
+        {
+          "name": "Recurrence Prevention",
+          "rows": 3
+        },
+        {
+          "name": "Verification Date"
+        },
+        {
+          "name": "Verified By"
+        },
+        {
+          "name": "Verification Notes",
+          "rows": 3
+        },
+        {
+          "name": "Effectiveness Rating"
+        },
+        {
+          "name": "Completion Date"
+        },
+        {
+          "name": "Completion Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
         "single": [
@@ -110,9 +253,28 @@
           "values[Site]"
         ],
         "compound": [
-          ["values[Status]", "values[Type]"]
+          [
+            "values[Status]",
+            "values[Type]"
+          ]
         ]
-      }
+      },
+      "workflows": [
+        {
+          "name": "Capa Submitted Validation",
+          "event": "Submission Submitted",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Submission\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">capa submitted: &lt;%= @values.to_a.map{|k,v| k.to_s + &apos;: &apos; + v.to_s}.join(&apos;, &apos;) %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        },
+        {
+          "name": "Capa Closure Timestamp",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos; || @values[&apos;Status&apos;] == &apos;Complete&apos; || @values[&apos;Status&apos;] == &apos;Resolved&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos; &amp;&amp; @values[&apos;Status&apos;] != &apos;Complete&apos; &amp;&amp; @values[&apos;Status&apos;] != &apos;Resolved&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">capa closed at &lt;%= Time.now.utc.iso8601 %&gt; by &lt;%= @updated_by %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Skip\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">capa updated, not closed</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "audit",
@@ -120,24 +282,64 @@
       "description": "Audit schedule and tracking",
       "submissionLabelExpression": "${values('Audit ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Audit ID" },
-        { "name": "Title" },
-        { "name": "Audit Type" },
-        { "name": "Status" },
-        { "name": "Site" },
-        { "name": "Lead Auditor" },
-        { "name": "Start Date" },
-        { "name": "End Date" },
-        { "name": "Findings Count" },
-        { "name": "Critical Findings Count" },
-        { "name": "Regulatory Domain" },
-        { "name": "Scope", "rows": 3 },
-        { "name": "Findings Summary", "rows": 3 },
-        { "name": "Recommendations", "rows": 3 },
-        { "name": "Sign Off Date" },
-        { "name": "Sign Off By" },
-        { "name": "Sign Off Status" },
-        { "name": "Notes", "rows": 3 }
+        {
+          "name": "Audit ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Audit Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Lead Auditor"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Critical Findings Count"
+        },
+        {
+          "name": "Regulatory Domain"
+        },
+        {
+          "name": "Scope",
+          "rows": 3
+        },
+        {
+          "name": "Findings Summary",
+          "rows": 3
+        },
+        {
+          "name": "Recommendations",
+          "rows": 3
+        },
+        {
+          "name": "Sign Off Date"
+        },
+        {
+          "name": "Sign Off By"
+        },
+        {
+          "name": "Sign Off Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
       ],
       "indexes": {
         "single": [
@@ -146,9 +348,21 @@
           "values[Audit Type]"
         ],
         "compound": [
-          ["values[Status]", "values[Audit Type]"]
+          [
+            "values[Status]",
+            "values[Audit Type]"
+          ]
         ]
-      }
+      },
+      "workflows": [
+        {
+          "name": "Audit Status Logger",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Closed\" value=\"@values[&apos;Status&apos;] == &apos;Closed&apos;\">utilities_echo_v1_1</task><task type=\"Complete\" label=\"Not Closed\" value=\"@values[&apos;Status&apos;] != &apos;Closed&apos;\">utilities_echo_v1_2</task></dependents></task><task name=\"Log Closure\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"100\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">audit closed at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task><task name=\"Log Status\" id=\"utilities_echo_v1_2\" definition_id=\"utilities_echo_v1\" x=\"350\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">audit status: &lt;%= @values[&apos;Status&apos;] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
     },
     {
       "slug": "audit-finding",
@@ -156,11 +370,21 @@
       "description": "Individual findings from audits",
       "submissionLabelExpression": "${values('Finding ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Finding ID" },
-        { "name": "Title" },
-        { "name": "Severity" },
-        { "name": "Related Audit ID" },
-        { "name": "Status" }
+        {
+          "name": "Finding ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Related Audit ID"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -176,20 +400,50 @@
       "description": "Compliance controls library",
       "submissionLabelExpression": "${values('Control ID')} - ${values('Name')}",
       "fields": [
-        { "name": "Control ID" },
-        { "name": "Name" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Domain" },
-        { "name": "Control Type" },
-        { "name": "Status" },
-        { "name": "Effectiveness Rating" },
-        { "name": "Control Owner" },
-        { "name": "Frequency" },
-        { "name": "Key Control" },
-        { "name": "Automation Level" },
-        { "name": "Last Tested Date" },
-        { "name": "Next Test Date" },
-        { "name": "Test Procedure", "rows": 3 }
+        {
+          "name": "Control ID"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Control Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Effectiveness Rating"
+        },
+        {
+          "name": "Control Owner"
+        },
+        {
+          "name": "Frequency"
+        },
+        {
+          "name": "Key Control"
+        },
+        {
+          "name": "Automation Level"
+        },
+        {
+          "name": "Last Tested Date"
+        },
+        {
+          "name": "Next Test Date"
+        },
+        {
+          "name": "Test Procedure",
+          "rows": 3
+        }
       ],
       "indexes": {
         "single": [
@@ -198,8 +452,14 @@
           "values[Effectiveness Rating]"
         ],
         "compound": [
-          ["values[Status]", "values[Domain]"],
-          ["values[Domain]", "values[Effectiveness Rating]"]
+          [
+            "values[Status]",
+            "values[Domain]"
+          ],
+          [
+            "values[Domain]",
+            "values[Effectiveness Rating]"
+          ]
         ]
       }
     },
@@ -209,10 +469,18 @@
       "description": "Regulatory and compliance requirements",
       "submissionLabelExpression": "${values('Requirement ID')} - ${values('Summary')}",
       "fields": [
-        { "name": "Requirement ID" },
-        { "name": "Summary" },
-        { "name": "Domain" },
-        { "name": "Status" }
+        {
+          "name": "Requirement ID"
+        },
+        {
+          "name": "Summary"
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -227,12 +495,24 @@
       "description": "Policies and standards documents",
       "submissionLabelExpression": "${values('Policy ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Policy ID" },
-        { "name": "Title" },
-        { "name": "Document Type" },
-        { "name": "Version" },
-        { "name": "Status" },
-        { "name": "Next Review Date" }
+        {
+          "name": "Policy ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Document Type"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Next Review Date"
+        }
       ],
       "indexes": {
         "single": [
@@ -247,11 +527,21 @@
       "description": "Response playbooks for compliance events",
       "submissionLabelExpression": "${values('Playbook ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Playbook ID" },
-        { "name": "Title" },
-        { "name": "Category" },
-        { "name": "Severity Level" },
-        { "name": "Status" }
+        {
+          "name": "Playbook ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Severity Level"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -266,22 +556,55 @@
       "description": "Physical site registry",
       "submissionLabelExpression": "${values('Site ID')} - ${values('Name')}",
       "fields": [
-        { "name": "Site ID" },
-        { "name": "Name" },
-        { "name": "Site Type" },
-        { "name": "Status" },
-        { "name": "Region" },
-        { "name": "State Province" },
-        { "name": "Country" },
-        { "name": "Business Unit" },
-        { "name": "Risk Rating" },
-        { "name": "Regulatory Jurisdiction" },
-        { "name": "Employee Count" },
-        { "name": "Contractor Count" },
-        { "name": "Last Inspection Date" },
-        { "name": "Description", "rows": 3 },
-        { "name": "Emergency Contact Name" },
-        { "name": "Emergency Contact Phone" }
+        {
+          "name": "Site ID"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Site Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "State Province"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Business Unit"
+        },
+        {
+          "name": "Risk Rating"
+        },
+        {
+          "name": "Regulatory Jurisdiction"
+        },
+        {
+          "name": "Employee Count"
+        },
+        {
+          "name": "Contractor Count"
+        },
+        {
+          "name": "Last Inspection Date"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Emergency Contact Name"
+        },
+        {
+          "name": "Emergency Contact Phone"
+        }
       ],
       "indexes": {
         "single": [
@@ -297,12 +620,24 @@
       "description": "Asset registry with criticality tracking",
       "submissionLabelExpression": "${values('Asset ID')} - ${values('Name')}",
       "fields": [
-        { "name": "Asset ID" },
-        { "name": "Name" },
-        { "name": "Asset Type" },
-        { "name": "Site" },
-        { "name": "Criticality" },
-        { "name": "Status" }
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Asset Type"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -319,11 +654,21 @@
       "description": "Third-party vendor registry",
       "submissionLabelExpression": "${values('Vendor ID')} - ${values('Name')}",
       "fields": [
-        { "name": "Vendor ID" },
-        { "name": "Name" },
-        { "name": "Category" },
-        { "name": "Risk Profile" },
-        { "name": "Status" }
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Risk Profile"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -339,13 +684,27 @@
       "description": "ESG and sustainability reporting cycles",
       "submissionLabelExpression": "${values('Cycle ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Cycle ID" },
-        { "name": "Title" },
-        { "name": "Reporting Period" },
-        { "name": "Framework" },
-        { "name": "Status" },
-        { "name": "Submission Deadline" },
-        { "name": "Data Quality Score" }
+        {
+          "name": "Cycle ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Reporting Period"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Submission Deadline"
+        },
+        {
+          "name": "Data Quality Score"
+        }
       ],
       "indexes": {
         "single": [
@@ -360,10 +719,18 @@
       "description": "Sustainability attestations and sign-offs",
       "submissionLabelExpression": "${values('Attestation ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Attestation ID" },
-        { "name": "Title" },
-        { "name": "Status" },
-        { "name": "Assigned To" }
+        {
+          "name": "Attestation ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        }
       ],
       "indexes": {
         "single": [
@@ -377,11 +744,21 @@
       "description": "Evidence records for compliance cases and audits",
       "submissionLabelExpression": "${values('Evidence ID')} - ${values('Title')}",
       "fields": [
-        { "name": "Evidence ID" },
-        { "name": "Title" },
-        { "name": "Evidence Type" },
-        { "name": "Related Case ID" },
-        { "name": "Status" }
+        {
+          "name": "Evidence ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Evidence Type"
+        },
+        {
+          "name": "Related Case ID"
+        },
+        {
+          "name": "Status"
+        }
       ],
       "indexes": {
         "single": [
@@ -390,6 +767,22 @@
           "values[Related Case ID]"
         ]
       }
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Auto Timestamp",
+      "event": "Submission Created",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Created\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">Record created at &lt;%= Time.now.utc.iso8601 %&gt; by &lt;%= @created_by %&gt; on form &lt;%= @form_slug %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+    },
+    {
+      "name": "Submission Notification",
+      "event": "Submission Submitted",
+      "type": "Tree",
+      "status": "Active",
+      "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Format Notification\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">New submission by &lt;%= @submitted_by %&gt; on form &lt;%= @form_slug %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
     }
   ]
 }

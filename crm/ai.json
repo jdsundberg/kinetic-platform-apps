@@ -1,0 +1,65 @@
+{
+  "description": "CRM system for managing sales leads, pipeline opportunities, products, and activities",
+  "tools": [
+    {
+      "name": "convert_lead",
+      "description": "Convert a qualified lead into a new opportunity. Updates lead status to Converted and creates an opportunity record.",
+      "params": {
+        "leadId": { "type": "string", "required": true, "description": "Submission ID of the lead to convert" },
+        "opportunityName": { "type": "string", "required": false, "description": "Name for the new opportunity (defaults to lead's company name)" },
+        "stage": { "type": "string", "required": false, "description": "Initial pipeline stage (defaults to Discovery)" },
+        "amount": { "type": "string", "required": false, "description": "Estimated deal amount" }
+      }
+    },
+    {
+      "name": "get_pipeline_summary",
+      "description": "Get aggregate pipeline summary — count and total dollar amount per stage",
+      "params": {}
+    },
+    {
+      "name": "log_activity",
+      "description": "Log a sales activity (call, email, meeting, demo) against a lead or opportunity",
+      "params": {
+        "type": { "type": "string", "required": true, "description": "Activity type", "values": ["Call", "Email", "Meeting", "Demo", "Follow-up", "Note"] },
+        "subject": { "type": "string", "required": true, "description": "Brief subject line" },
+        "relatedTo": { "type": "string", "required": true, "description": "Entity type", "values": ["Lead", "Opportunity"] },
+        "relatedId": { "type": "string", "required": true, "description": "Submission ID of the related lead or opportunity" },
+        "details": { "type": "string", "required": false, "description": "Activity notes" },
+        "outcome": { "type": "string", "required": false, "description": "Result of the activity" },
+        "followUpDate": { "type": "string", "required": false, "description": "ISO date for follow-up" }
+      }
+    }
+  ],
+  "forms": {
+    "leads": {
+      "description": "Sales leads from inbound and outbound channels",
+      "fields": {
+        "Status": { "values": ["New", "Contacted", "Qualified", "Proposal", "Converted", "Lost"] },
+        "Source": { "values": ["Website", "Referral", "LinkedIn", "Cold Call", "Trade Show", "Partner", "Inbound Email"] },
+        "Lead Score": { "hint": "Numeric 1-100, higher means more qualified" }
+      }
+    },
+    "opportunities": {
+      "description": "Sales pipeline deals and revenue tracking",
+      "fields": {
+        "Stage": { "values": ["Discovery", "Qualification", "Proposal", "Negotiation", "Closed Won", "Closed Lost"] },
+        "Probability": { "hint": "Percentage 0-100 likelihood of closing" },
+        "Amount": { "hint": "Dollar amount of the deal" }
+      }
+    },
+    "products": {
+      "description": "Product catalog with pricing tiers",
+      "fields": {
+        "Status": { "values": ["Active", "Discontinued", "Coming Soon"] },
+        "Tier": { "values": ["Standard", "Professional", "Enterprise"] }
+      }
+    },
+    "activities": {
+      "description": "Sales activity log — calls, emails, meetings, demos",
+      "fields": {
+        "Type": { "values": ["Call", "Email", "Meeting", "Demo", "Follow-up", "Note"] },
+        "Related To": { "values": ["Lead", "Opportunity"] }
+      }
+    }
+  }
+}
