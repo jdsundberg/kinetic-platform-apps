@@ -1,0 +1,541 @@
+{
+  "name": "ServiceProMax",
+  "slug": "service-pro-max",
+  "description": "Enterprise services delivery, quality, and management platform with project tracking, quality governance, time/cost management, and reporting.",
+  "category": "Professional Services",
+  "forms": [
+    {
+      "slug": "customer",
+      "name": "Customer",
+      "description": "Customer accounts with strategic classification and health tracking",
+      "submissionLabelExpression": "${values('Account ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Account ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Industry" },
+        { "name": "Region" },
+        { "name": "Tier" },
+        { "name": "Health" },
+        { "name": "Account Owner" },
+        { "name": "Executive Sponsor" },
+        { "name": "Delivery Preferences", "rows": 3 },
+        { "name": "Renewal Notes", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Tier]", "values[Health]", "values[Region]", "values[Account Owner]", "values[Industry]", "values[Account ID]"],
+        "compound": [["values[Status]", "values[Tier]"], ["values[Status]", "values[Health]"]]
+      }
+    },
+    {
+      "slug": "customer-contact",
+      "name": "Customer Contact",
+      "description": "Key contacts at customer organizations",
+      "submissionLabelExpression": "${values('Contact Name')} - ${values('Customer ID')}",
+      "fields": [
+        { "name": "Customer ID", "required": true },
+        { "name": "Contact Name", "required": true },
+        { "name": "Title" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Role" },
+        { "name": "Primary" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Customer ID]", "values[Role]"],
+        "compound": []
+      }
+    },
+    {
+      "slug": "project",
+      "name": "Project",
+      "description": "Service delivery projects with full lifecycle tracking",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Customer ID", "required": true },
+        { "name": "Customer Name" },
+        { "name": "Project Type" },
+        { "name": "Service Offering" },
+        { "name": "Project Manager" },
+        { "name": "Delivery Lead" },
+        { "name": "Executive Sponsor" },
+        { "name": "Priority" },
+        { "name": "Stage" },
+        { "name": "Health" },
+        { "name": "Planned Start" },
+        { "name": "Planned End" },
+        { "name": "Actual End" },
+        { "name": "Scope Summary", "rows": 3 },
+        { "name": "Planned Budget" },
+        { "name": "Forecast Cost" },
+        { "name": "Actual Cost" },
+        { "name": "Planned Hours" },
+        { "name": "Actual Hours" },
+        { "name": "Gross Margin" },
+        { "name": "Quality Score" },
+        { "name": "Closeout Status" },
+        { "name": "External Ref" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Stage]", "values[Health]", "values[Project Manager]", "values[Customer ID]", "values[Service Offering]", "values[Priority]", "values[Project Type]", "values[Closeout Status]", "values[Project ID]"],
+        "compound": [["values[Stage]", "values[Health]"], ["values[Stage]", "values[Project Manager]"], ["values[Customer ID]", "values[Stage]"], ["values[Stage]", "values[Priority]"]]
+      }
+    },
+    {
+      "slug": "project-team",
+      "name": "Project Team Assignment",
+      "description": "Team member assignments to projects",
+      "submissionLabelExpression": "${values('Member Name')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Member Name", "required": true },
+        { "name": "Role" },
+        { "name": "Allocation Percent" },
+        { "name": "Start Date" },
+        { "name": "End Date" },
+        { "name": "Status" },
+        { "name": "Rate" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Member Name]", "values[Status]"],
+        "compound": [["values[Project ID]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "status-update",
+      "name": "Status Update",
+      "description": "Weekly project status reports with multi-dimensional health scoring",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Report Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Report Date", "required": true },
+        { "name": "Reporter" },
+        { "name": "Overall Health" },
+        { "name": "Schedule Health" },
+        { "name": "Budget Health" },
+        { "name": "Scope Health" },
+        { "name": "Staffing Health" },
+        { "name": "Quality Health" },
+        { "name": "Customer Health" },
+        { "name": "Milestone Progress", "rows": 3 },
+        { "name": "Accomplishments", "rows": 3 },
+        { "name": "Planned Next Week", "rows": 3 },
+        { "name": "Risks Summary", "rows": 3 },
+        { "name": "Escalation Flag" },
+        { "name": "Executive Attention" },
+        { "name": "Change Summary", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Overall Health]", "values[Report Date]", "values[Escalation Flag]"],
+        "compound": [["values[Project ID]", "values[Report Date]"], ["values[Overall Health]", "values[Escalation Flag]"]]
+      }
+    },
+    {
+      "slug": "milestone",
+      "name": "Milestone",
+      "description": "Project milestones with planned vs actual tracking",
+      "submissionLabelExpression": "${values('Name')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Owner" },
+        { "name": "Planned Date" },
+        { "name": "Forecast Date" },
+        { "name": "Actual Date" },
+        { "name": "Status" },
+        { "name": "Dependency Notes", "rows": 3 },
+        { "name": "Delay Reason", "rows": 3 },
+        { "name": "Customer Visible" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]"],
+        "compound": [["values[Project ID]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "deliverable",
+      "name": "Deliverable",
+      "description": "Project deliverables with approval tracking",
+      "submissionLabelExpression": "${values('Name')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Type" },
+        { "name": "Due Date" },
+        { "name": "Owner" },
+        { "name": "Status" },
+        { "name": "Approval Status" },
+        { "name": "Customer Acknowledged" },
+        { "name": "Document Link" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]"],
+        "compound": [["values[Project ID]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "risk",
+      "name": "Risk",
+      "description": "Project risks with probability, impact, and mitigation tracking",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Title", "required": true },
+        { "name": "Category" },
+        { "name": "Probability" },
+        { "name": "Impact" },
+        { "name": "Severity" },
+        { "name": "Owner" },
+        { "name": "Mitigation Plan", "rows": 3 },
+        { "name": "Review Date" },
+        { "name": "Status" },
+        { "name": "Escalation Flag" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Severity]"],
+        "compound": [["values[Project ID]", "values[Status]"], ["values[Status]", "values[Severity]"]]
+      }
+    },
+    {
+      "slug": "issue",
+      "name": "Issue",
+      "description": "Project issues with resolution tracking",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Title", "required": true },
+        { "name": "Severity" },
+        { "name": "Owner" },
+        { "name": "Due Date" },
+        { "name": "Root Cause", "rows": 3 },
+        { "name": "Resolution Plan", "rows": 3 },
+        { "name": "Resolution Date" },
+        { "name": "Status" },
+        { "name": "Escalation Flag" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Severity]"],
+        "compound": [["values[Project ID]", "values[Status]"], ["values[Status]", "values[Severity]"]]
+      }
+    },
+    {
+      "slug": "change-request",
+      "name": "Change Request",
+      "description": "Scope/schedule/budget change requests with approval workflow",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Title", "required": true },
+        { "name": "Request Date" },
+        { "name": "Requested By" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Impact Summary", "rows": 3 },
+        { "name": "Budget Impact" },
+        { "name": "Schedule Impact" },
+        { "name": "Approval Status" },
+        { "name": "Decision Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Approval Status]"],
+        "compound": [["values[Project ID]", "values[Approval Status]"]]
+      }
+    },
+    {
+      "slug": "time-entry",
+      "name": "Time Entry",
+      "description": "Time tracking by project, category, and billing type",
+      "submissionLabelExpression": "${values('Consultant')} - ${values('Project ID')} - ${values('Entry Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Consultant", "required": true },
+        { "name": "Entry Date", "required": true },
+        { "name": "Hours", "required": true },
+        { "name": "Work Category" },
+        { "name": "Milestone" },
+        { "name": "Billable" },
+        { "name": "Effort Type" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Approval Status" },
+        { "name": "Approved By" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Consultant]", "values[Billable]", "values[Entry Date]", "values[Approval Status]"],
+        "compound": [["values[Project ID]", "values[Consultant]"], ["values[Project ID]", "values[Entry Date]"], ["values[Consultant]", "values[Entry Date]"]]
+      }
+    },
+    {
+      "slug": "cost-entry",
+      "name": "Cost Entry",
+      "description": "Non-labor cost tracking (vendor, travel, materials)",
+      "submissionLabelExpression": "${values('Category')} - ${values('Project ID')} - ${values('Entry Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Category", "required": true },
+        { "name": "Entry Date" },
+        { "name": "Amount" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Vendor" },
+        { "name": "Approval Status" },
+        { "name": "Approved By" },
+        { "name": "Receipt Reference" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Category]", "values[Approval Status]"],
+        "compound": [["values[Project ID]", "values[Category]"]]
+      }
+    },
+    {
+      "slug": "customer-feedback",
+      "name": "Customer Feedback",
+      "description": "Customer satisfaction surveys and feedback with action tracking",
+      "submissionLabelExpression": "${values('Customer ID')} - ${values('Project ID')} - ${values('Survey Date')}",
+      "fields": [
+        { "name": "Project ID" },
+        { "name": "Customer ID", "required": true },
+        { "name": "Survey Date" },
+        { "name": "Feedback Type" },
+        { "name": "Overall Score" },
+        { "name": "Delivery Score" },
+        { "name": "Communication Score" },
+        { "name": "Outcome Score" },
+        { "name": "Would Recommend" },
+        { "name": "Comments", "rows": 3 },
+        { "name": "Improvements", "rows": 3 },
+        { "name": "Follow Up Required" },
+        { "name": "Follow Up Status" },
+        { "name": "Follow Up Notes", "rows": 3 },
+        { "name": "Collected By" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Customer ID]", "values[Feedback Type]", "values[Follow Up Required]", "values[Follow Up Status]", "values[Overall Score]"],
+        "compound": [["values[Customer ID]", "values[Feedback Type]"], ["values[Follow Up Required]", "values[Follow Up Status]"]]
+      }
+    },
+    {
+      "slug": "quality-review",
+      "name": "Quality Review",
+      "description": "Quality gate reviews at key project lifecycle points",
+      "submissionLabelExpression": "${values('Gate Type')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Gate Type", "required": true },
+        { "name": "Review Date" },
+        { "name": "Reviewer" },
+        { "name": "Status" },
+        { "name": "Score" },
+        { "name": "Checklist Results", "rows": 5 },
+        { "name": "Findings Summary", "rows": 3 },
+        { "name": "Required Actions", "rows": 3 },
+        { "name": "Decision" },
+        { "name": "Decision Notes", "rows": 3 },
+        { "name": "Escalation Flag" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Gate Type]", "values[Status]", "values[Decision]"],
+        "compound": [["values[Project ID]", "values[Gate Type]"], ["values[Status]", "values[Gate Type]"]]
+      }
+    },
+    {
+      "slug": "quality-finding",
+      "name": "Quality Finding",
+      "description": "Specific findings from quality reviews requiring attention",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Review ID" },
+        { "name": "Title", "required": true },
+        { "name": "Category" },
+        { "name": "Severity" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Owner" },
+        { "name": "Due Date" },
+        { "name": "Status" },
+        { "name": "Resolution Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Severity]", "values[Category]"],
+        "compound": [["values[Status]", "values[Severity]"], ["values[Project ID]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "corrective-action",
+      "name": "Corrective Action",
+      "description": "Corrective and preventive actions from quality issues",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Finding ID" },
+        { "name": "Title", "required": true },
+        { "name": "Type" },
+        { "name": "Severity" },
+        { "name": "Root Cause", "rows": 3 },
+        { "name": "Action Description", "rows": 3 },
+        { "name": "Owner" },
+        { "name": "Due Date" },
+        { "name": "Status" },
+        { "name": "Resolution Evidence", "rows": 3 },
+        { "name": "Validated By" },
+        { "name": "Validation Date" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Type]", "values[Severity]", "values[Owner]"],
+        "compound": [["values[Status]", "values[Severity]"], ["values[Project ID]", "values[Status]"], ["values[Owner]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "recovery-plan",
+      "name": "Recovery Plan",
+      "description": "Formal recovery plans for at-risk or failing projects",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Initiated Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Initiated Date" },
+        { "name": "Trigger Reason", "rows": 3 },
+        { "name": "Root Problem", "rows": 3 },
+        { "name": "Key Risk Areas", "rows": 3 },
+        { "name": "Immediate Actions", "rows": 3 },
+        { "name": "Leadership Support", "rows": 3 },
+        { "name": "Customer Comm Plan", "rows": 3 },
+        { "name": "New Milestone Targets", "rows": 3 },
+        { "name": "Financial Impact" },
+        { "name": "Assigned To" },
+        { "name": "Manager" },
+        { "name": "Status" },
+        { "name": "Review Cadence" },
+        { "name": "Closed Date" },
+        { "name": "Outcome Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Assigned To]"],
+        "compound": [["values[Status]", "values[Assigned To]"]]
+      }
+    },
+    {
+      "slug": "delivery-audit",
+      "name": "Delivery Audit",
+      "description": "PMO audits of active projects for delivery standard compliance",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Audit Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Audit Date" },
+        { "name": "Auditor" },
+        { "name": "Status Discipline" },
+        { "name": "Time Discipline" },
+        { "name": "Documentation Score" },
+        { "name": "Risk Mgmt Score" },
+        { "name": "Deliverable Quality" },
+        { "name": "Customer Comm Score" },
+        { "name": "Governance Score" },
+        { "name": "Change Mgmt Score" },
+        { "name": "Overall Score" },
+        { "name": "Findings", "rows": 5 },
+        { "name": "Required Actions", "rows": 3 },
+        { "name": "Recommendation" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]", "values[Auditor]"],
+        "compound": [["values[Project ID]", "values[Audit Date]"]]
+      }
+    },
+    {
+      "slug": "closeout-record",
+      "name": "Closeout Record",
+      "description": "Project closeout validation and sign-off tracking",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Status')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Initiated Date" },
+        { "name": "Deliverables Complete" },
+        { "name": "Customer Signoff" },
+        { "name": "Time Entries Complete" },
+        { "name": "Costs Complete" },
+        { "name": "Issues Dispositioned" },
+        { "name": "Documentation Complete" },
+        { "name": "Feedback Captured" },
+        { "name": "Lessons Drafted" },
+        { "name": "Follow Up Opportunities", "rows": 3 },
+        { "name": "Finance Handoff" },
+        { "name": "Status" },
+        { "name": "Completed Date" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]"],
+        "compound": []
+      }
+    },
+    {
+      "slug": "post-project-review",
+      "name": "Post-Project Review",
+      "description": "Retrospective reviews capturing what worked and what didn't",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Review Date')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Review Date" },
+        { "name": "Facilitator" },
+        { "name": "What Went Well", "rows": 5 },
+        { "name": "What Went Poorly", "rows": 5 },
+        { "name": "Delivery Blockers", "rows": 3 },
+        { "name": "Process Breakdowns", "rows": 3 },
+        { "name": "Quality Issues", "rows": 3 },
+        { "name": "Customer Sentiment", "rows": 3 },
+        { "name": "Team Recommendations", "rows": 3 },
+        { "name": "Best Practices", "rows": 3 },
+        { "name": "Expansion Ideas", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Status]"],
+        "compound": []
+      }
+    },
+    {
+      "slug": "lessons-learned",
+      "name": "Lessons Learned",
+      "description": "Reusable lessons from project delivery for continuous improvement",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        { "name": "Project ID" },
+        { "name": "Title", "required": true },
+        { "name": "Category" },
+        { "name": "Theme" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Impact" },
+        { "name": "Recommendation", "rows": 3 },
+        { "name": "Service Offering" },
+        { "name": "Submitted By" },
+        { "name": "Date Captured" }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[Category]", "values[Theme]"],
+        "compound": [["values[Category]", "values[Theme]"]]
+      }
+    },
+    {
+      "slug": "integration-link",
+      "name": "Integration Link",
+      "description": "Links between projects and external systems (MS Project, Basecamp, CRM, etc.)",
+      "submissionLabelExpression": "${values('System')} - ${values('Project ID')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "System", "required": true },
+        { "name": "External ID" },
+        { "name": "External URL" },
+        { "name": "Sync Direction" },
+        { "name": "Last Sync" },
+        { "name": "Sync Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Project ID]", "values[System]", "values[Sync Status]"],
+        "compound": [["values[Project ID]", "values[System]"]]
+      }
+    }
+  ]
+}

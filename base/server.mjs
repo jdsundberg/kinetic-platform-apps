@@ -41,10 +41,11 @@ async function discoverApps() {
 
     const slug = appDef?.slug || dir.replace(/_/g, "-");
     const name = appDef?.name || dir;
-    const kappSlug = appDef?.slug || slug;
+    const hasForms = appDef?.forms?.length > 0;
+    const kappSlug = hasForms ? (appDef?.slug || slug) : null;
 
     // Register in APP_REGISTRY
-    APP_REGISTRY[slug] = { dir, name, kapp: kappSlug };
+    APP_REGISTRY[slug] = { dir, name, kapp: kappSlug, description: appDef?.description || '', category: appDef?.category || '' };
 
     // Try to import server.mjs for custom API handler
     const serverPath = path.join(appDir, "server.mjs");
@@ -595,7 +596,7 @@ function injectScripts(html, appSlug) {
                 var manageBtn = document.createElement('button');
                 manageBtn.className = 'um-item';
                 manageBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Manage Kapp';
-                manageBtn.onclick = function(){ window.location.href = '/kapp-admin/?kapp=' + _appKapp; };
+                manageBtn.onclick = function(){ window.open(window.location.protocol + '//' + window.location.hostname + ':4000/kapp-admin/?kapp=' + _appKapp, '_blank'); };
                 if (logoutItem) drop.insertBefore(manageBtn, logoutItem);
                 else drop.appendChild(manageBtn);
               }
@@ -676,6 +677,15 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === "/api/base/target" && req.method === "GET") {
     jsonResp(res, 200, { target: proxyTarget });
+    return;
+  }
+
+  // GET /api/base/apps — list all auto-discovered apps
+  if (pathname === "/api/base/apps" && req.method === "GET") {
+    const apps = Object.entries(APP_REGISTRY).map(([slug, reg]) => ({
+      slug, name: reg.name, kapp: reg.kapp, description: reg.description || '', category: reg.category || '',
+    })).sort((a, b) => a.name.localeCompare(b.name));
+    jsonResp(res, 200, { apps });
     return;
   }
 
@@ -778,6 +788,40 @@ const server = http.createServer((req, res) => {
         }
         emit({ step: "index", msg: `Indexes built: ${form.slug} (${custom.length} custom)`, ok: true });
       }
+
+      // Create workflows (kapp-level then form-level)
+      let wfCount = 0;
+      for (const wf of (appDef.workflows || [])) {
+        const r = await kineticRequest("POST", `/kapps/${kappSlug}/workflows`, {
+          name: wf.name, event: wf.event, type: wf.type || "Tree", status: wf.status || "Active",
+        }, auth);
+        if (r.status < 300 && wf.treeXml) {
+          await kineticRequest("PUT", `/kapps/${kappSlug}/workflows/${r.data.id}`, { treeXml: wf.treeXml }, auth);
+          wfCount++;
+          emit({ step: "workflow", msg: `Workflow (kapp): ${wf.name}`, ok: true });
+        } else if (r.data?.errorKey === "uniqueness_violation") {
+          emit({ step: "workflow", msg: `Workflow ${wf.name} already exists`, warn: true });
+        } else if (r.status >= 300) {
+          emit({ step: "workflow", msg: `FAILED workflow ${wf.name}: ${r.status}`, fail: true });
+        }
+      }
+      for (const form of appDef.forms) {
+        for (const wf of (form.workflows || [])) {
+          const r = await kineticRequest("POST", `/kapps/${kappSlug}/forms/${form.slug}/workflows`, {
+            name: wf.name, event: wf.event, type: wf.type || "Tree", status: wf.status || "Active",
+          }, auth);
+          if (r.status < 300 && wf.treeXml) {
+            await kineticRequest("PUT", `/kapps/${kappSlug}/forms/${form.slug}/workflows/${r.data.id}`, { treeXml: wf.treeXml }, auth);
+            wfCount++;
+            emit({ step: "workflow", msg: `Workflow (${form.slug}): ${wf.name}`, ok: true });
+          } else if (r.data?.errorKey === "uniqueness_violation") {
+            emit({ step: "workflow", msg: `Workflow ${wf.name} on ${form.slug} already exists`, warn: true });
+          } else if (r.status >= 300) {
+            emit({ step: "workflow", msg: `FAILED workflow ${wf.name} on ${form.slug}: ${r.status}`, fail: true });
+          }
+        }
+      }
+      if (wfCount > 0) emit({ step: "workflow", msg: `Total workflows created: ${wfCount}`, ok: true });
 
       // Seed data
       let seedCount = 0;

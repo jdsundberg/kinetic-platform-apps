@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceProMax</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2E3B5E;
+  --orange: #F36C24;
+  --orange-light: #FF8A4C;
+  --green: #34A853;
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --gray: #5F6368;
+  --light: #F8F9FA;
+  --border: #E8EAED;
+  --bg: #F1F3F4;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+  --purple: #7B1FA2;
+  --teal: #00695C;
+  --indigo: #283593;
+  --deep-orange: #BF360C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #202124; font-size: 14px; }
+
+/* ─── Login ─── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { color: var(--blue); font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.login-box .sub { color: var(--gray); font-size: 13px; margin-bottom: 16px; }
+.login-box .accent-bar { width: 40px; height: 3px; background: var(--orange); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.login-box button { width: 100%; padding: 12px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+.login-box button:hover { background: var(--orange-light); }
+.login-box .error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+
+/* ─── App Shell ─── */
+#app { display: none; }
+.topbar { background: var(--blue); color: white; display: flex; align-items: center; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.topbar .logo span { color: var(--orange); }
+.topbar nav { display: flex; gap: 2px; margin-left: 24px; overflow-x: auto; }
+.topbar nav button { background: transparent; color: rgba(255,255,255,.7); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.topbar nav button:hover { color: white; background: rgba(255,255,255,.1); }
+.topbar nav button.active { background: var(--orange); color: white; }
+.topbar .spacer { flex: 1; }
+.topbar .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
+.topbar .user-info button { background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.3); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+/* ─── Console ─── */
+.console { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ─── KPIs ─── */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); text-align: center; }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--blue); }
+.kpi .label { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+.kpi.orange .val { color: var(--orange); }
+.kpi.green .val { color: var(--green); }
+.kpi.red .val { color: var(--red); }
+.kpi.yellow .val { color: var(--yellow); }
+.kpi.purple .val { color: var(--purple); }
+.kpi.teal .val { color: var(--teal); }
+
+/* ─── Cards & Grids ─── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ─── Tables ─── */
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--light); font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; position: sticky; top: 0; }
+td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: #FAFAFA; }
+tr.clickable { cursor: pointer; }
+
+/* ─── Badges ─── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-yellow { background: #FFF8E1; color: #F9A825; }
+.badge-red { background: #FDECEA; color: #C62828; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-gray { background: #F1F3F4; color: #5F6368; }
+.badge-purple { background: #F3E5F5; color: #6A1B9A; }
+
+/* ─── Toolbar ─── */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar select, .toolbar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.toolbar select:focus, .toolbar input:focus { outline: none; border-color: var(--orange); }
+
+/* ─── Subtabs ─── */
+.subtabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.subtabs button { background: var(--light); color: var(--gray); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.subtabs button:hover { background: #E8EAED; }
+.subtabs button.active { background: var(--orange); color: white; border-color: var(--orange); }
+.subtab-panel { display: none; }
+.subtab-panel.active { display: block; }
+
+/* ─── Buttons ─── */
+.btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); }
+.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+
+/* ─── Modal ─── */
+#modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.show { display: flex; }
+.modal-content { background: var(--white); border-radius: 16px; padding: 28px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-content h2 { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 16px; }
+.modal-content label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; margin-top: 12px; }
+.modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
+.modal-content textarea { resize: vertical; }
+.modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.1); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 16px; }
+.detail-item { margin-bottom: 4px; }
+.detail-item .dl { font-size: 10px; font-weight: 600; color: var(--gray); text-transform: uppercase; }
+.detail-item .dv { font-size: 13px; color: #202124; }
+
+/* ─── Toast ─── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; padding: 12px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+
+/* ─── Health dots ─── */
+.health-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.health-dot.Green { background: var(--green); }
+.health-dot.Yellow { background: var(--yellow); }
+.health-dot.Red { background: var(--red); }
+
+/* ─── Progress bar ─── */
+.progress-bar { background: #E8EAED; border-radius: 4px; height: 8px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.progress-bar .fill.green { background: var(--green); }
+.progress-bar .fill.yellow { background: var(--yellow); }
+.progress-bar .fill.red { background: var(--red); }
+.progress-bar .fill.blue { background: var(--indigo); }
+
+/* ─── Pagination ─── */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; padding: 8px; }
+.pagination button { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); font-size: 12px; cursor: pointer; }
+.pagination button:disabled { opacity: .4; cursor: default; }
+.pagination span { font-size: 12px; color: var(--gray); }
+
+/* ─── Loading ─── */
+.loading { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+
+/* ─── Stat bar ─── */
+.stat-bar { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.stat-bar .stat { text-align: center; }
+.stat-bar .stat .sv { font-size: 20px; font-weight: 700; }
+.stat-bar .stat .sl { font-size: 10px; color: var(--gray); text-transform: uppercase; }
+
+/* ─── Quality checklist ─── */
+.checklist-item { padding: 4px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+.checklist-item.pass { color: var(--green); }
+.checklist-item.fail { color: var(--red); }
+.checklist-item.partial { color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>ServiceProMax</h1>
+    <p class="sub">Enterprise Services Delivery & Quality Management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input type="text" id="login-url" value="">
+    <label>Username</label>
+    <input type="text" id="login-user" value="">
+    <label>Password</label>
+    <input type="password" id="login-pass" value="" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Service<span>ProMax</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="showTab('dashboard')">Dashboard</button>
+      <button onclick="showTab('customers')">Customers</button>
+      <button onclick="showTab('projects')">Projects</button>
+      <button onclick="showTab('status')">Status</button>
+      <button onclick="showTab('time')">Time</button>
+      <button onclick="showTab('costs')">Costs</button>
+      <button onclick="showTab('milestones')">Milestones</button>
+      <button onclick="showTab('risksIssues')">Risks/Issues</button>
+      <button onclick="showTab('quality')">Quality</button>
+      <button onclick="showTab('feedback')">Feedback</button>
+      <button onclick="showTab('closeout')">Closeout</button>
+      <button onclick="showTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span id="display-name"></span>
+      <button onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ─── DASHBOARD ─── -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Executive Dashboard</div>
+    <div class="page-sub">Portfolio-wide view of services delivery, quality, and customer health</div>
+    <div id="dash-content"><div class="loading">Loading dashboard...</div></div>
+  </div>
+
+  <!-- ─── CUSTOMERS ─── -->
+  <div class="console" id="tab-customers">
+    <div class="page-title">Customer Management</div>
+    <div class="page-sub">Customer accounts, health, and project portfolios</div>
+    <div class="toolbar">
+      <select id="cust-filter-tier" onchange="loadCustomers()"><option value="">All Tiers</option><option>Strategic</option><option>Enterprise</option><option>Growth</option><option>Standard</option></select>
+      <select id="cust-filter-health" onchange="loadCustomers()"><option value="">All Health</option><option>Green</option><option>Yellow</option><option>Red</option></select>
+      <input type="search" id="cust-search" placeholder="Search customers..." oninput="loadCustomers()">
+    </div>
+    <div id="cust-content"><div class="loading">Loading customers...</div></div>
+  </div>
+
+  <!-- ─── PROJECTS ─── -->
+  <div class="console" id="tab-projects">
+    <div class="page-title">Project Portfolio</div>
+    <div class="page-sub">All projects with health, stage, and financial status</div>
+    <div class="toolbar">
+      <select id="proj-filter-stage" onchange="loadProjects()"><option value="">All Stages</option><option>Intake</option><option>Scoping</option><option>Planned</option><option>Kickoff</option><option>In Progress</option><option>On Hold</option><option>At Risk</option><option>Recovery</option><option>Ready for Closeout</option><option>Completed</option></select>
+      <select id="proj-filter-health" onchange="loadProjects()"><option value="">All Health</option><option>Green</option><option>Yellow</option><option>Red</option></select>
+      <select id="proj-filter-pm" onchange="loadProjects()"><option value="">All PMs</option></select>
+      <input type="search" id="proj-search" placeholder="Search projects..." oninput="loadProjects()">
+    </div>
+    <div id="proj-content"><div class="loading">Loading projects...</div></div>
+  </div>
+
+  <!-- ─── STATUS ─── -->
+  <div class="console" id="tab-status">
+    <div class="page-title">Status Management</div>
+    <div class="page-sub">Weekly project status reports and health scoring</div>
+    <div class="toolbar">
+      <select id="status-filter-health" onchange="loadStatuses()"><option value="">All Health</option><option>Green</option><option>Yellow</option><option>Red</option></select>
+      <select id="status-filter-esc" onchange="loadStatuses()"><option value="">All</option><option value="Yes">Escalations Only</option></select>
+    </div>
+    <div id="status-content"><div class="loading">Loading status updates...</div></div>
+  </div>
+
+  <!-- ─── TIME ─── -->
+  <div class="console" id="tab-time">
+    <div class="page-title">Time Tracking</div>
+    <div class="page-sub">Time entries, utilization, and approval management</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('time','summary')">Summary</button>
+      <button onclick="showSubtab('time','entries')">Time Entries</button>
+      <button onclick="showSubtab('time','utilization')">Utilization</button>
+    </div>
+    <div class="subtab-panel active" id="time-summary"><div class="loading">Loading time data...</div></div>
+    <div class="subtab-panel" id="time-entries"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="time-utilization"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ─── COSTS ─── -->
+  <div class="console" id="tab-costs">
+    <div class="page-title">Cost & Margin Tracking</div>
+    <div class="page-sub">Budget performance, cost tracking, and margin analysis</div>
+    <div id="cost-content"><div class="loading">Loading cost data...</div></div>
+  </div>
+
+  <!-- ─── MILESTONES ─── -->
+  <div class="console" id="tab-milestones">
+    <div class="page-title">Milestones & Deliverables</div>
+    <div class="page-sub">Milestone tracking, deliverable status, and acceptance management</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('ms','milestones')">Milestones</button>
+      <button onclick="showSubtab('ms','deliverables')">Deliverables</button>
+    </div>
+    <div class="subtab-panel active" id="ms-milestones"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="ms-deliverables"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ─── RISKS/ISSUES ─── -->
+  <div class="console" id="tab-risksIssues">
+    <div class="page-title">Risks & Issues</div>
+    <div class="page-sub">Risk register, issue tracking, and change requests</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('ri','risks')">Risks</button>
+      <button onclick="showSubtab('ri','issues')">Issues</button>
+      <button onclick="showSubtab('ri','changes')">Change Requests</button>
+    </div>
+    <div class="subtab-panel active" id="ri-risks"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="ri-issues"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="ri-changes"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ─── QUALITY ─── -->
+  <div class="console" id="tab-quality">
+    <div class="page-title">Quality Management</div>
+    <div class="page-sub">Quality gates, findings, corrective actions, audits, and recovery plans</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('qa','dashboard')">Dashboard</button>
+      <button onclick="showSubtab('qa','reviews')">Quality Reviews</button>
+      <button onclick="showSubtab('qa','findings')">Findings</button>
+      <button onclick="showSubtab('qa','actions')">Corrective Actions</button>
+      <button onclick="showSubtab('qa','audits')">Delivery Audits</button>
+      <button onclick="showSubtab('qa','recovery')">Recovery Plans</button>
+    </div>
+    <div class="subtab-panel active" id="qa-dashboard"><div class="loading">Loading quality data...</div></div>
+    <div class="subtab-panel" id="qa-reviews"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="qa-findings"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="qa-actions"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="qa-audits"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="qa-recovery"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ─── FEEDBACK ─── -->
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Customer Feedback</div>
+    <div class="page-sub">Satisfaction surveys, feedback tracking, and follow-up management</div>
+    <div id="feedback-content"><div class="loading">Loading feedback data...</div></div>
+  </div>
+
+  <!-- ─── CLOSEOUT ─── -->
+  <div class="console" id="tab-closeout">
+    <div class="page-title">Closeout & Lessons Learned</div>
+    <div class="page-sub">Project closeout checklists, post-project reviews, and continuous improvement</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('co','dashboard')">Dashboard</button>
+      <button onclick="showSubtab('co','closeouts')">Closeout Records</button>
+      <button onclick="showSubtab('co','reviews')">Post-Project Reviews</button>
+      <button onclick="showSubtab('co','lessons')">Lessons Learned</button>
+    </div>
+    <div class="subtab-panel active" id="co-dashboard"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="co-closeouts"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="co-reviews"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="co-lessons"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ─── REPORTS ─── -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports Center</div>
+    <div class="page-sub">Management dashboards, PM summaries, and operational reports</div>
+    <div class="subtabs">
+      <button class="active" onclick="showSubtab('rpt','pm')">PM Performance</button>
+      <button onclick="showSubtab('rpt','integrations')">Integrations</button>
+    </div>
+    <div class="subtab-panel active" id="rpt-pm"><div class="loading">Loading...</div></div>
+    <div class="subtab-panel" id="rpt-integrations"><div class="loading">Loading...</div></div>
+  </div>
+</div>
+
+<!-- ─── MODAL ─── -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ServiceProMax — Enterprise Services Management
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+let API = '', AUTH = '', USERNAME = '';
+const KAPP = 'service-pro-max';
+const LIMIT = 25;
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function fmt$(n) { return '$' + Number(n || 0).toLocaleString(); }
+function fmtN(n) { return Number(n || 0).toLocaleString(); }
+function healthBadge(h) { const cls = h === 'Green' ? 'badge-green' : h === 'Yellow' ? 'badge-yellow' : h === 'Red' ? 'badge-red' : 'badge-gray'; return `<span class="badge ${cls}">${esc(h || 'N/A')}</span>`; }
+function healthDot(h) { return `<span class="health-dot ${esc(h)}"></span>`; }
+function stageBadge(s) { const m = { 'In Progress': 'badge-blue', 'Kickoff': 'badge-blue', 'Planned': 'badge-gray', 'Scoping': 'badge-gray', 'Intake': 'badge-gray', 'At Risk': 'badge-orange', 'Recovery': 'badge-red', 'On Hold': 'badge-yellow', 'Ready for Closeout': 'badge-purple', 'Completed': 'badge-green', 'Closed': 'badge-gray' }; return `<span class="badge ${m[s] || 'badge-gray'}">${esc(s || 'N/A')}</span>`; }
+function sevBadge(s) { const m = { Critical: 'badge-red', High: 'badge-orange', Medium: 'badge-yellow', Low: 'badge-green' }; return `<span class="badge ${m[s] || 'badge-gray'}">${esc(s || 'N/A')}</span>`; }
+function statusBadge(s) { const m = { Open: 'badge-blue', 'In Progress': 'badge-blue', Active: 'badge-blue', Completed: 'badge-green', Resolved: 'badge-green', Complete: 'badge-green', Closed: 'badge-gray', Pending: 'badge-yellow', 'At Risk': 'badge-orange', 'Not Started': 'badge-gray', Draft: 'badge-gray', Approved: 'badge-green', 'Approved with Conditions': 'badge-yellow', Rejected: 'badge-red', 'Recovery Required': 'badge-red', Watchlist: 'badge-yellow', 'Milestone Approved': 'badge-green' }; return `<span class="badge ${m[s] || 'badge-gray'}">${esc(s || 'N/A')}</span>`; }
+function pctBar(pct, color) { const c = pct > 100 ? 'red' : color || 'blue'; return `<div class="progress-bar"><div class="fill ${c}" style="width:${Math.min(pct, 100)}%"></div></div>`; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+function showModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal').classList.add('show'); }
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+// ─── API Layer ────────────────────────────────────────────────────────────
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}/app/api/v1${path}`, { ...opts, headers: { 'Authorization': AUTH, 'Content-Type': 'application/json', ...opts.headers } });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function customApi(path) {
+  const res = await fetch(`${API}${path}`, { headers: { 'Authorization': AUTH } });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+async function fetchForm(formSlug, kql, pageToken, limit) {
+  let url = `/kapps/${KAPP}/forms/${formSlug}/submissions?include=values&limit=${limit || LIMIT}`;
+  if (kql) url += `&q=${encodeURIComponent(kql)}`;
+  if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
+  return api(url);
+}
+
+// ─── Login / Logout ───────────────────────────────────────────────────────
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    API = url;
+    AUTH = 'Basic ' + btoa(user + ':' + pass);
+    const me = await api('/me');
+    USERNAME = me.displayName || me.username || user;
+    document.getElementById('display-name').textContent = USERNAME;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  API = ''; AUTH = ''; USERNAME = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+}
+
+// Session bootstrap
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || '';
+      document.getElementById('display-name').textContent = USERNAME;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadDashboard();
+    } catch(e) {}
+  } else {
+    const port = location.port;
+    document.getElementById('login-url').value = location.origin;
+  }
+})();
+
+// ─── Tab Navigation ───────────────────────────────────────────────────────
+
+let currentTab = 'dashboard';
+function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('#main-nav button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const loaders = { dashboard: loadDashboard, customers: loadCustomers, projects: loadProjects, status: loadStatuses, time: loadTime, costs: loadCosts, milestones: loadMilestones, risksIssues: loadRisksIssues, quality: loadQuality, feedback: loadFeedback, closeout: loadCloseout, reports: loadReports };
+  if (loaders[tab]) loaders[tab]();
+}
+
+function showSubtab(group, sub) {
+  const parent = event.target.closest('.console');
+  parent.querySelectorAll('.subtabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  parent.querySelectorAll('.subtab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(group + '-' + sub).classList.add('active');
+  // Trigger load for specific subtabs
+  const subLoaders = {
+    'time-entries': loadTimeEntries, 'time-utilization': loadTimeUtilization,
+    'ms-milestones': loadMilestonesTab, 'ms-deliverables': loadDeliverablesTab,
+    'ri-risks': loadRisksTab, 'ri-issues': loadIssuesTab, 'ri-changes': loadChangesTab,
+    'qa-dashboard': loadQualityDashboard, 'qa-reviews': loadQualityReviews, 'qa-findings': loadQualityFindings, 'qa-actions': loadCorrectiveActions, 'qa-audits': loadAudits, 'qa-recovery': loadRecoveryPlans,
+    'co-dashboard': loadCloseoutDashboard, 'co-closeouts': loadCloseoutRecords, 'co-reviews': loadPostProjectReviews, 'co-lessons': loadLessonsLearned,
+    'rpt-pm': loadPMReport, 'rpt-integrations': loadIntegrations,
+  };
+  if (subLoaders[group + '-' + sub]) subLoaders[group + '-' + sub]();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadDashboard() {
+  const el = document.getElementById('dash-content');
+  el.innerHTML = '<div class="loading">Loading dashboard...</div>';
+  try {
+    const d = await customApi('/api/spm/dashboard');
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${d.portfolio.active}</div><div class="label">Active Projects</div><div class="sub">${d.portfolio.total} total</div></div>
+        <div class="kpi green"><div class="val">${d.portfolio.byHealth.Green}</div><div class="label">Healthy (Green)</div></div>
+        <div class="kpi yellow"><div class="val">${d.portfolio.byHealth.Yellow}</div><div class="label">At Risk (Yellow)</div></div>
+        <div class="kpi red"><div class="val">${d.portfolio.byHealth.Red}</div><div class="label">Critical (Red)</div></div>
+        <div class="kpi purple"><div class="val">${d.portfolio.inRecovery}</div><div class="label">In Recovery</div></div>
+        <div class="kpi red"><div class="val">${d.portfolio.escalations}</div><div class="label">Escalations</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Financial Summary</h3>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="dl">Planned Budget</div><div class="dv">${fmt$(d.financial.totalPlannedBudget)}</div></div>
+            <div class="detail-item"><div class="dl">Actual Cost</div><div class="dv">${fmt$(d.financial.totalActualCost)}</div></div>
+            <div class="detail-item"><div class="dl">Planned Hours</div><div class="dv">${fmtN(d.financial.totalPlannedHours)}</div></div>
+            <div class="detail-item"><div class="dl">Actual Hours</div><div class="dv">${fmtN(d.financial.totalActualHours)}</div></div>
+            <div class="detail-item"><div class="dl">Billable %</div><div class="dv">${d.financial.billablePercent}%</div></div>
+            <div class="detail-item"><div class="dl">Over-Budget Projects</div><div class="dv" style="color:${d.portfolio.overBudget > 0 ? 'var(--red)' : 'var(--green)'}">${d.portfolio.overBudget}</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Quality & Satisfaction</h3>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="dl">Avg Quality Score</div><div class="dv" style="font-size:18px;font-weight:700;color:${d.quality.avgScore >= 80 ? 'var(--green)' : d.quality.avgScore >= 60 ? 'var(--yellow)' : 'var(--red)'}">${d.quality.avgScore}</div></div>
+            <div class="detail-item"><div class="dl">Avg Satisfaction</div><div class="dv" style="font-size:18px;font-weight:700;color:${d.satisfaction.avgScore >= 4 ? 'var(--green)' : d.satisfaction.avgScore >= 3 ? 'var(--yellow)' : 'var(--red)'}">${d.satisfaction.avgScore}/5</div></div>
+            <div class="detail-item"><div class="dl">Open Corrective Actions</div><div class="dv">${d.quality.openCorrectiveActions}</div></div>
+            <div class="detail-item"><div class="dl">Overdue Actions</div><div class="dv" style="color:${d.quality.overdueCAs > 0 ? 'var(--red)' : 'var(--green)'}">${d.quality.overdueCAs}</div></div>
+            <div class="detail-item"><div class="dl">Feedback Follow-Ups</div><div class="dv">${d.satisfaction.followUpRequired}</div></div>
+            <div class="detail-item"><div class="dl">Pending Time Approvals</div><div class="dv">${d.time.pendingApprovals}</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Projects by Stage</h3>
+          <table><thead><tr><th>Stage</th><th>Count</th></tr></thead><tbody>
+          ${Object.entries(d.portfolio.byStage).sort((a,b) => b[1] - a[1]).map(([s, c]) => `<tr><td>${stageBadge(s)}</td><td>${c}</td></tr>`).join('')}
+          </tbody></table>
+        </div>
+        <div class="card">
+          <h3>Customer Health</h3>
+          <div class="kpi-row">
+            <div class="kpi green"><div class="val">${d.customers.byHealth.Green}</div><div class="label">Healthy</div></div>
+            <div class="kpi yellow"><div class="val">${d.customers.byHealth.Yellow}</div><div class="label">Attention</div></div>
+            <div class="kpi red"><div class="val">${d.customers.byHealth.Red}</div><div class="label">Critical</div></div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--gray)">${d.customers.total} total customer accounts</div>
+        </div>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error loading dashboard: ${esc(e.message)}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CUSTOMERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadCustomers() {
+  const el = document.getElementById('cust-content');
+  el.innerHTML = '<div class="loading">Loading customers...</div>';
+  try {
+    const d = await customApi('/api/spm/customers/dashboard');
+    let list = d.customers;
+    const tier = document.getElementById('cust-filter-tier').value;
+    const health = document.getElementById('cust-filter-health').value;
+    const search = document.getElementById('cust-search').value.toLowerCase();
+    if (tier) list = list.filter(c => c.tier === tier);
+    if (health) list = list.filter(c => c.health === health);
+    if (search) list = list.filter(c => c.name.toLowerCase().includes(search) || c.accountId.toLowerCase().includes(search));
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${d.customers.length}</div><div class="label">Total Customers</div></div>
+        <div class="kpi green"><div class="val">${d.customers.filter(c => c.health === 'Green').length}</div><div class="label">Healthy</div></div>
+        <div class="kpi yellow"><div class="val">${d.customers.filter(c => c.health === 'Yellow').length}</div><div class="label">Attention</div></div>
+        <div class="kpi red"><div class="val">${d.customers.filter(c => c.health === 'Red').length}</div><div class="label">Critical</div></div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Account ID</th><th>Name</th><th>Industry</th><th>Tier</th><th>Health</th><th>Region</th><th>Owner</th><th>Active Projects</th><th>Avg Satisfaction</th></tr></thead>
+          <tbody>
+          ${list.map(c => `<tr class="clickable" onclick="showCustomerDetail('${esc(c.id)}')">
+            <td>${esc(c.accountId)}</td><td><strong>${esc(c.name)}</strong></td><td>${esc(c.industry)}</td>
+            <td><span class="badge badge-blue">${esc(c.tier)}</span></td><td>${healthBadge(c.health)}</td>
+            <td>${esc(c.region)}</td><td>${esc(c.accountOwner)}</td><td>${c.activeProjects}</td>
+            <td>${c.avgSatisfaction > 0 ? c.avgSatisfaction + '/5' : '-'}</td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showCustomerDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>${esc(v(s, 'Name'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Account ID</div><div class="dv">${esc(v(s, 'Account ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Industry</div><div class="dv">${esc(v(s, 'Industry'))}</div></div>
+        <div class="detail-item"><div class="dl">Region</div><div class="dv">${esc(v(s, 'Region'))}</div></div>
+        <div class="detail-item"><div class="dl">Tier</div><div class="dv">${esc(v(s, 'Tier'))}</div></div>
+        <div class="detail-item"><div class="dl">Health</div><div class="dv">${healthBadge(v(s, 'Health'))}</div></div>
+        <div class="detail-item"><div class="dl">Account Owner</div><div class="dv">${esc(v(s, 'Account Owner'))}</div></div>
+        <div class="detail-item"><div class="dl">Executive Sponsor</div><div class="dv">${esc(v(s, 'Executive Sponsor'))}</div></div>
+        <div class="detail-item"><div class="dl">Status</div><div class="dv">${statusBadge(v(s, 'Status'))}</div></div>
+      </div>
+      ${v(s, 'Delivery Preferences') ? `<div class="detail-item"><div class="dl">Delivery Preferences</div><div class="dv">${esc(v(s, 'Delivery Preferences'))}</div></div>` : ''}
+      ${v(s, 'Renewal Notes') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Renewal Notes</div><div class="dv">${esc(v(s, 'Renewal Notes'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error loading customer: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+let projectsData = null;
+async function loadProjects() {
+  const el = document.getElementById('proj-content');
+  if (!projectsData) {
+    el.innerHTML = '<div class="loading">Loading projects...</div>';
+    try { projectsData = await customApi('/api/spm/projects/summary'); } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; return; }
+    // Populate PM filter
+    const pmSelect = document.getElementById('proj-filter-pm');
+    const pms = [...new Set(projectsData.projects.map(p => p.pm).filter(Boolean))].sort();
+    pms.forEach(pm => { const o = document.createElement('option'); o.value = pm; o.textContent = pm; pmSelect.appendChild(o); });
+  }
+  let list = projectsData.projects;
+  const stage = document.getElementById('proj-filter-stage').value;
+  const health = document.getElementById('proj-filter-health').value;
+  const pm = document.getElementById('proj-filter-pm').value;
+  const search = document.getElementById('proj-search').value.toLowerCase();
+  if (stage) list = list.filter(p => p.stage === stage);
+  if (health) list = list.filter(p => p.health === health);
+  if (pm) list = list.filter(p => p.pm === pm);
+  if (search) list = list.filter(p => p.name.toLowerCase().includes(search) || p.projectId.toLowerCase().includes(search) || p.customerName.toLowerCase().includes(search));
+  el.innerHTML = `
+    <div class="card">
+      <table>
+        <thead><tr><th>Project</th><th>Customer</th><th>PM</th><th>Stage</th><th>Health</th><th>Priority</th><th>Budget</th><th>Cost</th><th>Quality</th><th>Risks</th><th>Issues</th><th>Milestones</th></tr></thead>
+        <tbody>
+        ${list.map(p => `<tr class="clickable" onclick="showProjectDetail('${esc(p.id)}')">
+          <td><strong>${esc(p.projectId)}</strong><br><span style="font-size:12px;color:var(--gray)">${esc(p.name)}</span></td>
+          <td>${esc(p.customerName)}</td><td>${esc(p.pm)}</td>
+          <td>${stageBadge(p.stage)}</td><td>${healthBadge(p.health)}</td>
+          <td>${sevBadge(p.priority)}</td>
+          <td>${fmt$(p.plannedBudget)}</td><td>${fmt$(p.actualCost)}</td>
+          <td>${p.qualityScore && p.qualityScore !== 'N/A' ? p.qualityScore : '-'}</td>
+          <td style="color:${p.openRisks > 0 ? 'var(--orange)' : ''}">${p.openRisks}</td>
+          <td style="color:${p.openIssues > 0 ? 'var(--red)' : ''}">${p.openIssues}</td>
+          <td>${p.milestonesComplete}/${p.milestonesTotal}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--gray)">${list.length} projects</div>
+    </div>
+  `;
+}
+
+async function showProjectDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    const plannedBudget = parseFloat(v(s, 'Planned Budget')) || 0;
+    const actualCost = parseFloat(v(s, 'Actual Cost')) || 0;
+    const burnPct = plannedBudget > 0 ? Math.round(actualCost / plannedBudget * 100) : 0;
+    const plannedHours = parseFloat(v(s, 'Planned Hours')) || 0;
+    const actualHours = parseFloat(v(s, 'Actual Hours')) || 0;
+    const hoursPct = plannedHours > 0 ? Math.round(actualHours / plannedHours * 100) : 0;
+    showModal(`
+      <h2>${esc(v(s, 'Project ID'))} — ${esc(v(s, 'Name'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Customer</div><div class="dv">${esc(v(s, 'Customer Name'))}</div></div>
+        <div class="detail-item"><div class="dl">Type</div><div class="dv">${esc(v(s, 'Project Type'))}</div></div>
+        <div class="detail-item"><div class="dl">Service Offering</div><div class="dv">${esc(v(s, 'Service Offering'))}</div></div>
+        <div class="detail-item"><div class="dl">Project Manager</div><div class="dv">${esc(v(s, 'Project Manager'))}</div></div>
+        <div class="detail-item"><div class="dl">Delivery Lead</div><div class="dv">${esc(v(s, 'Delivery Lead'))}</div></div>
+        <div class="detail-item"><div class="dl">Priority</div><div class="dv">${sevBadge(v(s, 'Priority'))}</div></div>
+        <div class="detail-item"><div class="dl">Stage</div><div class="dv">${stageBadge(v(s, 'Stage'))}</div></div>
+        <div class="detail-item"><div class="dl">Health</div><div class="dv">${healthBadge(v(s, 'Health'))}</div></div>
+        <div class="detail-item"><div class="dl">Planned Start</div><div class="dv">${esc(v(s, 'Planned Start'))}</div></div>
+        <div class="detail-item"><div class="dl">Planned End</div><div class="dv">${esc(v(s, 'Planned End'))}</div></div>
+        <div class="detail-item"><div class="dl">Quality Score</div><div class="dv">${esc(v(s, 'Quality Score'))}</div></div>
+        <div class="detail-item"><div class="dl">Gross Margin</div><div class="dv">${esc(v(s, 'Gross Margin'))}%</div></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3>Budget — ${fmt$(plannedBudget)} planned / ${fmt$(actualCost)} actual (${burnPct}%)</h3>
+        ${pctBar(burnPct, burnPct > 90 ? 'red' : burnPct > 70 ? 'yellow' : 'green')}
+      </div>
+      <div class="card">
+        <h3>Hours — ${fmtN(plannedHours)} planned / ${fmtN(actualHours)} actual (${hoursPct}%)</h3>
+        ${pctBar(hoursPct, hoursPct > 90 ? 'red' : hoursPct > 70 ? 'yellow' : 'green')}
+      </div>
+      ${v(s, 'Scope Summary') ? `<div class="detail-item" style="margin-top:12px"><div class="dl">Scope Summary</div><div class="dv">${esc(v(s, 'Scope Summary'))}</div></div>` : ''}
+      ${v(s, 'Notes') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Notes</div><div class="dv">${esc(v(s, 'Notes'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error loading project: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATUS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadStatuses() {
+  const el = document.getElementById('status-content');
+  el.innerHTML = '<div class="loading">Loading status updates...</div>';
+  try {
+    const data = await fetchForm('status-update');
+    let subs = data.submissions || [];
+    const healthF = document.getElementById('status-filter-health').value;
+    const escF = document.getElementById('status-filter-esc').value;
+    if (healthF) subs = subs.filter(s => v(s, 'Overall Health') === healthF);
+    if (escF) subs = subs.filter(s => v(s, 'Escalation Flag') === escF);
+    subs.sort((a, b) => (v(b, 'Report Date') || '').localeCompare(v(a, 'Report Date') || ''));
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Date</th><th>Reporter</th><th>Overall</th><th>Schedule</th><th>Budget</th><th>Scope</th><th>Quality</th><th>Customer</th><th>Escalation</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showStatusDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Project ID'))}</strong></td><td>${esc(v(s, 'Report Date'))}</td><td>${esc(v(s, 'Reporter'))}</td>
+        <td>${healthBadge(v(s, 'Overall Health'))}</td><td>${healthDot(v(s, 'Schedule Health'))}</td><td>${healthDot(v(s, 'Budget Health'))}</td>
+        <td>${healthDot(v(s, 'Scope Health'))}</td><td>${healthDot(v(s, 'Quality Health'))}</td><td>${healthDot(v(s, 'Customer Health'))}</td>
+        <td>${v(s, 'Escalation Flag') === 'Yes' ? '<span class="badge badge-red">ESC</span>' : ''}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showStatusDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>Status Report — ${esc(v(s, 'Project ID'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Report Date</div><div class="dv">${esc(v(s, 'Report Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Reporter</div><div class="dv">${esc(v(s, 'Reporter'))}</div></div>
+        <div class="detail-item"><div class="dl">Overall Health</div><div class="dv">${healthBadge(v(s, 'Overall Health'))}</div></div>
+        <div class="detail-item"><div class="dl">Escalation</div><div class="dv">${v(s, 'Escalation Flag') === 'Yes' ? '<span class="badge badge-red">Yes</span>' : 'No'}</div></div>
+      </div>
+      <div class="card"><h3>Health Dimensions</h3>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="dl">Schedule</div><div class="dv">${healthBadge(v(s, 'Schedule Health'))}</div></div>
+          <div class="detail-item"><div class="dl">Budget</div><div class="dv">${healthBadge(v(s, 'Budget Health'))}</div></div>
+          <div class="detail-item"><div class="dl">Scope</div><div class="dv">${healthBadge(v(s, 'Scope Health'))}</div></div>
+          <div class="detail-item"><div class="dl">Staffing</div><div class="dv">${healthBadge(v(s, 'Staffing Health'))}</div></div>
+          <div class="detail-item"><div class="dl">Quality</div><div class="dv">${healthBadge(v(s, 'Quality Health'))}</div></div>
+          <div class="detail-item"><div class="dl">Customer</div><div class="dv">${healthBadge(v(s, 'Customer Health'))}</div></div>
+        </div>
+      </div>
+      ${v(s, 'Accomplishments') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Accomplishments</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Accomplishments'))}</div></div>` : ''}
+      ${v(s, 'Planned Next Week') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Planned Next Week</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Planned Next Week'))}</div></div>` : ''}
+      ${v(s, 'Risks Summary') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Risks</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Risks Summary'))}</div></div>` : ''}
+      ${v(s, 'Milestone Progress') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Milestone Progress</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Milestone Progress'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TIME
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadTime() {
+  loadTimeSummary();
+}
+
+async function loadTimeSummary() {
+  const el = document.getElementById('time-summary');
+  el.innerHTML = '<div class="loading">Loading time data...</div>';
+  try {
+    const d = await customApi('/api/spm/time/dashboard');
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${fmtN(d.summary.totalHours)}</div><div class="label">Total Hours</div></div>
+        <div class="kpi green"><div class="val">${fmtN(d.summary.billableHours)}</div><div class="label">Billable Hours</div></div>
+        <div class="kpi teal"><div class="val">${d.summary.billablePercent}%</div><div class="label">Billable %</div></div>
+        <div class="kpi yellow"><div class="val">${d.summary.pendingApprovals}</div><div class="label">Pending Approvals</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Hours by Consultant</h3>
+          <table><thead><tr><th>Consultant</th><th>Total</th><th>Billable</th><th>Billable %</th></tr></thead>
+          <tbody>${d.byConsultant.map(c => `<tr><td>${esc(c.name)}</td><td>${c.totalHours}</td><td>${c.billableHours}</td><td>${c.billablePercent}%</td></tr>`).join('')}</tbody></table>
+        </div>
+        <div class="card"><h3>Hours by Project</h3>
+          <table><thead><tr><th>Project</th><th>Actual</th><th>Planned</th><th>Progress</th></tr></thead>
+          <tbody>${d.byProject.map(p => { const pct = p.plannedHours > 0 ? Math.round(p.totalHours / p.plannedHours * 100) : 0; return `<tr><td>${esc(p.projectName)}</td><td>${p.totalHours}</td><td>${p.plannedHours || '-'}</td><td>${p.plannedHours ? pctBar(pct, pct > 100 ? 'red' : 'green') : '-'}</td></tr>`; }).join('')}</tbody></table>
+        </div>
+      </div>
+      <div class="card"><h3>Hours by Work Category</h3>
+        <table><thead><tr><th>Category</th><th>Hours</th></tr></thead>
+        <tbody>${Object.entries(d.byCategory).sort((a,b) => b[1] - a[1]).map(([c, h]) => `<tr><td>${esc(c)}</td><td>${Math.round(h * 10) / 10}</td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadTimeEntries() {
+  const el = document.getElementById('time-entries');
+  el.innerHTML = '<div class="loading">Loading time entries...</div>';
+  try {
+    const data = await fetchForm('time-entry');
+    const subs = (data.submissions || []).sort((a, b) => (v(b, 'Entry Date') || '').localeCompare(v(a, 'Entry Date') || ''));
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Date</th><th>Project</th><th>Consultant</th><th>Hours</th><th>Category</th><th>Billable</th><th>Approval</th></tr></thead>
+      <tbody>${subs.map(s => `<tr>
+        <td>${esc(v(s, 'Entry Date'))}</td><td>${esc(v(s, 'Project ID'))}</td><td>${esc(v(s, 'Consultant'))}</td>
+        <td>${esc(v(s, 'Hours'))}</td><td>${esc(v(s, 'Work Category'))}</td>
+        <td>${v(s, 'Billable') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+        <td>${statusBadge(v(s, 'Approval Status'))}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadTimeUtilization() {
+  const el = document.getElementById('time-utilization');
+  el.innerHTML = '<div class="loading">Loading utilization...</div>';
+  try {
+    const d = await customApi('/api/spm/time/dashboard');
+    el.innerHTML = `<div class="card"><h3>Consultant Utilization</h3>
+      <table><thead><tr><th>Consultant</th><th>Total Hours</th><th>Billable</th><th>Non-Billable</th><th>Billable %</th><th>Utilization</th></tr></thead>
+      <tbody>${d.byConsultant.map(c => `<tr>
+        <td><strong>${esc(c.name)}</strong></td><td>${c.totalHours}</td><td>${c.billableHours}</td><td>${Math.round((c.totalHours - c.billableHours) * 10) / 10}</td>
+        <td>${c.billablePercent}%</td><td>${pctBar(c.billablePercent, c.billablePercent >= 75 ? 'green' : c.billablePercent >= 50 ? 'yellow' : 'red')}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COSTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadCosts() {
+  const el = document.getElementById('cost-content');
+  el.innerHTML = '<div class="loading">Loading cost data...</div>';
+  try {
+    const d = await customApi('/api/spm/cost/dashboard');
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${fmt$(d.summary.totalPlanned)}</div><div class="label">Total Planned</div></div>
+        <div class="kpi teal"><div class="val">${fmt$(d.summary.totalForecast)}</div><div class="label">Total Forecast</div></div>
+        <div class="kpi ${d.summary.totalActual > d.summary.totalPlanned ? 'red' : 'green'}"><div class="val">${fmt$(d.summary.totalActual)}</div><div class="label">Total Actual</div></div>
+        <div class="kpi ${d.summary.portfolioVariance > 5 ? 'red' : d.summary.portfolioVariance > 0 ? 'yellow' : 'green'}"><div class="val">${d.summary.portfolioVariance}%</div><div class="label">Portfolio Variance</div></div>
+        <div class="kpi red"><div class="val">${d.summary.overBudgetProjects}</div><div class="label">Over Budget</div></div>
+      </div>
+      <div class="card"><h3>Project Financial Summary</h3>
+        <table><thead><tr><th>Project</th><th>Customer</th><th>Stage</th><th>Planned</th><th>Forecast</th><th>Actual</th><th>Variance</th><th>Margin</th><th>Burn Rate</th></tr></thead>
+        <tbody>${d.projects.sort((a,b) => b.variance - a.variance).map(p => `<tr>
+          <td><strong>${esc(p.projectId)}</strong><br><span style="font-size:11px;color:var(--gray)">${esc(p.name)}</span></td>
+          <td>${esc(p.customerName)}</td><td>${stageBadge(p.stage)}</td>
+          <td>${fmt$(p.plannedBudget)}</td><td>${fmt$(p.forecastCost)}</td><td>${fmt$(p.actualCost)}</td>
+          <td style="color:${p.variance > 5 ? 'var(--red)' : p.variance > 0 ? 'var(--yellow)' : 'var(--green)'}">${p.variance > 0 ? '+' : ''}${p.variance}%</td>
+          <td>${esc(p.margin)}%</td>
+          <td>${pctBar(p.burnRate, p.burnRate > 90 ? 'red' : p.burnRate > 70 ? 'yellow' : 'green')}<span style="font-size:11px;color:var(--gray)">${p.burnRate}%</span></td>
+        </tr>`).join('')}</tbody></table>
+      </div>
+      <div class="card"><h3>Non-Labor Costs by Category</h3>
+        <table><thead><tr><th>Category</th><th>Total</th></tr></thead>
+        <tbody>${Object.entries(d.costByCategory).sort((a,b) => b[1] - a[1]).map(([c, a]) => `<tr><td>${esc(c)}</td><td>${fmt$(a)}</td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MILESTONES & DELIVERABLES
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadMilestones() { loadMilestonesTab(); }
+
+async function loadMilestonesTab() {
+  const el = document.getElementById('ms-milestones');
+  el.innerHTML = '<div class="loading">Loading milestones...</div>';
+  try {
+    const data = await fetchForm('milestone');
+    const subs = (data.submissions || []).sort((a, b) => (v(a, 'Planned Date') || '').localeCompare(v(b, 'Planned Date') || ''));
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Milestone</th><th>Owner</th><th>Planned</th><th>Forecast</th><th>Actual</th><th>Status</th><th>Customer Visible</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const planned = v(s, 'Planned Date');
+        const forecast = v(s, 'Forecast Date');
+        const isLate = forecast && planned && forecast > planned;
+        return `<tr class="clickable" onclick="showMilestoneDetail('${s.id}')">
+          <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Name'))}</strong></td><td>${esc(v(s, 'Owner'))}</td>
+          <td>${esc(planned)}</td><td style="color:${isLate ? 'var(--red)' : ''}">${esc(forecast)}</td><td>${esc(v(s, 'Actual Date'))}</td>
+          <td>${statusBadge(v(s, 'Status'))}</td><td>${v(s, 'Customer Visible') === 'Yes' ? 'Yes' : ''}</td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showMilestoneDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>${esc(v(s, 'Name'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Project</div><div class="dv">${esc(v(s, 'Project ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Owner</div><div class="dv">${esc(v(s, 'Owner'))}</div></div>
+        <div class="detail-item"><div class="dl">Planned Date</div><div class="dv">${esc(v(s, 'Planned Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Forecast Date</div><div class="dv">${esc(v(s, 'Forecast Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Actual Date</div><div class="dv">${esc(v(s, 'Actual Date') || 'Pending')}</div></div>
+        <div class="detail-item"><div class="dl">Status</div><div class="dv">${statusBadge(v(s, 'Status'))}</div></div>
+      </div>
+      ${v(s, 'Dependency Notes') ? `<div class="detail-item"><div class="dl">Dependencies</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Dependency Notes'))}</div></div>` : ''}
+      ${v(s, 'Delay Reason') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Delay Reason</div><div class="dv" style="white-space:pre-wrap;color:var(--red)">${esc(v(s, 'Delay Reason'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadDeliverablesTab() {
+  const el = document.getElementById('ms-deliverables');
+  el.innerHTML = '<div class="loading">Loading deliverables...</div>';
+  try {
+    const data = await fetchForm('deliverable');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Deliverable</th><th>Type</th><th>Due</th><th>Owner</th><th>Status</th><th>Approval</th><th>Customer Ack</th></tr></thead>
+      <tbody>${subs.map(s => `<tr>
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Name'))}</strong></td><td>${esc(v(s, 'Type'))}</td>
+        <td>${esc(v(s, 'Due Date'))}</td><td>${esc(v(s, 'Owner'))}</td>
+        <td>${statusBadge(v(s, 'Status'))}</td><td>${statusBadge(v(s, 'Approval Status'))}</td>
+        <td>${v(s, 'Customer Acknowledged') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RISKS / ISSUES / CHANGES
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadRisksIssues() { loadRisksTab(); }
+
+async function loadRisksTab() {
+  const el = document.getElementById('ri-risks');
+  el.innerHTML = '<div class="loading">Loading risks...</div>';
+  try {
+    const data = await fetchForm('risk');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Risk</th><th>Category</th><th>Probability</th><th>Impact</th><th>Severity</th><th>Owner</th><th>Status</th><th>Escalation</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showRiskDetail('${s.id}')">
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Title'))}</strong></td><td>${esc(v(s, 'Category'))}</td>
+        <td>${esc(v(s, 'Probability'))}</td><td>${esc(v(s, 'Impact'))}</td><td>${sevBadge(v(s, 'Severity'))}</td>
+        <td>${esc(v(s, 'Owner'))}</td><td>${statusBadge(v(s, 'Status'))}</td>
+        <td>${v(s, 'Escalation Flag') === 'Yes' ? '<span class="badge badge-red">ESC</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showRiskDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>${esc(v(s, 'Title'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Project</div><div class="dv">${esc(v(s, 'Project ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Category</div><div class="dv">${esc(v(s, 'Category'))}</div></div>
+        <div class="detail-item"><div class="dl">Probability</div><div class="dv">${esc(v(s, 'Probability'))}</div></div>
+        <div class="detail-item"><div class="dl">Impact</div><div class="dv">${esc(v(s, 'Impact'))}</div></div>
+        <div class="detail-item"><div class="dl">Severity</div><div class="dv">${sevBadge(v(s, 'Severity'))}</div></div>
+        <div class="detail-item"><div class="dl">Owner</div><div class="dv">${esc(v(s, 'Owner'))}</div></div>
+        <div class="detail-item"><div class="dl">Status</div><div class="dv">${statusBadge(v(s, 'Status'))}</div></div>
+        <div class="detail-item"><div class="dl">Review Date</div><div class="dv">${esc(v(s, 'Review Date'))}</div></div>
+      </div>
+      ${v(s, 'Mitigation Plan') ? `<div class="detail-item"><div class="dl">Mitigation Plan</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Mitigation Plan'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadIssuesTab() {
+  const el = document.getElementById('ri-issues');
+  el.innerHTML = '<div class="loading">Loading issues...</div>';
+  try {
+    const data = await fetchForm('issue');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Issue</th><th>Severity</th><th>Owner</th><th>Due</th><th>Status</th><th>Escalation</th></tr></thead>
+      <tbody>${subs.map(s => `<tr>
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Title'))}</strong></td><td>${sevBadge(v(s, 'Severity'))}</td>
+        <td>${esc(v(s, 'Owner'))}</td><td>${esc(v(s, 'Due Date'))}</td><td>${statusBadge(v(s, 'Status'))}</td>
+        <td>${v(s, 'Escalation Flag') === 'Yes' ? '<span class="badge badge-red">ESC</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadChangesTab() {
+  const el = document.getElementById('ri-changes');
+  el.innerHTML = '<div class="loading">Loading change requests...</div>';
+  try {
+    const data = await fetchForm('change-request');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Change</th><th>Date</th><th>Requested By</th><th>Budget Impact</th><th>Schedule Impact</th><th>Status</th></tr></thead>
+      <tbody>${subs.map(s => `<tr>
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Title'))}</strong></td><td>${esc(v(s, 'Request Date'))}</td>
+        <td>${esc(v(s, 'Requested By'))}</td><td>${v(s, 'Budget Impact') ? fmt$(v(s, 'Budget Impact')) : '-'}</td>
+        <td>${esc(v(s, 'Schedule Impact'))}</td><td>${statusBadge(v(s, 'Approval Status'))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QUALITY
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadQuality() { loadQualityDashboard(); }
+
+async function loadQualityDashboard() {
+  const el = document.getElementById('qa-dashboard');
+  el.innerHTML = '<div class="loading">Loading quality dashboard...</div>';
+  try {
+    const d = await customApi('/api/spm/quality/dashboard');
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi green"><div class="val">${d.gatePassRate}%</div><div class="label">Gate Pass Rate</div></div>
+        <div class="kpi orange"><div class="val">${d.findings.open}</div><div class="label">Open Findings</div><div class="sub">${d.findings.total} total</div></div>
+        <div class="kpi red"><div class="val">${d.correctiveActions.overdue}</div><div class="label">Overdue Actions</div><div class="sub">${d.correctiveActions.open} open</div></div>
+        <div class="kpi teal"><div class="val">${d.audits.avgScore}</div><div class="label">Avg Audit Score</div><div class="sub">${d.audits.total} audits</div></div>
+        <div class="kpi purple"><div class="val">${d.activeRecoveries}</div><div class="label">Active Recoveries</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Gate Results by Type</h3>
+          <table><thead><tr><th>Gate Type</th><th>Total</th><th>Passed</th><th>Pass Rate</th></tr></thead>
+          <tbody>${Object.entries(d.byGateType).map(([gt, data]) => `<tr>
+            <td>${esc(gt)}</td><td>${data.total}</td><td>${data.passed}</td>
+            <td>${data.total > 0 ? Math.round(data.passed / data.total * 100) : 0}%</td>
+          </tr>`).join('')}</tbody></table>
+        </div>
+        <div class="card"><h3>Findings by Category</h3>
+          <table><thead><tr><th>Category</th><th>Count</th></tr></thead>
+          <tbody>${Object.entries(d.findings.byCategory).sort((a,b) => b[1] - a[1]).map(([c, n]) => `<tr><td>${esc(c)}</td><td>${n}</td></tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Findings by Severity</h3>
+          <table><thead><tr><th>Severity</th><th>Count</th></tr></thead>
+          <tbody>${Object.entries(d.findings.bySeverity).sort((a,b) => b[1] - a[1]).map(([s, n]) => `<tr><td>${sevBadge(s)}</td><td>${n}</td></tr>`).join('')}</tbody></table>
+        </div>
+        <div class="card"><h3>Corrective Actions Summary</h3>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="dl">Total Actions</div><div class="dv">${d.correctiveActions.total}</div></div>
+            <div class="detail-item"><div class="dl">Open</div><div class="dv">${d.correctiveActions.open}</div></div>
+            <div class="detail-item"><div class="dl">Overdue</div><div class="dv" style="color:var(--red)">${d.correctiveActions.overdue}</div></div>
+            <div class="detail-item"><div class="dl">Corrective</div><div class="dv">${d.correctiveActions.byType.Corrective || 0}</div></div>
+            <div class="detail-item"><div class="dl">Preventive</div><div class="dv">${d.correctiveActions.byType.Preventive || 0}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadQualityReviews() {
+  const el = document.getElementById('qa-reviews');
+  el.innerHTML = '<div class="loading">Loading quality reviews...</div>';
+  try {
+    const data = await fetchForm('quality-review');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Gate Type</th><th>Date</th><th>Reviewer</th><th>Score</th><th>Decision</th><th>Escalation</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showQRDetail('${s.id}')">
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Gate Type'))}</strong></td><td>${esc(v(s, 'Review Date'))}</td>
+        <td>${esc(v(s, 'Reviewer'))}</td>
+        <td style="font-weight:700;color:${parseInt(v(s,'Score'))>=80?'var(--green)':parseInt(v(s,'Score'))>=60?'var(--yellow)':'var(--red)'}">${esc(v(s, 'Score'))}</td>
+        <td>${statusBadge(v(s, 'Decision'))}</td>
+        <td>${v(s, 'Escalation Flag') === 'Yes' ? '<span class="badge badge-red">ESC</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showQRDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    const checklist = v(s, 'Checklist Results') || '';
+    const checklistHtml = checklist.split('\n').filter(Boolean).map(line => {
+      const cls = line.includes('Pass') ? 'pass' : line.includes('Fail') ? 'fail' : 'partial';
+      return `<div class="checklist-item ${cls}">${esc(line)}</div>`;
+    }).join('');
+    showModal(`
+      <h2>${esc(v(s, 'Gate Type'))} — ${esc(v(s, 'Project ID'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Review Date</div><div class="dv">${esc(v(s, 'Review Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Reviewer</div><div class="dv">${esc(v(s, 'Reviewer'))}</div></div>
+        <div class="detail-item"><div class="dl">Score</div><div class="dv" style="font-size:20px;font-weight:700">${esc(v(s, 'Score'))}</div></div>
+        <div class="detail-item"><div class="dl">Decision</div><div class="dv">${statusBadge(v(s, 'Decision'))}</div></div>
+      </div>
+      ${checklistHtml ? `<div class="card"><h3>Checklist Results</h3>${checklistHtml}</div>` : ''}
+      ${v(s, 'Findings Summary') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Findings</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Findings Summary'))}</div></div>` : ''}
+      ${v(s, 'Decision Notes') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Decision Notes</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Decision Notes'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadQualityFindings() {
+  const el = document.getElementById('qa-findings');
+  el.innerHTML = '<div class="loading">Loading findings...</div>';
+  try {
+    const data = await fetchForm('quality-finding');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Finding</th><th>Category</th><th>Severity</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
+      <tbody>${subs.map(s => `<tr>
+        <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Title'))}</strong></td><td>${esc(v(s, 'Category'))}</td>
+        <td>${sevBadge(v(s, 'Severity'))}</td><td>${esc(v(s, 'Owner'))}</td><td>${esc(v(s, 'Due Date'))}</td>
+        <td>${statusBadge(v(s, 'Status'))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadCorrectiveActions() {
+  const el = document.getElementById('qa-actions');
+  el.innerHTML = '<div class="loading">Loading corrective actions...</div>';
+  try {
+    const data = await fetchForm('corrective-action');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Action</th><th>Type</th><th>Severity</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const overdue = v(s, 'Status') !== 'Completed' && v(s, 'Due Date') && new Date(v(s, 'Due Date')) < new Date();
+        return `<tr style="${overdue ? 'background:#FFF5F5' : ''}">
+          <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'Title'))}</strong></td>
+          <td><span class="badge ${v(s,'Type')==='Corrective'?'badge-orange':'badge-blue'}">${esc(v(s, 'Type'))}</span></td>
+          <td>${sevBadge(v(s, 'Severity'))}</td><td>${esc(v(s, 'Owner'))}</td>
+          <td style="color:${overdue?'var(--red)':''}">${esc(v(s, 'Due Date'))}${overdue?' (OVERDUE)':''}</td>
+          <td>${statusBadge(v(s, 'Status'))}</td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadAudits() {
+  const el = document.getElementById('qa-audits');
+  el.innerHTML = '<div class="loading">Loading audits...</div>';
+  try {
+    const data = await fetchForm('delivery-audit');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Date</th><th>Auditor</th><th>Status</th><th>Time</th><th>Docs</th><th>Risk</th><th>Quality</th><th>Comm</th><th>Governance</th><th>Overall</th><th>Recommendation</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const score = parseInt(v(s, 'Overall Score')) || 0;
+        return `<tr class="clickable" onclick="showAuditDetail('${s.id}')">
+          <td>${esc(v(s, 'Project ID'))}</td><td>${esc(v(s, 'Audit Date'))}</td><td>${esc(v(s, 'Auditor'))}</td>
+          <td>${esc(v(s, 'Status Discipline'))}/5</td><td>${esc(v(s, 'Time Discipline'))}/5</td>
+          <td>${esc(v(s, 'Documentation Score'))}/5</td><td>${esc(v(s, 'Risk Mgmt Score'))}/5</td>
+          <td>${esc(v(s, 'Deliverable Quality'))}/5</td><td>${esc(v(s, 'Customer Comm Score'))}/5</td>
+          <td>${esc(v(s, 'Governance Score'))}/5</td>
+          <td style="font-weight:700;color:${score>=80?'var(--green)':score>=60?'var(--yellow)':'var(--red)'}">${score}</td>
+          <td style="font-size:12px">${esc(v(s, 'Recommendation'))}</td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showAuditDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>Delivery Audit — ${esc(v(s, 'Project ID'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Audit Date</div><div class="dv">${esc(v(s, 'Audit Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Auditor</div><div class="dv">${esc(v(s, 'Auditor'))}</div></div>
+        <div class="detail-item"><div class="dl">Overall Score</div><div class="dv" style="font-size:24px;font-weight:700">${esc(v(s, 'Overall Score'))}</div></div>
+        <div class="detail-item"><div class="dl">Recommendation</div><div class="dv">${esc(v(s, 'Recommendation'))}</div></div>
+      </div>
+      <div class="card"><h3>Dimension Scores (1-5)</h3>
+        <div class="detail-grid">
+          ${['Status Discipline','Time Discipline','Documentation Score','Risk Mgmt Score','Deliverable Quality','Customer Comm Score','Governance Score','Change Mgmt Score'].map(d => `<div class="detail-item"><div class="dl">${d}</div><div class="dv">${esc(v(s, d))}/5</div></div>`).join('')}
+        </div>
+      </div>
+      ${v(s, 'Findings') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Findings</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Findings'))}</div></div>` : ''}
+      ${v(s, 'Required Actions') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Required Actions</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Required Actions'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadRecoveryPlans() {
+  const el = document.getElementById('qa-recovery');
+  el.innerHTML = '<div class="loading">Loading recovery plans...</div>';
+  try {
+    const data = await fetchForm('recovery-plan');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Initiated</th><th>Assigned To</th><th>Manager</th><th>Status</th><th>Financial Impact</th><th>Cadence</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showRecoveryDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Project ID'))}</strong></td><td>${esc(v(s, 'Initiated Date'))}</td>
+        <td>${esc(v(s, 'Assigned To'))}</td><td>${esc(v(s, 'Manager'))}</td>
+        <td>${statusBadge(v(s, 'Status'))}</td><td>${v(s, 'Financial Impact') ? fmt$(v(s, 'Financial Impact')) : '-'}</td>
+        <td>${esc(v(s, 'Review Cadence'))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showRecoveryDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>Recovery Plan — ${esc(v(s, 'Project ID'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Initiated</div><div class="dv">${esc(v(s, 'Initiated Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Status</div><div class="dv">${statusBadge(v(s, 'Status'))}</div></div>
+        <div class="detail-item"><div class="dl">Assigned To</div><div class="dv">${esc(v(s, 'Assigned To'))}</div></div>
+        <div class="detail-item"><div class="dl">Manager</div><div class="dv">${esc(v(s, 'Manager'))}</div></div>
+        <div class="detail-item"><div class="dl">Financial Impact</div><div class="dv">${v(s, 'Financial Impact') ? fmt$(v(s, 'Financial Impact')) : '-'}</div></div>
+        <div class="detail-item"><div class="dl">Review Cadence</div><div class="dv">${esc(v(s, 'Review Cadence'))}</div></div>
+      </div>
+      ${['Trigger Reason','Root Problem','Key Risk Areas','Immediate Actions','Leadership Support','Customer Comm Plan','New Milestone Targets','Outcome Notes'].map(f => v(s, f) ? `<div class="detail-item" style="margin-top:8px"><div class="dl">${f}</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, f))}</div></div>` : '').join('')}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadFeedback() {
+  const el = document.getElementById('feedback-content');
+  el.innerHTML = '<div class="loading">Loading feedback data...</div>';
+  try {
+    const d = await customApi('/api/spm/feedback/dashboard');
+    const data = await fetchForm('customer-feedback');
+    const subs = data.submissions || [];
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${d.summary.total}</div><div class="label">Total Responses</div></div>
+        <div class="kpi ${d.summary.avgOverall >= 4 ? 'green' : d.summary.avgOverall >= 3 ? 'yellow' : 'red'}"><div class="val">${d.summary.avgOverall}/5</div><div class="label">Avg Overall</div></div>
+        <div class="kpi teal"><div class="val">${d.summary.avgDelivery}/5</div><div class="label">Avg Delivery</div></div>
+        <div class="kpi purple"><div class="val">${d.summary.avgCommunication}/5</div><div class="label">Avg Communication</div></div>
+        <div class="kpi green"><div class="val">${d.summary.wouldRecommendPct}%</div><div class="label">Would Recommend</div></div>
+        <div class="kpi ${d.followUp.pending > 0 ? 'red' : 'green'}"><div class="val">${d.followUp.pending}</div><div class="label">Pending Follow-ups</div></div>
+      </div>
+      <div class="card"><h3>All Feedback</h3>
+        <table>
+          <thead><tr><th>Customer</th><th>Project</th><th>Date</th><th>Type</th><th>Overall</th><th>Delivery</th><th>Comm</th><th>Outcome</th><th>Recommend</th><th>Follow-up</th></tr></thead>
+          <tbody>${subs.map(s => `<tr class="clickable" onclick="showFeedbackDetail('${s.id}')">
+            <td>${esc(v(s, 'Customer ID'))}</td><td>${esc(v(s, 'Project ID'))}</td><td>${esc(v(s, 'Survey Date'))}</td>
+            <td><span class="badge badge-blue">${esc(v(s, 'Feedback Type'))}</span></td>
+            <td style="font-weight:700;color:${parseInt(v(s,'Overall Score'))>=4?'var(--green)':parseInt(v(s,'Overall Score'))>=3?'var(--yellow)':'var(--red)'}">${esc(v(s, 'Overall Score'))}/5</td>
+            <td>${esc(v(s, 'Delivery Score'))}/5</td><td>${esc(v(s, 'Communication Score'))}/5</td><td>${esc(v(s, 'Outcome Score'))}/5</td>
+            <td>${v(s, 'Would Recommend') === 'Yes' ? '<span class="badge badge-green">Yes</span>' : v(s, 'Would Recommend') === 'No' ? '<span class="badge badge-red">No</span>' : '<span class="badge badge-yellow">Maybe</span>'}</td>
+            <td>${v(s, 'Follow Up Required') === 'Yes' ? statusBadge(v(s, 'Follow Up Status')) : ''}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showFeedbackDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>Customer Feedback</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Customer</div><div class="dv">${esc(v(s, 'Customer ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Project</div><div class="dv">${esc(v(s, 'Project ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Date</div><div class="dv">${esc(v(s, 'Survey Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Type</div><div class="dv">${esc(v(s, 'Feedback Type'))}</div></div>
+        <div class="detail-item"><div class="dl">Overall</div><div class="dv" style="font-size:20px;font-weight:700">${esc(v(s, 'Overall Score'))}/5</div></div>
+        <div class="detail-item"><div class="dl">Recommend</div><div class="dv">${esc(v(s, 'Would Recommend'))}</div></div>
+      </div>
+      ${v(s, 'Comments') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Comments</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Comments'))}</div></div>` : ''}
+      ${v(s, 'Improvements') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Improvements Suggested</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Improvements'))}</div></div>` : ''}
+      ${v(s, 'Follow Up Notes') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Follow-Up Notes</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Follow Up Notes'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLOSEOUT
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadCloseout() { loadCloseoutDashboard(); }
+
+async function loadCloseoutDashboard() {
+  const el = document.getElementById('co-dashboard');
+  el.innerHTML = '<div class="loading">Loading closeout data...</div>';
+  try {
+    const d = await customApi('/api/spm/closeout/dashboard');
+    el.innerHTML = `
+      <div class="kpi-row">
+        <div class="kpi orange"><div class="val">${d.closeout.readyForCloseout}</div><div class="label">Ready for Closeout</div></div>
+        <div class="kpi yellow"><div class="val">${d.closeout.inProgress}</div><div class="label">In Progress</div></div>
+        <div class="kpi green"><div class="val">${d.closeout.complete}</div><div class="label">Complete</div></div>
+        <div class="kpi teal"><div class="val">${d.reviews.completed}</div><div class="label">Reviews Done</div><div class="sub">${d.reviews.total} total</div></div>
+        <div class="kpi purple"><div class="val">${d.lessons.total}</div><div class="label">Lessons Captured</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>Lessons by Category</h3>
+          <table><thead><tr><th>Category</th><th>Count</th></tr></thead>
+          <tbody>${Object.entries(d.lessons.byCategory).sort((a,b) => b[1] - a[1]).map(([c, n]) => `<tr><td>${esc(c)}</td><td>${n}</td></tr>`).join('')}</tbody></table>
+        </div>
+        <div class="card"><h3>Lessons by Theme</h3>
+          <table><thead><tr><th>Theme</th><th>Count</th></tr></thead>
+          <tbody>${Object.entries(d.lessons.byTheme).sort((a,b) => b[1] - a[1]).map(([t, n]) => `<tr><td>${esc(t)}</td><td>${n}</td></tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+    `;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadCloseoutRecords() {
+  const el = document.getElementById('co-closeouts');
+  el.innerHTML = '<div class="loading">Loading closeout records...</div>';
+  try {
+    const data = await fetchForm('closeout-record');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Initiated</th><th>Deliverables</th><th>Signoff</th><th>Time</th><th>Costs</th><th>Docs</th><th>Feedback</th><th>Lessons</th><th>Status</th></tr></thead>
+      <tbody>${subs.map(s => {
+        const check = val => val === 'Yes' ? '<span style="color:var(--green)">&#10003;</span>' : val === 'Partial' ? '<span style="color:var(--yellow)">&#9679;</span>' : val === 'Pending' ? '<span style="color:var(--yellow)">&#8987;</span>' : '<span style="color:var(--red)">&#10007;</span>';
+        return `<tr>
+          <td><strong>${esc(v(s, 'Project ID'))}</strong></td><td>${esc(v(s, 'Initiated Date'))}</td>
+          <td>${check(v(s, 'Deliverables Complete'))}</td><td>${check(v(s, 'Customer Signoff'))}</td>
+          <td>${check(v(s, 'Time Entries Complete'))}</td><td>${check(v(s, 'Costs Complete'))}</td>
+          <td>${check(v(s, 'Documentation Complete'))}</td><td>${check(v(s, 'Feedback Captured'))}</td>
+          <td>${check(v(s, 'Lessons Drafted'))}</td><td>${statusBadge(v(s, 'Status'))}</td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadPostProjectReviews() {
+  const el = document.getElementById('co-reviews');
+  el.innerHTML = '<div class="loading">Loading post-project reviews...</div>';
+  try {
+    const data = await fetchForm('post-project-review');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Project</th><th>Date</th><th>Facilitator</th><th>Status</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showReviewDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Project ID'))}</strong></td><td>${esc(v(s, 'Review Date'))}</td>
+        <td>${esc(v(s, 'Facilitator'))}</td><td>${statusBadge(v(s, 'Status'))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showReviewDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>Post-Project Review — ${esc(v(s, 'Project ID'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Review Date</div><div class="dv">${esc(v(s, 'Review Date'))}</div></div>
+        <div class="detail-item"><div class="dl">Facilitator</div><div class="dv">${esc(v(s, 'Facilitator'))}</div></div>
+      </div>
+      ${['What Went Well','What Went Poorly','Delivery Blockers','Process Breakdowns','Quality Issues','Customer Sentiment','Team Recommendations','Best Practices','Expansion Ideas'].map(f => v(s, f) ? `<div class="card" style="margin-top:8px"><h3>${f}</h3><div style="white-space:pre-wrap;font-size:13px">${esc(v(s, f))}</div></div>` : '').join('')}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function loadLessonsLearned() {
+  const el = document.getElementById('co-lessons');
+  el.innerHTML = '<div class="loading">Loading lessons learned...</div>';
+  try {
+    const data = await fetchForm('lessons-learned');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><table>
+      <thead><tr><th>Title</th><th>Project</th><th>Category</th><th>Theme</th><th>Impact</th><th>Service Offering</th><th>Submitted By</th></tr></thead>
+      <tbody>${subs.map(s => `<tr class="clickable" onclick="showLessonDetail('${s.id}')">
+        <td><strong>${esc(v(s, 'Title'))}</strong></td><td>${esc(v(s, 'Project ID'))}</td>
+        <td>${esc(v(s, 'Category'))}</td>
+        <td><span class="badge ${v(s,'Theme')==='Success Pattern'?'badge-green':v(s,'Theme')==='Failure Pattern'?'badge-red':'badge-yellow'}">${esc(v(s, 'Theme'))}</span></td>
+        <td>${sevBadge(v(s, 'Impact'))}</td><td>${esc(v(s, 'Service Offering'))}</td><td>${esc(v(s, 'Submitted By'))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function showLessonDetail(id) {
+  try {
+    const sub = await api(`/kapps/${KAPP}/submissions/${id}?include=values`);
+    const s = sub.submission || sub;
+    showModal(`
+      <h2>${esc(v(s, 'Title'))}</h2>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="dl">Project</div><div class="dv">${esc(v(s, 'Project ID'))}</div></div>
+        <div class="detail-item"><div class="dl">Category</div><div class="dv">${esc(v(s, 'Category'))}</div></div>
+        <div class="detail-item"><div class="dl">Theme</div><div class="dv">${esc(v(s, 'Theme'))}</div></div>
+        <div class="detail-item"><div class="dl">Impact</div><div class="dv">${sevBadge(v(s, 'Impact'))}</div></div>
+        <div class="detail-item"><div class="dl">Service Offering</div><div class="dv">${esc(v(s, 'Service Offering'))}</div></div>
+        <div class="detail-item"><div class="dl">Submitted By</div><div class="dv">${esc(v(s, 'Submitted By'))}</div></div>
+      </div>
+      ${v(s, 'Description') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Description</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Description'))}</div></div>` : ''}
+      ${v(s, 'Recommendation') ? `<div class="detail-item" style="margin-top:8px"><div class="dl">Recommendation</div><div class="dv" style="white-space:pre-wrap">${esc(v(s, 'Recommendation'))}</div></div>` : ''}
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+    `);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadReports() { loadPMReport(); }
+
+async function loadPMReport() {
+  const el = document.getElementById('rpt-pm');
+  el.innerHTML = '<div class="loading">Loading PM report...</div>';
+  try {
+    const d = await customApi('/api/spm/reports/pm');
+    el.innerHTML = `<div class="card"><h3>Project Manager Performance Summary</h3>
+      <table>
+        <thead><tr><th>Project Manager</th><th>Total Projects</th><th>Active</th><th>At Risk</th><th>Open Risks</th><th>Open Issues</th><th>Avg Quality</th></tr></thead>
+        <tbody>${d.pmSummary.map(pm => `<tr>
+          <td><strong>${esc(pm.pm)}</strong></td><td>${pm.totalProjects}</td><td>${pm.activeProjects}</td>
+          <td style="color:${pm.atRisk > 0 ? 'var(--red)' : ''}">${pm.atRisk}</td>
+          <td>${pm.openRisks}</td><td>${pm.openIssues}</td>
+          <td style="font-weight:700;color:${pm.avgQuality>=80?'var(--green)':pm.avgQuality>=60?'var(--yellow)':'var(--red)'}">${pm.avgQuality || '-'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+async function loadIntegrations() {
+  const el = document.getElementById('rpt-integrations');
+  el.innerHTML = '<div class="loading">Loading integrations...</div>';
+  try {
+    const data = await fetchForm('integration-link');
+    const subs = data.submissions || [];
+    el.innerHTML = `<div class="card"><h3>External System Integrations</h3>
+      <table>
+        <thead><tr><th>Project</th><th>System</th><th>External ID</th><th>Direction</th><th>Last Sync</th><th>Status</th></tr></thead>
+        <tbody>${subs.map(s => `<tr>
+          <td>${esc(v(s, 'Project ID'))}</td><td><strong>${esc(v(s, 'System'))}</strong></td>
+          <td>${esc(v(s, 'External ID'))}</td><td>${esc(v(s, 'Sync Direction'))}</td>
+          <td>${esc(v(s, 'Last Sync'))}</td>
+          <td>${v(s, 'Sync Status') === 'Active' ? '<span class="badge badge-green">Active</span>' : v(s, 'Sync Status') === 'Warning' ? '<span class="badge badge-yellow">Warning</span>' : '<span class="badge badge-red">Error</span>'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch (e) { el.innerHTML = `<div class="card" style="color:var(--red)">Error: ${esc(e.message)}</div>`; }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ServiceProMax Documentation</title>
+<style>
+:root { --blue: #242F4D; --orange: #F36C24; --gray: #5F6368; --border: #E8EAED; --bg: #F8F9FA; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #202124; background: var(--bg); line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+h1 { font-size: 32px; color: var(--blue); margin-bottom: 8px; }
+h1 span { color: var(--orange); }
+h2 { font-size: 22px; color: var(--blue); margin: 40px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--orange); }
+h3 { font-size: 16px; color: var(--blue); margin: 24px 0 8px; }
+p, li { font-size: 14px; margin-bottom: 8px; }
+ul, ol { padding-left: 24px; margin-bottom: 12px; }
+.subtitle { color: var(--gray); font-size: 16px; margin-bottom: 24px; }
+.card { background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card h3 { margin-top: 0; }
+img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+th { background: var(--bg); font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+code { background: #E8EAED; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', Monaco, monospace; }
+pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 12px 0; font-size: 13px; }
+pre code { background: none; padding: 0; color: inherit; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-red { background: #FDECEA; color: #C62828; }
+.badge-gray { background: #F1F3F4; color: #5F6368; }
+.toc { background: white; border-radius: 12px; padding: 20px 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+.toc a { color: var(--blue); text-decoration: none; font-size: 14px; }
+.toc a:hover { color: var(--orange); }
+.toc ul { list-style: none; padding-left: 16px; }
+.toc > ul { padding-left: 0; }
+.toc li { margin: 4px 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+.stat { background: white; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid var(--border); }
+.stat .val { font-size: 28px; font-weight: 700; }
+.stat .label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; }
+.stat.orange .val { color: var(--orange); }
+.stat.green .val { color: #34A853; }
+.stat.blue .val { color: #1565C0; }
+.stat.red .val { color: #EA4335; }
+.erd { font-family: 'SF Mono', Monaco, monospace; font-size: 12px; white-space: pre; line-height: 1.4; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+.roadmap-item { display: flex; gap: 8px; padding: 6px 0; font-size: 14px; }
+.roadmap-item::before { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Service<span>ProMax</span></h1>
+<p class="subtitle">Enterprise Services Delivery, Quality Governance & Management Platform</p>
+
+<div class="stats">
+  <div class="stat orange"><div class="val">22</div><div class="label">Forms</div></div>
+  <div class="stat green"><div class="val">169</div><div class="label">Seed Records</div></div>
+  <div class="stat blue"><div class="val">12</div><div class="label">Main Tabs</div></div>
+  <div class="stat orange"><div class="val">9</div><div class="label">API Endpoints</div></div>
+  <div class="stat green"><div class="val">32</div><div class="label">Tests Passed</div></div>
+  <div class="stat blue"><div class="val">39</div><div class="label">Screenshots</div></div>
+</div>
+
+<div class="toc">
+<strong>Table of Contents</strong>
+<ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#architecture">Architecture</a></li>
+  <li><a href="#erd">Data Model (ERD)</a></li>
+  <li><a href="#pages">Page-by-Page Guide</a>
+    <ul>
+      <li><a href="#dashboard">1. Executive Dashboard</a></li>
+      <li><a href="#customers">2. Customer Management</a></li>
+      <li><a href="#projects">3. Project Portfolio</a></li>
+      <li><a href="#status">4. Status Management</a></li>
+      <li><a href="#time">5. Time Tracking</a></li>
+      <li><a href="#costs">6. Cost & Margin</a></li>
+      <li><a href="#milestones">7. Milestones & Deliverables</a></li>
+      <li><a href="#risksIssues">8. Risks & Issues</a></li>
+      <li><a href="#quality">9. Quality Management</a></li>
+      <li><a href="#feedback">10. Customer Feedback</a></li>
+      <li><a href="#closeout">11. Closeout & Lessons</a></li>
+      <li><a href="#reports">12. Reports Center</a></li>
+    </ul>
+  </li>
+  <li><a href="#api">API Endpoints</a></li>
+  <li><a href="#lifecycle">Project Lifecycle</a></li>
+  <li><a href="#quality-framework">Quality Framework</a></li>
+  <li><a href="#maintenance">Maintenance Guide</a></li>
+  <li><a href="#roadmap">Future Roadmap</a></li>
+</ul>
+</div>
+
+<h2 id="overview">Overview</h2>
+<div class="card">
+<p>ServiceProMax is the operational command center for professional services organizations. It provides visibility into:</p>
+<ul>
+  <li><strong>Project health</strong> across the entire portfolio with multi-dimensional scoring</li>
+  <li><strong>Delivery quality</strong> through embedded quality gates, audits, and corrective actions</li>
+  <li><strong>Customer satisfaction</strong> with feedback tracking and follow-up management</li>
+  <li><strong>Financial performance</strong> including budget variance, margin analysis, and burn rates</li>
+  <li><strong>Resource utilization</strong> with consultant-level billable/non-billable tracking</li>
+  <li><strong>Continuous improvement</strong> through lessons learned and delivery pattern analysis</li>
+</ul>
+</div>
+
+<h2 id="architecture">Architecture</h2>
+<div class="card">
+<pre><code>Browser (index.html)  -->  Base Server (port 3011)  -->  Kinetic Platform
+   Single-page app           API proxy + custom          (first.kinetics.com)
+   All CSS/JS inline         aggregation endpoints       Kapp: service-pro-max
+                              server.mjs                  22 Forms, 100+ Indexes</code></pre>
+<p style="margin-top:12px"><strong>Key design decisions:</strong></p>
+<ul>
+  <li>Single HTML file with all CSS/JS inline &mdash; no build step, no external dependencies</li>
+  <li>System fonts only (<code>-apple-system</code> stack)</li>
+  <li>Server-side aggregation for dashboard KPIs via 9 custom API endpoints</li>
+  <li>Client-side pagination with 25-record limit per page</li>
+  <li>Auto-discovery by the base launcher &mdash; drop directory and restart</li>
+</ul>
+</div>
+
+<h2 id="erd">Data Model (ERD)</h2>
+<div class="card">
+
+<h3>Core Entities (4 forms)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Customer</td><td><code>customer</code></td><td>Account ID, Name, Tier, Health</td><td>Customer accounts</td></tr>
+<tr><td>Customer Contact</td><td><code>customer-contact</code></td><td>Customer ID, Contact Name, Role</td><td>Key contacts</td></tr>
+<tr><td>Project</td><td><code>project</code></td><td>Project ID, Customer ID, Stage, Health, Budget</td><td>Project records</td></tr>
+<tr><td>Project Team</td><td><code>project-team</code></td><td>Project ID, Member Name, Role, Rate</td><td>Team allocation</td></tr>
+</table>
+
+<h3>Execution Tracking (6 forms)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Status Update</td><td><code>status-update</code></td><td>Project ID, 7 Health Dimensions</td><td>Weekly status reports</td></tr>
+<tr><td>Milestone</td><td><code>milestone</code></td><td>Planned/Forecast/Actual Dates</td><td>Milestone tracking</td></tr>
+<tr><td>Deliverable</td><td><code>deliverable</code></td><td>Status, Approval, Customer Ack</td><td>Deliverable management</td></tr>
+<tr><td>Risk</td><td><code>risk</code></td><td>Probability, Impact, Severity</td><td>Risk register</td></tr>
+<tr><td>Issue</td><td><code>issue</code></td><td>Severity, Root Cause, Resolution</td><td>Issue tracking</td></tr>
+<tr><td>Change Request</td><td><code>change-request</code></td><td>Budget/Schedule Impact, Approval</td><td>Change control</td></tr>
+</table>
+
+<h3>Financial (2 forms)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Time Entry</td><td><code>time-entry</code></td><td>Hours, Billable, Approval Status</td><td>Time tracking</td></tr>
+<tr><td>Cost Entry</td><td><code>cost-entry</code></td><td>Amount, Category, Vendor</td><td>Non-labor costs</td></tr>
+</table>
+
+<h3>Quality & Governance (5 forms)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Quality Review</td><td><code>quality-review</code></td><td>Gate Type, Score, Decision</td><td>Quality gate reviews</td></tr>
+<tr><td>Quality Finding</td><td><code>quality-finding</code></td><td>Category, Severity, Owner</td><td>Review findings</td></tr>
+<tr><td>Corrective Action</td><td><code>corrective-action</code></td><td>Type, Root Cause, Due Date</td><td>CAPA tracking</td></tr>
+<tr><td>Recovery Plan</td><td><code>recovery-plan</code></td><td>Root Problem, Actions, Impact</td><td>At-risk project recovery</td></tr>
+<tr><td>Delivery Audit</td><td><code>delivery-audit</code></td><td>8 Dimension Scores, Overall</td><td>PMO audits</td></tr>
+</table>
+
+<h3>Closeout & Learning (4 forms)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Customer Feedback</td><td><code>customer-feedback</code></td><td>Scores (1-5), Follow Up</td><td>Satisfaction surveys</td></tr>
+<tr><td>Closeout Record</td><td><code>closeout-record</code></td><td>10-item Checklist, Status</td><td>Project closeout</td></tr>
+<tr><td>Post-Project Review</td><td><code>post-project-review</code></td><td>Well/Poorly/Blockers/Practices</td><td>Retrospectives</td></tr>
+<tr><td>Lessons Learned</td><td><code>lessons-learned</code></td><td>Category, Theme, Impact</td><td>Continuous improvement</td></tr>
+</table>
+
+<h3>Integration (1 form)</h3>
+<table>
+<tr><th>Form</th><th>Slug</th><th>Key Fields</th><th>Purpose</th></tr>
+<tr><td>Integration Link</td><td><code>integration-link</code></td><td>System, Sync Direction, Status</td><td>External system links</td></tr>
+</table>
+
+<h3>Relationships</h3>
+<pre><code>Customer (1) ---< Project (many)           via Customer ID
+Customer (1) ---< Customer Contact (many)   via Customer ID
+Customer (1) ---< Customer Feedback (many)  via Customer ID
+Project  (1) ---< Status Update (many)      via Project ID
+Project  (1) ---< Milestone (many)          via Project ID
+Project  (1) ---< Deliverable (many)        via Project ID
+Project  (1) ---< Risk (many)              via Project ID
+Project  (1) ---< Issue (many)             via Project ID
+Project  (1) ---< Change Request (many)     via Project ID
+Project  (1) ---< Time Entry (many)         via Project ID
+Project  (1) ---< Cost Entry (many)         via Project ID
+Project  (1) ---< Quality Review (many)     via Project ID
+Project  (1) ---< Quality Finding (many)    via Project ID
+Project  (1) ---< Corrective Action (many)  via Project ID
+Project  (1) ---< Recovery Plan (many)      via Project ID
+Project  (1) ---< Delivery Audit (many)     via Project ID
+Project  (1) ---< Closeout Record (1)       via Project ID
+Project  (1) ---< Post-Project Review (1)   via Project ID
+Project  (1) ---< Lessons Learned (many)    via Project ID
+Project  (1) ---< Integration Link (many)   via Project ID
+Project  (1) ---< Project Team (many)       via Project ID</code></pre>
+</div>
+
+<h2 id="pages">Page-by-Page Guide</h2>
+
+<h3 id="dashboard">1. Executive Dashboard</h3>
+<div class="card">
+<img src="../screenshots/01_dashboard.png" alt="Executive Dashboard">
+<p>Portfolio-wide view of services delivery health at a glance.</p>
+<ul>
+  <li><strong>KPI row:</strong> Active Projects, Green/Yellow/Red health counts, Recovery count, Escalations</li>
+  <li><strong>Financial Summary:</strong> Planned Budget vs Actual Cost, Hours, Billable %, Over-budget count</li>
+  <li><strong>Quality & Satisfaction:</strong> Avg Quality Score, Avg Satisfaction, Open/Overdue corrective actions</li>
+  <li><strong>Projects by Stage:</strong> Distribution across lifecycle stages</li>
+  <li><strong>Customer Health:</strong> Green/Yellow/Red distribution across accounts</li>
+</ul>
+</div>
+
+<h3 id="customers">2. Customer Management</h3>
+<div class="card">
+<img src="../screenshots/01_customers.png" alt="Customer Management">
+<p>Customer accounts with filtering by tier, health, and search. Click any row to see full details including delivery preferences and renewal notes.</p>
+<p><strong>Columns:</strong> Account ID, Name, Industry, Tier, Health, Region, Owner, Active Projects, Avg Satisfaction</p>
+</div>
+
+<h3 id="projects">3. Project Portfolio</h3>
+<div class="card">
+<img src="../screenshots/01_projects.png" alt="Project Portfolio">
+<p>Full project portfolio with filters by stage, health, PM. Click any project for detailed view with budget/hours progress bars.</p>
+<p><strong>Columns:</strong> Project ID+Name, Customer, PM, Stage, Health, Priority, Budget, Cost, Quality, Risks, Issues, Milestones</p>
+</div>
+
+<h3 id="status">4. Status Management</h3>
+<div class="card">
+<img src="../screenshots/01_status.png" alt="Status Management">
+<p>Weekly status reports with 7-dimension health visualization. Filter by health level or escalations only.</p>
+<p><strong>Health dimensions:</strong> Schedule, Budget, Scope, Staffing, Quality, Customer, Overall</p>
+</div>
+
+<h3 id="time">5. Time Tracking</h3>
+<div class="card">
+<h3 style="border:none;margin:0">Summary</h3>
+<img src="../screenshots/02_time_summary.png" alt="Time Summary">
+<p>KPIs: Total Hours, Billable Hours, Billable %, Pending Approvals. Breakdowns by consultant, project, and work category.</p>
+
+<h3 style="border:none;margin:16px 0 0">Utilization</h3>
+<img src="../screenshots/02_time_utilization.png" alt="Utilization">
+<p>Consultant utilization with visual progress bars. Green (&ge;75%), Yellow (&ge;50%), Red (&lt;50%).</p>
+
+<h3 style="border:none;margin:16px 0 0">Time Entries</h3>
+<img src="../screenshots/02_time_time_entries.png" alt="Time Entries">
+<p>Chronological list of all time entries with project, consultant, hours, category, billable flag, and approval status.</p>
+</div>
+
+<h3 id="costs">6. Cost & Margin Tracking</h3>
+<div class="card">
+<img src="../screenshots/01_costs.png" alt="Costs">
+<p>Comprehensive financial analysis with budget variance and burn rate tracking per project.</p>
+<ul>
+  <li><strong>KPIs:</strong> Total Planned, Forecast, Actual, Portfolio Variance %, Over Budget count</li>
+  <li><strong>Per-project:</strong> Planned/Forecast/Actual, Variance % (color-coded), Margin %, Burn Rate (progress bar)</li>
+  <li><strong>Non-labor costs:</strong> Breakdown by category (Vendor, License, Equipment, Travel)</li>
+</ul>
+</div>
+
+<h3 id="milestones">7. Milestones & Deliverables</h3>
+<div class="card">
+<div class="grid-2">
+  <div><h3 style="border:none;margin:0">Milestones</h3><img src="../screenshots/02_milestones_milestones.png" alt="Milestones"></div>
+  <div><h3 style="border:none;margin:0">Deliverables</h3><img src="../screenshots/02_milestones_deliverables.png" alt="Deliverables"></div>
+</div>
+<p><strong>Milestones:</strong> Planned vs Forecast date tracking. Late forecasts highlighted in red. Click for dependency and delay details.</p>
+<p><strong>Deliverables:</strong> Approval status, customer acknowledgment tracking.</p>
+</div>
+
+<h3 id="risksIssues">8. Risks & Issues</h3>
+<div class="card">
+<div class="grid-2">
+  <div><h3 style="border:none;margin:0">Risks</h3><img src="../screenshots/02_risksIssues_risks.png" alt="Risks"></div>
+  <div><h3 style="border:none;margin:0">Issues</h3><img src="../screenshots/02_risksIssues_issues.png" alt="Issues"></div>
+</div>
+<img src="../screenshots/02_risksIssues_change_requests.png" alt="Change Requests" style="margin-top:8px">
+<p><strong>Risks:</strong> Probability, Impact, Severity scoring with mitigation plans. Escalation flags.</p>
+<p><strong>Issues:</strong> Severity, root cause, resolution tracking.</p>
+<p><strong>Change Requests:</strong> Budget and schedule impact with approval workflow.</p>
+</div>
+
+<h3 id="quality">9. Quality Management</h3>
+<div class="card">
+<h3 style="border:none;margin:0">Quality Dashboard</h3>
+<img src="../screenshots/02_quality_dashboard.png" alt="Quality Dashboard">
+<p>Gate pass rate, open findings by category/severity, corrective action backlog, avg audit score, active recoveries.</p>
+
+<div class="grid-2" style="margin-top:16px">
+  <div><h3 style="border:none;margin:0">Quality Reviews</h3><img src="../screenshots/02_quality_quality_reviews.png" alt="Quality Reviews"></div>
+  <div><h3 style="border:none;margin:0">Corrective Actions</h3><img src="../screenshots/02_quality_corrective_actions.png" alt="Corrective Actions"></div>
+</div>
+<div class="grid-2" style="margin-top:8px">
+  <div><h3 style="border:none;margin:0">Delivery Audits</h3><img src="../screenshots/02_quality_delivery_audits.png" alt="Delivery Audits"></div>
+  <div><h3 style="border:none;margin:0">Recovery Plans</h3><img src="../screenshots/02_quality_recovery_plans.png" alt="Recovery Plans"></div>
+</div>
+</div>
+
+<h3 id="feedback">10. Customer Feedback</h3>
+<div class="card">
+<img src="../screenshots/01_feedback.png" alt="Feedback">
+<p>Satisfaction surveys with multi-dimension scoring (Overall, Delivery, Communication, Outcome on 1-5 scale), Would Recommend tracking, and follow-up management.</p>
+</div>
+
+<h3 id="closeout">11. Closeout & Lessons Learned</h3>
+<div class="card">
+<h3 style="border:none;margin:0">Closeout Dashboard</h3>
+<img src="../screenshots/02_closeout_dashboard.png" alt="Closeout Dashboard">
+<div class="grid-2" style="margin-top:16px">
+  <div><h3 style="border:none;margin:0">Closeout Records</h3><img src="../screenshots/02_closeout_closeout_records.png" alt="Closeout Records"></div>
+  <div><h3 style="border:none;margin:0">Lessons Learned</h3><img src="../screenshots/02_closeout_lessons_learned.png" alt="Lessons Learned"></div>
+</div>
+<p><strong>Closeout Records:</strong> 10-item checklist with visual completion indicators.</p>
+<p><strong>Lessons Learned:</strong> Categorized by theme (Success Pattern, Failure Pattern, Improvement Needed) with impact severity.</p>
+</div>
+
+<h3 id="reports">12. Reports Center</h3>
+<div class="card">
+<div class="grid-2">
+  <div><h3 style="border:none;margin:0">PM Performance</h3><img src="../screenshots/02_reports_pm_performance.png" alt="PM Performance"></div>
+  <div><h3 style="border:none;margin:0">Integrations</h3><img src="../screenshots/02_reports_integrations.png" alt="Integrations"></div>
+</div>
+<p><strong>PM Performance:</strong> Total/Active/At-Risk projects, open risks/issues, avg quality per PM.</p>
+<p><strong>Integrations:</strong> External system links (MS Project, SAP, Basecamp, Jira) with sync status.</p>
+</div>
+
+<h2 id="api">API Endpoints</h2>
+<div class="card">
+<table>
+<tr><th>Endpoint</th><th>Description</th></tr>
+<tr><td><code>GET /api/spm/dashboard</code></td><td>Executive dashboard KPIs (portfolio, financial, quality, satisfaction)</td></tr>
+<tr><td><code>GET /api/spm/projects/summary</code></td><td>Project portfolio with risk/issue/milestone counts per project</td></tr>
+<tr><td><code>GET /api/spm/quality/dashboard</code></td><td>Quality gate pass rates, findings, corrective actions, audit scores</td></tr>
+<tr><td><code>GET /api/spm/time/dashboard</code></td><td>Time utilization by consultant and project</td></tr>
+<tr><td><code>GET /api/spm/cost/dashboard</code></td><td>Cost & margin by project with variance tracking</td></tr>
+<tr><td><code>GET /api/spm/customers/dashboard</code></td><td>Customer list with project counts and satisfaction scores</td></tr>
+<tr><td><code>GET /api/spm/feedback/dashboard</code></td><td>Feedback scores, would-recommend %, follow-up status</td></tr>
+<tr><td><code>GET /api/spm/closeout/dashboard</code></td><td>Closeout status and lessons learned summaries</td></tr>
+<tr><td><code>GET /api/spm/reports/pm</code></td><td>PM performance summary (projects, risks, issues, quality)</td></tr>
+</table>
+</div>
+
+<h2 id="lifecycle">Project Lifecycle</h2>
+<div class="card">
+<pre><code>Intake &rarr; Scoping &rarr; Approval &rarr; Planned &rarr; Kickoff &rarr; In Progress
+                                                        |
+                                           +------------+------------+
+                                           |            |            |
+                                       On Hold      At Risk      Recovery
+                                           |            |            |
+                                           +------------+------------+
+                                                        |
+                                           Ready for Closeout &rarr; Completed &rarr; Closed &rarr; Archived</code></pre>
+</div>
+
+<h2 id="quality-framework">Quality Framework</h2>
+<div class="card">
+<h3 style="margin-top:0">Quality Gates (8 types)</h3>
+<ol>
+  <li><strong>Intake Quality Gate</strong> &mdash; Validates project setup before approval</li>
+  <li><strong>Kickoff Readiness</strong> &mdash; Confirms team, timeline, milestones before start</li>
+  <li><strong>Delivery Health Review</strong> &mdash; Weekly delivery quality checks</li>
+  <li><strong>Milestone Readiness</strong> &mdash; Validates deliverables before milestone sign-off</li>
+  <li><strong>Customer Feedback Review</strong> &mdash; Processes customer satisfaction data</li>
+  <li><strong>Pre-Closeout Quality Gate</strong> &mdash; Validates all closeout checklist items</li>
+  <li><strong>Post-Project Retrospective</strong> &mdash; Captures lessons and best practices</li>
+  <li><strong>Delivery Audit</strong> &mdash; PMO-driven 8-dimension compliance review</li>
+</ol>
+
+<h3>Scoring Systems</h3>
+<ul>
+  <li><strong>Quality Reviews:</strong> 0-100 score with Pass/Fail/Partial checklist items</li>
+  <li><strong>Delivery Audits:</strong> 8 dimensions (1-5 each), weighted to overall score</li>
+  <li><strong>Customer Feedback:</strong> 1-5 scale for Delivery, Communication, Outcome</li>
+  <li><strong>Project Health:</strong> 7 dimensions (Schedule, Budget, Scope, Staffing, Quality, Customer, Overall)</li>
+</ul>
+</div>
+
+<h2 id="maintenance">Maintenance Guide</h2>
+<div class="card">
+<h3 style="margin-top:0">Adding Seed Data</h3>
+<pre><code># Edit seed-data.json then run:
+node setup-all.mjs --seed</code></pre>
+
+<h3>Rebuilding Indexes</h3>
+<pre><code>node setup-all.mjs  # Redefines fields/indexes and builds</code></pre>
+
+<h3>Adding a New Form</h3>
+<ol>
+  <li>Add form definition to <code>app.json</code> with fields and indexes</li>
+  <li>Run <code>node setup-all.mjs</code> to provision on the platform</li>
+  <li>Add UI elements in <code>index.html</code></li>
+  <li>Add API endpoints in <code>server.mjs</code> if needed</li>
+</ol>
+
+<h3>Restarting the Server</h3>
+<pre><code>kill $(lsof -ti:3011) && cd apps/base && node server.mjs &</code></pre>
+
+<h3>File Structure</h3>
+<pre><code>apps/service_pro_max/
+  app.json           # 22 forms, fields, indexes
+  seed-data.json     # 169 realistic records
+  server.mjs         # 9 custom API endpoints
+  index.html         # Complete single-page application
+  setup-all.mjs      # Field/index/seed provisioning
+  test-all-tabs.mjs  # Playwright test suite
+  docs/
+    README.md        # Full documentation (markdown)
+    page-guide.md    # Per-page guide (markdown)
+    guide.html       # This file (visual docs)
+  screenshots/       # 39 screenshots</code></pre>
+</div>
+
+<h2 id="roadmap">Future Enhancement Roadmap</h2>
+<div class="card">
+<h3 style="margin-top:0">Phase 1: Workflow Automation</h3>
+<div class="roadmap-item">Automated weekly status reminders via workflow</div>
+<div class="roadmap-item">Auto-escalation when health turns Red for 2+ weeks</div>
+<div class="roadmap-item">Recovery plan auto-trigger on persistent Red status</div>
+<div class="roadmap-item">Time entry weekly reminders</div>
+
+<h3>Phase 2: Advanced Reporting</h3>
+<div class="roadmap-item">Portfolio trend charts (health over time)</div>
+<div class="roadmap-item">Financial forecast modeling</div>
+<div class="roadmap-item">Resource capacity planning dashboard</div>
+<div class="roadmap-item">SLA compliance reporting</div>
+
+<h3>Phase 3: Enhanced Quality</h3>
+<div class="roadmap-item">Quality review template library</div>
+<div class="roadmap-item">Root cause analysis trends</div>
+<div class="roadmap-item">Predictive risk scoring</div>
+<div class="roadmap-item">Delivery standard compliance scoring</div>
+
+<h3>Phase 4: Integration Framework</h3>
+<div class="roadmap-item">Microsoft Project schedule sync</div>
+<div class="roadmap-item">Basecamp task/milestone sync</div>
+<div class="roadmap-item">CRM opportunity linkage</div>
+<div class="roadmap-item">Finance/ERP cost feed</div>
+
+<h3>Phase 5: Mobile & Advanced UX</h3>
+<div class="roadmap-item">Mobile-friendly time entry</div>
+<div class="roadmap-item">Kanban board view for projects</div>
+<div class="roadmap-item">Gantt chart visualization</div>
+<div class="roadmap-item">PDF report generation</div>
+
+<h3>Phase 6: Analytics & AI</h3>
+<div class="roadmap-item">Service profitability analysis</div>
+<div class="roadmap-item">PM performance benchmarking</div>
+<div class="roadmap-item">Customer health prediction</div>
+<div class="roadmap-item">AI-powered risk assessment</div>
+</div>
+
+<hr>
+<p style="text-align:center;color:var(--gray);font-size:12px;margin-top:24px">ServiceProMax &mdash; Built on the Kinetic Platform &mdash; Generated April 2026</p>
+
+</div>
+</body>
+</html>

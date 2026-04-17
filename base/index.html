@@ -215,6 +215,7 @@ const APPS = [
   { slug: 'attendance',      name: 'Attendance & Behavior', desc: 'Daily attendance, behavior incidents, interventions & tardies', icon: 'clipboard', color: '#E65100', bg: '#FFF3E0', school: true },
   { slug: 'communication',   name: 'Parent Communication', desc: 'Messages, announcements, conferences & notifications', icon: 'bell', color: '#7B1FA2', bg: '#F3E5F5', school: true },
   { slug: 'scheduling',      name: 'Scheduling & Courses', desc: 'Course catalog, sections, rooms, teachers & bell schedules', icon: 'calendar', color: '#00695C', bg: '#E0F2F1', school: true },
+  { slug: 'service-pro-max', name: 'ServiceProMax',        desc: 'Enterprise services delivery, quality governance & management', icon: 'briefcase',    color: '#1565C0', bg: '#E3F2FD', industry: true },
   { slug: 'school-for-good', name: 'SchoolForGood',       desc: 'School management with sites, members, trainers & classes', icon: 'book',           color: '#2E7D32', bg: '#E8F5E9', industry: true },
   { slug: 'mining-ops',      name: 'Mining Ops',          desc: 'Mining compliance, operations, environmental monitoring',    icon: 'hard-hat',      color: '#BF360C', bg: '#FBE9E7', industry: true },
   { slug: 'og-compliance',   name: 'Oil & Gas Compliance', desc: 'Compliance, CAPA, audits & ESG sustainability for O&G',    icon: 'droplet',       color: '#0D6E3F', bg: '#ECFDF5', industry: true },
@@ -269,6 +270,7 @@ function svgIcon(name, color) {
     'git-merge': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 009 9"/></svg>`,
     'cpu': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>`,
     'package': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+    'briefcase': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
     'clipboard': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>`,
     'shield-check': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
     'badge': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><line x1="9" y1="16" x2="15" y2="16"/><line x1="10" y1="19" x2="14" y2="19"/></svg>`,
@@ -412,6 +414,7 @@ async function doLogin() {
     document.getElementById('app').style.display = 'block';
 
     renderGrid();
+    mergeDiscoveredApps();
   } catch(e) {
     err.textContent = e.message.includes('Failed to fetch')
       ? 'Cannot reach server.'
@@ -483,6 +486,7 @@ async function restoreSession() {
     localStorage.setItem('base_session', JSON.stringify(API));
 
     renderGrid();
+    mergeDiscoveredApps();
   } catch(e) {
     var bs = document.getElementById('boot-style'); if (bs) bs.remove();
     sessionStorage.removeItem('base_session');
@@ -497,6 +501,42 @@ populateServerHistory();
 restoreSession();
 
 /* ── Grid Rendering ───────────────────────────────────────────── */
+
+// Category mapping from app.json category → launcher section
+const CATEGORY_MAP = {
+  'Education': 'school', 'School': 'school',
+  'Healthcare': 'healthcare', 'Clinical': 'healthcare',
+  'Defense': 'dod', 'DoD': 'dod', 'Government': 'dod',
+  'Hospitality': 'misc', 'Retail': 'misc', 'Food Service': 'misc', 'Sports': 'misc',
+  'Energy': 'industry', 'Mining': 'industry', 'Supply Chain': 'industry', 'Manufacturing': 'industry',
+};
+const DEFAULT_COLORS = ['#5F6368','#1565C0','#2E7D32','#E65100','#7B1FA2','#00695C','#C62828','#F36C24','#283593','#795548'];
+
+async function mergeDiscoveredApps() {
+  try {
+    const resp = await fetch('/api/base/apps');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const knownSlugs = new Set(APPS.map(a => a.slug));
+    let added = 0;
+    for (const app of (data.apps || [])) {
+      if (knownSlugs.has(app.slug)) continue;
+      const cat = CATEGORY_MAP[app.category] || 'misc';
+      const colorIdx = app.name.length % DEFAULT_COLORS.length;
+      APPS.push({
+        slug: app.slug,
+        name: app.name,
+        desc: app.description || app.name,
+        icon: 'package',
+        color: DEFAULT_COLORS[colorIdx],
+        bg: '#F5F5F5',
+        [cat]: true,
+      });
+      added++;
+    }
+    if (added > 0) renderGrid();
+  } catch {}
+}
 
 function renderGrid() {
   const appApps = APPS.filter(a => !a.industry && !a.healthcare && !a.dod && !a.school && !a.misc);
