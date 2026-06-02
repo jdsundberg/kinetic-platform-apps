@@ -192,7 +192,7 @@ function enterApp(){loadInv()}
 async function loadInv(dir){
   const ps=PS.inv;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
   const cat=document.getElementById('f-cat').value,stat=document.getElementById('f-stat').value;
-  let p=`/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25`;const q=[];
+  let p=`/kapps/${KAPP}/forms/inventory/submissions?include=details,values&limit=25`;const q=[];
   if(cat)q.push(`values[Category]="${cat}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
@@ -218,7 +218,7 @@ function openInvModal(ex){const s=ex||{},vl=s.values||{};
     ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadInv')">Delete</button>`:''}`;
   document.getElementById('modal').classList.add('open')}
 
-async function editInv(id){const d=await api(`/submissions/${id}?include=values`);openInvModal(d.submission||d)}
+async function editInv(id){const d=await api(`/submissions/${id}?include=details,values`);openInvModal(d.submission||d)}
 async function saveInv(id){const values={Name:document.getElementById('m-name').value,Category:document.getElementById('m-cat').value,Brand:document.getElementById('m-brand').value,Condition:document.getElementById('m-cond').value,Price:document.getElementById('m-price').value,'Serial Number':document.getElementById('m-sn').value,Status:document.getElementById('m-status').value};
   try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/inventory/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
   closeModal();toast(id?'Updated':'Created');loadInv()}catch(e){toast('Error: '+e.message)}}
@@ -227,7 +227,7 @@ async function saveInv(id){const values={Name:document.getElementById('m-name').
 async function loadEmp(dir){
   const ps=PS.emp;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
   const role=document.getElementById('f-role').value,stat=document.getElementById('f-empstat').value;
-  let p=`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`;const q=[];
+  let p=`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`;const q=[];
   if(role)q.push(`values[Role]="${role}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
@@ -250,7 +250,7 @@ function openEmpModal(ex){const s=ex||{},vl=s.values||{};
     ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadEmp')">Delete</button>`:''}`;
   document.getElementById('modal').classList.add('open')}
 
-async function editEmp(id){const d=await api(`/submissions/${id}?include=values`);openEmpModal(d.submission||d)}
+async function editEmp(id){const d=await api(`/submissions/${id}?include=details,values`);openEmpModal(d.submission||d)}
 async function saveEmp(id){const values={Name:document.getElementById('me-name').value,Role:document.getElementById('me-role').value,Phone:document.getElementById('me-phone').value,Email:document.getElementById('me-email').value,'Hire Date':document.getElementById('me-hire').value,Status:document.getElementById('me-stat').value};
   try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/employees/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
   closeModal();toast(id?'Updated':'Added');loadEmp()}catch(e){toast('Error: '+e.message)}}
@@ -259,7 +259,7 @@ async function saveEmp(id){const values={Name:document.getElementById('me-name')
 async function loadCust(dir){
   const ps=PS.cust;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
   const mem=document.getElementById('f-mem').value;
-  let p=`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`;
+  let p=`/kapps/${KAPP}/forms/customers/submissions?include=details,values&limit=25`;
   if(mem)p+='&q='+encodeURIComponent(`values[Membership]="${mem}"`);
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
@@ -282,7 +282,7 @@ function openCustModal(ex){const s=ex||{},vl=s.values||{};
     ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadCust')">Delete</button>`:''}`;
   document.getElementById('modal').classList.add('open')}
 
-async function editCust(id){const d=await api(`/submissions/${id}?include=values`);openCustModal(d.submission||d)}
+async function editCust(id){const d=await api(`/submissions/${id}?include=details,values`);openCustModal(d.submission||d)}
 async function saveCust(id){const values={Name:document.getElementById('mc-name').value,Phone:document.getElementById('mc-phone').value,Email:document.getElementById('mc-email').value,Membership:document.getElementById('mc-mem').value,Notes:document.getElementById('mc-notes').value};
   try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/customers/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
   closeModal();toast(id?'Updated':'Added');loadCust()}catch(e){toast('Error: '+e.message)}}
@@ -290,9 +290,9 @@ async function saveCust(id){const values={Name:document.getElementById('mc-name'
 /* ── DASHBOARD ── */
 async function loadDash(){
   try{const[invD,empD,custD]=await Promise.all([
-    api(`/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25`),
-    api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`),
-    api(`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`)]);
+    api(`/kapps/${KAPP}/forms/inventory/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/customers/submissions?include=details,values&limit=25`)]);
   const inv=invD.submissions||[],emp=empD.submissions||[],cust=custD.submissions||[];
   const inStock=inv.filter(s=>v(s,'Status')==='In Stock').length;
   const totalValue=inv.filter(s=>v(s,'Status')==='In Stock').reduce((sum,s)=>sum+parseFloat(v(s,'Price')||0),0);

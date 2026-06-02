@@ -558,7 +558,7 @@ function kpi(val, label, colorVar) {
 async function loadCatalog() {
   try {
     const KAPP = 'api-manager';
-    let url = `/kapps/${KAPP}/forms/apis/submissions?include=values&limit=25`;
+    let url = `/kapps/${KAPP}/forms/apis/submissions?include=details,values&limit=25`;
     let all = [];
     let lastCreatedAt = null;
     for (let i=0;i<8;i++) {
@@ -904,7 +904,7 @@ async function loadGovernance() {
 
     // Active changes table
     const KAPP = 'api-manager';
-    const changesData = await api(`/kapps/${KAPP}/forms/changes/submissions?include=values&limit=25`);
+    const changesData = await api(`/kapps/${KAPP}/forms/changes/submissions?include=details,values&limit=25`);
     const changes = (changesData.submissions||[]).filter(c=> v(c,'Status')!=='Complete');
     document.getElementById('gov-change-table').innerHTML = changes.length ? changes.map(c=>`<tr>
       <td><strong>${esc(v(c,'Change ID'))}</strong></td>
@@ -930,7 +930,7 @@ async function loadContracts() {
 
   try {
     const KAPP = 'api-manager';
-    const data = await api(`/kapps/${KAPP}/forms/contracts/submissions?include=values&limit=25`);
+    const data = await api(`/kapps/${KAPP}/forms/contracts/submissions?include=details,values&limit=25`);
     const contracts = data.submissions||[];
 
     // KPIs
@@ -981,7 +981,7 @@ async function loadReuse() {
 
   try {
     const KAPP = 'api-manager';
-    const data = await api(`/kapps/${KAPP}/forms/reuse-requests/submissions?include=values&limit=25`);
+    const data = await api(`/kapps/${KAPP}/forms/reuse-requests/submissions?include=details,values&limit=25`);
     const requests = data.submissions||[];
 
     if (requests.length) {

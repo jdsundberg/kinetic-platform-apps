@@ -1,0 +1,795 @@
+{
+  "name": "ServicePro",
+  "slug": "service-pro",
+  "description": "Professional services delivery — projects, time, costs, milestones & exec reporting",
+  "category": "Operations",
+  "icon": "briefcase",
+  "color": "#1565C0",
+  "bg": "#E3F2FD",
+  "forms": [
+    {
+      "slug": "customers",
+      "name": "Customers",
+      "fields": [
+        {
+          "name": "Customer ID",
+          "required": true
+        },
+        {
+          "name": "Company Name",
+          "required": true
+        },
+        {
+          "name": "Account Owner"
+        },
+        {
+          "name": "Industry"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "Health"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Website"
+        },
+        {
+          "name": "Revenue Tier"
+        },
+        {
+          "name": "Strategic Notes",
+          "rows": 3
+        },
+        {
+          "name": "Escalation History",
+          "rows": 2
+        }
+      ],
+      "description": "Customer accounts",
+      "submissionLabelExpression": "${values('Company Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Industry]",
+          "values[Health]",
+          "values[Region]",
+          "values[Company Name]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Health]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "contacts",
+      "name": "Contacts",
+      "fields": [
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Full Name",
+          "required": true
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Primary"
+        },
+        {
+          "name": "Notes"
+        }
+      ],
+      "description": "Customer contacts",
+      "submissionLabelExpression": "${values('Full Name')} - ${values('Customer')}",
+      "indexes": {
+        "single": [
+          "values[Customer]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "projects",
+      "name": "Projects",
+      "fields": [
+        {
+          "name": "Project ID",
+          "required": true
+        },
+        {
+          "name": "Project Name",
+          "required": true
+        },
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Project Manager"
+        },
+        {
+          "name": "Executive Sponsor"
+        },
+        {
+          "name": "Phase"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Health"
+        },
+        {
+          "name": "Schedule Health"
+        },
+        {
+          "name": "Budget Health"
+        },
+        {
+          "name": "Scope Health"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Target End Date"
+        },
+        {
+          "name": "Actual End Date"
+        },
+        {
+          "name": "Budget"
+        },
+        {
+          "name": "Forecast Cost"
+        },
+        {
+          "name": "Actual Cost"
+        },
+        {
+          "name": "Planned Hours"
+        },
+        {
+          "name": "Actual Hours"
+        },
+        {
+          "name": "Margin Estimate"
+        },
+        {
+          "name": "Team Size"
+        },
+        {
+          "name": "Methodology"
+        },
+        {
+          "name": "Scope Summary",
+          "rows": 3
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        },
+        {
+          "name": "External Ref"
+        }
+      ],
+      "description": "Service delivery projects",
+      "submissionLabelExpression": "${values('Project Name')} - ${values('Customer')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Customer]",
+          "values[Health]",
+          "values[Project Manager]",
+          "values[Phase]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Customer]"
+          ],
+          [
+            "values[Status]",
+            "values[Health]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "team-assignments",
+      "name": "Team Assignments",
+      "fields": [
+        {
+          "name": "Project"
+        },
+        {
+          "name": "Employee",
+          "required": true
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Allocation"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Hourly Rate"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Project team assignments and allocations",
+      "submissionLabelExpression": "${values('Employee')} - ${values('Project')} (${values('Role')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Employee]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Employee]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "status-updates",
+      "name": "Status Updates",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Week",
+          "required": true
+        },
+        {
+          "name": "Overall Health"
+        },
+        {
+          "name": "Schedule Health"
+        },
+        {
+          "name": "Budget Health"
+        },
+        {
+          "name": "Scope Health"
+        },
+        {
+          "name": "Resource Health"
+        },
+        {
+          "name": "Customer Sentiment"
+        },
+        {
+          "name": "Accomplishments",
+          "rows": 3
+        },
+        {
+          "name": "Next Steps",
+          "rows": 3
+        },
+        {
+          "name": "Blockers",
+          "rows": 2
+        },
+        {
+          "name": "Exec Attention"
+        },
+        {
+          "name": "Submitted By"
+        }
+      ],
+      "description": "Weekly project status reports",
+      "submissionLabelExpression": "${values('Project')} - ${values('Week')} (${values('Overall Health')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Overall Health]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Week]"
+          ]
+        ]
+      },
+      "workflows": [
+        {
+          "name": "Red Health Escalation",
+          "event": "Submission Created",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Red Health\" value=\"@values['Overall Health'] == 'Red'\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Escalation\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">ESCALATION: Project &lt;%= @values['Project'] %&gt; reported RED health for week &lt;%= @values['Week'] %&gt;. Blockers: &lt;%= @values['Blockers'] %&gt;. Submitted by &lt;%= @submission['Created By'] %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
+    },
+    {
+      "slug": "milestones",
+      "name": "Milestones",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Milestone Name",
+          "required": true
+        },
+        {
+          "name": "Planned Date"
+        },
+        {
+          "name": "Actual Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Dependencies"
+        },
+        {
+          "name": "Delay Reason",
+          "rows": 2
+        }
+      ],
+      "description": "Project milestones and delivery gates",
+      "submissionLabelExpression": "${values('Milestone Name')} - ${values('Project')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "risks-issues",
+      "name": "Risks & Issues",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Impact"
+        },
+        {
+          "name": "Probability"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Mitigation",
+          "rows": 2
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Escalated"
+        },
+        {
+          "name": "Resolution",
+          "rows": 2
+        }
+      ],
+      "description": "Project risks and issues",
+      "submissionLabelExpression": "${values('Title')} - ${values('Project')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Status]",
+          "values[Type]",
+          "values[Severity]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Status]"
+          ],
+          [
+            "values[Type]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "time-entries",
+      "name": "Time Entries",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Employee",
+          "required": true
+        },
+        {
+          "name": "Date",
+          "required": true
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Billable"
+        },
+        {
+          "name": "Approved"
+        }
+      ],
+      "description": "Hours logged against projects",
+      "submissionLabelExpression": "${values('Employee')} - ${values('Project')} (${values('Hours')}h)",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Employee]",
+          "values[Date]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Employee]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "costs",
+      "name": "Costs",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Description"
+        },
+        {
+          "name": "Amount"
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Submitted By"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Receipt Ref"
+        }
+      ],
+      "description": "Project expenses and cost tracking",
+      "submissionLabelExpression": "${values('Project')} - ${values('Category')} (${values('Amount')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "fields": [
+        {
+          "name": "Project"
+        },
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Overall Rating"
+        },
+        {
+          "name": "Communication"
+        },
+        {
+          "name": "Quality"
+        },
+        {
+          "name": "Timeliness"
+        },
+        {
+          "name": "NPS"
+        },
+        {
+          "name": "Comments",
+          "rows": 4
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Submitted By"
+        },
+        {
+          "name": "Follow Up Required"
+        },
+        {
+          "name": "Follow Up Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Customer satisfaction feedback",
+      "submissionLabelExpression": "${values('Customer')} - ${values('Project')} (${values('Overall Rating')})",
+      "indexes": {
+        "single": [
+          "values[Customer]",
+          "values[Project]",
+          "values[Overall Rating]"
+        ],
+        "compound": []
+      },
+      "workflows": [
+        {
+          "name": "Low Feedback Escalation",
+          "event": "Submission Created",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Low Rating\" value=\"@values['Overall Rating'].to_i &lt;= 2\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Low Feedback\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">LOW SATISFACTION ALERT: &lt;%= @values['Customer'] %&gt; rated project &lt;%= @values['Project'] %&gt; at &lt;%= @values['Overall Rating'] %&gt;/5. Comments: &lt;%= @values['Comments'] %&gt;. Follow up required. Created by &lt;%= @submission['Created By'] %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
+    },
+    {
+      "slug": "checkouts",
+      "name": "Checkouts",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Checkout Date"
+        },
+        {
+          "name": "Deliverables Complete"
+        },
+        {
+          "name": "Customer Signoff"
+        },
+        {
+          "name": "Time Complete"
+        },
+        {
+          "name": "Costs Complete"
+        },
+        {
+          "name": "Invoice Ready"
+        },
+        {
+          "name": "Lessons Captured"
+        },
+        {
+          "name": "Quality Score"
+        },
+        {
+          "name": "Success Summary",
+          "rows": 3
+        },
+        {
+          "name": "Expansion Opportunities",
+          "rows": 2
+        },
+        {
+          "name": "Completed By"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "description": "Post-project closeout and checkout",
+      "submissionLabelExpression": "${values('Project')} - ${values('Status')}",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "lessons-learned",
+      "name": "Lessons Learned",
+      "fields": [
+        {
+          "name": "Project"
+        },
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Impact"
+        },
+        {
+          "name": "Reusable"
+        },
+        {
+          "name": "Tags"
+        }
+      ],
+      "description": "Reusable delivery insights and lessons",
+      "submissionLabelExpression": "${values('Title')} (${values('Category')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Project]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "deliverables",
+      "name": "Deliverables",
+      "fields": [
+        {
+          "name": "Project",
+          "required": true
+        },
+        {
+          "name": "Deliverable Name",
+          "required": true
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Customer Acknowledged"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Project deliverables and acceptance tracking",
+      "submissionLabelExpression": "${values('Deliverable Name')} - ${values('Project')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Project]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Project]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "notifications",
+      "name": "Notifications",
+      "fields": [
+        {
+          "name": "Project"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Message",
+          "rows": 2
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Acknowledged"
+        },
+        {
+          "name": "Acknowledged By"
+        }
+      ],
+      "description": "Escalation and notification log",
+      "submissionLabelExpression": "${values('Type')} - ${values('Project')} (${values('Severity')})",
+      "indexes": {
+        "single": [
+          "values[Acknowledged]",
+          "values[Severity]"
+        ],
+        "compound": []
+      }
+    }
+  ]
+}

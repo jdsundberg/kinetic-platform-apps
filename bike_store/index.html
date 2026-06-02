@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bike Store</title>
+<style>
+:root {
+  --blue:#1A237E;--orange:#F36C24;--green:#34A853;--red:#EA4335;--yellow:#FBBC04;
+  --gray:#5F6368;--light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --pending:#9AA0A6; --picked:#FBBC04; --shipped:#4285F4; --transit:#F36C24; --delivered:#34A853; --error:#EA4335;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 14px;transition:background .15s}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;outline:none;background:white}
+input:focus,select:focus{border-color:var(--orange)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable:hover{background:#EEF1F6;cursor:pointer}
+
+/* Topbar */
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;margin-left:32px}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 14px;font-size:13px;font-weight:500;border-radius:8px;white-space:nowrap}
+.topbar nav button:hover{color:white;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:white}
+.topbar .spacer{flex:1}
+.topbar .user-info{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.85)}
+.topbar .user-info strong{color:white}
+.logout-btn{background:rgba(255,255,255,.12);color:white;font-size:11px;padding:5px 10px}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a237e 0%,#283593 50%,#3949ab 100%)}
+.login-card{background:white;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.25);padding:36px;width:380px;max-width:90vw}
+.login-card h1{text-align:center;font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.login-card h1 span{color:var(--orange)}
+.login-card .sub{text-align:center;font-size:12px;color:var(--gray);margin-bottom:20px}
+.login-card label{display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px}
+.login-card input{width:100%}
+.login-btn{width:100%;background:var(--orange);color:white;font-weight:600;padding:11px;margin-top:18px}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+
+/* App */
+#app{display:none}
+.main{padding:20px 24px;max-width:1400px;margin:0 auto}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:2px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:white;border-radius:12px;padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi .val{font-size:28px;font-weight:700;color:var(--blue);line-height:1}
+.kpi .lbl{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+.kpi.warn .val{color:var(--orange)}
+.kpi.alert .val{color:var(--red)}
+.kpi.good .val{color:var(--green)}
+
+/* Map */
+.map-card{background:white;border-radius:12px;padding:0;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.map-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.map-head h3{font-size:14px;font-weight:600;color:var(--blue)}
+.map-legend{display:flex;gap:14px;font-size:11px;color:var(--gray);margin-left:auto}
+.map-legend span{display:inline-flex;align-items:center;gap:5px}
+.map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.map-wrap{position:relative;background:#0F1729;background-image:radial-gradient(circle at 35% 30%,rgba(67,97,238,.06),transparent 55%),radial-gradient(circle at 70% 70%,rgba(243,108,36,.04),transparent 55%);padding:8px}
+svg.us-map{display:block;width:100%;height:auto;font-family:inherit}
+svg.us-map .grid{stroke:rgba(255,255,255,.05);stroke-width:.5;fill:none}
+svg.us-map .land{fill:rgba(232,234,237,.08);stroke:rgba(232,234,237,.2);stroke-width:.5}
+svg.us-map .wh-pin{cursor:pointer;transition:transform .15s}
+svg.us-map .wh-pin:hover circle.outer{stroke-width:3}
+svg.us-map .wh-label{fill:rgba(255,255,255,.85);font-size:10px;font-weight:600;text-anchor:middle;pointer-events:none}
+svg.us-map .wh-sub{fill:rgba(255,255,255,.5);font-size:8px;text-anchor:middle;pointer-events:none}
+svg.us-map .ship-arc{fill:none;stroke-width:1.4;opacity:.85;cursor:pointer}
+svg.us-map .ship-arc:hover{stroke-width:2.5;opacity:1}
+svg.us-map .ship-end{r:2.5;cursor:pointer}
+svg.us-map .ship-dot{fill:white;opacity:.9}
+@keyframes flow{0%{stroke-dashoffset:30}100%{stroke-dashoffset:0}}
+svg.us-map .ship-arc.in-transit{animation:flow 1.5s linear infinite;stroke-dasharray:5 4}
+svg.us-map .ship-arc.shipped{stroke-dasharray:3 3}
+
+/* Cards / tables */
+.card{background:white;border-radius:12px;padding:0;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.card-head h3{font-size:14px;font-weight:600;color:var(--blue)}
+.card-head .spacer{flex:1}
+.empty{padding:30px;text-align:center;color:var(--gray);font-size:13px}
+
+/* Badges */
+.badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:.2px}
+.b-blue{background:#E3F2FD;color:#1565C0}
+.b-green{background:#E8F5E9;color:#2E7D32}
+.b-yellow{background:#FFF8E1;color:#F57F17}
+.b-orange{background:#FFF3E0;color:#E65100}
+.b-red{background:#FFEBEE;color:#C62828}
+.b-gray{background:#F1F3F4;color:#5F6368}
+.b-purple{background:#F3E5F5;color:#6A1B9A}
+
+/* Filters/search row */
+.filters{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:#FAFBFC}
+.filters input,.filters select{font-size:12px;padding:6px 10px}
+.filters .pager{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray)}
+.filters .pager button{padding:5px 10px;font-size:12px;background:var(--light);color:var(--blue);border:1px solid var(--border)}
+
+/* Stock bar */
+.bar{display:inline-block;width:80px;height:8px;background:#F1F3F4;border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.bar > span{display:block;height:100%;background:var(--green);transition:width .25s}
+.bar.warn > span{background:var(--yellow)}
+.bar.low > span{background:var(--red)}
+
+/* Drawer */
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none}
+.drawer-bg.open{display:block}
+.drawer{position:fixed;top:0;right:0;width:640px;max-width:100vw;height:100vh;background:white;box-shadow:-4px 0 16px rgba(0,0,0,.18);z-index:201;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:14px 22px 0;border-bottom:1px solid var(--border)}
+.drawer-head-row{display:flex;align-items:center;gap:10px;padding-bottom:10px}
+.drawer-head h3{font-size:16px;font-weight:700;color:var(--blue);flex:1}
+.drawer-tabs{display:flex;gap:4px}
+.drawer-tabs button{background:transparent;color:var(--gray);font-size:12px;font-weight:600;padding:8px 14px;border-radius:6px 6px 0 0;border-bottom:2px solid transparent}
+.drawer-tabs button.active{color:var(--orange);border-bottom-color:var(--orange);background:#FFF8F4}
+.drawer-body{padding:18px 22px;flex:1;overflow-y:auto}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 14px;font-size:13px;margin-bottom:14px}
+.kv .k{color:var(--gray);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;padding-top:3px}
+.kv .v{color:#202124;word-break:break-word}
+.section-h{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin:18px 0 8px}
+.edit-form .kv label{color:var(--gray);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;padding-top:8px}
+.edit-form input, .edit-form select, .edit-form textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.edit-form textarea{resize:vertical;min-height:60px}
+.edit-form input:focus, .edit-form select:focus, .edit-form textarea:focus{border-color:var(--orange);outline:none}
+.edit-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.btn-primary{background:var(--orange);color:white;font-weight:600;padding:9px 16px}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:9px 16px}
+.audit-entry{padding:14px;border-left:3px solid var(--orange);background:#FFF8F4;border-radius:0 8px 8px 0;margin-bottom:10px}
+.audit-entry.created{border-left-color:var(--green);background:#F1F8E9}
+.audit-entry.rejected{border-left-color:var(--red);background:#FFEBEE}
+.audit-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--gray);margin-bottom:6px}
+.audit-meta strong{color:var(--blue);font-size:12px}
+.audit-desc{font-size:13px;color:#202124;line-height:1.4;margin-bottom:6px}
+.audit-diff{font-size:11px;color:var(--gray);font-family:monospace;background:rgba(0,0,0,.04);padding:4px 8px;border-radius:4px;margin-top:6px}
+.audit-diff div{padding:1px 0}
+.audit-diff .before{color:#C62828;text-decoration:line-through}
+.audit-diff .after{color:#2E7D32;font-weight:600}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{padding:30px;text-align:center;color:var(--gray)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--blue);color:white;padding:10px 18px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.18);transition:transform .25s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Bike <span>Store</span></h1>
+    <div class="sub">Cross-US bike shipping & inventory</div>
+    <label>Server URL</label>
+    <input id="login-url" placeholder="https://kinetic.example.com">
+    <label>Username</label>
+    <input id="login-user">
+    <label>Password</label>
+    <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Bike <span>Store</span></div>
+    <nav>
+      <button class="active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button data-tab="shipments" onclick="switchTab('shipments')">Shipments</button>
+      <button data-tab="warehouses" onclick="switchTab('warehouses')">Warehouses</button>
+      <button data-tab="inventory" onclick="switchTab('inventory')">Inventory</button>
+      <button data-tab="products" onclick="switchTab('products')">Products</button>
+      <button data-tab="transfers" onclick="switchTab('transfers')">Transfers</button>
+      <button data-tab="trails" onclick="switchTab('trails')">Trails</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Dashboard -->
+    <div class="tab" id="tab-dashboard">
+      <div class="page-title">Cross-US Shipping Network</div>
+      <div class="page-sub">Live snapshot of every warehouse, every in-flight order.</div>
+
+      <div class="kpis" id="dash-kpis">
+        <div class="kpi"><div class="val" id="kpi-shipments">—</div><div class="lbl">Active Shipments</div></div>
+        <div class="kpi"><div class="val" id="kpi-miles">—</div><div class="lbl">Miles in Motion</div></div>
+        <div class="kpi good"><div class="val" id="kpi-delivered">—</div><div class="lbl">Delivered (7d)</div></div>
+        <div class="kpi warn"><div class="val" id="kpi-low">—</div><div class="lbl">Low-Stock Lines</div></div>
+        <div class="kpi"><div class="val" id="kpi-onhand">—</div><div class="lbl">Total On-Hand</div></div>
+        <div class="kpi"><div class="val" id="kpi-warehouses">—</div><div class="lbl">Warehouses</div></div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-head">
+          <h3>Network Map</h3>
+          <div class="map-legend">
+            <span><i style="background:#9AA0A6"></i> Pending</span>
+            <span><i style="background:#FBBC04"></i> Picked</span>
+            <span><i style="background:#4285F4"></i> Shipped</span>
+            <span><i style="background:#F36C24"></i> In Transit</span>
+            <span><i style="background:#34A853"></i> Delivered</span>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <svg class="us-map" viewBox="0 0 1000 500" id="us-map"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Active Shipments</h3><div class="spacer"></div></div>
+        <div id="dash-active-shipments"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Shipments -->
+    <div class="tab" id="tab-shipments" style="display:none">
+      <div class="page-title">Shipments</div>
+      <div class="page-sub">Customer orders fulfilling across the network.</div>
+      <div class="card">
+        <div class="filters">
+          <select id="ship-status-filter" onchange="loadShipments(true)">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Picked">Picked</option>
+            <option value="Shipped">Shipped</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+          <select id="ship-wh-filter" onchange="loadShipments(true)">
+            <option value="">All Warehouses</option>
+          </select>
+          <input id="ship-search" type="text" placeholder="Search order # / customer / tracking" oninput="renderShipments()">
+          <div class="pager">
+            <button id="ship-prev" onclick="shipPage(-1)">‹ Prev</button>
+            <span id="ship-page">Page 1</span>
+            <button id="ship-next" onclick="shipPage(1)">Next ›</button>
+          </div>
+        </div>
+        <div id="ship-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Warehouses -->
+    <div class="tab" id="tab-warehouses" style="display:none">
+      <div class="page-title">Warehouses</div>
+      <div class="page-sub">Fulfillment hubs and their utilization.</div>
+      <div class="card">
+        <div id="wh-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Inventory -->
+    <div class="tab" id="tab-inventory" style="display:none">
+      <div class="page-title">Inventory</div>
+      <div class="page-sub">Stock-on-hand per warehouse × product. Click a row for product detail.</div>
+      <div class="card">
+        <div class="filters">
+          <select id="inv-wh-filter" onchange="loadInventory(true)">
+            <option value="">All Warehouses</option>
+          </select>
+          <input id="inv-search" type="text" placeholder="Search SKU" oninput="renderInventory()">
+          <div class="pager">
+            <button id="inv-prev" onclick="invPage(-1)">‹ Prev</button>
+            <span id="inv-page">Page 1</span>
+            <button id="inv-next" onclick="invPage(1)">Next ›</button>
+          </div>
+        </div>
+        <div id="inv-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="tab" id="tab-products" style="display:none">
+      <div class="page-title">Products</div>
+      <div class="page-sub">Bike catalog.</div>
+      <div class="card">
+        <div class="filters">
+          <select id="prod-cat-filter" onchange="loadProducts(true)">
+            <option value="">All Categories</option>
+            <option value="Road">Road</option>
+            <option value="Mountain">Mountain</option>
+            <option value="Hybrid">Hybrid</option>
+            <option value="E-Bike">E-Bike</option>
+            <option value="Kids">Kids</option>
+          </select>
+          <input id="prod-search" type="text" placeholder="Search SKU / make / model" oninput="renderProducts()">
+          <div class="pager">
+            <button id="prod-prev" onclick="prodPage(-1)">‹ Prev</button>
+            <span id="prod-page">Page 1</span>
+            <button id="prod-next" onclick="prodPage(1)">Next ›</button>
+          </div>
+        </div>
+        <div id="prod-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Transfers -->
+    <div class="tab" id="tab-transfers" style="display:none">
+      <div class="page-title">Warehouse Transfers</div>
+      <div class="page-sub">Inventory rebalancing flows between hubs.</div>
+      <div class="card">
+        <div id="tr-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Trails -->
+    <div class="tab" id="tab-trails" style="display:none">
+      <div class="page-title">Bike Trails</div>
+      <div class="page-sub">Trail catalog — where customers are riding the bikes we ship.</div>
+
+      <div class="map-card">
+        <div class="map-head">
+          <h3>Trail Map</h3>
+          <div class="map-legend">
+            <span><i style="background:#34A853"></i> Easy</span>
+            <span><i style="background:#4285F4"></i> Moderate</span>
+            <span><i style="background:#F36C24"></i> Hard</span>
+            <span><i style="background:#D93025"></i> Expert</span>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <svg class="us-map" viewBox="0 0 1000 500" id="trails-map"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="filters">
+          <select id="trail-diff-filter" onchange="loadTrails(true)">
+            <option value="">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Hard">Hard</option>
+            <option value="Expert">Expert</option>
+          </select>
+          <select id="trail-status-filter" onchange="loadTrails(true)">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="Seasonal Closure">Seasonal Closure</option>
+            <option value="Under Maintenance">Under Maintenance</option>
+            <option value="Closed">Closed</option>
+          </select>
+          <input id="trail-search" type="text" placeholder="Search name / city / state" oninput="renderTrails()">
+          <div class="pager">
+            <button id="trail-prev" onclick="trailPage(-1)">‹ Prev</button>
+            <span id="trail-page">Page 1</span>
+            <button id="trail-next" onclick="trailPage(1)">Next ›</button>
+          </div>
+        </div>
+        <div id="trail-tbody"><div class="loading"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Detail Drawer -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-head-row">
+      <h3 id="drawer-title">Detail</h3>
+      <button class="logout-btn" style="background:var(--light);color:var(--blue)" onclick="closeDrawer()">Close</button>
+    </div>
+    <div class="drawer-tabs">
+      <button data-dtab="view" class="active" onclick="setDrawerTab('view')">View</button>
+      <button data-dtab="edit" onclick="setDrawerTab('edit')">Edit</button>
+      <button data-dtab="history" onclick="setDrawerTab('history')">History</button>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div id="drawer-view"></div>
+    <div id="drawer-edit" style="display:none"></div>
+    <div id="drawer-history" style="display:none"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ── State ──────────────────────────────────────────────────────── */
+let API = '', AUTH = '', USERNAME = '', SPACE_SLUG = '';
+const KAPP = 'bike-store';
+const STATE = {
+  warehouses: [],
+  products: [],
+  inventory: [],     // current view (25 rows)
+  shipments: [],     // current view
+  transfers: [],
+  trails: [],
+  invPage: 0, invHasNext: false, invFilter: '',
+  shipPage: 0, shipHasNext: false, shipFilter: '', shipWhFilter: '',
+  prodPage: 0, prodHasNext: false, prodCatFilter: '',
+  trailPage: 0, trailHasNext: false,
+};
+
+/* ── Helpers ────────────────────────────────────────────────────── */
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function v(sub, field) { return sub?.values?.[field] || ''; }
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+async function api(path, opts = {}) {
+  const headers = { 'Authorization': AUTH, 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const res = await fetch(API + path, { ...opts, headers });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Session / Login ────────────────────────────────────────────── */
+function tryRestoreSession() {
+  let raw = sessionStorage.getItem('kinetic_session') || localStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session') || localStorage.getItem('base_session');
+  if (!raw) return false;
+  try {
+    const s = JSON.parse(raw);
+    // Launcher session uses absolute server URL; if running standalone, URL prefix is window.origin
+    if (s.server || s.url) {
+      // Launcher pattern: use empty API (current origin via proxy) but with X-Kinetic-Server… we'll just hit current origin
+      API = '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || s.username || '';
+      SPACE_SLUG = s.spaceSlug || '';
+      // Mirror to both keys so other apps work
+      sessionStorage.setItem('kinetic_session', JSON.stringify(s));
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+async function doLogin() {
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  const url = (document.getElementById('login-url').value || '').replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  if (!url || !user || !pass) { errEl.textContent = 'All fields required'; return; }
+  const auth = 'Basic ' + btoa(user + ':' + pass);
+  try {
+    const r = await fetch(url + '/app/api/v1/me', { headers: { 'Authorization': auth } });
+    if (!r.ok) throw new Error(r.status === 401 ? 'Invalid credentials' : `HTTP ${r.status}`);
+    const me = await r.json();
+    API = url;
+    AUTH = auth;
+    USERNAME = me.displayName || me.username || user;
+    SPACE_SLUG = me.space?.slug || '';
+    localStorage.setItem('kinetic_server', url);
+    const sess = { server: url, url: url, auth: btoa(user + ':' + pass), user: me.username || user, displayName: USERNAME, spaceSlug: SPACE_SLUG };
+    sessionStorage.setItem('kinetic_session', JSON.stringify(sess));
+    localStorage.setItem('kinetic_session', JSON.stringify(sess));
+    enterApp();
+  } catch (e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('kinetic_session');
+  localStorage.removeItem('kinetic_session');
+  sessionStorage.removeItem('base_session');
+  location.reload();
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = USERNAME + (SPACE_SLUG ? ' · ' + SPACE_SLUG : '');
+  loadDashboard();
+}
+
+/* ── Tab routing ────────────────────────────────────────────────── */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = '';
+  document.querySelector(`.topbar nav button[data-tab="${name}"]`).classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  else if (name === 'shipments') loadShipments(true);
+  else if (name === 'warehouses') loadWarehouses();
+  else if (name === 'inventory') loadInventory(true);
+  else if (name === 'products') loadProducts(true);
+  else if (name === 'transfers') loadTransfers();
+  else if (name === 'trails') loadTrails(true);
+}
+
+/* ── Dashboard ──────────────────────────────────────────────────── */
+async function loadDashboard() {
+  // Load warehouses (~8) and a recent slice of shipments + inventory for KPIs/map
+  try {
+    const [whRes, shipRes, invRes] = await Promise.all([
+      api(`/app/api/v1/kapps/${KAPP}/forms/warehouses/submissions?include=values&limit=25`),
+      api(`/app/api/v1/kapps/${KAPP}/forms/shipments/submissions?include=values&limit=25&orderBy=updatedAt&direction=DESC`),
+      api(`/app/api/v1/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25`),
+    ]);
+    STATE.warehouses = (whRes.submissions || []);
+    populateWarehouseFilters();
+
+    const activeShipments = (shipRes.submissions || []);
+    const allInv = (invRes.submissions || []);
+
+    // KPIs
+    const inFlight = activeShipments.filter(s => ['Pending','Picked','Shipped','In Transit'].includes(v(s,'Status')));
+    const totalMiles = inFlight.reduce((sum, s) => sum + (parseInt(v(s,'Distance Miles'),10) || 0), 0);
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+    const delivered7d = activeShipments.filter(s => v(s,'Status') === 'Delivered' && new Date(v(s,'Ship Date') || s.updatedAt) >= weekAgo).length;
+    const lowStock = allInv.filter(i => {
+      const oh = parseInt(v(i,'On Hand'),10) || 0;
+      const th = parseInt(v(i,'Reorder Threshold'),10) || 0;
+      return th > 0 && oh <= th;
+    }).length;
+    const totalOnHand = allInv.reduce((s,i) => s + (parseInt(v(i,'On Hand'),10) || 0), 0);
+
+    document.getElementById('kpi-shipments').textContent = inFlight.length;
+    document.getElementById('kpi-miles').textContent = totalMiles.toLocaleString();
+    document.getElementById('kpi-delivered').textContent = delivered7d;
+    document.getElementById('kpi-low').textContent = lowStock;
+    document.getElementById('kpi-onhand').textContent = totalOnHand;
+    document.getElementById('kpi-warehouses').textContent = STATE.warehouses.length;
+
+    // Map render
+    renderMap(inFlight);
+
+    // Active shipments table
+    renderActiveShipments(inFlight);
+  } catch (e) {
+    toast('Dashboard error: ' + e.message, true);
+  }
+}
+
+/* US linear projection: continental bounding box (-125..-65, 24..50) → 0..1000 × 0..500 */
+function project(lat, lng) {
+  const lat0 = parseFloat(lat), lng0 = parseFloat(lng);
+  if (!isFinite(lat0) || !isFinite(lng0)) return null;
+  const x = ((lng0 + 125) / 60) * 1000;
+  const y = ((50 - lat0) / 26) * 500;
+  return { x, y };
+}
+
+function renderMap(shipments) {
+  const svg = document.getElementById('us-map');
+  // Grid + suggestive land shape
+  const grid = [];
+  for (let x = 0; x <= 1000; x += 100) grid.push(`<line class="grid" x1="${x}" y1="0" x2="${x}" y2="500"/>`);
+  for (let y = 0; y <= 500; y += 100) grid.push(`<line class="grid" x1="0" y1="${y}" x2="1000" y2="${y}"/>`);
+
+  // Crude continental US "land" silhouette — abstract, not geographic-perfect, but reads as USA.
+  const land = `<path class="land" d="M 50 180 Q 80 130 140 120 Q 220 100 290 105 Q 360 95 440 100 Q 540 95 640 110 Q 740 105 820 130 Q 880 145 920 180 Q 950 220 945 270 Q 935 330 905 370 Q 855 405 800 415 Q 730 425 660 420 Q 580 420 500 425 Q 420 430 350 425 Q 280 420 220 410 Q 150 395 100 370 Q 60 340 50 290 Q 45 230 50 180 Z"/>`;
+
+  // Warehouse pins
+  const whTotals = computeWarehouseTotals();
+  const whSvg = STATE.warehouses.map(w => {
+    const p = project(v(w,'Lat'), v(w,'Lng'));
+    if (!p) return '';
+    const code = esc(v(w,'Code'));
+    const city = esc(v(w,'City'));
+    const total = whTotals[v(w,'Code')] || 0;
+    const r = 6 + Math.min(14, Math.sqrt(total) * 1.4);
+    return `<g class="wh-pin" data-code="${code}" onclick="openWarehouseDrawer('${code}')">
+      <circle class="outer" cx="${p.x}" cy="${p.y}" r="${r}" fill="rgba(243,108,36,.15)" stroke="#F36C24" stroke-width="1.8"/>
+      <circle cx="${p.x}" cy="${p.y}" r="4" fill="#F36C24"/>
+      <text class="wh-label" x="${p.x}" y="${p.y - r - 4}">${code}</text>
+      <text class="wh-sub" x="${p.x}" y="${p.y + r + 11}">${city}</text>
+    </g>`;
+  }).join('');
+
+  // Shipment arcs — origin warehouse → destination lat/lng (or ship-to state proxy)
+  const whByCode = {};
+  STATE.warehouses.forEach(w => { whByCode[v(w,'Code')] = w; });
+  const arcs = shipments.map(s => {
+    const wh = whByCode[v(s,'From Warehouse Code')];
+    if (!wh) return '';
+    const p1 = project(v(wh,'Lat'), v(wh,'Lng'));
+    const p2 = project(v(s,'To Lat'), v(s,'To Lng'));
+    if (!p1 || !p2) return '';
+    const status = v(s,'Status');
+    const color = status === 'Delivered' ? '#34A853'
+      : status === 'In Transit' ? '#F36C24'
+      : status === 'Shipped' ? '#4285F4'
+      : status === 'Picked' ? '#FBBC04'
+      : '#9AA0A6';
+    // Bezier curve — control point lifted halfway, perpendicular to chord
+    const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const cx = mx + (-dy / len) * Math.min(120, len * 0.25);
+    const cy = my + (dx / len) * Math.min(120, len * 0.25) - 30;
+    const arcClass = status === 'In Transit' ? 'in-transit' : status === 'Shipped' ? 'shipped' : '';
+    return `<path class="ship-arc ${arcClass}" d="M ${p1.x} ${p1.y} Q ${cx} ${cy} ${p2.x} ${p2.y}" stroke="${color}" onclick="openShipmentDrawer('${esc(s.id)}')"/>
+            <circle class="ship-end" cx="${p2.x}" cy="${p2.y}" r="3" fill="${color}" onclick="openShipmentDrawer('${esc(s.id)}')"/>`;
+  }).join('');
+
+  svg.innerHTML = grid.join('') + land + arcs + whSvg;
+}
+
+function computeWarehouseTotals() {
+  // Without loading every inventory row (which would violate the 25-row rule),
+  // we approximate using whatever inventory we already have.
+  // Real value of the pin sizing is "how many lines are active here".
+  const counts = {};
+  // Use shipments + transfers to give pins some weight; warehouses with more activity look bigger.
+  STATE.warehouses.forEach(w => { counts[v(w,'Code')] = 1; });
+  return counts;
+}
+
+function populateWarehouseFilters() {
+  const opts = STATE.warehouses.map(w =>
+    `<option value="${esc(v(w,'Code'))}">${esc(v(w,'Code'))} — ${esc(v(w,'City'))}</option>`).join('');
+  const shipSel = document.getElementById('ship-wh-filter');
+  const invSel = document.getElementById('inv-wh-filter');
+  if (shipSel && shipSel.children.length === 1) shipSel.innerHTML = '<option value="">All Warehouses</option>' + opts;
+  if (invSel && invSel.children.length === 1) invSel.innerHTML = '<option value="">All Warehouses</option>' + opts;
+}
+
+function renderActiveShipments(shipments) {
+  const el = document.getElementById('dash-active-shipments');
+  if (!shipments.length) { el.innerHTML = '<div class="empty">No active shipments.</div>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Order</th><th>Customer</th><th>Route</th><th>Status</th><th>Carrier</th><th>Distance</th></tr></thead>
+    <tbody>${shipments.slice(0, 15).map(s => {
+      return `<tr class="clickable" onclick="openShipmentDrawer('${esc(s.id)}')">
+        <td><strong>${esc(v(s,'Order Number'))}</strong></td>
+        <td>${esc(v(s,'Customer Name'))}</td>
+        <td><strong>${esc(v(s,'From Warehouse Code'))}</strong> → ${esc(v(s,'To City'))}, ${esc(v(s,'To State'))}</td>
+        <td>${shipStatusBadge(v(s,'Status'))}</td>
+        <td><span class="badge b-gray">${esc(v(s,'Carrier'))}</span></td>
+        <td>${(parseInt(v(s,'Distance Miles'),10) || 0).toLocaleString()} mi</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function shipStatusBadge(status) {
+  const map = { 'Pending':'b-gray','Picked':'b-yellow','Shipped':'b-blue','In Transit':'b-orange','Delivered':'b-green' };
+  return `<span class="badge ${map[status] || 'b-gray'}">${esc(status || '—')}</span>`;
+}
+
+/* ── Shipments tab ──────────────────────────────────────────────── */
+async function loadShipments(reset) {
+  if (reset) { STATE.shipPage = 0; STATE._shipTokens = []; }
+  const status = document.getElementById('ship-status-filter').value;
+  const wh = document.getElementById('ship-wh-filter').value;
+  const filters = [];
+  if (status) filters.push(`values[Status] = "${status}"`);
+  if (wh) filters.push(`values[From Warehouse Code] = "${wh}"`);
+  const q = filters.length ? `&q=${encodeURIComponent(filters.join(' AND '))}` : '';
+  const token = STATE.shipPage > 0 ? `&pageToken=${encodeURIComponent(STATE._shipTokens[STATE.shipPage - 1] || '')}` : '';
+  try {
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/shipments/submissions?include=values&limit=25&orderBy=updatedAt&direction=DESC${q}${token}`);
+    STATE.shipments = r.submissions || [];
+    if (r.nextPageToken) STATE._shipTokens[STATE.shipPage] = r.nextPageToken;
+    STATE.shipHasNext = !!r.nextPageToken;
+    document.getElementById('ship-page').textContent = 'Page ' + (STATE.shipPage + 1);
+    document.getElementById('ship-prev').disabled = STATE.shipPage === 0;
+    document.getElementById('ship-next').disabled = !STATE.shipHasNext;
+    renderShipments();
+  } catch (e) { toast('Shipments error: ' + e.message, true); }
+}
+function shipPage(dir) {
+  if (dir > 0 && STATE.shipHasNext) { STATE.shipPage++; loadShipments(); }
+  else if (dir < 0 && STATE.shipPage > 0) { STATE.shipPage--; loadShipments(); }
+}
+function renderShipments() {
+  const q = (document.getElementById('ship-search').value || '').toLowerCase();
+  const rows = STATE.shipments.filter(s => {
+    if (!q) return true;
+    return [v(s,'Order Number'),v(s,'Customer Name'),v(s,'Tracking Number'),v(s,'To City'),v(s,'To State')].some(x => (x||'').toLowerCase().includes(q));
+  });
+  const el = document.getElementById('ship-tbody');
+  if (!rows.length) { el.innerHTML = '<div class="empty">No shipments match.</div>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Order</th><th>Customer</th><th>From</th><th>To</th><th>Status</th><th>Carrier</th><th>Distance</th><th>Ship Date</th></tr></thead>
+    <tbody>${rows.map(s => `<tr class="clickable" onclick="openShipmentDrawer('${esc(s.id)}')">
+      <td><strong>${esc(v(s,'Order Number'))}</strong></td>
+      <td>${esc(v(s,'Customer Name'))}</td>
+      <td><strong>${esc(v(s,'From Warehouse Code'))}</strong></td>
+      <td>${esc(v(s,'To City'))}, ${esc(v(s,'To State'))}</td>
+      <td>${shipStatusBadge(v(s,'Status'))}</td>
+      <td>${esc(v(s,'Carrier'))}</td>
+      <td>${(parseInt(v(s,'Distance Miles'),10) || 0).toLocaleString()} mi</td>
+      <td>${esc(v(s,'Ship Date'))}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* ── Warehouses tab ─────────────────────────────────────────────── */
+async function loadWarehouses() {
+  if (!STATE.warehouses.length) {
+    try {
+      const r = await api(`/app/api/v1/kapps/${KAPP}/forms/warehouses/submissions?include=values&limit=25`);
+      STATE.warehouses = r.submissions || [];
+      populateWarehouseFilters();
+    } catch (e) { toast('Warehouses error: ' + e.message, true); return; }
+  }
+  const el = document.getElementById('wh-tbody');
+  el.innerHTML = `<table>
+    <thead><tr><th>Code</th><th>Name</th><th>City</th><th>State</th><th>Capacity</th><th>Manager</th><th>Status</th></tr></thead>
+    <tbody>${STATE.warehouses.map(w => `<tr class="clickable" onclick="openWarehouseDrawer('${esc(v(w,'Code'))}')">
+      <td><strong style="color:var(--orange)">${esc(v(w,'Code'))}</strong></td>
+      <td>${esc(v(w,'Name'))}</td>
+      <td>${esc(v(w,'City'))}</td>
+      <td>${esc(v(w,'State'))}</td>
+      <td>${(parseInt(v(w,'Capacity'),10) || 0).toLocaleString()} bikes</td>
+      <td style="font-size:12px;color:var(--gray)">${esc(v(w,'Manager Email'))}</td>
+      <td><span class="badge b-green">${esc(v(w,'Status'))}</span></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* ── Inventory tab ──────────────────────────────────────────────── */
+async function loadInventory(reset) {
+  if (reset) { STATE.invPage = 0; STATE._invTokens = []; }
+  const wh = document.getElementById('inv-wh-filter').value;
+  const q = wh ? `&q=${encodeURIComponent(`values[Warehouse Code] = "${wh}"`)}` : '';
+  const token = STATE.invPage > 0 ? `&pageToken=${encodeURIComponent(STATE._invTokens[STATE.invPage - 1] || '')}` : '';
+  try {
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/inventory/submissions?include=values&limit=25${q}${token}`);
+    STATE.inventory = r.submissions || [];
+    if (r.nextPageToken) STATE._invTokens[STATE.invPage] = r.nextPageToken;
+    STATE.invHasNext = !!r.nextPageToken;
+    document.getElementById('inv-page').textContent = 'Page ' + (STATE.invPage + 1);
+    document.getElementById('inv-prev').disabled = STATE.invPage === 0;
+    document.getElementById('inv-next').disabled = !STATE.invHasNext;
+    renderInventory();
+  } catch (e) { toast('Inventory error: ' + e.message, true); }
+}
+function invPage(dir) {
+  if (dir > 0 && STATE.invHasNext) { STATE.invPage++; loadInventory(); }
+  else if (dir < 0 && STATE.invPage > 0) { STATE.invPage--; loadInventory(); }
+}
+function renderInventory() {
+  const q = (document.getElementById('inv-search').value || '').toLowerCase();
+  const rows = STATE.inventory.filter(i => {
+    if (!q) return true;
+    return [v(i,'Product SKU'),v(i,'Warehouse Code')].some(x => (x||'').toLowerCase().includes(q));
+  });
+  const el = document.getElementById('inv-tbody');
+  if (!rows.length) { el.innerHTML = '<div class="empty">No inventory rows match.</div>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Warehouse</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Available</th><th>Threshold</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(i => {
+      const oh = parseInt(v(i,'On Hand'),10) || 0;
+      const rsv = parseInt(v(i,'Reserved'),10) || 0;
+      const avail = Math.max(0, oh - rsv);
+      const th = parseInt(v(i,'Reorder Threshold'),10) || 0;
+      const cap = Math.max(oh + 5, th * 3, 30);
+      const pct = Math.min(100, (oh / cap) * 100);
+      const cls = th > 0 && oh <= th ? 'low' : (th > 0 && oh <= th * 2 ? 'warn' : '');
+      const badge = th > 0 && oh <= th ? '<span class="badge b-red">Reorder</span>'
+        : (th > 0 && oh <= th * 2 ? '<span class="badge b-yellow">Watch</span>'
+        : '<span class="badge b-green">OK</span>');
+      return `<tr class="clickable" onclick="openRecordDrawer('inventory','${esc(i.id)}')">
+        <td><strong style="color:var(--orange)">${esc(v(i,'Warehouse Code'))}</strong></td>
+        <td>${esc(v(i,'Product SKU'))}</td>
+        <td><span class="bar ${cls}"><span style="width:${pct}%"></span></span>${oh}</td>
+        <td>${rsv}</td>
+        <td>${avail}</td>
+        <td>${th}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+/* ── Products tab ───────────────────────────────────────────────── */
+async function loadProducts(reset) {
+  if (reset) { STATE.prodPage = 0; STATE._prodTokens = []; }
+  const cat = document.getElementById('prod-cat-filter').value;
+  const q = cat ? `&q=${encodeURIComponent(`values[Category] = "${cat}"`)}` : '';
+  const token = STATE.prodPage > 0 ? `&pageToken=${encodeURIComponent(STATE._prodTokens[STATE.prodPage - 1] || '')}` : '';
+  try {
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/products/submissions?include=values&limit=25${q}${token}`);
+    STATE.products = r.submissions || [];
+    if (r.nextPageToken) STATE._prodTokens[STATE.prodPage] = r.nextPageToken;
+    STATE.prodHasNext = !!r.nextPageToken;
+    document.getElementById('prod-page').textContent = 'Page ' + (STATE.prodPage + 1);
+    document.getElementById('prod-prev').disabled = STATE.prodPage === 0;
+    document.getElementById('prod-next').disabled = !STATE.prodHasNext;
+    renderProducts();
+  } catch (e) { toast('Products error: ' + e.message, true); }
+}
+function prodPage(dir) {
+  if (dir > 0 && STATE.prodHasNext) { STATE.prodPage++; loadProducts(); }
+  else if (dir < 0 && STATE.prodPage > 0) { STATE.prodPage--; loadProducts(); }
+}
+function renderProducts() {
+  const q = (document.getElementById('prod-search').value || '').toLowerCase();
+  const rows = STATE.products.filter(p => {
+    if (!q) return true;
+    return [v(p,'SKU'),v(p,'Make'),v(p,'Model'),v(p,'Color')].some(x => (x||'').toLowerCase().includes(q));
+  });
+  const el = document.getElementById('prod-tbody');
+  if (!rows.length) { el.innerHTML = '<div class="empty">No products match.</div>'; return; }
+  const catColor = { 'Road':'b-blue','Mountain':'b-green','Hybrid':'b-purple','E-Bike':'b-orange','Kids':'b-yellow' };
+  el.innerHTML = `<table>
+    <thead><tr><th>SKU</th><th>Make</th><th>Model</th><th>Category</th><th>Frame</th><th>Color</th><th>Weight</th><th>Price</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(p => `<tr class="clickable" onclick="openRecordDrawer('products','${esc(p.id)}')">
+      <td><strong>${esc(v(p,'SKU'))}</strong></td>
+      <td>${esc(v(p,'Make'))}</td>
+      <td>${esc(v(p,'Model'))}</td>
+      <td><span class="badge ${catColor[v(p,'Category')] || 'b-gray'}">${esc(v(p,'Category'))}</span></td>
+      <td>${esc(v(p,'Frame Size'))}</td>
+      <td>${esc(v(p,'Color'))}</td>
+      <td>${esc(v(p,'Weight'))} lbs</td>
+      <td>$${esc(v(p,'Price'))}</td>
+      <td>${v(p,'Status') === 'Active' ? '<span class="badge b-green">Active</span>' : '<span class="badge b-gray">' + esc(v(p,'Status')) + '</span>'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* ── Transfers tab ──────────────────────────────────────────────── */
+async function loadTransfers() {
+  try {
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/transfers/submissions?include=values&limit=25&orderBy=updatedAt&direction=DESC`);
+    STATE.transfers = r.submissions || [];
+  } catch (e) { toast('Transfers error: ' + e.message, true); return; }
+  const el = document.getElementById('tr-tbody');
+  if (!STATE.transfers.length) { el.innerHTML = '<div class="empty">No transfers.</div>'; return; }
+  const tStatus = { 'Requested':'b-gray','Approved':'b-yellow','Shipped':'b-orange','Received':'b-green' };
+  el.innerHTML = `<table>
+    <thead><tr><th>Transfer</th><th>Route</th><th>SKU</th><th>Qty</th><th>Status</th><th>Requested</th><th>Shipped</th><th>Notes</th></tr></thead>
+    <tbody>${STATE.transfers.map(t => `<tr class="clickable" onclick="openRecordDrawer('transfers','${esc(t.id)}')">
+      <td><strong>${esc(v(t,'Transfer Number'))}</strong></td>
+      <td><strong style="color:var(--orange)">${esc(v(t,'From Warehouse Code'))}</strong> → <strong style="color:var(--orange)">${esc(v(t,'To Warehouse Code'))}</strong></td>
+      <td>${esc(v(t,'Product SKU'))}</td>
+      <td>${esc(v(t,'Quantity'))}</td>
+      <td><span class="badge ${tStatus[v(t,'Status')] || 'b-gray'}">${esc(v(t,'Status'))}</span></td>
+      <td style="font-size:12px">${esc(v(t,'Requested Date'))}</td>
+      <td style="font-size:12px">${esc(v(t,'Ship Date'))}</td>
+      <td style="font-size:12px;color:var(--gray)">${esc(v(t,'Notes'))}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* ── Trails tab ─────────────────────────────────────────────────── */
+const TRAIL_DIFF_COLOR = {
+  'Easy':     '#34A853',
+  'Moderate': '#4285F4',
+  'Hard':     '#F36C24',
+  'Expert':   '#D93025',
+};
+const TRAIL_STATUS_BADGE = {
+  'Open':              'b-green',
+  'Seasonal Closure':  'b-yellow',
+  'Under Maintenance': 'b-orange',
+  'Closed':            'b-red',
+};
+
+async function loadTrails(reset) {
+  if (reset) { STATE.trailPage = 0; STATE._trailTokens = []; }
+  const diff = document.getElementById('trail-diff-filter').value;
+  const status = document.getElementById('trail-status-filter').value;
+  const filters = [];
+  if (diff) filters.push(`values[Difficulty] = "${diff}"`);
+  if (status) filters.push(`values[Status] = "${status}"`);
+  const q = filters.length ? `&q=${encodeURIComponent(filters.join(' AND '))}` : '';
+  const token = STATE.trailPage > 0 ? `&pageToken=${encodeURIComponent(STATE._trailTokens[STATE.trailPage - 1] || '')}` : '';
+  try {
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/bike-trails/submissions?include=values&limit=25${q}${token}`);
+    STATE.trails = r.submissions || [];
+    if (r.nextPageToken) STATE._trailTokens[STATE.trailPage] = r.nextPageToken;
+    STATE.trailHasNext = !!r.nextPageToken;
+    document.getElementById('trail-page').textContent = 'Page ' + (STATE.trailPage + 1);
+    document.getElementById('trail-prev').disabled = STATE.trailPage === 0;
+    document.getElementById('trail-next').disabled = !STATE.trailHasNext;
+    renderTrails();
+    renderTrailMap();
+  } catch (e) { toast('Trails error: ' + e.message, true); }
+}
+function trailPage(dir) {
+  if (dir > 0 && STATE.trailHasNext) { STATE.trailPage++; loadTrails(); }
+  else if (dir < 0 && STATE.trailPage > 0) { STATE.trailPage--; loadTrails(); }
+}
+function renderTrails() {
+  const q = (document.getElementById('trail-search').value || '').toLowerCase();
+  const rows = STATE.trails.filter(t => {
+    if (!q) return true;
+    return [v(t,'Name'),v(t,'City'),v(t,'State'),v(t,'Surface')].some(x => (x||'').toLowerCase().includes(q));
+  });
+  const el = document.getElementById('trail-tbody');
+  if (!rows.length) { el.innerHTML = '<div class="empty">No trails match.</div>'; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>Trail</th><th>Location</th><th>Length</th><th>Elev. Gain</th><th>Difficulty</th><th>Surface</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(t => {
+      const diff = v(t,'Difficulty');
+      const diffColor = TRAIL_DIFF_COLOR[diff] || '#9AA0A6';
+      const status = v(t,'Status');
+      const statusBadge = TRAIL_STATUS_BADGE[status] || 'b-gray';
+      return `<tr class="clickable" onclick="openRecordDrawer('bike-trails','${esc(t.id)}')">
+        <td><strong>${esc(v(t,'Name'))}</strong></td>
+        <td>${esc(v(t,'City'))}, ${esc(v(t,'State'))}</td>
+        <td>${esc(v(t,'Length Miles'))} mi</td>
+        <td>${(parseInt(v(t,'Elevation Gain'),10) || 0).toLocaleString()} ft</td>
+        <td><span class="badge" style="background:${diffColor};color:#fff">${esc(diff || '—')}</span></td>
+        <td>${esc(v(t,'Surface'))}</td>
+        <td><span class="badge ${statusBadge}">${esc(status || '—')}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function renderTrailMap() {
+  const svg = document.getElementById('trails-map');
+  if (!svg) return;
+  const grid = [];
+  for (let x = 0; x <= 1000; x += 100) grid.push(`<line class="grid" x1="${x}" y1="0" x2="${x}" y2="500"/>`);
+  for (let y = 0; y <= 500; y += 100) grid.push(`<line class="grid" x1="0" y1="${y}" x2="1000" y2="${y}"/>`);
+  const land = `<path class="land" d="M 50 180 Q 80 130 140 120 Q 220 100 290 105 Q 360 95 440 100 Q 540 95 640 110 Q 740 105 820 130 Q 880 145 920 180 Q 950 220 945 270 Q 935 330 905 370 Q 855 405 800 415 Q 730 425 660 420 Q 580 420 500 425 Q 420 430 350 425 Q 280 420 220 410 Q 150 395 100 370 Q 60 340 50 290 Q 45 230 50 180 Z"/>`;
+
+  const pins = STATE.trails.map(t => {
+    const p = project(v(t,'Lat'), v(t,'Lng'));
+    if (!p) return '';
+    const diff = v(t,'Difficulty');
+    const color = TRAIL_DIFF_COLOR[diff] || '#9AA0A6';
+    const len = parseFloat(v(t,'Length Miles')) || 0;
+    const r = 5 + Math.min(10, Math.log10(len + 1) * 4);
+    const name = esc(v(t,'Name'));
+    return `<g class="wh-pin" onclick="openRecordDrawer('bike-trails','${esc(t.id)}')">
+      <circle class="outer" cx="${p.x}" cy="${p.y}" r="${r}" fill="${color}33" stroke="${color}" stroke-width="1.6"/>
+      <circle cx="${p.x}" cy="${p.y}" r="3" fill="${color}"/>
+      <text class="wh-label" x="${p.x}" y="${p.y - r - 4}">${name}</text>
+    </g>`;
+  }).join('');
+
+  svg.innerHTML = grid.join('') + land + pins;
+}
+
+/* ── Drawer (View / Edit / History) ─────────────────────────────── */
+
+// Field config per form: enum select options, readonly fields, multi-line, label fallback.
+const FORM_CONFIG = {
+  warehouses: {
+    label: r => `${v(r,'Code')} — ${v(r,'Name')}`,
+    fields: [
+      { name: 'Code', readonly: true },
+      { name: 'Name' },
+      { name: 'City' },
+      { name: 'State' },
+      { name: 'Zip' },
+      { name: 'Lat' },
+      { name: 'Lng' },
+      { name: 'Capacity', type: 'number' },
+      { name: 'Manager Email' },
+      { name: 'Phone' },
+      { name: 'Status', options: ['Active','Inactive'] },
+    ],
+  },
+  products: {
+    label: r => `${v(r,'Make')} ${v(r,'Model')} (${v(r,'SKU')})`,
+    fields: [
+      { name: 'SKU', readonly: true },
+      { name: 'Make' },
+      { name: 'Model' },
+      { name: 'Category', options: ['Road','Mountain','Hybrid','E-Bike','Kids'] },
+      { name: 'Frame Size' },
+      { name: 'Color' },
+      { name: 'Weight', type: 'number' },
+      { name: 'Price', type: 'number' },
+      { name: 'MSRP', type: 'number' },
+      { name: 'Status', options: ['Active','Discontinued'] },
+      { name: 'Description', textarea: true },
+    ],
+  },
+  inventory: {
+    label: r => `${v(r,'Warehouse Code')} / ${v(r,'Product SKU')}`,
+    fields: [
+      { name: 'Warehouse Code', readonly: true },
+      { name: 'Product SKU', readonly: true },
+      { name: 'On Hand', type: 'number' },
+      { name: 'Reserved', type: 'number' },
+      { name: 'Reorder Threshold', type: 'number' },
+    ],
+  },
+  shipments: {
+    label: r => `${v(r,'Order Number')} → ${v(r,'To City')}, ${v(r,'To State')}`,
+    fields: [
+      { name: 'Order Number', readonly: true },
+      { name: 'Customer Name' },
+      { name: 'Customer Email' },
+      { name: 'From Warehouse Code' },
+      { name: 'To Street' },
+      { name: 'To City' },
+      { name: 'To State' },
+      { name: 'To Zip' },
+      { name: 'To Lat' },
+      { name: 'To Lng' },
+      { name: 'Product SKU' },
+      { name: 'Quantity', type: 'number' },
+      { name: 'Carrier', options: ['UPS','FedEx','USPS','DHL','Freight'] },
+      { name: 'Tracking Number' },
+      { name: 'Status', options: ['Pending','Picked','Shipped','In Transit','Delivered'] },
+      { name: 'Ship Date' },
+      { name: 'Est Delivery Date' },
+      { name: 'Distance Miles', type: 'number' },
+      { name: 'Notes', textarea: true },
+    ],
+  },
+  'bike-trails': {
+    label: r => `${v(r,'Name')} — ${v(r,'City')}, ${v(r,'State')}`,
+    fields: [
+      { name: 'Name' },
+      { name: 'City' },
+      { name: 'State' },
+      { name: 'Length Miles', type: 'number' },
+      { name: 'Elevation Gain', type: 'number' },
+      { name: 'Difficulty', options: ['Easy','Moderate','Hard','Expert'] },
+      { name: 'Surface', options: ['Paved','Gravel','Dirt','Singletrack','Fire Road','Slickrock','Crushed Limestone','Rock/Singletrack','Rock/Desert'] },
+      { name: 'Lat' },
+      { name: 'Lng' },
+      { name: 'Status', options: ['Open','Seasonal Closure','Under Maintenance','Closed'] },
+      { name: 'Description', textarea: true },
+    ],
+  },
+  transfers: {
+    label: r => `${v(r,'Transfer Number')} — ${v(r,'From Warehouse Code')}→${v(r,'To Warehouse Code')}`,
+    fields: [
+      { name: 'Transfer Number', readonly: true },
+      { name: 'From Warehouse Code' },
+      { name: 'To Warehouse Code' },
+      { name: 'Product SKU' },
+      { name: 'Quantity', type: 'number' },
+      { name: 'Status', options: ['Requested','Approved','Shipped','Received','Cancelled'] },
+      { name: 'Requested Date' },
+      { name: 'Ship Date' },
+      { name: 'Carrier', options: ['UPS','FedEx','USPS','Freight'] },
+      { name: 'Tracking Number' },
+      { name: 'Notes', textarea: true },
+    ],
+  },
+};
+
+let CURRENT_DRAWER = null; // { formSlug, record }
+
+async function openRecordDrawer(formSlug, id) {
+  // Always re-fetch fresh values when opening. Use the generic /submissions/{id}
+  // endpoint because the form-scoped singular path 404s for Submitted-state records.
+  let record = null;
+  try {
+    const r = await api(`/app/api/v1/submissions/${id}?include=values`);
+    record = r.submission;
+  } catch (e) { toast('Could not load record: ' + e.message, true); return; }
+  if (!record) return;
+  CURRENT_DRAWER = { formSlug, record };
+  const cfg = FORM_CONFIG[formSlug];
+  const title = cfg?.label ? cfg.label(record) : 'Record';
+  document.getElementById('drawer-title').textContent = title;
+  renderDrawerView();
+  setDrawerTab('view');
+  document.getElementById('drawer-bg').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-bg').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  CURRENT_DRAWER = null;
+}
+
+function setDrawerTab(name) {
+  document.querySelectorAll('.drawer-tabs button').forEach(b => b.classList.toggle('active', b.dataset.dtab === name));
+  document.getElementById('drawer-view').style.display = name === 'view' ? '' : 'none';
+  document.getElementById('drawer-edit').style.display = name === 'edit' ? '' : 'none';
+  document.getElementById('drawer-history').style.display = name === 'history' ? '' : 'none';
+  if (name === 'edit') renderDrawerEdit();
+  if (name === 'history') renderDrawerHistory();
+}
+
+function renderDrawerView() {
+  if (!CURRENT_DRAWER) return;
+  const { formSlug, record } = CURRENT_DRAWER;
+  const cfg = FORM_CONFIG[formSlug];
+  const fields = cfg?.fields || Object.keys(record.values || {}).map(name => ({ name }));
+  let html = '<div class="kv">';
+  for (const f of fields) {
+    const val = v(record, f.name);
+    if (val === '' || val == null) continue; // skip empty in view
+    let display = esc(val);
+    if (f.name === 'Status') display = renderStatusBadge(formSlug, val);
+    if (f.name === 'Category' && formSlug === 'products') display = renderCategoryBadge(val);
+    if (f.textarea) display = `<span style="white-space:pre-wrap">${esc(val)}</span>`;
+    html += `<div class="k">${esc(f.name)}</div><div class="v">${display}</div>`;
+  }
+  html += '</div>';
+  // Append form-specific cross-references
+  html += renderDrawerExtras(formSlug, record);
+  document.getElementById('drawer-view').innerHTML = html;
+}
+
+function renderStatusBadge(formSlug, status) {
+  if (formSlug === 'shipments') return shipStatusBadge(status);
+  if (formSlug === 'transfers') {
+    const m = { 'Requested':'b-gray','Approved':'b-yellow','Shipped':'b-orange','Received':'b-green','Cancelled':'b-red' };
+    return `<span class="badge ${m[status]||'b-gray'}">${esc(status)}</span>`;
+  }
+  if (formSlug === 'bike-trails') {
+    return `<span class="badge ${TRAIL_STATUS_BADGE[status]||'b-gray'}">${esc(status)}</span>`;
+  }
+  if (status === 'Active') return '<span class="badge b-green">Active</span>';
+  if (status === 'Discontinued' || status === 'Inactive') return '<span class="badge b-gray">' + esc(status) + '</span>';
+  return esc(status);
+}
+function renderCategoryBadge(cat) {
+  const m = { 'Road':'b-blue','Mountain':'b-green','Hybrid':'b-purple','E-Bike':'b-orange','Kids':'b-yellow' };
+  return `<span class="badge ${m[cat]||'b-gray'}">${esc(cat)}</span>`;
+}
+
+function renderDrawerExtras(formSlug, record) {
+  if (formSlug === 'warehouses') {
+    const code = v(record,'Code');
+    return `<div class="section-h">Related</div>
+      <div style="font-size:12px;color:var(--gray)">Switch to <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="closeDrawer();switchTab('inventory');setTimeout(()=>{document.getElementById('inv-wh-filter').value='${esc(code)}';loadInventory(true);},50)">Inventory @ ${esc(code)}</button>
+      <button class="btn-secondary" style="padding:4px 10px;font-size:11px;margin-left:6px" onclick="closeDrawer();switchTab('shipments');setTimeout(()=>{document.getElementById('ship-wh-filter').value='${esc(code)}';loadShipments(true);},50)">Shipments from ${esc(code)}</button></div>`;
+  }
+  if (formSlug === 'bike-trails') {
+    setTimeout(() => loadTrailComments(record.id, v(record,'Name')), 0);
+    return `<div class="section-h">Customer Comments</div>
+      <div id="trail-comments-${esc(record.id)}"><div class="loading"><span class="spinner"></span> Loading comments...</div></div>
+      <div class="section-h" style="margin-top:18px">Add a Comment</div>
+      <div class="kv" style="margin-bottom:8px">
+        <label class="k">Your Name</label><div><input type="text" id="tc-name" placeholder="Required"></div>
+        <label class="k">Rating</label><div>
+          <select id="tc-rating">
+            <option value="">(no rating)</option>
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★ (4)</option>
+            <option value="3">★★★ (3)</option>
+            <option value="2">★★ (2)</option>
+            <option value="1">★ (1)</option>
+          </select>
+        </div>
+        <label class="k">Comment</label><div><textarea id="tc-comment" rows="3" placeholder="Required"></textarea></div>
+      </div>
+      <div class="edit-actions" style="justify-content:flex-end">
+        <button class="btn-primary" id="tc-post" onclick="postTrailComment('${esc(record.id)}','${esc(v(record,'Name'))}')">Post Comment</button>
+      </div>`;
+  }
+  return '';
+}
+
+const STAR_COLOR = '#FBBC04';
+function renderStars(n) {
+  const r = parseInt(n, 10);
+  if (!r || r < 1) return '<span style="color:var(--gray);font-size:12px">unrated</span>';
+  const filled = '★'.repeat(Math.min(5, r));
+  const empty = '☆'.repeat(Math.max(0, 5 - r));
+  return `<span style="color:${STAR_COLOR};letter-spacing:1px">${filled}<span style="color:#ddd">${empty}</span></span>`;
+}
+
+async function loadTrailComments(trailId, trailName) {
+  const el = document.getElementById('trail-comments-' + trailId);
+  if (!el) return;
+  try {
+    const kql = `values[Trail ID] = "${trailId}"`;
+    const r = await api(`/app/api/v1/kapps/${KAPP}/forms/trail-comments/submissions?include=values&limit=25&q=${encodeURIComponent(kql)}&orderBy=createdAt&direction=DESC`);
+    const comments = r.submissions || [];
+    if (!comments.length) {
+      el.innerHTML = `<div class="empty">No comments yet for ${esc(trailName)}. Be the first!</div>`;
+      return;
+    }
+    const ratings = comments.map(c => parseInt(v(c,'Rating'),10)).filter(n => n >= 1 && n <= 5);
+    const avg = ratings.length ? (ratings.reduce((s,n) => s+n, 0) / ratings.length).toFixed(1) : null;
+    const summary = avg
+      ? `<div style="margin-bottom:10px;padding:8px 12px;background:var(--light);border-radius:6px;font-size:13px"><strong>${esc(avg)}</strong> ${renderStars(Math.round(avg))} from ${ratings.length} rating${ratings.length === 1 ? '' : 's'} · ${comments.length} comment${comments.length === 1 ? '' : 's'}</div>`
+      : `<div style="margin-bottom:10px;font-size:12px;color:var(--gray)">${comments.length} comment${comments.length === 1 ? '' : 's'}</div>`;
+    el.innerHTML = summary + comments.map(c => {
+      const created = c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) : '';
+      return `<div class="audit-entry" style="margin-bottom:8px">
+        <div class="audit-meta">
+          <strong>${esc(v(c,'Customer Name'))}</strong>
+          <span style="margin-left:8px">${renderStars(v(c,'Rating'))}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--gray)">${esc(created)}</span>
+        </div>
+        <div class="audit-desc" style="white-space:pre-wrap;margin-top:4px">${esc(v(c,'Comment'))}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="color:var(--red)">Could not load comments: ${esc(e.message)}</div>`;
+  }
+}
+
+async function postTrailComment(trailId, trailName) {
+  const name = document.getElementById('tc-name').value.trim();
+  const rating = document.getElementById('tc-rating').value;
+  const comment = document.getElementById('tc-comment').value.trim();
+  if (!name || !comment) { toast('Name and comment are required', true); return; }
+  const btn = document.getElementById('tc-post');
+  btn.disabled = true;
+  btn.textContent = 'Posting...';
+  try {
+    const r = await fetch(API + `/app/api/v1/kapps/${KAPP}/forms/trail-comments/submissions?completed=true`, {
+      method: 'POST',
+      headers: { 'Authorization': AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: { 'Trail ID': trailId, 'Trail Name': trailName, 'Customer Name': name, 'Rating': rating, 'Comment': comment } }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200));
+    }
+    document.getElementById('tc-name').value = '';
+    document.getElementById('tc-rating').value = '';
+    document.getElementById('tc-comment').value = '';
+    toast('Comment posted. Thanks!');
+    loadTrailComments(trailId, trailName);
+  } catch (e) {
+    toast('Could not post: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post Comment';
+  }
+}
+
+function renderDrawerEdit() {
+  if (!CURRENT_DRAWER) return;
+  const { formSlug, record } = CURRENT_DRAWER;
+  const cfg = FORM_CONFIG[formSlug];
+  const fields = cfg?.fields || Object.keys(record.values || {}).map(name => ({ name }));
+  let html = '<div class="edit-form"><div class="kv">';
+  for (const f of fields) {
+    const val = v(record, f.name);
+    const id = 'ef-' + f.name.replace(/\s+/g, '-');
+    let input;
+    if (f.readonly) {
+      input = `<div class="v" style="padding-top:9px">${esc(val) || '<span style="color:var(--gray)">(empty)</span>'} <span class="badge b-gray" style="margin-left:6px;font-size:9px">read-only</span></div>`;
+    } else if (f.options) {
+      input = `<select id="${id}">` +
+        ['', ...f.options].map(o => `<option value="${esc(o)}" ${o === val ? 'selected' : ''}>${o ? esc(o) : '(none)'}</option>`).join('') +
+        '</select>';
+    } else if (f.textarea) {
+      input = `<textarea id="${id}">${esc(val)}</textarea>`;
+    } else if (f.type === 'number') {
+      input = `<input type="number" step="any" id="${id}" value="${esc(val)}">`;
+    } else {
+      input = `<input type="text" id="${id}" value="${esc(val)}">`;
+    }
+    html += `<label class="k">${esc(f.name)}</label><div>${input}</div>`;
+  }
+  html += '</div><div class="edit-actions">';
+  html += '<button class="btn-secondary" onclick="setDrawerTab(\'view\')">Cancel</button>';
+  html += '<button class="btn-primary" id="save-btn" onclick="saveDrawerEdit()">Save Changes</button>';
+  html += '</div></div>';
+  document.getElementById('drawer-edit').innerHTML = html;
+}
+
+async function saveDrawerEdit() {
+  if (!CURRENT_DRAWER) return;
+  const { formSlug, record } = CURRENT_DRAWER;
+  const cfg = FORM_CONFIG[formSlug];
+  const fields = cfg?.fields || [];
+  const values = {};
+  for (const f of fields) {
+    if (f.readonly) { values[f.name] = v(record, f.name); continue; }
+    const id = 'ef-' + f.name.replace(/\s+/g, '-');
+    const el = document.getElementById(id);
+    if (!el) continue;
+    values[f.name] = el.value;
+  }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    const r = await fetch(API + `/api/bike-store/save/${encodeURIComponent(formSlug)}/${encodeURIComponent(record.id)}`, {
+      method: 'PUT',
+      headers: { 'Authorization': AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200));
+    }
+    const result = await r.json();
+    // Update local record with server-confirmed values
+    CURRENT_DRAWER.record.values = result.values || values;
+    if (result.persisted && result.persisted.length === 0) {
+      toast('No changes saved' + (result.ignored?.length ? ' (fields blocked: ' + result.ignored.join(', ') + ')' : ''), true);
+    } else {
+      toast(result.description || `Saved ${result.persisted?.length || 0} change(s)`);
+    }
+    renderDrawerView();
+    setDrawerTab('view');
+    // Refresh underlying table
+    refreshCurrentTable();
+  } catch (e) {
+    toast('Save failed: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+}
+
+function refreshCurrentTable() {
+  const active = document.querySelector('.topbar nav button.active');
+  const tab = active?.dataset?.tab;
+  if (tab === 'shipments') loadShipments();
+  else if (tab === 'inventory') loadInventory();
+  else if (tab === 'products') loadProducts();
+  else if (tab === 'transfers') loadTransfers();
+  else if (tab === 'trails') loadTrails();
+  else if (tab === 'warehouses') { STATE.warehouses = []; loadWarehouses(); }
+  else if (tab === 'dashboard') loadDashboard();
+}
+
+async function renderDrawerHistory() {
+  if (!CURRENT_DRAWER) return;
+  const { formSlug, record } = CURRENT_DRAWER;
+  const el = document.getElementById('drawer-history');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading history...</div>';
+  try {
+    const r = await fetch(API + `/api/bike-store/history/${encodeURIComponent(formSlug)}/${encodeURIComponent(record.id)}`, {
+      headers: { 'Authorization': AUTH },
+    });
+    const data = await r.json();
+    if (!data.history || !data.history.length) {
+      el.innerHTML = `<div class="empty">No edit history for this record yet.<br><span style="font-size:11px">Every change made through this app is logged with an AI-generated description.</span></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="section-h" style="margin-top:0">Change History (${data.history.length})</div>` +
+      data.history.map(h => {
+        const cls = h.action === 'Created' ? 'created' : (h.action === 'Update Rejected' ? 'rejected' : '');
+        const ts = h.changedAt ? new Date(h.changedAt).toLocaleString() : '';
+        const diffHtml = (h.diff || []).map(d => `
+          <div><strong>${esc(d.field)}:</strong>
+            <span class="before">${esc(d.before) || '(empty)'}</span>
+            →
+            <span class="after">${esc(d.after) || '(empty)'}</span>
+          </div>`).join('');
+        return `<div class="audit-entry ${cls}">
+          <div class="audit-meta">
+            <strong>${esc(h.changedBy)}</strong>
+            <span>${esc(h.action)}</span>
+            <span style="margin-left:auto">${esc(ts)}</span>
+          </div>
+          <div class="audit-desc">${esc(h.description)}</div>
+          ${diffHtml ? `<div class="audit-diff">${diffHtml}</div>` : ''}
+        </div>`;
+      }).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="color:var(--red)">Could not load history: ${esc(e.message)}</div>`;
+  }
+}
+
+/* Legacy entry points (used by map + dashboard table) */
+function openShipmentDrawer(id) { return openRecordDrawer('shipments', id); }
+function openWarehouseDrawer(code) {
+  const w = STATE.warehouses.find(x => v(x,'Code') === code);
+  if (!w) return;
+  return openRecordDrawer('warehouses', w.id);
+}
+
+/* ── Boot ───────────────────────────────────────────────────────── */
+(async function boot() {
+  if (tryRestoreSession()) {
+    enterApp();
+  } else {
+    document.getElementById('login-url').value = localStorage.getItem('kinetic_server') || (location.origin || '');
+  }
+})();
+</script>
+</body>
+</html>

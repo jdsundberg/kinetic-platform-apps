@@ -1,0 +1,285 @@
+{
+  "name": "Appliance Store",
+  "slug": "appliance-store",
+  "description": "Appliance retail — inventory, staff scheduling & order fulfillment",
+  "category": "Retail",
+  "icon": "package",
+  "color": "#00838F",
+  "bg": "#E0F7FA",
+  "forms": [
+    {
+      "slug": "products",
+      "name": "Products",
+      "fields": [
+        {
+          "name": "SKU",
+          "required": true
+        },
+        {
+          "name": "Product Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Brand"
+        },
+        {
+          "name": "Model Number"
+        },
+        {
+          "name": "Price"
+        },
+        {
+          "name": "Cost"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Reorder Level"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Color"
+        },
+        {
+          "name": "Energy Rating"
+        },
+        {
+          "name": "Warranty Months"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "description": "Appliance inventory catalog",
+      "submissionLabelExpression": "${values('Product Name')} - ${values('SKU')} (${values('Category')})",
+      "indexes": {
+        "single": [
+          "values[Category]",
+          "values[Status]",
+          "values[Brand]"
+        ],
+        "compound": [
+          [
+            "values[Category]",
+            "values[Status]"
+          ]
+        ]
+      },
+      "workflows": [
+        {
+          "name": "Low Stock Alert",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Low Stock\" value=\"@values['Status'] == 'Low Stock' &amp;&amp; @values_previous['Status'] != 'Low Stock'\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Low Stock\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">LOW STOCK ALERT: &lt;%= @values['Product Name'] %&gt; (SKU: &lt;%= @values['SKU'] %&gt;) now at &lt;%= @values['Quantity'] %&gt; units. Reorder level: &lt;%= @values['Reorder Level'] %&gt;. Updated by &lt;%= @submission['Updated By'] %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
+    },
+    {
+      "slug": "orders",
+      "name": "Orders",
+      "fields": [
+        {
+          "name": "Order Number",
+          "required": true
+        },
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Customer Email"
+        },
+        {
+          "name": "Customer Phone"
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "SKU"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Unit Price"
+        },
+        {
+          "name": "Total"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Payment Method"
+        },
+        {
+          "name": "Delivery Date"
+        },
+        {
+          "name": "Delivery Address",
+          "rows": 2
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Customer orders and fulfillment tracking",
+      "submissionLabelExpression": "${values('Order Number')} - ${values('Customer Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Customer Name]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Customer Name]"
+          ]
+        ]
+      },
+      "workflows": [
+        {
+          "name": "Order Status Change",
+          "event": "Submission Updated",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\" label=\"Status Changed\" value=\"@values['Status'] != @values_previous['Status']\">utilities_echo_v1_1</task></dependents></task><task name=\"Log Status Change\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">ORDER &lt;%= @values['Order Number'] %&gt; status changed: &lt;%= @values_previous['Status'] %&gt; -&gt; &lt;%= @values['Status'] %&gt; for customer &lt;%= @values['Customer Name'] %&gt;. Updated by &lt;%= @submission['Updated By'] %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
+    },
+    {
+      "slug": "schedules",
+      "name": "Schedules",
+      "fields": [
+        {
+          "name": "Employee Name",
+          "required": true
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Date",
+          "required": true
+        },
+        {
+          "name": "Shift Start"
+        },
+        {
+          "name": "Shift End"
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Department"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "description": "Employee shift schedules by department",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Date')} (${values('Role')})",
+      "indexes": {
+        "single": [
+          "values[Date]",
+          "values[Employee Name]",
+          "values[Department]"
+        ],
+        "compound": [
+          [
+            "values[Employee Name]",
+            "values[Date]"
+          ],
+          [
+            "values[Department]",
+            "values[Date]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "service-tickets",
+      "name": "Service Tickets",
+      "fields": [
+        {
+          "name": "Ticket Number",
+          "required": true
+        },
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Customer Phone"
+        },
+        {
+          "name": "Appliance"
+        },
+        {
+          "name": "Brand"
+        },
+        {
+          "name": "Model Number"
+        },
+        {
+          "name": "Issue",
+          "rows": 3
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Resolution",
+          "rows": 3
+        },
+        {
+          "name": "Warranty"
+        }
+      ],
+      "description": "Appliance service and repair tickets",
+      "submissionLabelExpression": "${values('Ticket Number')} - ${values('Customer Name')} (${values('Status')})",
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Priority]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Priority]"
+          ]
+        ]
+      },
+      "workflows": [
+        {
+          "name": "Service Ticket Created",
+          "event": "Submission Created",
+          "type": "Tree",
+          "status": "Active",
+          "treeXml": "<taskTree schema_version=\"1.0\" version=\"1\"><request><task name=\"Start\" id=\"start\" definition_id=\"system_start_v1\" x=\"200\" y=\"50\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters></parameters><messages><message type=\"Complete\"></message></messages><dependents><task type=\"Complete\">utilities_echo_v1_1</task></dependents></task><task name=\"Log New Ticket\" id=\"utilities_echo_v1_1\" definition_id=\"utilities_echo_v1\" x=\"200\" y=\"200\"><version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>true</visible><parameters><parameter id=\"input\" label=\"Input\" required=\"true\" tooltip=\"\" menu=\"\">NEW SERVICE TICKET &lt;%= @values['Ticket Number'] %&gt;: &lt;%= @values['Appliance'] %&gt; (&lt;%= @values['Brand'] %&gt;) for &lt;%= @values['Customer Name'] %&gt;. Priority: &lt;%= @values['Priority'] %&gt;. Created by &lt;%= @submission['Created By'] %&gt; at &lt;%= Time.now.utc.iso8601 %&gt;</parameter></parameters><messages><message type=\"Complete\"></message></messages><dependents></dependents></task></request></taskTree>"
+        }
+      ]
+    }
+  ]
+}

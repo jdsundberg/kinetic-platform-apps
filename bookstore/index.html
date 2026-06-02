@@ -377,7 +377,7 @@ async function loadInventory() {
 
     const lastCreatedAt = invPageKeys[invPage];
     if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/books/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/books/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     invData = res.submissions || [];
@@ -528,7 +528,7 @@ async function loadLoans() {
 
     const lastCreatedAt = loanPageKeys[loanPage];
     if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/loans/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/loans/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     loanData = res.submissions || [];
@@ -690,7 +690,7 @@ async function loadBorrowers() {
     let kql = '';
     const lastCreatedAt = borPageKeys[borPage];
     if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/borrowers/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/borrowers/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     borData = res.submissions || [];
@@ -823,7 +823,7 @@ async function loadEmployees() {
     let kql = '';
     const lastCreatedAt = empPageKeys[empPage];
     if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     empData = res.submissions || [];

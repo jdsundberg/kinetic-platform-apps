@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donut Management</title>
+<style>
+:root {
+  --brown: #5D3A1A; --brown-light: #7A4E23;
+  --pink: #F28DB2; --pink-light: #FFC1D9; --pink-bg: #FFF1F6;
+  --choco: #3E2723;
+  --cream: #FFF8E7; --cream-dark: #F5E6C8;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --blue: #1976D2;
+  --gray: #5F6368; --light: #FAFAFA; --border: #E8EAED; --bg: #F6F3EE;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #5D3A1A 0%, #F28DB2 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--brown); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--pink); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(242,141,178,.25); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--brown); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--brown-light); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: #FFEBEE; color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--brown); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--pink); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.75); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.12); color: white; }
+.nav-tabs button.active { background: var(--pink); color: var(--choco); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--pink); border-color: var(--pink); color: var(--choco); }
+
+/* ── Consoles ── */
+.console { display: none; padding: 24px; max-width: 1280px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--brown); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.kpi .val { font-size: 26px; font-weight: 700; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); position: sticky; top: 56px; background: var(--white); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--cream); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-open, .badge-active, .badge-fresh, .badge-resolved { background: #E8F5E9; color: #2E7D32; }
+.badge-closed, .badge-inactive, .badge-sold-out { background: #FFEBEE; color: #C62828; }
+.badge-remodel, .badge-stale, .badge-reviewed { background: #FFF3E0; color: #E65100; }
+.badge-new { background: #E3F2FD; color: #1565C0; }
+.badge-baker { background: #FFF3E0; color: #BF360C; }
+.badge-cashier { background: #E3F2FD; color: #1565C0; }
+.badge-manager { background: #F3E5F5; color: #6A1B9A; }
+.badge-driver { background: #E8F5E9; color: #2E7D32; }
+.badge-yes { background: #FFEBEE; color: #C62828; }
+.badge-no { background: #E8F5E9; color: #2E7D32; }
+
+/* ── Stars ── */
+.stars { color: var(--yellow); font-size: 14px; letter-spacing: 1px; }
+.stars-dim { color: #ddd; }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--brown); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--brown-light); }
+.btn-secondary { background: var(--light); color: var(--brown); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+/* ── Filter ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 560px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; color: var(--brown); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 60px; }
+.modal-body .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--brown); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+
+/* ── Dashboard ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+.rating-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.rating-bar .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.rating-bar .bar-fill { height: 100%; border-radius: 4px; }
+.rating-bar .bar-label { font-size: 12px; color: var(--gray); width: 24px; }
+.rating-bar .bar-count { font-size: 12px; color: var(--gray); width: 28px; text-align: right; }
+.low-stock { background: #FFF3E0 !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Donut Management</h1>
+    <div class="sub">Inventory, stores, staff & feedback</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://first.kinetics.com" placeholder="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Donut<span>Haven</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('stores')">Stores</button>
+      <button onclick="switchTab('employees')">Employees</button>
+      <button onclick="switchTab('inventory')">Inventory</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="page-sub">Donut operations at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Inventory Status</h3><div id="inventory-status"></div></div>
+      <div class="card"><h3>Customer Rating Distribution</h3><div id="rating-dist"></div></div>
+      <div class="card"><h3>Recent Feedback</h3><div id="recent-feedback"></div></div>
+      <div class="card"><h3>Stores by State</h3><div id="stores-by-state"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Stores ── -->
+  <div id="console-stores" class="console">
+    <h2 class="page-title">Stores</h2>
+    <div class="page-sub">Donut Haven locations</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openStoreModal()">+ New Store</button>
+      <div class="filter-bar">
+        <select id="filter-store-state" onchange="loadStores()">
+          <option value="">All States</option>
+        </select>
+        <select id="filter-store-status" onchange="loadStores()">
+          <option value="">All Statuses</option>
+          <option>Open</option><option>Closed</option><option>Remodel</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Code</th><th>Name</th><th>City</th><th>State</th><th>Manager</th><th>Capacity</th><th>Cameras</th><th>Status</th><th></th></tr></thead>
+      <tbody id="stores-body"></tbody>
+    </table></div>
+    <div class="pagination" id="stores-pagination"></div>
+  </div>
+
+  <!-- ── Employees ── -->
+  <div id="console-employees" class="console">
+    <h2 class="page-title">Employees</h2>
+    <div class="page-sub">Staff across all locations</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEmployeeModal()">+ New Employee</button>
+      <div class="filter-bar">
+        <select id="filter-emp-store" onchange="loadEmployees()"><option value="">All Stores</option></select>
+        <select id="filter-emp-role" onchange="loadEmployees()">
+          <option value="">All Roles</option>
+          <option>Manager</option><option>Baker</option><option>Cashier</option><option>Driver</option>
+        </select>
+        <select id="filter-emp-status" onchange="loadEmployees()">
+          <option value="">All</option>
+          <option value="Active">Active</option><option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Role</th><th>Store</th><th>Email</th><th>Hire Date</th><th>Status</th><th></th></tr></thead>
+      <tbody id="employees-body"></tbody>
+    </table></div>
+    <div class="pagination" id="employees-pagination"></div>
+  </div>
+
+  <!-- ── Inventory ── -->
+  <div id="console-inventory" class="console">
+    <h2 class="page-title">Inventory</h2>
+    <div class="page-sub">Donut stock by store and type</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openInventoryModal()">+ New Entry</button>
+      <div class="filter-bar">
+        <select id="filter-inv-store" onchange="loadInventory()"><option value="">All Stores</option></select>
+        <select id="filter-inv-type" onchange="loadInventory()"><option value="">All Donut Types</option></select>
+        <select id="filter-inv-status" onchange="loadInventory()">
+          <option value="">All Statuses</option>
+          <option>Fresh</option><option>Stale</option><option>Sold Out</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Store</th><th>Donut Type</th><th>Qty</th><th>Batch Date</th><th>Price</th><th>Status</th><th></th></tr></thead>
+      <tbody id="inventory-body"></tbody>
+    </table></div>
+    <div class="pagination" id="inventory-pagination"></div>
+  </div>
+
+  <!-- ── Feedback ── -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Customer Feedback</h2>
+    <div class="page-sub">Reviews and ratings</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openFeedbackModal()">+ New Feedback</button>
+      <div class="filter-bar">
+        <select id="filter-fb-store" onchange="loadFeedback()"><option value="">All Stores</option></select>
+        <select id="filter-fb-rating" onchange="loadFeedback()">
+          <option value="">All Ratings</option>
+          <option value="5">5 ★</option><option value="4">4 ★</option>
+          <option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+        </select>
+        <select id="filter-fb-status" onchange="loadFeedback()">
+          <option value="">All Statuses</option>
+          <option>New</option><option>Reviewed</option><option>Resolved</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Customer</th><th>Store</th><th>Rating</th><th>Donut</th><th>Date</th><th>Status</th><th></th></tr></thead>
+      <tbody id="feedback-body"></tbody>
+    </table></div>
+    <div class="pagination" id="feedback-pagination"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'donut-management';
+const DONUT_TYPES = ["Glazed","Chocolate","Jelly","Maple Bar","Sprinkle","Old Fashioned","Boston Cream","Powdered","Cruller","Apple Fritter","Bear Claw","Cinnamon","Blueberry","Vanilla","Strawberry"];
+
+const PAGE_STATE = {
+  stores: { pageToken: null, page: 1, history: [] },
+  employees: { pageToken: null, page: 1, history: [] },
+  inventory: { pageToken: null, page: 1, history: [] },
+  feedback: { pageToken: null, page: 1, history: [] },
+};
+
+// Cached store list for filter dropdowns & store-code → name lookup
+let STORES_CACHE = [];
+
+/* ── Helpers ── */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+function stars(n) {
+  const num = parseInt(n) || 0;
+  let out = '';
+  for (let i = 1; i <= 5; i++) out += i <= num ? '<span class="stars">★</span>' : '<span class="stars-dim">★</span>';
+  return out;
+}
+
+function badge(val) {
+  if (!val) return '';
+  const cls = String(val).toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge badge-${esc(cls)}">${esc(val)}</span>`;
+}
+
+function storeName(code) {
+  if (!code) return '';
+  const s = STORES_CACHE.find(x => v(x, 'Code') === code);
+  return s ? `${v(s, 'Name')} (${v(s, 'City')})` : code;
+}
+
+/* ── Auth ── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ── Session Restore ── */
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ── API ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Enter App: cache stores for filters, seed donut dropdowns ── */
+async function enterApp() {
+  try {
+    const data = await api(`/kapps/${KAPP}/forms/stores/submissions?include=details,values&limit=25`);
+    STORES_CACHE = data.submissions || [];
+  } catch {}
+  populateStoreFilters();
+  populateDonutFilter();
+  loadDashboard();
+}
+
+function populateStoreFilters() {
+  const selects = ['filter-emp-store','filter-inv-store','filter-fb-store'];
+  const opts = STORES_CACHE
+    .slice()
+    .sort((a,b) => v(a,'Code').localeCompare(v(b,'Code')))
+    .map(s => `<option value="${esc(v(s,'Code'))}">${esc(v(s,'Code'))} — ${esc(v(s,'City'))}</option>`).join('');
+  for (const id of selects) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">All Stores</option>' + opts;
+  }
+  // States
+  const states = [...new Set(STORES_CACHE.map(s => v(s,'State')).filter(Boolean))].sort();
+  const stateEl = document.getElementById('filter-store-state');
+  if (stateEl) stateEl.innerHTML = '<option value="">All States</option>' + states.map(st => `<option>${esc(st)}</option>`).join('');
+}
+
+function populateDonutFilter() {
+  const el = document.getElementById('filter-inv-type');
+  if (el) el.innerHTML = '<option value="">All Donut Types</option>' + DONUT_TYPES.map(d => `<option>${esc(d)}</option>`).join('');
+}
+
+/* ── Tabs ── */
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  const tabs = ['dash','stores','employees','inventory','feedback'];
+  document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  else if (tab === 'stores') loadStores();
+  else if (tab === 'employees') loadEmployees();
+  else if (tab === 'inventory') loadInventory();
+  else if (tab === 'feedback') loadFeedback();
+}
+
+/* ── Pagination helper ── */
+function updatePageState(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+
+function paginationHtml(ps, fn) {
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ══════════════════════════════════════════════
+   STORES
+   ══════════════════════════════════════════════ */
+async function loadStores(direction) {
+  const ps = PAGE_STATE.stores;
+  updatePageState(ps, direction);
+  const state = document.getElementById('filter-store-state').value;
+  const status = document.getElementById('filter-store-status').value;
+
+  let path = `/kapps/${KAPP}/forms/stores/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (state) q.push(`values[State]="${state}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('stores-body').innerHTML = subs.length ? subs.map(s => {
+      const cams = v(s,'Has Security Cameras');
+      const camIcon = cams === 'Yes' ? '📹' : cams === 'No' ? '—' : '';
+      return `<tr>
+      <td><strong>${esc(v(s,'Code'))}</strong></td>
+      <td>${esc(v(s,'Name'))}</td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'State'))}</td>
+      <td>${esc(v(s,'Manager'))}</td>
+      <td>${esc(v(s,'Capacity'))}</td>
+      <td title="${esc(cams)}">${camIcon} ${esc(cams)}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editStore('${s.id}')">Edit</button></td>
+    </tr>`;
+    }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--gray)">No stores found</td></tr>';
+
+    document.getElementById('stores-pagination').innerHTML = paginationHtml(ps, 'loadStores');
+  } catch (e) { toast('Error loading stores: ' + e.message); }
+}
+
+function openStoreModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Store' : 'New Store';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row"><div><label>Code</label><input id="f-s-code" value="${esc(vals.Code||'')}" placeholder="S021"></div>
+      <div><label>Name</label><input id="f-s-name" value="${esc(vals.Name||'')}"></div></div>
+    <label>Address</label><input id="f-s-address" value="${esc(vals.Address||'')}">
+    <div class="row"><div><label>City</label><input id="f-s-city" value="${esc(vals.City||'')}"></div>
+      <div><label>State</label><input id="f-s-state" value="${esc(vals.State||'')}"></div></div>
+    <div class="row"><div><label>Zip</label><input id="f-s-zip" value="${esc(vals.Zip||'')}"></div>
+      <div><label>Phone</label><input id="f-s-phone" value="${esc(vals.Phone||'')}"></div></div>
+    <label>Manager</label><input id="f-s-manager" value="${esc(vals.Manager||'')}">
+    <div class="row"><div><label>Status</label>
+        <select id="f-s-status">${['Open','Closed','Remodel'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Opening Date</label><input id="f-s-open" type="date" value="${esc(vals['Opening Date']||'')}"></div></div>
+    <div class="row"><div><label>Capacity (seats)</label><input id="f-s-capacity" type="number" value="${esc(vals.Capacity||'')}" placeholder="48"></div>
+      <div><label>Has Security Cameras</label>
+        <select id="f-s-cameras">${['','Yes','No'].map(x=>`<option value="${x}" ${vals['Has Security Cameras']===x?'selected':''}>${x||'—'}</option>`).join('')}</select></div></div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveStore('${s.id||''}')">${existing?'Update':'Create'}</button>
+    ${existing?`<button class="btn-danger btn-sm" onclick="deleteSubmission('stores','${s.id}','loadStores')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editStore(id) {
+  const data = await api(`/submissions/${id}?include=details,values`);
+  openStoreModal(data.submission || data);
+}
+
+async function saveStore(id) {
+  const values = {
+    Code: document.getElementById('f-s-code').value,
+    Name: document.getElementById('f-s-name').value,
+    Address: document.getElementById('f-s-address').value,
+    City: document.getElementById('f-s-city').value,
+    State: document.getElementById('f-s-state').value,
+    Zip: document.getElementById('f-s-zip').value,
+    Phone: document.getElementById('f-s-phone').value,
+    Manager: document.getElementById('f-s-manager').value,
+    Status: document.getElementById('f-s-status').value,
+    'Opening Date': document.getElementById('f-s-open').value,
+    Capacity: document.getElementById('f-s-capacity').value,
+    'Has Security Cameras': document.getElementById('f-s-cameras').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/stores/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Store updated' : 'Store created');
+    // refresh cache
+    const data = await api(`/kapps/${KAPP}/forms/stores/submissions?include=details,values&limit=25`);
+    STORES_CACHE = data.submissions || []; populateStoreFilters();
+    loadStores();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   EMPLOYEES
+   ══════════════════════════════════════════════ */
+async function loadEmployees(direction) {
+  const ps = PAGE_STATE.employees;
+  updatePageState(ps, direction);
+  const store = document.getElementById('filter-emp-store').value;
+  const role = document.getElementById('filter-emp-role').value;
+  const status = document.getElementById('filter-emp-status').value;
+
+  let path = `/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (store) q.push(`values[Store Code]="${store}"`);
+  if (role) q.push(`values[Role]="${role}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('employees-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'First Name')+' '+v(s,'Last Name'))}</strong></td>
+      <td>${badge(v(s,'Role'))}</td>
+      <td>${esc(storeName(v(s,'Store Code')))}</td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Hire Date'))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editEmployee('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No employees found</td></tr>';
+
+    document.getElementById('employees-pagination').innerHTML = paginationHtml(ps, 'loadEmployees');
+  } catch (e) { toast('Error loading employees: ' + e.message); }
+}
+
+function storeOptions(selected) {
+  return STORES_CACHE
+    .slice()
+    .sort((a,b) => v(a,'Code').localeCompare(v(b,'Code')))
+    .map(s => `<option value="${esc(v(s,'Code'))}" ${v(s,'Code')===selected?'selected':''}>${esc(v(s,'Code'))} — ${esc(v(s,'City'))}</option>`).join('');
+}
+
+function openEmployeeModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Employee' : 'New Employee';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row"><div><label>First Name</label><input id="f-e-first" value="${esc(vals['First Name']||'')}"></div>
+      <div><label>Last Name</label><input id="f-e-last" value="${esc(vals['Last Name']||'')}"></div></div>
+    <label>Email</label><input id="f-e-email" value="${esc(vals.Email||'')}">
+    <label>Phone</label><input id="f-e-phone" value="${esc(vals.Phone||'')}">
+    <div class="row"><div><label>Role</label>
+        <select id="f-e-role">${['Manager','Baker','Cashier','Driver'].map(x=>`<option ${vals.Role===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Store</label><select id="f-e-store"><option value="">—</option>${storeOptions(vals['Store Code']||'')}</select></div></div>
+    <div class="row"><div><label>Hire Date</label><input id="f-e-hire" type="date" value="${esc(vals['Hire Date']||'')}"></div>
+      <div><label>Status</label>
+        <select id="f-e-status">${['Active','Inactive'].map(x=>`<option ${vals.Status===x||(!existing&&x==='Active')?'selected':''}>${x}</option>`).join('')}</select></div></div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveEmployee('${s.id||''}')">${existing?'Update':'Create'}</button>
+    ${existing?`<button class="btn-danger btn-sm" onclick="deleteSubmission('employees','${s.id}','loadEmployees')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editEmployee(id) {
+  const data = await api(`/submissions/${id}?include=details,values`);
+  openEmployeeModal(data.submission || data);
+}
+
+async function saveEmployee(id) {
+  const values = {
+    'First Name': document.getElementById('f-e-first').value,
+    'Last Name': document.getElementById('f-e-last').value,
+    Email: document.getElementById('f-e-email').value,
+    Phone: document.getElementById('f-e-phone').value,
+    Role: document.getElementById('f-e-role').value,
+    'Store Code': document.getElementById('f-e-store').value,
+    'Hire Date': document.getElementById('f-e-hire').value,
+    Status: document.getElementById('f-e-status').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/employees/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Employee updated' : 'Employee added'); loadEmployees();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   INVENTORY
+   ══════════════════════════════════════════════ */
+async function loadInventory(direction) {
+  const ps = PAGE_STATE.inventory;
+  updatePageState(ps, direction);
+  const store = document.getElementById('filter-inv-store').value;
+  const type = document.getElementById('filter-inv-type').value;
+  const status = document.getElementById('filter-inv-status').value;
+
+  let path = `/kapps/${KAPP}/forms/inventory/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (store) q.push(`values[Store Code]="${store}"`);
+  if (type) q.push(`values[Donut Type]="${type}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('inventory-body').innerHTML = subs.length ? subs.map(s => {
+      const qty = parseInt(v(s,'Quantity'))||0;
+      const low = qty < 10;
+      return `<tr class="${low?'low-stock':''}">
+        <td>${esc(storeName(v(s,'Store Code')))}</td>
+        <td><strong>${esc(v(s,'Donut Type'))}</strong></td>
+        <td>${esc(v(s,'Quantity'))}${low?' ⚠':''}</td>
+        <td>${esc(v(s,'Batch Date'))}</td>
+        <td>$${esc(v(s,'Unit Price'))}</td>
+        <td>${badge(v(s,'Status'))}</td>
+        <td><button class="btn-secondary btn-sm" onclick="editInventory('${s.id}')">Edit</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No inventory found</td></tr>';
+
+    document.getElementById('inventory-pagination').innerHTML = paginationHtml(ps, 'loadInventory');
+  } catch (e) { toast('Error loading inventory: ' + e.message); }
+}
+
+function openInventoryModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Inventory' : 'New Inventory Entry';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row"><div><label>Store</label><select id="f-i-store"><option value="">—</option>${storeOptions(vals['Store Code']||'')}</select></div>
+      <div><label>Donut Type</label><select id="f-i-type">${DONUT_TYPES.map(x=>`<option ${vals['Donut Type']===x?'selected':''}>${x}</option>`).join('')}</select></div></div>
+    <div class="row"><div><label>Quantity</label><input id="f-i-qty" type="number" value="${esc(vals.Quantity||'')}"></div>
+      <div><label>Unit Price</label><input id="f-i-price" value="${esc(vals['Unit Price']||'')}" placeholder="2.49"></div></div>
+    <div class="row"><div><label>Batch Date</label><input id="f-i-batch" type="date" value="${esc(vals['Batch Date']||'')}"></div>
+      <div><label>Expiration Date</label><input id="f-i-exp" type="date" value="${esc(vals['Expiration Date']||'')}"></div></div>
+    <label>Status</label>
+    <select id="f-i-status">${['Fresh','Stale','Sold Out'].map(x=>`<option ${vals.Status===x||(!existing&&x==='Fresh')?'selected':''}>${x}</option>`).join('')}</select>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveInventory('${s.id||''}')">${existing?'Update':'Create'}</button>
+    ${existing?`<button class="btn-danger btn-sm" onclick="deleteSubmission('inventory','${s.id}','loadInventory')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editInventory(id) {
+  const data = await api(`/submissions/${id}?include=details,values`);
+  openInventoryModal(data.submission || data);
+}
+
+async function saveInventory(id) {
+  const values = {
+    'Store Code': document.getElementById('f-i-store').value,
+    'Donut Type': document.getElementById('f-i-type').value,
+    Quantity: document.getElementById('f-i-qty').value,
+    'Unit Price': document.getElementById('f-i-price').value,
+    'Batch Date': document.getElementById('f-i-batch').value,
+    'Expiration Date': document.getElementById('f-i-exp').value,
+    Status: document.getElementById('f-i-status').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/inventory/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Inventory updated' : 'Inventory entry added'); loadInventory();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   FEEDBACK
+   ══════════════════════════════════════════════ */
+async function loadFeedback(direction) {
+  const ps = PAGE_STATE.feedback;
+  updatePageState(ps, direction);
+  const store = document.getElementById('filter-fb-store').value;
+  const rating = document.getElementById('filter-fb-rating').value;
+  const status = document.getElementById('filter-fb-status').value;
+
+  let path = `/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (store) q.push(`values[Store Code]="${store}"`);
+  if (rating) q.push(`values[Rating]="${rating}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('feedback-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Customer Name'))}</strong></td>
+      <td>${esc(storeName(v(s,'Store Code')))}</td>
+      <td>${stars(v(s,'Rating'))}</td>
+      <td>${esc(v(s,'Donut Type'))}</td>
+      <td>${esc(v(s,'Visit Date'))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="viewFeedback('${s.id}')">View</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No feedback yet</td></tr>';
+
+    document.getElementById('feedback-pagination').innerHTML = paginationHtml(ps, 'loadFeedback');
+  } catch (e) { toast('Error loading feedback: ' + e.message); }
+}
+
+async function viewFeedback(id) {
+  const data = await api(`/submissions/${id}?include=details,values`);
+  const s = data.submission || data;
+  document.getElementById('modal-title').textContent = 'Feedback from ' + v(s, 'Customer Name');
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:12px">${stars(v(s,'Rating'))} <span style="font-size:13px;color:var(--gray);margin-left:8px">${esc(v(s,'Visit Date'))} — ${esc(storeName(v(s,'Store Code')))}</span></div>
+    <label>Customer Email</label><div style="font-size:13px;color:var(--gray);margin-bottom:8px">${esc(v(s,'Customer Email'))}</div>
+    <label>Donut</label><div style="font-size:13px;margin-bottom:8px">${esc(v(s,'Donut Type'))}</div>
+    <label>Comments</label>
+    <div style="font-size:13px;white-space:pre-wrap;background:var(--light);padding:10px;border-radius:6px">${esc(v(s,'Comments'))}</div>
+    <div style="margin-top:10px">${badge(v(s,'Status'))} ${v(s,'Follow Up Needed')==='Yes'?'<span class="badge badge-yes">Follow-Up</span>':''}</div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Close</button>
+    <button class="btn-primary" onclick="editFeedback('${s.id}')">Edit</button>
+    <button class="btn-danger btn-sm" onclick="deleteSubmission('feedback','${s.id}','loadFeedback')">Delete</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function editFeedback(id) {
+  const data = await api(`/submissions/${id}?include=details,values`);
+  openFeedbackModal(data.submission || data);
+}
+
+function openFeedbackModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Feedback' : 'New Feedback';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row"><div><label>Customer Name</label><input id="f-fb-name" value="${esc(vals['Customer Name']||'')}"></div>
+      <div><label>Customer Email</label><input id="f-fb-email" value="${esc(vals['Customer Email']||'')}"></div></div>
+    <div class="row"><div><label>Store</label><select id="f-fb-store"><option value="">—</option>${storeOptions(vals['Store Code']||'')}</select></div>
+      <div><label>Visit Date</label><input id="f-fb-date" type="date" value="${esc(vals['Visit Date']||new Date().toISOString().slice(0,10))}"></div></div>
+    <div class="row"><div><label>Donut Type</label><select id="f-fb-donut"><option value="">—</option>${DONUT_TYPES.map(x=>`<option ${vals['Donut Type']===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Rating</label><select id="f-fb-rating">${[5,4,3,2,1].map(x=>`<option ${String(vals.Rating)===String(x)?'selected':''}>${x}</option>`).join('')}</select></div></div>
+    <label>Comments</label><textarea id="f-fb-comments">${esc(vals.Comments||'')}</textarea>
+    <div class="row"><div><label>Status</label>
+        <select id="f-fb-status">${['New','Reviewed','Resolved'].map(x=>`<option ${vals.Status===x||(!existing&&x==='New')?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Follow Up Needed</label>
+        <select id="f-fb-follow">${['No','Yes'].map(x=>`<option ${vals['Follow Up Needed']===x?'selected':''}>${x}</option>`).join('')}</select></div></div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveFeedback('${s.id||''}')">${existing?'Update':'Submit'}</button>
+    ${existing?`<button class="btn-danger btn-sm" onclick="deleteSubmission('feedback','${s.id}','loadFeedback')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveFeedback(id) {
+  const values = {
+    'Customer Name': document.getElementById('f-fb-name').value,
+    'Customer Email': document.getElementById('f-fb-email').value,
+    'Store Code': document.getElementById('f-fb-store').value,
+    'Donut Type': document.getElementById('f-fb-donut').value,
+    Rating: document.getElementById('f-fb-rating').value,
+    'Visit Date': document.getElementById('f-fb-date').value,
+    Comments: document.getElementById('f-fb-comments').value,
+    Status: document.getElementById('f-fb-status').value,
+    'Follow Up Needed': document.getElementById('f-fb-follow').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/feedback/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Feedback updated' : 'Feedback submitted'); loadFeedback();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [storesData, employeesData, inventoryData, feedbackData] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/stores/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/inventory/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`),
+    ]);
+    const stores = storesData.submissions || [];
+    const employees = employeesData.submissions || [];
+    const inventory = inventoryData.submissions || [];
+    const feedback = feedbackData.submissions || [];
+
+    const openStores = stores.filter(s => v(s,'Status') === 'Open').length;
+    const activeEmp = employees.filter(s => v(s,'Status') === 'Active').length;
+    const totalQty = inventory.reduce((a,s) => a + (parseInt(v(s,'Quantity'))||0), 0);
+    const avgRating = feedback.length ? (feedback.reduce((a,s) => a + (parseInt(v(s,'Rating'))||0), 0) / feedback.length).toFixed(1) : '-';
+
+    const camCount = stores.filter(s => v(s,'Has Security Cameras') === 'Yes').length;
+    const totalCapacity = stores.reduce((a,s) => a + (parseInt(v(s,'Capacity'))||0), 0);
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val" style="color:var(--brown)">${stores.length}</div><div class="label">Total Stores (${openStores} open)</div></div>
+      <div class="kpi"><div class="val" style="color:var(--pink)">${activeEmp}</div><div class="label">Active Employees</div></div>
+      <div class="kpi"><div class="val" style="color:var(--blue)">${totalCapacity}</div><div class="label">Total Seat Capacity</div></div>
+      <div class="kpi"><div class="val" style="color:var(--green)">${camCount}/${stores.length}</div><div class="label">📹 Stores with Cameras</div></div>
+      <div class="kpi"><div class="val" style="color:var(--yellow)">${stars(Math.round(avgRating))} ${avgRating}</div><div class="label">Avg Rating (sample)</div></div>`;
+
+    // Inventory status breakdown
+    const invStatus = { Fresh: 0, Stale: 0, 'Sold Out': 0 };
+    inventory.forEach(s => { const st = v(s,'Status'); if (st in invStatus) invStatus[st]++; });
+    const invColors = { Fresh: 'var(--green)', Stale: '#E65100', 'Sold Out': 'var(--red)' };
+    const invMax = Math.max(...Object.values(invStatus), 1);
+    document.getElementById('inventory-status').innerHTML = Object.entries(invStatus).map(([k,c]) => `
+      <div class="rating-bar"><div class="bar-label" style="width:64px">${k}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(c/invMax)*100}%;background:${invColors[k]}"></div></div>
+        <div class="bar-count">${c}</div></div>`).join('');
+
+    // Rating distribution
+    const ratingCounts = [0,0,0,0,0];
+    feedback.forEach(s => { const r = parseInt(v(s,'Rating')); if (r>=1&&r<=5) ratingCounts[r-1]++; });
+    const rMax = Math.max(...ratingCounts, 1);
+    const rColors = ['var(--red)','#E65100','var(--yellow)','#8BC34A','var(--green)'];
+    document.getElementById('rating-dist').innerHTML = [5,4,3,2,1].map(r => `
+      <div class="rating-bar"><div class="bar-label">${r}★</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(ratingCounts[r-1]/rMax)*100}%;background:${rColors[r-1]}"></div></div>
+        <div class="bar-count">${ratingCounts[r-1]}</div></div>`).join('');
+
+    // Recent feedback
+    document.getElementById('recent-feedback').innerHTML = feedback.slice(0,5).map(s => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <div style="display:flex;justify-content:space-between"><strong>${esc(v(s,'Customer Name'))}</strong>${stars(v(s,'Rating'))}</div>
+        <div style="color:var(--gray);font-size:12px;margin-top:2px">${esc(storeName(v(s,'Store Code')))} — ${esc(String(v(s,'Comments')).slice(0,70))}${String(v(s,'Comments')).length>70?'...':''}</div>
+      </div>`).join('') || '<div style="color:var(--gray);font-size:13px">No feedback yet</div>';
+
+    // Stores by State
+    const byState = {};
+    stores.forEach(s => { const st = v(s,'State')||'?'; byState[st] = (byState[st]||0)+1; });
+    document.getElementById('stores-by-state').innerHTML = Object.entries(byState).sort((a,b)=>b[1]-a[1]).map(([st,c]) =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${esc(st)}</span><strong>${c}</strong></div>`
+    ).join('');
+  } catch (e) { toast('Dashboard error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   SHARED
+   ══════════════════════════════════════════════ */
+async function deleteSubmission(form, id, reloadFn) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    closeModal(); toast('Deleted'); window[reloadFn]();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

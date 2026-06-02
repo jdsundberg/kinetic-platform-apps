@@ -538,7 +538,7 @@ function renderAgentTable() {
 }
 
 function openAgentDetail(id) {
-  api('GET', '/app/api/v1/submissions/'+id+'?include=values').then(data => {
+  api('GET', '/app/api/v1/submissions/'+id+'?include=details,values').then(data => {
     const v = data.submission?.values || {};
     const isAI = v['Type'] === 'AI Agent';
     document.getElementById('agent-modal-title').textContent = (v['Name']||'Agent') + ' - Details';
@@ -659,7 +659,7 @@ function loadRuns() {
     allAgents = data.agentSummary;
     allRuns = data.recentRuns;
     // Also load all runs separately
-    return api('GET', '/app/api/v1/kapps/agent-hub/forms/agent-run/submissions?include=values&limit=100');
+    return api('GET', '/app/api/v1/kapps/agent-hub/forms/agent-run/submissions?include=details,values&limit=100');
   }).then(data => {
     const subs = data.submissions || [];
     allRuns = subs.map(r => {
@@ -906,7 +906,7 @@ function loadPromptForAgent() {
   const id = document.getElementById('prompt-agent-select').value;
   if (!id) { document.getElementById('prompt-meta').style.display='none'; document.getElementById('prompt-display').style.display='none'; return; }
 
-  api('GET', '/app/api/v1/submissions/'+id+'?include=values').then(data => {
+  api('GET', '/app/api/v1/submissions/'+id+'?include=details,values').then(data => {
     const v = data.submission?.values || {};
     const prompt = v['Generated Prompt'] || '(No prompt generated yet. Click "Regenerate" to create one.)';
     document.getElementById('prompt-meta').style.display = 'flex';

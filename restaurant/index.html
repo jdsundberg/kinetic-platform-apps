@@ -398,7 +398,7 @@ async function fetchSubs(form, params = {}) {
     const dateClause = `createdAt < "${params.lastCreatedAt}"`;
     kql = kql ? `(${kql}) AND ${dateClause}` : dateClause;
   }
-  let qs = `limit=${params.limit || 25}&include=values`;
+  let qs = `limit=${params.limit || 25}&include=details,values`;
   if (kql) qs += `&q=${encodeURIComponent(kql)}`;
   if (params.orderBy) qs += `&orderBy=${encodeURIComponent(params.orderBy)}`;
   const data = await api(`/kapps/${KAPP}/forms/${form}/submissions?${qs}`);
@@ -689,7 +689,7 @@ async function openMenuModal(id) {
   let vals = {};
   if (id) {
     try {
-      const data = await api(`/submissions/${id}?include=values`);
+      const data = await api(`/submissions/${id}?include=details,values`);
       vals = data.submission.values || {};
     } catch (e) { showToast('Failed to load item', true); return; }
   }
@@ -827,7 +827,7 @@ async function openInventoryModal(id) {
   let vals = {};
   if (id) {
     try {
-      const data = await api(`/submissions/${id}?include=values`);
+      const data = await api(`/submissions/${id}?include=details,values`);
       vals = data.submission.values || {};
     } catch (e) { showToast('Failed to load item', true); return; }
   }
@@ -974,7 +974,7 @@ async function openReservationModal(id) {
   let vals = {};
   if (id) {
     try {
-      const data = await api(`/submissions/${id}?include=values`);
+      const data = await api(`/submissions/${id}?include=details,values`);
       vals = data.submission.values || {};
     } catch (e) { showToast('Failed to load reservation', true); return; }
   }
@@ -1162,7 +1162,7 @@ async function openDailySalesModal(id) {
   let vals = {};
   if (id) {
     try {
-      const data = await api(`/submissions/${id}?include=values`);
+      const data = await api(`/submissions/${id}?include=details,values`);
       vals = data.submission.values || {};
     } catch (e) { showToast('Failed to load entry', true); return; }
   }

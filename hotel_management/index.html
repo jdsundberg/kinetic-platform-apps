@@ -371,7 +371,7 @@ async function api(path, opts) {
 }
 
 function submissionUrl(form, params) {
-  let url = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`;
+  let url = `/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
   if (params) url += '&' + params;
   return url;
 }
@@ -588,7 +588,7 @@ async function loadReservations() {
 
 async function showReservationDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     const v = s.values || {};
     document.getElementById('detail-title').textContent = `Reservation ${v['Confirmation Number'] || ''}`;
@@ -777,7 +777,7 @@ document.getElementById('room-filter-status').addEventListener('change', renderR
 
 async function showRoomDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     const v = s.values || {};
     document.getElementById('detail-title').textContent = `Room ${v['Room Number'] || ''}`;
@@ -856,7 +856,7 @@ document.getElementById('guest-search').addEventListener('input', () => { guestP
 
 async function showGuestDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     const v = s.values || {};
     document.getElementById('detail-title').textContent = `${v['First Name'] || ''} ${v['Last Name'] || ''}`;

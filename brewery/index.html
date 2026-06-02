@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brewery Manager</title>
+<style>
+:root {
+  --amber: #C46210; --amber-dark: #8E4710; --amber-light: #F5A623;
+  --cream: #FFF7E6; --foam: #FFFDF4;
+  --hop: #6B8E23; --hop-light: #94B447;
+  --dark: #2B1810; --char: #1A0F0A;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04; --blue: #1976D2; --purple: #6A1B9A;
+  --gray: #5F6368; --light: #FAFAFA; --border: #E8DCC0; --bg: #FBF6E9;
+  --white: #fff;
+  --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.18);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #2B1810; font-size: 14px; }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #8E4710 0%, #C46210 60%, #F5A623 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--amber-dark); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--amber); border-radius: 2px; margin-bottom: 24px; width: 60px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: .3px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(196,98,16,.18); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--amber); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--amber-dark); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: #FFEBEE; color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--char); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; white-space: nowrap; }
+.topbar .logo span { color: var(--amber-light); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; flex-wrap: wrap; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.75); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.10); color: white; }
+.nav-tabs button.active { background: var(--amber); color: white; }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--amber); border-color: var(--amber); color: white; }
+
+/* ── Consoles ── */
+.console { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--amber-dark); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); border-left: 4px solid var(--amber); }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--amber-dark); }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .3px; }
+.kpi.hop { border-left-color: var(--hop); } .kpi.hop .val { color: var(--hop); }
+.kpi.blue { border-left-color: var(--blue); } .kpi.blue .val { color: var(--blue); }
+.kpi.purple { border-left-color: var(--purple); } .kpi.purple .val { color: var(--purple); }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); background: var(--foam); white-space: nowrap; }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: var(--cream); }
+.muted { color: var(--gray); font-size: 12px; }
+.tracking { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; color: var(--dark); }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-active, .badge-delivered, .badge-reviewed, .badge-resolved { background: #E8F5E9; color: #2E7D32; }
+.badge-retired, .badge-inactive, .badge-exception { background: #FFEBEE; color: #C62828; }
+.badge-seasonal, .badge-limited, .badge-in-transit, .badge-shipped, .badge-action-needed { background: #FFF3E0; color: #E65100; }
+.badge-new, .badge-processing, .badge-pending { background: #E3F2FD; color: #1565C0; }
+.badge-bar { background: #F3E5F5; color: #6A1B9A; }
+.badge-retail { background: #E3F2FD; color: #1565C0; }
+.badge-distributor { background: #FFF8E1; color: #F57F17; }
+
+/* ── Stars ── */
+.stars { color: var(--amber-light); font-size: 14px; letter-spacing: 1px; }
+.stars-dim { color: #ddd; }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--amber); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--amber-dark); }
+.btn-secondary { background: var(--light); color: var(--amber-dark); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--cream); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 600px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; color: var(--amber-dark); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: .3px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 60px; }
+.modal-body .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-body .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--char); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+
+/* ── Dashboard ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+.row-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.row-line:last-child { border-bottom: none; }
+.row-line .num { font-weight: 700; color: var(--amber-dark); }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+.bar-row .bar-label { width: 90px; color: var(--gray); }
+.bar-row .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.bar-row .bar-fill { height: 100%; background: var(--amber); border-radius: 4px; }
+.bar-row .bar-fill.hop { background: var(--hop); }
+.bar-row .bar-count { width: 32px; text-align: right; color: var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Brewery Manager</h1>
+    <div class="sub">Products • Customers • National shipping • Feedback</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://first.kinetics.com" placeholder="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Brewery<span>Hub</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('beers')">Beers</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('orders')">Orders</button>
+      <button onclick="switchTab('shipments')">Shipments</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="page-sub">Brewery operations at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Shipments by State</h3><div id="ship-by-state"></div></div>
+      <div class="card"><h3>Shipments by Carrier</h3><div id="ship-by-carrier"></div></div>
+      <div class="card"><h3>Rating Distribution</h3><div id="rating-dist"></div></div>
+      <div class="card"><h3>In-Transit Shipments</h3><div id="in-transit"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Beers ── -->
+  <div id="console-beers" class="console">
+    <h2 class="page-title">Beers</h2>
+    <div class="page-sub">Product catalog</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openBeerModal()">+ New Beer</button>
+      <div class="filter-bar">
+        <select id="filter-beer-style" onchange="loadBeers()"><option value="">All Styles</option></select>
+        <select id="filter-beer-status" onchange="loadBeers()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Seasonal</option><option>Limited</option><option>Retired</option>
+        </select>
+      </div>
+    </div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Name</th><th>Style</th><th>ABV</th><th>IBU</th><th>Package</th><th>Price</th><th>Status</th><th></th></tr></thead>
+      <tbody id="beers-body"></tbody>
+    </table></div>
+    <div class="pagination" id="beers-pagination"></div>
+  </div>
+
+  <!-- ── Customers ── -->
+  <div id="console-customers" class="console">
+    <h2 class="page-title">Customers</h2>
+    <div class="page-sub">Accounts across the country</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openCustomerModal()">+ New Customer</button>
+      <div class="filter-bar">
+        <select id="filter-cust-state" onchange="loadCustomers()"><option value="">All States</option></select>
+        <select id="filter-cust-type" onchange="loadCustomers()">
+          <option value="">All Types</option>
+          <option>Bar</option><option>Retail</option><option>Distributor</option>
+        </select>
+        <select id="filter-cust-status" onchange="loadCustomers()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Pending</option><option>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Business</th><th>Contact</th><th>Type</th><th>City</th><th>State</th><th>Email</th><th>Status</th><th></th></tr></thead>
+      <tbody id="customers-body"></tbody>
+    </table></div>
+    <div class="pagination" id="customers-pagination"></div>
+  </div>
+
+  <!-- ── Orders ── -->
+  <div id="console-orders" class="console">
+    <h2 class="page-title">Orders</h2>
+    <div class="page-sub">Customer purchase orders</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openOrderModal()">+ New Order</button>
+      <div class="filter-bar">
+        <select id="filter-order-status" onchange="loadOrders()">
+          <option value="">All Statuses</option>
+          <option>New</option><option>Processing</option><option>Shipped</option><option>In Transit</option><option>Delivered</option><option>Cancelled</option>
+        </select>
+        <input id="filter-order-customer" placeholder="Customer name…" oninput="debouncedLoadOrders()">
+      </div>
+    </div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th>Subtotal</th><th>Items</th><th>Status</th><th></th></tr></thead>
+      <tbody id="orders-body"></tbody>
+    </table></div>
+    <div class="pagination" id="orders-pagination"></div>
+  </div>
+
+  <!-- ── Shipments ── -->
+  <div id="console-shipments" class="console">
+    <h2 class="page-title">Shipments</h2>
+    <div class="page-sub">National shipping &amp; tracking</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openShipmentModal()">+ New Shipment</button>
+      <div class="filter-bar">
+        <select id="filter-ship-status" onchange="loadShipments()">
+          <option value="">All Statuses</option>
+          <option>Pending</option><option>In Transit</option><option>Delivered</option><option>Exception</option>
+        </select>
+        <select id="filter-ship-carrier" onchange="loadShipments()">
+          <option value="">All Carriers</option>
+          <option>UPS</option><option>FedEx</option><option>FedEx Freight</option><option>USPS</option><option>DHL</option>
+        </select>
+        <select id="filter-ship-state" onchange="loadShipments()"><option value="">All Destinations</option></select>
+      </div>
+    </div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Tracking #</th><th>Order #</th><th>Customer</th><th>Carrier</th><th>Ship Date</th><th>Delivery</th><th>To</th><th>Status</th><th></th></tr></thead>
+      <tbody id="shipments-body"></tbody>
+    </table></div>
+    <div class="pagination" id="shipments-pagination"></div>
+  </div>
+
+  <!-- ── Feedback ── -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Customer Feedback</h2>
+    <div class="page-sub">Reviews and product ratings</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openFeedbackModal()">+ New Feedback</button>
+      <div class="filter-bar">
+        <select id="filter-fb-beer" onchange="loadFeedback()"><option value="">All Beers</option></select>
+        <select id="filter-fb-rating" onchange="loadFeedback()">
+          <option value="">All Ratings</option>
+          <option value="5">5 ★</option><option value="4">4 ★</option>
+          <option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+        </select>
+        <select id="filter-fb-status" onchange="loadFeedback()">
+          <option value="">All Statuses</option>
+          <option>New</option><option>Reviewed</option><option>Action Needed</option><option>Resolved</option>
+        </select>
+      </div>
+    </div>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Customer</th><th>Beer</th><th>Rating</th><th>Comments</th><th>Date</th><th>Status</th><th></th></tr></thead>
+      <tbody id="feedback-body"></tbody>
+    </table></div>
+    <div class="pagination" id="feedback-pagination"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'brewery';
+const PAGE_STATE = {
+  beers:     { pageToken: null, page: 1, history: [] },
+  customers: { pageToken: null, page: 1, history: [] },
+  orders:    { pageToken: null, page: 1, history: [] },
+  shipments: { pageToken: null, page: 1, history: [] },
+  feedback:  { pageToken: null, page: 1, history: [] },
+};
+let BEERS_CACHE = [];
+
+/* ── Helpers ── */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return (sub && sub.values && sub.values[field]) || ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function badge(val) { if (!val) return ''; const cls = String(val).toLowerCase().replace(/\s+/g, '-'); return `<span class="badge badge-${esc(cls)}">${esc(val)}</span>`; }
+function stars(n) { const num = parseInt(n) || 0; let out = ''; for (let i = 1; i <= 5; i++) out += i <= num ? '<span class="stars">★</span>' : '<span class="stars-dim">★</span>'; return out; }
+function fmtMoney(n) { const x = parseFloat(n); if (isNaN(x)) return ''; return '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function debounce(fn, ms) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; }
+const debouncedLoadOrders = debounce(() => loadOrders(), 300);
+
+/* ── Auth ── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ── Session restore ── */
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ── API ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ── Enter app: cache beers for filters, populate dropdowns, load dashboard ── */
+async function enterApp() {
+  try {
+    const d = await api(`/kapps/${KAPP}/forms/beers/submissions?include=details,values&limit=25`);
+    BEERS_CACHE = d.submissions || [];
+  } catch {}
+  populateBeerFilters();
+  populateStateFilters();
+  loadDashboard();
+}
+
+function populateBeerFilters() {
+  const beerNames = BEERS_CACHE.map(b => v(b, 'Name')).filter(Boolean).sort();
+  const styles = [...new Set(BEERS_CACHE.map(b => v(b, 'Style')).filter(Boolean))].sort();
+  const styleEl = document.getElementById('filter-beer-style');
+  if (styleEl) styleEl.innerHTML = '<option value="">All Styles</option>' + styles.map(s => `<option>${esc(s)}</option>`).join('');
+  const fbBeer = document.getElementById('filter-fb-beer');
+  if (fbBeer) fbBeer.innerHTML = '<option value="">All Beers</option>' + beerNames.map(b => `<option>${esc(b)}</option>`).join('');
+}
+
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+function populateStateFilters() {
+  const stateOpts = '<option value="">All States</option>' + US_STATES.map(s => `<option>${s}</option>`).join('');
+  const c = document.getElementById('filter-cust-state'); if (c) c.innerHTML = stateOpts;
+  const sh = document.getElementById('filter-ship-state'); if (sh) sh.innerHTML = '<option value="">All Destinations</option>' + US_STATES.map(s => `<option>${s}</option>`).join('');
+}
+
+/* ── Tabs ── */
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  const tabs = ['dash','beers','customers','orders','shipments','feedback'];
+  document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  else if (tab === 'beers') loadBeers();
+  else if (tab === 'customers') loadCustomers();
+  else if (tab === 'orders') loadOrders();
+  else if (tab === 'shipments') loadShipments();
+  else if (tab === 'feedback') loadFeedback();
+}
+
+/* ── Pagination helpers ── */
+function updatePageState(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+function paginationHtml(ps, fn) {
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [beers, customers, orders, shipments, feedback] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/beers/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/orders/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/shipments/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`),
+    ]);
+
+    const bs = beers.submissions || [], cs = customers.submissions || [], os = orders.submissions || [], ss = shipments.submissions || [], fs = feedback.submissions || [];
+
+    const activeBeers = bs.filter(b => v(b,'Status') === 'Active').length;
+    const activeCust  = cs.filter(c => v(c,'Status') === 'Active').length;
+    const inTransit   = ss.filter(s => v(s,'Status') === 'In Transit').length;
+    const delivered   = ss.filter(s => v(s,'Status') === 'Delivered').length;
+    const openOrders  = os.filter(o => ['New','Processing'].includes(v(o,'Status'))).length;
+    const totalShipped = ss.length;
+    const ratings = fs.map(f => parseFloat(v(f,'Rating')) || 0).filter(n => n > 0);
+    const avgRating = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length).toFixed(2) : '—';
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val">${activeBeers}</div><div class="label">Active Beers</div></div>
+      <div class="kpi hop"><div class="val">${activeCust}</div><div class="label">Active Customers</div></div>
+      <div class="kpi blue"><div class="val">${openOrders}</div><div class="label">Open Orders</div></div>
+      <div class="kpi"><div class="val">${inTransit}</div><div class="label">In Transit</div></div>
+      <div class="kpi hop"><div class="val">${delivered}</div><div class="label">Delivered</div></div>
+      <div class="kpi purple"><div class="val">${avgRating}</div><div class="label">Avg Rating</div></div>
+    `;
+
+    // Shipments by state
+    const byState = {};
+    ss.forEach(s => { const st = v(s,'Destination State'); if (!st) return; byState[st] = (byState[st]||0) + 1; });
+    const stateRows = Object.entries(byState).sort((a,b) => b[1]-a[1]).slice(0, 12);
+    const stateMax = stateRows[0] ? stateRows[0][1] : 1;
+    document.getElementById('ship-by-state').innerHTML = stateRows.length ? stateRows.map(([st,n]) => `
+      <div class="bar-row"><span class="bar-label">${esc(st)}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/stateMax*100).toFixed(0)}%"></div></div><span class="bar-count">${n}</span></div>
+    `).join('') : '<div class="muted">No shipment data.</div>';
+
+    // Shipments by carrier
+    const byCarrier = {};
+    ss.forEach(s => { const c = v(s,'Carrier'); if (!c) return; byCarrier[c] = (byCarrier[c]||0) + 1; });
+    const carrierRows = Object.entries(byCarrier).sort((a,b)=>b[1]-a[1]);
+    const carrierMax = carrierRows[0] ? carrierRows[0][1] : 1;
+    document.getElementById('ship-by-carrier').innerHTML = carrierRows.length ? carrierRows.map(([c,n]) => `
+      <div class="bar-row"><span class="bar-label">${esc(c)}</span><div class="bar-track"><div class="bar-fill hop" style="width:${(n/carrierMax*100).toFixed(0)}%"></div></div><span class="bar-count">${n}</span></div>
+    `).join('') : '<div class="muted">No shipment data.</div>';
+
+    // Rating distribution
+    const dist = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+    fs.forEach(f => { const r = parseInt(v(f,'Rating')); if (r >= 1 && r <= 5) dist[r]++; });
+    const ratingMax = Math.max(...Object.values(dist), 1);
+    document.getElementById('rating-dist').innerHTML = [5,4,3,2,1].map(r => `
+      <div class="bar-row"><span class="bar-label">${r} ★</span><div class="bar-track"><div class="bar-fill" style="width:${(dist[r]/ratingMax*100).toFixed(0)}%"></div></div><span class="bar-count">${dist[r]}</span></div>
+    `).join('');
+
+    // In-transit shipments table
+    const intransit = ss.filter(s => v(s,'Status') === 'In Transit').slice(0, 8);
+    document.getElementById('in-transit').innerHTML = intransit.length ? `<table style="width:100%"><thead><tr><th>Tracking</th><th>To</th><th>Carrier</th></tr></thead><tbody>` +
+      intransit.map(s => `<tr>
+        <td class="tracking">${esc(v(s,'Tracking Number'))}</td>
+        <td>${esc(v(s,'Customer'))} (${esc(v(s,'Destination State'))})</td>
+        <td>${esc(v(s,'Carrier'))}</td>
+      </tr>`).join('') + '</tbody></table>'
+      : '<div class="muted">No shipments in transit.</div>';
+  } catch (e) { toast('Dashboard error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   BEERS
+   ══════════════════════════════════════════════ */
+async function loadBeers(direction) {
+  const ps = PAGE_STATE.beers; updatePageState(ps, direction);
+  const style = document.getElementById('filter-beer-style').value;
+  const status = document.getElementById('filter-beer-status').value;
+  let path = `/kapps/${KAPP}/forms/beers/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (style) q.push(`values[Style]="${style}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('beers-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Name'))}</strong><div class="muted">${esc((v(s,'Description')||'').slice(0,60))}</div></td>
+      <td>${esc(v(s,'Style'))}</td>
+      <td>${esc(v(s,'ABV'))}%</td>
+      <td>${esc(v(s,'IBU'))}</td>
+      <td>${esc(v(s,'Package'))}</td>
+      <td>${fmtMoney(v(s,'Price'))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editBeer('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray)">No beers found</td></tr>';
+    document.getElementById('beers-pagination').innerHTML = paginationHtml(ps, 'loadBeers');
+  } catch (e) { toast('Error loading beers: ' + e.message); }
+}
+
+async function editBeer(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    openBeerModal(data.submission);
+  } catch (e) { toast('Error loading beer: ' + e.message); }
+}
+
+function openBeerModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Beer' : 'New Beer';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Name</label><input id="f-b-name" value="${esc(vals.Name||'')}">
+    <div class="row">
+      <div><label>Style</label><input id="f-b-style" value="${esc(vals.Style||'')}"></div>
+      <div><label>Status</label>
+        <select id="f-b-status">${['Active','Seasonal','Limited','Retired'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="row-3">
+      <div><label>ABV %</label><input id="f-b-abv" value="${esc(vals.ABV||'')}"></div>
+      <div><label>IBU</label><input id="f-b-ibu" value="${esc(vals.IBU||'')}"></div>
+      <div><label>Price</label><input id="f-b-price" value="${esc(vals.Price||'')}"></div>
+    </div>
+    <label>Package</label><input id="f-b-package" value="${esc(vals.Package||'')}">
+    <label>Description</label><textarea id="f-b-desc" rows="3">${esc(vals.Description||'')}</textarea>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    ${existing ? `<button class="btn-secondary" onclick="deleteBeer('${s.id}')">Delete</button>` : ''}
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveBeer('${s.id||''}')">${existing ? 'Save' : 'Create'}</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveBeer(id) {
+  const values = {
+    Name:     document.getElementById('f-b-name').value,
+    Style:    document.getElementById('f-b-style').value,
+    Status:   document.getElementById('f-b-status').value,
+    ABV:      document.getElementById('f-b-abv').value,
+    IBU:      document.getElementById('f-b-ibu').value,
+    Price:    document.getElementById('f-b-price').value,
+    Package:  document.getElementById('f-b-package').value,
+    Description: document.getElementById('f-b-desc').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/beers/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    toast(id ? 'Beer updated' : 'Beer created');
+    closeModal(); loadBeers();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function deleteBeer(id) {
+  if (!confirm('Delete this beer?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Beer deleted'); closeModal(); loadBeers();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   CUSTOMERS
+   ══════════════════════════════════════════════ */
+async function loadCustomers(direction) {
+  const ps = PAGE_STATE.customers; updatePageState(ps, direction);
+  const state = document.getElementById('filter-cust-state').value;
+  const type = document.getElementById('filter-cust-type').value;
+  const status = document.getElementById('filter-cust-status').value;
+  let path = `/kapps/${KAPP}/forms/customers/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (state) q.push(`values[State]="${state}"`);
+  if (type) q.push(`values[Type]="${type}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('customers-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Business Name'))}</strong></td>
+      <td>${esc(v(s,'Contact Name'))}<div class="muted">${esc(v(s,'Phone'))}</div></td>
+      <td>${badge(v(s,'Type'))}</td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'State'))}</td>
+      <td class="muted">${esc(v(s,'Email'))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editCustomer('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray)">No customers found</td></tr>';
+    document.getElementById('customers-pagination').innerHTML = paginationHtml(ps, 'loadCustomers');
+  } catch (e) { toast('Error loading customers: ' + e.message); }
+}
+
+async function editCustomer(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    openCustomerModal(data.submission);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function openCustomerModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Customer' : 'New Customer';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Business Name</label><input id="f-c-biz" value="${esc(vals['Business Name']||'')}">
+    <div class="row">
+      <div><label>Contact Name</label><input id="f-c-contact" value="${esc(vals['Contact Name']||'')}"></div>
+      <div><label>Type</label><select id="f-c-type">${['','Bar','Retail','Distributor'].map(x=>`<option value="${x}" ${vals.Type===x?'selected':''}>${x||'—'}</option>`).join('')}</select></div>
+    </div>
+    <div class="row">
+      <div><label>Email</label><input id="f-c-email" value="${esc(vals.Email||'')}"></div>
+      <div><label>Phone</label><input id="f-c-phone" value="${esc(vals.Phone||'')}"></div>
+    </div>
+    <label>Street</label><input id="f-c-street" value="${esc(vals.Street||'')}">
+    <div class="row-3">
+      <div><label>City</label><input id="f-c-city" value="${esc(vals.City||'')}"></div>
+      <div><label>State</label><select id="f-c-state">${['',...US_STATES].map(x=>`<option value="${x}" ${vals.State===x?'selected':''}>${x||'—'}</option>`).join('')}</select></div>
+      <div><label>ZIP</label><input id="f-c-zip" value="${esc(vals.ZIP||'')}"></div>
+    </div>
+    <div class="row">
+      <div><label>Status</label><select id="f-c-status">${['Active','Pending','Inactive'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div></div>
+    </div>
+    <label>Notes</label><textarea id="f-c-notes" rows="2">${esc(vals.Notes||'')}</textarea>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    ${existing ? `<button class="btn-secondary" onclick="deleteCustomer('${s.id}')">Delete</button>` : ''}
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveCustomer('${s.id||''}')">${existing ? 'Save' : 'Create'}</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveCustomer(id) {
+  const values = {
+    'Business Name': document.getElementById('f-c-biz').value,
+    'Contact Name':  document.getElementById('f-c-contact').value,
+    Email:    document.getElementById('f-c-email').value,
+    Phone:    document.getElementById('f-c-phone').value,
+    Type:     document.getElementById('f-c-type').value,
+    Street:   document.getElementById('f-c-street').value,
+    City:     document.getElementById('f-c-city').value,
+    State:    document.getElementById('f-c-state').value,
+    ZIP:      document.getElementById('f-c-zip').value,
+    Status:   document.getElementById('f-c-status').value,
+    Notes:    document.getElementById('f-c-notes').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/customers/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    toast(id ? 'Customer updated' : 'Customer created');
+    closeModal(); loadCustomers();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function deleteCustomer(id) {
+  if (!confirm('Delete this customer?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Customer deleted'); closeModal(); loadCustomers();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   ORDERS
+   ══════════════════════════════════════════════ */
+async function loadOrders(direction) {
+  const ps = PAGE_STATE.orders; updatePageState(ps, direction);
+  const status = document.getElementById('filter-order-status').value;
+  const cust = document.getElementById('filter-order-customer').value.trim();
+  let path = `/kapps/${KAPP}/forms/orders/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (status) q.push(`values[Status]="${status}"`);
+  if (cust) q.push(`values[Customer]*=*"${cust}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('orders-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td><strong>${esc(v(s,'Order Number'))}</strong></td>
+      <td>${esc(v(s,'Customer'))}</td>
+      <td>${esc(v(s,'Order Date'))}</td>
+      <td>${fmtMoney(v(s,'Subtotal'))}</td>
+      <td class="muted" style="max-width:280px">${esc((v(s,'Items')||'').slice(0,80))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editOrder('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No orders found</td></tr>';
+    document.getElementById('orders-pagination').innerHTML = paginationHtml(ps, 'loadOrders');
+  } catch (e) { toast('Error loading orders: ' + e.message); }
+}
+
+async function editOrder(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openOrderModal(d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+
+function openOrderModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Order' : 'New Order';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row">
+      <div><label>Order Number</label><input id="f-o-num" value="${esc(vals['Order Number']||'')}"></div>
+      <div><label>Order Date</label><input id="f-o-date" type="date" value="${esc(vals['Order Date']||'')}"></div>
+    </div>
+    <label>Customer</label><input id="f-o-cust" value="${esc(vals.Customer||'')}">
+    <div class="row">
+      <div><label>Subtotal</label><input id="f-o-sub" value="${esc(vals.Subtotal||'')}"></div>
+      <div><label>Status</label><select id="f-o-status">${['New','Processing','Shipped','In Transit','Delivered','Cancelled'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Items</label><textarea id="f-o-items" rows="3">${esc(vals.Items||'')}</textarea>
+    <label>Notes</label><textarea id="f-o-notes" rows="2">${esc(vals.Notes||'')}</textarea>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    ${existing ? `<button class="btn-secondary" onclick="deleteOrder('${s.id}')">Delete</button>` : ''}
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveOrder('${s.id||''}')">${existing ? 'Save' : 'Create'}</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveOrder(id) {
+  const values = {
+    'Order Number': document.getElementById('f-o-num').value,
+    Customer:       document.getElementById('f-o-cust').value,
+    'Order Date':   document.getElementById('f-o-date').value,
+    Subtotal:       document.getElementById('f-o-sub').value,
+    Status:         document.getElementById('f-o-status').value,
+    Items:          document.getElementById('f-o-items').value,
+    Notes:          document.getElementById('f-o-notes').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/orders/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    toast(id ? 'Order updated' : 'Order created');
+    closeModal(); loadOrders();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function deleteOrder(id) {
+  if (!confirm('Delete this order?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Order deleted'); closeModal(); loadOrders();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   SHIPMENTS
+   ══════════════════════════════════════════════ */
+async function loadShipments(direction) {
+  const ps = PAGE_STATE.shipments; updatePageState(ps, direction);
+  const status = document.getElementById('filter-ship-status').value;
+  const carrier = document.getElementById('filter-ship-carrier').value;
+  const state = document.getElementById('filter-ship-state').value;
+  let path = `/kapps/${KAPP}/forms/shipments/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (status) q.push(`values[Status]="${status}"`);
+  if (carrier) q.push(`values[Carrier]="${carrier}"`);
+  if (state) q.push(`values[Destination State]="${state}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('shipments-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td class="tracking">${esc(v(s,'Tracking Number'))}</td>
+      <td>${esc(v(s,'Order Number'))}</td>
+      <td>${esc(v(s,'Customer'))}</td>
+      <td>${esc(v(s,'Carrier'))}</td>
+      <td>${esc(v(s,'Ship Date'))}</td>
+      <td>${esc(v(s,'Delivery Date')||'—')}</td>
+      <td><strong>${esc(v(s,'Destination State'))}</strong></td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editShipment('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--gray)">No shipments found</td></tr>';
+    document.getElementById('shipments-pagination').innerHTML = paginationHtml(ps, 'loadShipments');
+  } catch (e) { toast('Error loading shipments: ' + e.message); }
+}
+
+async function editShipment(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openShipmentModal(d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+
+function openShipmentModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Shipment' : 'New Shipment';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Tracking Number</label><input id="f-s-track" value="${esc(vals['Tracking Number']||'')}">
+    <div class="row">
+      <div><label>Order Number</label><input id="f-s-order" value="${esc(vals['Order Number']||'')}"></div>
+      <div><label>Customer</label><input id="f-s-cust" value="${esc(vals.Customer||'')}"></div>
+    </div>
+    <div class="row">
+      <div><label>Carrier</label><select id="f-s-carrier">${['','UPS','FedEx','FedEx Freight','USPS','DHL'].map(x=>`<option value="${x}" ${vals.Carrier===x?'selected':''}>${x||'—'}</option>`).join('')}</select></div>
+      <div><label>Destination State</label><select id="f-s-state">${['',...US_STATES].map(x=>`<option value="${x}" ${vals['Destination State']===x?'selected':''}>${x||'—'}</option>`).join('')}</select></div>
+    </div>
+    <div class="row-3">
+      <div><label>Ship Date</label><input id="f-s-ship" type="date" value="${esc(vals['Ship Date']||'')}"></div>
+      <div><label>Delivery Date</label><input id="f-s-deliv" type="date" value="${esc(vals['Delivery Date']||'')}"></div>
+      <div><label>Status</label><select id="f-s-status">${['Pending','In Transit','Delivered','Exception'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Notes</label><textarea id="f-s-notes" rows="2">${esc(vals.Notes||'')}</textarea>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    ${existing ? `<button class="btn-secondary" onclick="deleteShipment('${s.id}')">Delete</button>` : ''}
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveShipment('${s.id||''}')">${existing ? 'Save' : 'Create'}</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveShipment(id) {
+  const values = {
+    'Tracking Number':   document.getElementById('f-s-track').value,
+    'Order Number':      document.getElementById('f-s-order').value,
+    Customer:            document.getElementById('f-s-cust').value,
+    Carrier:             document.getElementById('f-s-carrier').value,
+    'Destination State': document.getElementById('f-s-state').value,
+    'Ship Date':         document.getElementById('f-s-ship').value,
+    'Delivery Date':     document.getElementById('f-s-deliv').value,
+    Status:              document.getElementById('f-s-status').value,
+    Notes:               document.getElementById('f-s-notes').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/shipments/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    toast(id ? 'Shipment updated' : 'Shipment created');
+    closeModal(); loadShipments();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function deleteShipment(id) {
+  if (!confirm('Delete this shipment?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Shipment deleted'); closeModal(); loadShipments();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   FEEDBACK
+   ══════════════════════════════════════════════ */
+async function loadFeedback(direction) {
+  const ps = PAGE_STATE.feedback; updatePageState(ps, direction);
+  const beer = document.getElementById('filter-fb-beer').value;
+  const rating = document.getElementById('filter-fb-rating').value;
+  const status = document.getElementById('filter-fb-status').value;
+  let path = `/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (beer) q.push(`values[Beer]="${beer}"`);
+  if (rating) q.push(`values[Rating]="${rating}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length-1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('feedback-body').innerHTML = subs.length ? subs.map(s => `<tr>
+      <td>${esc(v(s,'Customer'))}</td>
+      <td><strong>${esc(v(s,'Beer'))}</strong></td>
+      <td>${stars(v(s,'Rating'))}</td>
+      <td class="muted" style="max-width:340px">${esc(v(s,'Comments'))}</td>
+      <td>${esc(v(s,'Submitted Date'))}</td>
+      <td>${badge(v(s,'Status'))}</td>
+      <td><button class="btn-secondary btn-sm" onclick="editFeedback('${s.id}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray)">No feedback found</td></tr>';
+    document.getElementById('feedback-pagination').innerHTML = paginationHtml(ps, 'loadFeedback');
+  } catch (e) { toast('Error loading feedback: ' + e.message); }
+}
+
+async function editFeedback(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openFeedbackModal(d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+
+function openFeedbackModal(existing) {
+  const s = existing || {}; const vals = s.values || {};
+  document.getElementById('modal-title').textContent = existing ? 'Edit Feedback' : 'New Feedback';
+  const beerOptions = '<option value="">— Select —</option>' + BEERS_CACHE.map(b => v(b,'Name')).filter(Boolean).sort().map(n => `<option ${vals.Beer===n?'selected':''}>${esc(n)}</option>`).join('');
+  document.getElementById('modal-body').innerHTML = `
+    <label>Customer</label><input id="f-f-cust" value="${esc(vals.Customer||'')}">
+    <div class="row">
+      <div><label>Beer</label><select id="f-f-beer">${beerOptions}</select></div>
+      <div><label>Rating</label><select id="f-f-rating">${['1','2','3','4','5'].map(x=>`<option ${vals.Rating===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Comments</label><textarea id="f-f-comments" rows="3">${esc(vals.Comments||'')}</textarea>
+    <div class="row">
+      <div><label>Submitted Date</label><input id="f-f-date" type="date" value="${esc(vals['Submitted Date']||'')}"></div>
+      <div><label>Status</label><select id="f-f-status">${['New','Reviewed','Action Needed','Resolved'].map(x=>`<option ${vals.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    ${existing ? `<button class="btn-secondary" onclick="deleteFeedback('${s.id}')">Delete</button>` : ''}
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveFeedback('${s.id||''}')">${existing ? 'Save' : 'Create'}</button>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveFeedback(id) {
+  const values = {
+    Customer:         document.getElementById('f-f-cust').value,
+    Beer:             document.getElementById('f-f-beer').value,
+    Rating:           document.getElementById('f-f-rating').value,
+    Comments:         document.getElementById('f-f-comments').value,
+    'Submitted Date': document.getElementById('f-f-date').value,
+    Status:           document.getElementById('f-f-status').value,
+  };
+  try {
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+    else await api(`/kapps/${KAPP}/forms/feedback/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    toast(id ? 'Feedback updated' : 'Feedback created');
+    closeModal(); loadFeedback();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('Delete this feedback?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Feedback deleted'); closeModal(); loadFeedback();
+  } catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+/* ── Modal helpers ── */
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

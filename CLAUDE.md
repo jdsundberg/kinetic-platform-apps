@@ -6,6 +6,7 @@ Single-page web applications on the Kinetic Platform. Each app is a standalone N
 
 - **Architecture & data model:** [app.md](app.md)
 - **Branding & design:** [branding.md](branding.md)
+- **Session persistence across tabs:** [apps.md](apps.md) — mirror sessionStorage to localStorage so new tabs don't force re-login
 - **Test suites:** [kinetic-test-suite.md](kinetic-test-suite.md)
 - **MCP gaps:** [mcp-gaps.md](mcp-gaps.md)
 

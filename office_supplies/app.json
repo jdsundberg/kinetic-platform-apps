@@ -1,0 +1,143 @@
+{
+  "name": "Office Supplies",
+  "slug": "office-supplies",
+  "description": "Office supply inventory tracking with automatic low-stock reorder tasks",
+  "category": "Operations",
+  "icon": "clipboard",
+  "color": "#6D4C41",
+  "bg": "#EFEBE9",
+  "forms": [
+    {
+      "slug": "supplies",
+      "name": "Supplies",
+      "description": "Office supply items with stock levels and reorder thresholds",
+      "fields": [
+        {
+          "name": "SKU",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Quantity On Hand"
+        },
+        {
+          "name": "Unit"
+        },
+        {
+          "name": "Reorder Threshold"
+        },
+        {
+          "name": "Reorder Quantity"
+        },
+        {
+          "name": "Unit Cost"
+        },
+        {
+          "name": "Vendor"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values('Name')} (${values('SKU')})",
+      "indexes": {
+        "single": [
+          "values[SKU]",
+          "values[Category]",
+          "values[Location]",
+          "values[Status]",
+          "values[Vendor]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Category]"
+          ],
+          [
+            "values[Location]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "reorder-tasks",
+      "name": "Reorder Tasks",
+      "description": "Fulfillment tasks created when a supply needs to be reordered",
+      "fields": [
+        {
+          "name": "Task Number",
+          "required": true
+        },
+        {
+          "name": "SKU"
+        },
+        {
+          "name": "Item Name"
+        },
+        {
+          "name": "Quantity Requested"
+        },
+        {
+          "name": "Vendor"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Requested By"
+        },
+        {
+          "name": "Requested Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values('Task Number')} - ${values('Item Name')}",
+      "indexes": {
+        "single": [
+          "values[Task Number]",
+          "values[SKU]",
+          "values[Status]",
+          "values[Priority]",
+          "values[Assigned To]",
+          "values[Requested Date]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Priority]"
+          ],
+          [
+            "values[Assigned To]",
+            "values[Status]"
+          ],
+          [
+            "values[SKU]",
+            "values[Status]"
+          ]
+        ]
+      }
+    }
+  ]
+}

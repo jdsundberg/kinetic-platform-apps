@@ -74,6 +74,22 @@ a { text-decoration: none; color: inherit; }
 .app-card .card-info h3 { font-size:15px; font-weight:700; color:var(--blue); margin-bottom:2px; }
 .app-card .card-info .desc { font-size:12px; color:var(--gray); line-height:1.4; }
 
+/* Featured landing + library */
+.browse-tile { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:22px 24px; margin-bottom:32px; background:var(--white); border:1px solid var(--border); border-left:4px solid var(--blue); border-radius:12px; box-shadow:var(--shadow); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+.browse-tile:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+.browse-tile .bt-title { font-size:16px; font-weight:700; color:var(--blue); }
+.browse-tile .bt-sub { font-size:12px; color:var(--gray); margin-top:2px; }
+.browse-tile .bt-arrow { font-size:22px; color:var(--blue); line-height:1; }
+.library-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+.btn-back { background:var(--white); border:1px solid var(--border); border-radius:8px; padding:9px 14px; font-size:13px; font-weight:600; color:var(--blue); cursor:pointer; transition:background .1s; }
+.btn-back:hover { background:var(--bg); }
+.library-search { flex:1; max-width:420px; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; }
+.library-search:focus { border-color:var(--blue); }
+.library-sort { padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--blue); background:var(--white); cursor:pointer; outline:none; }
+.library-sort:focus { border-color:var(--blue); }
+.library-empty { padding:40px; text-align:center; color:var(--gray); font-size:14px; }
+.app-card .card-info .card-date { margin-top:3px; font-size:11px; color:var(--blue); opacity:.75; }
+
 /* Toast */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--blue); color:white; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); transition:transform .3s; z-index:300; }
 .toast.show { transform:translateX(-50%) translateY(0); }
@@ -163,18 +179,34 @@ if (sessionStorage.getItem('base_session') || localStorage.getItem('base_session
       <div class="page-sub">Select an application to open</div>
     </div>
 
-    <div class="section-label">Applications</div>
-    <div id="app-grid" class="app-grid"></div>
-    <div class="section-label" style="margin-top:24px">School Management</div>
-    <div id="school-grid" class="app-grid"></div>
-    <div class="section-label" style="margin-top:24px">Industry</div>
-    <div id="industry-grid" class="app-grid"></div>
-    <div class="section-label" style="margin-top:24px">Healthcare</div>
-    <div id="healthcare-grid" class="app-grid"></div>
-    <div class="section-label" style="margin-top:24px">Department of Defense</div>
-    <div id="dod-grid" class="app-grid"></div>
-    <div class="section-label" style="margin-top:24px">Miscellaneous</div>
-    <div id="misc-grid" class="app-grid"></div>
+    <!-- Landing: featured apps only -->
+    <div id="landing-view">
+      <div class="section-label">Featured</div>
+      <div id="featured-grid" class="app-grid"></div>
+      <div class="browse-tile" onclick="showLibrary()">
+        <div>
+          <div class="bt-title">Browse App Library</div>
+          <div class="bt-sub" id="browse-sub">All applications</div>
+        </div>
+        <div class="bt-arrow">&rarr;</div>
+      </div>
+    </div>
+
+    <!-- Library: full searchable, category-grouped list -->
+    <div id="library-view" style="display:none">
+      <div class="library-bar">
+        <button class="btn-back" onclick="showLanding()">&larr; Back</button>
+        <input id="library-search" class="library-search" type="text" placeholder="Search applications&hellip;" oninput="renderLibrary(this.value)">
+        <select id="library-sort" class="library-sort" onchange="setLibrarySort(this.value)" title="Sort applications">
+          <option value="category">Group by category</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name">Name (A&ndash;Z)</option>
+        </select>
+        <button class="btn-back" onclick="refreshLibrary(this)" title="Re-scan for newly built apps">&#8635; Refresh</button>
+      </div>
+      <div id="launcher-sections"></div>
+    </div>
   </div>
 </div>
 
@@ -198,57 +230,7 @@ if (sessionStorage.getItem('base_session') || localStorage.getItem('base_session
 <script>
 /* ── App Registry ─────────────────────────────────────────────── */
 
-const APPS = [
-  { slug: 'itsm',             name: 'ITSM Console',      desc: 'Incident, Problem, Change & Service Request management',  icon: 'alert-triangle', color: '#EA4335', bg: '#FDECEA' },
-  { slug: 'crm',              name: 'CRM Console',        desc: 'Sales pipeline, leads, opportunities & activities',       icon: 'handshake',      color: '#E65100', bg: '#FFF3E0' },
-  { slug: 'knowledge',        name: 'Knowledge Portal',   desc: 'Knowledge base articles, categories & search',           icon: 'book',           color: '#283593', bg: '#E8EAF6' },
-  { slug: 'atlas',            name: 'Data Atlas',          desc: 'Data dictionary, catalog & consistency intelligence',     icon: 'database',       color: '#00695C', bg: '#E0F2F1' },
-  { slug: 'sec-ops',          name: 'Security Ops',        desc: 'SOC alerts, incidents, vulnerabilities & playbooks',      icon: 'shield',         color: '#B71C1C', bg: '#FFEBEE' },
-  { slug: 'asset-management', name: 'Asset Management',    desc: 'IT asset lifecycle, financials & warranty tracking',      icon: 'server',         color: '#00695C', bg: '#E0F2F1' },
-  { slug: 'case',             name: 'Case Management',     desc: 'Ticket tracking & case resolution',                        icon: 'alert-triangle', color: '#2563eb', bg: '#dbeafe' },
-  { slug: 'innovation',       name: 'Innovation Intake',   desc: 'Application proposal intake, review & AI build pipeline',   icon: 'lightbulb',     color: '#F36C24', bg: '#FFF3E0' },
-  { slug: 'agent-hub',        name: 'AgentHub',             desc: 'AI agent administration, prompt generation & forensic run history', icon: 'cpu', color: '#0097A7', bg: '#E0F7FA' },
-  { slug: 'kinetic-air',     name: 'Kinetic Air',         desc: 'Spreadsheet-style data tables',                                                            icon: 'grid',           color: '#34A853', bg: '#E8F5E9' },
-  { slug: 'school-mgmt',     name: 'School Management',   desc: 'K-12 school suite: students, teachers, classes, grades, buses, lunch & allergy tracking', icon: 'graduation-cap', color: '#1565C0', bg: '#E3F2FD', school: true },
-  { slug: 'sis',             name: 'Student Info System', desc: 'Student records, guardians, enrollments, transcripts & demographics', icon: 'users', color: '#1565C0', bg: '#E3F2FD', school: true },
-  { slug: 'lms',             name: 'Learning Management', desc: 'Courses, assignments, grades, resources & announcements', icon: 'book', color: '#2E7D32', bg: '#E8F5E9', school: true },
-  { slug: 'attendance',      name: 'Attendance & Behavior', desc: 'Daily attendance, behavior incidents, interventions & tardies', icon: 'clipboard', color: '#E65100', bg: '#FFF3E0', school: true },
-  { slug: 'communication',   name: 'Parent Communication', desc: 'Messages, announcements, conferences & notifications', icon: 'bell', color: '#7B1FA2', bg: '#F3E5F5', school: true },
-  { slug: 'scheduling',      name: 'Scheduling & Courses', desc: 'Course catalog, sections, rooms, teachers & bell schedules', icon: 'calendar', color: '#00695C', bg: '#E0F2F1', school: true },
-  { slug: 'service-pro-max', name: 'ServiceProMax',        desc: 'Enterprise services delivery, quality governance & management', icon: 'briefcase',    color: '#1565C0', bg: '#E3F2FD', industry: true },
-  { slug: 'school-for-good', name: 'SchoolForGood',       desc: 'School management with sites, members, trainers & classes', icon: 'book',           color: '#2E7D32', bg: '#E8F5E9', industry: true },
-  { slug: 'mining-ops',      name: 'Mining Ops',          desc: 'Mining compliance, operations, environmental monitoring',    icon: 'hard-hat',      color: '#BF360C', bg: '#FBE9E7', industry: true },
-  { slug: 'og-compliance',   name: 'Oil & Gas Compliance', desc: 'Compliance, CAPA, audits & ESG sustainability for O&G',    icon: 'droplet',       color: '#0D6E3F', bg: '#ECFDF5', industry: true },
-  { slug: 'hotel-mgmt',      name: 'Hotel Management',     desc: 'Room inventory, guest profiles, reservations, front desk & housekeeping', icon: 'hotel', color: '#1565C0', bg: '#E3F2FD', industry: true },
-  { slug: 'hotel-guru',      name: 'HotelGuru',             desc: 'Global Hospitality Command — enterprise multi-tenant hotel management across brands & regions', icon: 'globe-hotel', color: '#0D47A1', bg: '#E3F2FD', industry: true },
-  { slug: 'dod-forms',      name: 'DoD Forms',            desc: 'Department of Defense standardized forms library & DD-93',  icon: 'shield',        color: '#1B3A5C', bg: '#E3EBF3', dod: true },
-  { slug: 'atlas-lake',      name: 'AtlasLake',            desc: 'Data lake governance, risk scoring, lineage & compliance',   icon: 'database',      color: '#283593', bg: '#E8EAF6' },
-  { slug: 'credentials',    name: 'Credentials Mgr',     desc: 'Healthcare provider credentialing, privileging & compliance', icon: 'clipboard',     color: '#00838F', bg: '#E0F7FA', healthcare: true },
-  { slug: 'compliance-reg', name: 'Compliance & Reg',    desc: 'Joint Commission, CMS, OSHA compliance tracking & readiness', icon: 'shield-check',  color: '#1B5E20', bg: '#E8F5E9', healthcare: true },
-  { slug: 'vendor-cred',   name: 'Vendor Credentialing', desc: 'Vendor rep credentialing, facility access & visit tracking',     icon: 'badge',         color: '#0097A7', bg: '#E0F7FA', healthcare: true },
-  { slug: 'clinical-equipment', name: 'Clinical Equipment', desc: 'Biomedical device tracking, maintenance, FDA recalls & lifecycle management', icon: 'stethoscope', color: '#1565C0', bg: '#E3F2FD', healthcare: true },
-  { slug: 'patient-safety', name: 'Patient Safety', desc: 'Near-miss & adverse event reporting, RCA, CAPA tracking & regulatory disclosure', icon: 'heart-pulse', color: '#C62828', bg: '#FFEBEE', healthcare: true },
-  { slug: 'contract-lifecycle', name: 'Contract Lifecycle', desc: 'Payer contract management, fee schedules, amendments & compliance', icon: 'file-text', color: '#283593', bg: '#E8EAF6', healthcare: true },
-  { slug: 'supply-chain', name: 'Supply Chain', desc: 'Supply chain resilience, inventory, disruptions & vendor management', icon: 'truck', color: '#00695C', bg: '#E0F2F1', healthcare: true },
-  { slug: 'third-party-risk', name: 'Third-Party Risk', desc: 'Vendor cyber risk assessments, certifications & remediation tracking', icon: 'shield-alert', color: '#B71C1C', bg: '#FFEBEE', healthcare: true },
-  { slug: 'clinical-research', name: 'Clinical Research', desc: 'Clinical trial operations, enrollment, adverse events & regulatory', icon: 'microscope', color: '#4A148C', bg: '#F3E5F5', healthcare: true },
-  { slug: 'data-governance', name: 'Data Governance', desc: 'Enterprise data assets, quality rules, policies & access governance', icon: 'lock', color: '#1A237E', bg: '#E8EAF6', healthcare: true },
-  { slug: 'workforce-optimization', name: 'Workforce Optimization', desc: 'Staffing analytics, scheduling, vacancies & productivity', icon: 'users', color: '#004D40', bg: '#E0F2F1', healthcare: true },
-  { slug: 'physician-performance', name: 'Physician Performance', desc: 'wRVU tracking, quality metrics, compensation & benchmarks', icon: 'trending-up', color: '#E65100', bg: '#FFF3E0', healthcare: true },
-  { slug: 'grants-funding', name: 'Grants & Funding', desc: 'Research grants, applications, awards, budgets & compliance', icon: 'dollar-sign', color: '#1B5E20', bg: '#E8F5E9', healthcare: true },
-  { slug: 'capital-assets', name: 'Capital Assets', desc: 'Facilities lifecycle, work orders, inspections & capital projects', icon: 'building', color: '#37474F', bg: '#ECEFF1', healthcare: true },
-  { slug: 'address-std', name: 'Address Standardizer', desc: 'Parse, standardize & deduplicate postal addresses', icon: 'map-pin', color: '#1565C0', bg: '#E3F2FD', misc: true },
-  { slug: 'restaurant', name: 'Restaurant Man', desc: 'Inventory, menus, reservations & P&L', icon: 'restaurant', color: '#E65100', bg: '#FFF3E0', industry: true },
-  { slug: 'golf-shop', name: 'Golf Shop', desc: 'Inventory, employees & 3-bay driving range scheduling', icon: 'golf', color: '#2E7D32', bg: '#E8F5E9', industry: true },
-  { slug: 'bookstore', name: 'Bookstore', desc: 'Book inventory, employees & book loaner program', icon: 'book', color: '#6A1B9A', bg: '#F3E5F5', industry: true },
-  { slug: 'ai-training', name: 'AI Training', desc: 'One-day AI-powered enterprise development training course & presentation', icon: 'play-circle', color: '#7B1FA2', bg: '#F3E5F5', misc: true },
-  { slug: 'api-manager', name: 'API Manager', desc: 'Enterprise API registry, reuse intelligence & governance', icon: 'grid', color: '#00695C', bg: '#E0F2F1' },
-  { slug: 'racecar-manager', name: 'Racecar Manager', desc: 'Car parts, race schedule, results & fan/sponsor contact management', icon: 'flag', color: '#D32F2F', bg: '#FFEBEE', industry: true },
-  { slug: 'sandwich-shop', name: 'Sandwich & Soup Shop', desc: 'Family recipes, employees & customer feedback', icon: 'sandwich', color: '#D84315', bg: '#FBE9E7', industry: true },
-  { slug: 'music-store', name: 'Music Store', desc: 'Instrument inventory, staff & customer management', icon: 'music', color: '#283593', bg: '#E8EAF6', industry: true },
-  { slug: 'surf-shop', name: 'Surf Shop', desc: 'Tide reports, inventory, schedules & customer feedback', icon: 'waves', color: '#1B4965', bg: '#E0F7FA', industry: true },
-  { slug: 'camp-registry', name: 'Camp Registry', desc: '20 campgrounds, reservations, feedback & camp store', icon: 'tent', color: '#1B4332', bg: '#E8F5E9', industry: true },
-];
+const APPS = []; // styling + list now sourced from each app.json via /api/base/apps
 
 /* ── SVG Icons ────────────────────────────────────────────────── */
 
@@ -298,6 +280,9 @@ function svgIcon(name, color) {
     'sandwich': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18c0-4.97-4.03-9-9-9s-9 4.03-9 9z"/><path d="M3 14h18"/><path d="M3 14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2"/><path d="M5 16l-1 4h16l-1-4"/><circle cx="7.5" cy="11" r=".5" fill="${color}"/><circle cx="12" cy="11" r=".5" fill="${color}"/><circle cx="16.5" cy="11" r=".5" fill="${color}"/></svg>`,
     'music': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
     'tent': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 2v20"/><path d="M8 22l4-8 4 8"/></svg>`,
+    'donut': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M7 7.5c1 .5 2 .5 3 0"/><path d="M15 9c.8.5 1.7.3 2.3-.3"/><path d="M6 14.5c.8-.2 1.5-.8 1.5-1.5"/><path d="M16 16c.5-.5 1-.5 1.5 0"/></svg>`,
+    'bike': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 100-2 1 1 0 000 2zm-3 11.5L8 9h4l3 4 3-2.5"/><path d="M5.5 17.5L8 9"/></svg>`,
+    'vinyl': `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="${color}"/></svg>`,
   };
   return icons[name] || icons['grid'];
 }
@@ -502,16 +487,36 @@ restoreSession();
 
 /* ── Grid Rendering ───────────────────────────────────────────── */
 
-// Category mapping from app.json category → launcher section
-const CATEGORY_MAP = {
-  'Education': 'school', 'School': 'school',
-  'Healthcare': 'healthcare', 'Clinical': 'healthcare',
-  'Defense': 'dod', 'DoD': 'dod', 'Government': 'dod',
-  'Hospitality': 'misc', 'Retail': 'misc', 'Food Service': 'misc', 'Sports': 'misc',
-  'Energy': 'industry', 'Mining': 'industry', 'Supply Chain': 'industry', 'Manufacturing': 'industry',
-};
+// Display order for category sections; categories not listed here are
+// appended alphabetically after these. Category comes from each app.json.
+const CATEGORY_ORDER = [
+  'Operations', 'Business', 'Security', 'Data & Analytics', 'AI & Automation', 'Foundation',
+  'Compliance', 'Finance', 'Legal', 'Professional Services',
+  'Healthcare', 'Education', 'Hospitality', 'Industry', 'Retail', 'Food & Beverage', 'Government',
+];
 const DEFAULT_COLORS = ['#5F6368','#1565C0','#2E7D32','#E65100','#7B1FA2','#00695C','#C62828','#F36C24','#283593','#795548'];
 
+// Apps shown on the clean landing page (in this order). Everything else lives in
+// the searchable library. Edit this one line to curate the front page.
+const FEATURED = ['itsm', 'crm', 'case'];
+
+// Map a discovery record (from /api/base/apps) into a launcher card. Styling
+// comes from each app.json, with fallbacks for apps lacking metadata.
+function appFromDiscovery(app) {
+  return {
+    slug: app.slug,
+    name: app.name,
+    desc: app.description || app.name,
+    category: app.category || 'Other',
+    icon: app.icon || 'package',
+    color: app.color || DEFAULT_COLORS[app.name.length % DEFAULT_COLORS.length],
+    bg: app.bg || '#F5F5F5',
+    created: app.created || '',
+  };
+}
+
+// Load the full app list from discovery. Every app is sourced from its app.json
+// (name, description, category, icon, color, bg via /api/base/apps).
 async function mergeDiscoveredApps() {
   try {
     const resp = await fetch('/api/base/apps');
@@ -521,44 +526,137 @@ async function mergeDiscoveredApps() {
     let added = 0;
     for (const app of (data.apps || [])) {
       if (knownSlugs.has(app.slug)) continue;
-      const cat = CATEGORY_MAP[app.category] || 'misc';
-      const colorIdx = app.name.length % DEFAULT_COLORS.length;
-      APPS.push({
-        slug: app.slug,
-        name: app.name,
-        desc: app.description || app.name,
-        icon: 'package',
-        color: DEFAULT_COLORS[colorIdx],
-        bg: '#F5F5F5',
-        [cat]: true,
-      });
+      APPS.push(appFromDiscovery(app));
       added++;
     }
     if (added > 0) renderGrid();
   } catch {}
 }
 
-function renderGrid() {
-  const appApps = APPS.filter(a => !a.industry && !a.healthcare && !a.dod && !a.school && !a.misc);
-  const schoolApps = APPS.filter(a => a.school);
-  const industryApps = APPS.filter(a => a.industry);
-  const healthcareApps = APPS.filter(a => a.healthcare);
-  const dodApps = APPS.filter(a => a.dod);
-  const miscApps = APPS.filter(a => a.misc);
-  document.getElementById('app-grid').innerHTML = renderCards(appApps);
-  document.getElementById('school-grid').innerHTML = renderCards(schoolApps);
-  document.getElementById('industry-grid').innerHTML = renderCards(industryApps);
-  document.getElementById('healthcare-grid').innerHTML = renderCards(healthcareApps);
-  document.getElementById('dod-grid').innerHTML = renderCards(dodApps);
-  document.getElementById('misc-grid').innerHTML = renderCards(miscApps);
+// Re-scan the apps/ directory on the server, then rebuild the list. Lets a newly
+// built app show up without restarting the launcher.
+async function refreshLibrary(btn) {
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Refreshing…'; }
+  try {
+    const resp = await fetch('/api/base/rescan', { method: 'POST' });
+    if (!resp.ok) throw new Error('rescan failed');
+    const data = await resp.json();
+    APPS.length = 0;
+    for (const app of (data.apps || [])) APPS.push(appFromDiscovery(app));
+    renderGrid();
+    const filter = document.getElementById('library-search');
+    renderLibrary(filter ? filter.value : '');
+    const n = (data.added || []).length;
+    showToast(n ? `Found ${n} new app${n > 1 ? 's' : ''}` : 'Library up to date');
+  } catch (e) {
+    showToast('Refresh failed');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig || '↻ Refresh'; }
+  }
 }
 
-function renderCards(apps) {
+function renderGrid() {
+  renderFeatured();
+  renderLibrary(document.getElementById('library-search') ? document.getElementById('library-search').value : '');
+}
+
+// Landing page: just the featured apps, in FEATURED order.
+function renderFeatured() {
+  const grid = document.getElementById('featured-grid');
+  if (!grid) return;
+  const apps = FEATURED.map(slug => APPS.find(a => a.slug === slug)).filter(Boolean);
+  grid.innerHTML = renderCards(apps);
+  const sub = document.getElementById('browse-sub');
+  if (sub) {
+    const n = APPS.filter(a => !FEATURED.includes(a.slug)).length;
+    sub.textContent = `Browse all ${n} applications`;
+  }
+}
+
+// Current library sort mode: 'category' (grouped) | 'newest' | 'oldest' | 'name'
+let librarySort = 'category';
+function setLibrarySort(v) {
+  librarySort = v;
+  const s = document.getElementById('library-search');
+  renderLibrary(s ? s.value : '');
+}
+
+// Library: every app except the featured ones, filtered by search, ordered per librarySort.
+function renderLibrary(filter) {
+  const container = document.getElementById('launcher-sections');
+  if (!container) return;
+  const q = (filter || '').trim().toLowerCase();
+  let apps = APPS.filter(a => !FEATURED.includes(a.slug));
+  if (q) apps = apps.filter(a =>
+    (a.name || '').toLowerCase().includes(q) ||
+    (a.desc || '').toLowerCase().includes(q) ||
+    (a.category || '').toLowerCase().includes(q));
+  if (!apps.length) { container.innerHTML = '<div class="library-empty">No applications match your search.</div>'; return; }
+
+  // Flat date/name sorts render a single ungrouped list.
+  if (librarySort !== 'category') {
+    const list = apps.slice();
+    if (librarySort === 'newest')      list.sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+    else if (librarySort === 'oldest') list.sort((a, b) => (a.created || '').localeCompare(b.created || ''));
+    else                               list.sort((a, b) => a.name.localeCompare(b.name)); // 'name'
+    const label = librarySort === 'newest' ? 'Newest first' : librarySort === 'oldest' ? 'Oldest first' : 'Name (A–Z)';
+    const showDate = (librarySort === 'newest' || librarySort === 'oldest');
+    container.innerHTML = `<div class="section-label">${label}</div>`
+      + `<div class="app-grid">${renderCards(list, showDate)}</div>`;
+    return;
+  }
+
+  // Default: group by category
+  const groups = {};
+  for (const app of apps) {
+    const cat = app.category || 'Other';
+    (groups[cat] = groups[cat] || []).push(app);
+  }
+  // Known categories in CATEGORY_ORDER first, then any others alphabetically
+  const cats = Object.keys(groups).sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  let html = '', first = true;
+  for (const cat of cats) {
+    const list = groups[cat].slice().sort((a, b) => a.name.localeCompare(b.name));
+    html += `<div class="section-label"${first ? '' : ' style="margin-top:24px"'}>${cat}</div>`
+          + `<div class="app-grid">${renderCards(list)}</div>`;
+    first = false;
+  }
+  container.innerHTML = html;
+}
+
+function showLibrary() {
+  document.getElementById('landing-view').style.display = 'none';
+  document.getElementById('library-view').style.display = 'block';
+  const s = document.getElementById('library-search');
+  if (s) { s.value = ''; renderLibrary(''); s.focus(); }
+}
+
+function showLanding() {
+  document.getElementById('library-view').style.display = 'none';
+  document.getElementById('landing-view').style.display = 'block';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+  catch { return ''; }
+}
+
+function renderCards(apps, showDate) {
   return apps.map(app => {
     const tag = app.picker ? 'div' : 'a';
     const action = app.picker
       ? `onclick="openKappPicker('${app.slug}','${app.name}')"`
       : `href="/${app.slug}/"`;
+    const dateLine = (showDate && app.created)
+      ? `<div class="desc card-date">Added ${fmtDate(app.created)}</div>` : '';
     return `
     <${tag} class="app-card" ${action}>
       <div class="accent" style="background:${app.color}"></div>
@@ -569,6 +667,7 @@ function renderCards(apps) {
         <div class="card-info">
           <h3>${app.name}</h3>
           <div class="desc">${app.desc}</div>
+          ${dateLine}
         </div>
       </div>
     </${tag}>`;

@@ -362,7 +362,7 @@ async function loadParts() {
 
     const lastCreatedAt = partsPageKeys[partsPage];
     if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/parts/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/parts/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     partsData = res.submissions || [];
@@ -513,7 +513,7 @@ async function loadRaces() {
 
     const lastCreatedAt = racesPageKeys[racesPage];
     if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/races/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/races/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     racesData = res.submissions || [];
@@ -646,7 +646,7 @@ async function loadContacts() {
     const lastCreatedAt = contactsPageKeys[contactsPage];
     let kql = '';
     if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/contacts/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/contacts/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     contactsData = res.submissions || [];
@@ -782,7 +782,7 @@ async function loadSwag() {
     const lastCreatedAt = swagPageKeys[swagPage];
     let kql = '';
     if (lastCreatedAt) kql = 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/swag/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/swag/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     swagData = res.submissions || [];

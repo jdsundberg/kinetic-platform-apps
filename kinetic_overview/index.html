@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic Data &mdash; Platform Overview</title>
+<style>
+:root {
+  --blue: #242F4D;
+  --blue-light: #2d3a5c;
+  --blue-dark: #1a2240;
+  --orange: #F36C24;
+  --orange-light: #ff8a4c;
+  --green: #27ae60;
+  --red: #e74c3c;
+  --yellow: #f39c12;
+  --gray: #6b7a99;
+  --light: #f0f2f7;
+  --white: #ffffff;
+  --text: #2c3e50;
+  --text-light: #7f8c9b;
+  --slide-max: 960px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--light); color: var(--text); overflow: hidden; height: 100vh; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 280px; min-width: 280px; background: var(--blue); color: white;
+  display: flex; flex-direction: column; transition: margin-left .3s;
+  z-index: 10; overflow-y: auto;
+}
+.sidebar.collapsed { margin-left: -280px; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.sidebar-header h2 { font-size: 15px; font-weight: 600; letter-spacing: .5px; }
+.sidebar-header .subtitle { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+.module-list { flex: 1; padding: 8px 0; }
+.module-item {
+  padding: 10px 20px; cursor: pointer; font-size: 13px;
+  border-left: 3px solid transparent; transition: all .2s;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.module-item:hover { background: rgba(255,255,255,.06); }
+.module-item.active { background: rgba(255,255,255,.1); border-left-color: var(--orange); }
+.module-item .mod-num {
+  background: rgba(255,255,255,.15); border-radius: 4px; min-width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+}
+.module-item.active .mod-num { background: var(--orange); }
+.module-item .mod-info { flex: 1; }
+.module-item .mod-title { font-weight: 500; line-height: 1.3; }
+
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.1);
+  font-size: 11px; color: rgba(255,255,255,.4);
+}
+
+/* Main area */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Top bar */
+.topbar {
+  height: 48px; background: white; border-bottom: 1px solid #e0e4eb;
+  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+}
+.btn-toggle {
+  background: none; border: 1px solid #d0d5de; border-radius: 6px; padding: 6px 10px;
+  cursor: pointer; font-size: 16px; color: var(--gray);
+}
+.btn-toggle:hover { background: var(--light); }
+.progress-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
+.progress-bar { flex: 1; height: 4px; background: #e0e4eb; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--orange); border-radius: 2px; transition: width .4s; }
+.progress-text { font-size: 12px; color: var(--gray); min-width: 60px; text-align: right; }
+.nav-btns { display: flex; gap: 6px; }
+.nav-btn {
+  background: white; border: 1px solid #d0d5de; border-radius: 6px; padding: 6px 14px;
+  cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: all .15s;
+}
+.nav-btn:hover { background: var(--light); border-color: var(--orange); color: var(--orange); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+.nav-btn:disabled:hover { background: white; border-color: #d0d5de; color: var(--text); }
+
+/* Slide area */
+.slide-area {
+  flex: 1; overflow-y: auto; display: flex; justify-content: center;
+  padding: 40px 40px 60px;
+}
+.slide {
+  width: 100%; max-width: var(--slide-max); animation: fadeIn .35s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Slide content */
+.slide h1 { font-size: 36px; font-weight: 700; color: var(--blue); margin-bottom: 8px; line-height: 1.2; }
+.slide .slide-subtitle { font-size: 18px; color: var(--gray); margin-bottom: 32px; font-weight: 400; }
+.slide h2 { font-size: 24px; font-weight: 600; color: var(--blue); margin: 32px 0 16px; }
+.slide h3 { font-size: 18px; font-weight: 600; color: var(--blue-light); margin: 24px 0 12px; }
+.slide p { font-size: 16px; line-height: 1.7; margin-bottom: 16px; color: var(--text); }
+.slide ul, .slide ol { margin: 0 0 20px 24px; }
+.slide li { font-size: 16px; line-height: 1.7; margin-bottom: 8px; }
+.slide li strong { color: var(--blue); }
+.slide .highlight { color: var(--orange); font-weight: 600; }
+
+/* Title slide */
+.title-slide { text-align: center; padding-top: 60px; }
+.title-slide h1 { font-size: 44px; margin-bottom: 12px; }
+.title-slide .slide-subtitle { font-size: 22px; margin-bottom: 40px; }
+.title-badge {
+  display: inline-block; background: var(--orange); color: white; padding: 8px 24px;
+  border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 32px;
+}
+
+/* Metric cards */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.metric {
+  background: white; border-radius: 12px; padding: 24px; text-align: center;
+  border: 1px solid #e0e4eb; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.metric .val { font-size: 36px; font-weight: 700; color: var(--blue); }
+.metric .val.orange { color: var(--orange); }
+.metric .val.green { color: var(--green); }
+.metric .label { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+
+/* Comparison */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+.compare-col { background: white; border-radius: 12px; padding: 24px; border: 1px solid #e0e4eb; }
+.compare-col.old { border-top: 3px solid var(--red); }
+.compare-col.new { border-top: 3px solid var(--green); }
+.compare-col h3 { margin-top: 0; font-size: 16px; }
+.compare-col.old h3 { color: var(--red); }
+.compare-col.new h3 { color: var(--green); }
+.compare-col li { font-size: 14px; }
+
+/* Callout boxes */
+.callout {
+  border-radius: 10px; padding: 20px 24px; margin: 20px 0;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.callout-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.callout p { margin: 0; font-size: 15px; }
+.callout.insight { background: #eef2ff; border-left: 4px solid #6366f1; }
+.callout.warning { background: #fff7ed; border-left: 4px solid var(--orange); }
+.callout.success { background: #f0fdf4; border-left: 4px solid var(--green); }
+
+/* Architecture diagram */
+.arch-diagram {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 24px 0;
+}
+.arch-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.arch-box {
+  background: white; border: 2px solid var(--blue); border-radius: 10px;
+  padding: 14px 24px; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--blue); min-width: 140px;
+}
+.arch-box.highlight { background: var(--orange); border-color: var(--orange); color: white; }
+.arch-box.secondary { border-color: var(--gray); color: var(--gray); border-style: dashed; }
+.arch-box.green { border-color: var(--green); color: var(--green); }
+.arch-arrow { color: var(--gray); font-size: 20px; }
+
+/* Pill tags */
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.pill {
+  background: #eef2ff; color: #4338ca; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+.pill.orange { background: #fff7ed; color: #c2410c; }
+.pill.green { background: #f0fdf4; color: #15803d; }
+.pill.blue { background: #eff6ff; color: #1d4ed8; }
+
+/* Section divider */
+.section-divider {
+  text-align: center; padding: 80px 0 40px;
+}
+.section-divider .mod-badge {
+  background: var(--orange); color: white; display: inline-block;
+  padding: 6px 16px; border-radius: 16px; font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+}
+.section-divider h1 { font-size: 40px; margin-bottom: 12px; }
+.section-divider p { font-size: 18px; color: var(--gray); max-width: 600px; margin: 0 auto; }
+
+/* Case study cards */
+.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.case-card {
+  background: white; border-radius: 12px; padding: 20px;
+  border: 1px solid #e0e4eb; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.case-card .industry { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); font-weight: 700; margin-bottom: 6px; }
+.case-card h3 { margin: 0 0 8px; font-size: 16px; color: var(--blue); }
+.case-card p { font-size: 13px; color: var(--gray); margin: 0; line-height: 1.5; }
+
+/* Timeline */
+.timeline { margin: 24px 0; }
+.timeline-item {
+  display: flex; gap: 16px; padding: 16px 0;
+  border-bottom: 1px solid #e0e4eb;
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-year { min-width: 60px; font-size: 14px; font-weight: 700; color: var(--orange); padding-top: 2px; }
+.timeline-content { font-size: 15px; line-height: 1.6; }
+.timeline-content strong { color: var(--blue); }
+
+/* Feature grid */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.feature-card {
+  background: white; border-radius: 12px; padding: 20px;
+  border: 1px solid #e0e4eb; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.feature-card .feat-icon { font-size: 28px; margin-bottom: 8px; }
+.feature-card h3 { margin: 0 0 8px; font-size: 15px; color: var(--blue); }
+.feature-card p { font-size: 13px; color: var(--gray); margin: 0; line-height: 1.5; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; }
+  .sidebar.collapsed { margin-left: -280px; }
+  .slide-area { padding: 24px 20px 40px; }
+  .compare { grid-template-columns: 1fr; }
+  .case-grid { grid-template-columns: 1fr; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .slide h1 { font-size: 28px; }
+  .title-slide h1 { font-size: 32px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Keyboard hint */
+.key-hint {
+  position: fixed; bottom: 16px; right: 16px; background: rgba(0,0,0,.7);
+  color: white; padding: 6px 14px; border-radius: 8px; font-size: 11px;
+  opacity: .5; pointer-events: none;
+}
+.key-hint kbd {
+  background: rgba(255,255,255,.2); padding: 2px 6px; border-radius: 3px;
+  font-family: inherit; margin: 0 2px;
+}
+
+@media print {
+  .sidebar, .topbar, .nav-btns, .key-hint, .btn-toggle { display: none !important; }
+  .slide-area { padding: 20px; overflow: visible; }
+  .slide { page-break-after: always; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Kinetic Data</h2>
+      <div class="subtitle">Platform Overview</div>
+    </div>
+    <div class="module-list" id="moduleList"></div>
+    <div class="sidebar-footer">
+      <div style="font-size:10px;color:rgba(255,255,255,.3)">Use arrow keys or buttons to navigate</div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="btn-toggle" onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText"></div>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="btnPrev" onclick="prevSlide()">&larr; Prev</button>
+        <button class="nav-btn" id="btnNext" onclick="nextSlide()">Next &rarr;</button>
+      </div>
+    </div>
+    <div class="slide-area" id="slideArea"></div>
+  </div>
+</div>
+
+<div class="key-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate &middot; <kbd>S</kbd> sidebar</div>
+
+<script>
+const MODULES = [
+  {
+    title: 'Introduction',
+    slides: [
+      {
+        type: 'title',
+        html: `
+          <div class="title-slide">
+            <div class="title-badge">Platform Overview</div>
+            <h1>Kinetic Data</h1>
+            <p class="slide-subtitle">The enterprise platform where AI and workflow converge &mdash; purpose-built for the organizations that run the world.</p>
+            <p style="font-size:14px;color:var(--gray);margin-top:32px">kineticdata.com</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Who Is Kinetic Data',
+    slides: [
+      {
+        html: `
+          <h1>Who Is Kinetic Data</h1>
+          <p class="slide-subtitle">Enterprise workflow infrastructure since 1998</p>
+          <p>Kinetic Data builds the <span class="highlight">Kinetic Platform</span> &mdash; enterprise middleware that connects people, processes, and systems into unified digital workflows. We work with organizations that can't afford downtime: government agencies, defense contractors, healthcare systems, financial institutions, and critical infrastructure operators.</p>
+          <div class="metrics">
+            <div class="metric"><div class="val orange">25+</div><div class="label">Years in Enterprise</div></div>
+            <div class="metric"><div class="val">500+</div><div class="label">Enterprise Deployments</div></div>
+            <div class="metric"><div class="val green">99.9%</div><div class="label">Uptime SLA</div></div>
+            <div class="metric"><div class="val orange">0</div><div class="label">Vendor Lock-in</div></div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128161;</div>
+            <p>Kinetic Data is not a startup chasing the AI hype cycle. We're a proven enterprise infrastructure company that recognized early that AI would transform how applications are built, deployed, and operated &mdash; and built the platform to make that transformation safe and scalable.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Our Story</h1>
+          <p class="slide-subtitle">Two decades of solving the hardest enterprise problems</p>
+          <div class="timeline">
+            <div class="timeline-item"><div class="timeline-year">1998</div><div class="timeline-content"><strong>Founded</strong> &mdash; Built to solve enterprise service management for organizations where BMC Remedy and ServiceNow couldn't flex enough</div></div>
+            <div class="timeline-item"><div class="timeline-year">2010</div><div class="timeline-content"><strong>Workflow Engine</strong> &mdash; Purpose-built task engine with visual workflow builder, handler ecosystem, and deferral-based orchestration</div></div>
+            <div class="timeline-item"><div class="timeline-year">2015</div><div class="timeline-content"><strong>Platform Evolution</strong> &mdash; Transformed from a service catalog into a full application platform with KQL, form engine, and security model</div></div>
+            <div class="timeline-item"><div class="timeline-year">2020</div><div class="timeline-content"><strong>Cloud Native</strong> &mdash; Kubernetes-based deployment, API-first architecture, modern React front-end framework</div></div>
+            <div class="timeline-item"><div class="timeline-year">2025</div><div class="timeline-content"><strong>AI-Native</strong> &mdash; AI skills system, MCP integration, natural language platform management, AI-assisted application development</div></div>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'The Kinetic Platform',
+    slides: [
+      {
+        html: `
+          <div class="section-divider">
+            <div class="mod-badge">Core Technology</div>
+            <h1>The Kinetic Platform</h1>
+            <p>A complete enterprise application platform with workflow orchestration, form engine, security model, and integration framework &mdash; all API-first.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Platform Architecture</h1>
+          <p class="slide-subtitle">Six layers that work together to power enterprise applications</p>
+          <div class="arch-diagram">
+            <div class="arch-row">
+              <div class="arch-box">React Front-End</div>
+              <div class="arch-box">Custom Apps</div>
+              <div class="arch-box secondary">AI Agents</div>
+            </div>
+            <div class="arch-arrow">&#8595;</div>
+            <div class="arch-row">
+              <div class="arch-box highlight">Core API</div>
+              <div class="arch-box highlight">Task API</div>
+              <div class="arch-box highlight">Integrator API</div>
+            </div>
+            <div class="arch-arrow">&#8595;</div>
+            <div class="arch-row">
+              <div class="arch-box">Form Engine</div>
+              <div class="arch-box">Workflow Engine</div>
+              <div class="arch-box">Security (KSL)</div>
+            </div>
+            <div class="arch-arrow">&#8595;</div>
+            <div class="arch-row">
+              <div class="arch-box secondary">Databases</div>
+              <div class="arch-box secondary">External APIs</div>
+              <div class="arch-box secondary">Email / LDAP</div>
+              <div class="arch-box secondary">Cloud Services</div>
+            </div>
+          </div>
+          <div class="callout insight">
+            <div class="callout-icon">&#128736;</div>
+            <p>Every layer is accessible via REST API. Nothing is locked behind a UI. This is what makes AI-driven development and management possible &mdash; an agent can do anything a human administrator can do.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>Platform Capabilities</h1>
+          <p class="slide-subtitle">What you get out of the box</p>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feat-icon">&#128203;</div>
+              <h3>Form Engine</h3>
+              <p>Dynamic forms with field-level security, conditional logic, expression evaluation, validations, and multi-page workflows. Forms are data &mdash; defined in JSON, rendered at runtime.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#9881;</div>
+              <h3>Workflow Engine</h3>
+              <p>Visual workflow builder with 200+ pre-built handlers. Supports deferrals, loops, branching, error handling, and parallel execution. Event-driven triggers on any submission lifecycle change.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128274;</div>
+              <h3>Security Model (KSL)</h3>
+              <p>Attribute-based access control with Kinetic Security Language expressions. Row-level, field-level, and API-level policies. Evaluated at runtime against user attributes, team membership, and submission data.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128268;</div>
+              <h3>Integration Framework</h3>
+              <p>Connections and Operations for external system integration. Bridge adapters for real-time data queries. Handler ecosystem for workflow-embedded integrations with retry and error management.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128269;</div>
+              <h3>KQL Query Language</h3>
+              <p>Purpose-built query language for submission data. Supports equality, range, prefix matching, and compound queries backed by configurable indexes. Server-side filtering at scale.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#127760;</div>
+              <h3>Multi-Tenancy</h3>
+              <p>Spaces provide complete isolation &mdash; separate data, users, security policies, and configurations. One platform instance serves many organizations with zero bleed-through.</p>
+            </div>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Why AI Changes Everything',
+    slides: [
+      {
+        html: `
+          <h1>The Enterprise Software Crisis</h1>
+          <p class="slide-subtitle">Why the old model is breaking down</p>
+          <p>Enterprise IT has a compounding problem: the backlog of applications that need to be built, maintained, and updated grows faster than teams can hire. Traditional approaches &mdash; 12-month RFPs, 18-month implementations, armies of consultants &mdash; can't keep pace.</p>
+          <div class="compare">
+            <div class="compare-col old">
+              <h3>Traditional Approach</h3>
+              <ul>
+                <li>6-18 month implementation cycles</li>
+                <li>$500K-$5M per major application</li>
+                <li>Vendor lock-in with proprietary stacks</li>
+                <li>Rigid &mdash; every change requires a project</li>
+                <li>IT as bottleneck, not enabler</li>
+                <li>Shadow IT fills the gaps</li>
+              </ul>
+            </div>
+            <div class="compare-col new">
+              <h3>AI-Powered on Kinetic</h3>
+              <ul>
+                <li>Days to weeks for production apps</li>
+                <li>Platform cost, not project cost</li>
+                <li>Open APIs, portable data, no lock-in</li>
+                <li>Adaptive &mdash; AI modifies apps in conversation</li>
+                <li>IT as platform team, enabling builders</li>
+                <li>Governed building replaces shadow IT</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout warning">
+            <div class="callout-icon">&#9888;&#65039;</div>
+            <p>Organizations that don't adopt AI-powered development aren't just slower &mdash; they're accumulating technical debt at an accelerating rate while their competitors build and iterate in real time.</p>
+          </div>`
+      },
+      {
+        html: `
+          <h1>AI Needs a Platform</h1>
+          <p class="slide-subtitle">Why AI alone isn't enough &mdash; and what it needs to be enterprise-ready</p>
+          <p>AI can generate code, but code isn't an application. An enterprise application needs <span class="highlight">data persistence</span>, <span class="highlight">security</span>, <span class="highlight">workflow orchestration</span>, <span class="highlight">integration</span>, and <span class="highlight">governance</span>. AI generates the parts &mdash; the platform provides the whole.</p>
+          <h3>What AI is great at</h3>
+          <ul>
+            <li><strong>Generating UI</strong> &mdash; HTML, CSS, JavaScript from a natural language description</li>
+            <li><strong>Writing integrations</strong> &mdash; API calls, data transformations, handler code</li>
+            <li><strong>Defining data models</strong> &mdash; Forms, fields, indexes, validation rules</li>
+            <li><strong>Building workflows</strong> &mdash; Event triggers, branching logic, notification chains</li>
+          </ul>
+          <h3>What AI needs from a platform</h3>
+          <ul>
+            <li><strong>Persistent data layer</strong> &mdash; Submissions, forms, KQL-queryable storage</li>
+            <li><strong>Security enforcement</strong> &mdash; Authentication, authorization, row-level access control</li>
+            <li><strong>Workflow runtime</strong> &mdash; Execute business processes, handle errors, manage deferrals</li>
+            <li><strong>API surface</strong> &mdash; Programmatic access to every platform capability</li>
+            <li><strong>Governance</strong> &mdash; Audit trails, approval flows, change management</li>
+          </ul>`
+      }
+    ]
+  },
+  {
+    title: 'The AI-Native Advantage',
+    slides: [
+      {
+        html: `
+          <h1>Built for AI from the Ground Up</h1>
+          <p class="slide-subtitle">Why Kinetic is uniquely positioned for the AI era</p>
+          <p>Most enterprise platforms were designed for human operators clicking through UIs. Kinetic was designed <span class="highlight">API-first</span> &mdash; every operation, from creating a form to deploying a workflow, is a REST call. This architecture decision, made years before the AI era, is exactly what AI agents need.</p>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feat-icon">&#129302;</div>
+              <h3>AI Skills System</h3>
+              <p>Structured knowledge files that teach AI agents how to work with the platform correctly. Not prompt engineering &mdash; real documentation that prevents the mistakes AI would otherwise make.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128279;</div>
+              <h3>MCP Integration</h3>
+              <p>Model Context Protocol server gives AI agents direct, authenticated access to every platform API. Create kapps, deploy workflows, manage users &mdash; all through natural conversation.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128230;</div>
+              <h3>App Packaging</h3>
+              <p>Applications defined as JSON (app.json) &mdash; forms, fields, indexes, seed data. AI generates the definition, the platform installs it. Reproducible, versionable, portable.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feat-icon">&#128640;</div>
+              <h3>Zero-Dependency Apps</h3>
+              <p>Single HTML file per application, no build step, no npm. AI can generate a complete enterprise application in one conversation and deploy it immediately.</p>
+            </div>
+          </div>`
+      },
+      {
+        html: `
+          <h1>What We've Proven</h1>
+          <p class="slide-subtitle">Real results from AI-powered development on Kinetic</p>
+          <div class="metrics">
+            <div class="metric"><div class="val orange">50+</div><div class="label">Apps Built with AI</div></div>
+            <div class="metric"><div class="val">12</div><div class="label">Industries Covered</div></div>
+            <div class="metric"><div class="val green">Days</div><div class="label">Not Months</div></div>
+            <div class="metric"><div class="val orange">1</div><div class="label">Platform, Many Apps</div></div>
+          </div>
+          <div class="case-grid">
+            <div class="case-card">
+              <div class="industry">Healthcare</div>
+              <h3>Clinical Equipment Tracking</h3>
+              <p>Patient safety reporting, credentialing management, and equipment lifecycle tracking &mdash; built in days, running in production.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Finance</div>
+              <h3>Capital Asset Management</h3>
+              <p>Multi-entity asset tracking with depreciation schedules, compliance reporting, and approval workflows.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Government</div>
+              <h3>Grants &amp; Compliance</h3>
+              <p>Grant application intake, review workflows, compliance tracking, and audit-ready reporting with full submission history.</p>
+            </div>
+            <div class="case-card">
+              <div class="industry">Operations</div>
+              <h3>Security Operations Center</h3>
+              <p>Incident response, vulnerability management, threat intelligence, and SLA tracking with real-time dashboards.</p>
+            </div>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Building on Kinetic',
+    slides: [
+      {
+        html: `
+          <h1>How Companies Build on Kinetic</h1>
+          <p class="slide-subtitle">Three paths to production, all on one platform</p>
+          <h3>1. AI-Assisted Development</h3>
+          <p>Describe what you need in natural language. AI generates the app.json (data model), index.html (UI), seed data, and workflows. The platform installs and runs it. Iterate through conversation.</p>
+          <h3>2. Professional Development</h3>
+          <p>Development teams use the React front-end framework, workflow builder, and integration tools to build custom applications. The platform provides the data layer, security, and runtime &mdash; developers focus on business logic.</p>
+          <h3>3. Citizen Development</h3>
+          <p>Business users create forms, define workflows, and configure integrations through the visual tools. IT governs the platform; business owns the applications. No shadow IT required.</p>
+          <div class="callout success">
+            <div class="callout-icon">&#9989;</div>
+            <p><strong>All three approaches produce first-class applications</strong> &mdash; same security model, same APIs, same data layer. An app built by AI is indistinguishable from one built by a senior developer. The platform doesn't care how the application was created; it enforces the same governance either way.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'The Future',
+    slides: [
+      {
+        html: `
+          <h1>Why This Is the Future</h1>
+          <p class="slide-subtitle">The enterprise application landscape is being rewritten</p>
+          <p>The organizations that will thrive in the next decade are the ones that can <span class="highlight">build and adapt applications at the speed of their business</span> &mdash; not at the speed of their IT backlog. This requires three things:</p>
+          <h3>1. A platform that AI agents can operate</h3>
+          <p>API-first architecture means AI doesn't need to learn a UI &mdash; it calls the same APIs that power the UI. Every platform capability is programmatically accessible, auditable, and reversible.</p>
+          <h3>2. Governance that scales with velocity</h3>
+          <p>When anyone can build an app, security and compliance can't be gatekeepers &mdash; they must be guardrails. KSL security policies, attribute-based access control, and submission-level audit trails are enforced by the platform, not by process.</p>
+          <h3>3. Workflow that bridges humans and machines</h3>
+          <p>The future isn't fully automated or fully manual &mdash; it's orchestrated. Kinetic workflows handle the handoffs between AI agents, human approvers, external systems, and time-based triggers. The workflow engine is the connective tissue of the AI-powered enterprise.</p>
+          <div class="callout insight">
+            <div class="callout-icon">&#128302;</div>
+            <p>The question isn't whether AI will build your enterprise applications. It's whether you'll have a platform ready to run them safely, securely, and at scale when it does.</p>
+          </div>`
+      }
+    ]
+  },
+  {
+    title: 'Get Started',
+    slides: [
+      {
+        html: `
+          <div class="title-slide">
+            <div class="title-badge">Next Steps</div>
+            <h1>Build Something Today</h1>
+            <p class="slide-subtitle">The fastest way to understand Kinetic is to use it.</p>
+            <div style="text-align:left;max-width:600px;margin:32px auto 0">
+              <h3 style="margin-bottom:16px;color:var(--blue)">Start Here</h3>
+              <ul style="font-size:16px;line-height:2">
+                <li><strong>See a demo</strong> &mdash; Watch AI build a complete enterprise app in conversation</li>
+                <li><strong>Try the platform</strong> &mdash; Get a sandbox environment and build your first kapp</li>
+                <li><strong>Bring a use case</strong> &mdash; Tell us your hardest workflow problem and we'll prototype it live</li>
+                <li><strong>Talk architecture</strong> &mdash; Our team will map Kinetic to your infrastructure</li>
+              </ul>
+            </div>
+            <div style="margin-top:40px">
+              <div class="pills" style="justify-content:center">
+                <span class="pill orange">kineticdata.com</span>
+                <span class="pill blue">API-First</span>
+                <span class="pill green">AI-Native</span>
+                <span class="pill">Enterprise-Grade</span>
+              </div>
+            </div>
+          </div>`
+      }
+    ]
+  }
+];
+
+// ── Engine ──────────────────────────────────────────────────────
+let currentSlide = 0;
+const allSlides = [];
+const moduleStarts = [];
+
+MODULES.forEach((mod, mi) => {
+  moduleStarts.push(allSlides.length);
+  mod.slides.forEach(s => {
+    allSlides.push({ ...s, moduleIndex: mi });
+  });
+});
+
+function renderModuleList() {
+  const list = document.getElementById('moduleList');
+  list.innerHTML = MODULES.map((mod, i) => `
+    <div class="module-item ${i === 0 ? 'active' : ''}" data-mod="${i}" onclick="goToModule(${i})">
+      <div class="mod-num">${i === 0 ? '&#9733;' : i}</div>
+      <div class="mod-info">
+        <div class="mod-title">${mod.title}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSlide() {
+  const slide = allSlides[currentSlide];
+  document.getElementById('slideArea').innerHTML = `<div class="slide">${slide.html}</div>`;
+
+  const pct = ((currentSlide + 1) / allSlides.length * 100).toFixed(0);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${currentSlide + 1} / ${allSlides.length}`;
+
+  document.getElementById('btnPrev').disabled = currentSlide === 0;
+  document.getElementById('btnNext').disabled = currentSlide === allSlides.length - 1;
+
+  document.querySelectorAll('.module-item').forEach(el => {
+    const mi = parseInt(el.dataset.mod);
+    el.classList.toggle('active', mi === slide.moduleIndex);
+  });
+
+  document.getElementById('slideArea').scrollTop = 0;
+}
+
+function nextSlide() { if (currentSlide < allSlides.length - 1) { currentSlide++; renderSlide(); } }
+function prevSlide() { if (currentSlide > 0) { currentSlide--; renderSlide(); } }
+function goToModule(mi) { currentSlide = moduleStarts[mi]; renderSlide(); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  if (e.key === 's' || e.key === 'S') { toggleSidebar(); }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 60) { diff > 0 ? prevSlide() : nextSlide(); }
+});
+
+renderModuleList();
+renderSlide();
+</script>
+</body>
+</html>

@@ -1,0 +1,887 @@
+{
+  "name": "CMDB",
+  "slug": "cmdb",
+  "description": "Configuration Management Database — system of record for CIs, relationships & service maps (consumed by other apps via WebAPIs + routines)",
+  "category": "Foundation",
+  "icon": "database",
+  "color": "#7C3AED",
+  "bg": "#F3E8FF",
+  "forms": [
+    {
+      "slug": "ci-classes",
+      "name": "CI Classes",
+      "description": "Catalog of Configuration Item classes (Server, Database, Application, Service, etc.) — schema definitions used by CIs.",
+      "submissionLabelExpression": "${values('Class Name')}",
+      "fields": [
+        {
+          "name": "Class Name"
+        },
+        {
+          "name": "Form Slug"
+        },
+        {
+          "name": "Parent Class"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Icon"
+        },
+        {
+          "name": "Color"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Default Criticality"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Class Name]",
+          "values[Form Slug]",
+          "values[Category]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "environments",
+      "name": "Environments",
+      "description": "Environment registry (Production, Staging, Dev, Test, DR).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Tier"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Name]",
+          "values[Tier]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "locations",
+      "name": "Locations",
+      "description": "Physical and cloud locations (datacenters, AWS regions, offices).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Provider"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Tier"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Name]",
+          "values[Type]",
+          "values[Provider]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "discovery-sources",
+      "name": "Discovery Sources",
+      "description": "Where CI data comes from — Manual, Scanner, Cloud API, Agent, Integration.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Last Run"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Name]",
+          "values[Type]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "datacenters",
+      "name": "Datacenters",
+      "description": "Physical datacenters and cloud regions (top of the location hierarchy).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "DC Type"
+        },
+        {
+          "name": "Provider"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Tier"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Provider]",
+          "values[Status]",
+          "values[Tier]"
+        ],
+        "compound": [
+          [
+            "values[Provider]",
+            "values[Region]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "clusters",
+      "name": "Clusters",
+      "description": "Compute or data clusters (Kubernetes, database HA pairs, etc.).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Cluster Type"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Node Count"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Cluster Type]",
+          "values[Status]",
+          "values[Environment]",
+          "values[Criticality]"
+        ],
+        "compound": [
+          [
+            "values[Environment]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "servers",
+      "name": "Servers",
+      "description": "Physical and virtual servers — the compute fabric.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "FQDN"
+        },
+        {
+          "name": "IP Address"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "OS"
+        },
+        {
+          "name": "OS Version"
+        },
+        {
+          "name": "CPU Cores"
+        },
+        {
+          "name": "RAM GB"
+        },
+        {
+          "name": "Storage GB"
+        },
+        {
+          "name": "Virtual"
+        },
+        {
+          "name": "Hypervisor"
+        },
+        {
+          "name": "Serial Number"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[FQDN]",
+          "values[IP Address]",
+          "values[Status]",
+          "values[Environment]",
+          "values[Criticality]",
+          "values[OS]"
+        ],
+        "compound": [
+          [
+            "values[Environment]",
+            "values[Status]"
+          ],
+          [
+            "values[Environment]",
+            "values[Criticality]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "databases",
+      "name": "Databases",
+      "description": "Database instances and schemas (PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, Redis).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Engine"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Host"
+        },
+        {
+          "name": "Port"
+        },
+        {
+          "name": "Database Name"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Size GB"
+        },
+        {
+          "name": "HA Mode"
+        },
+        {
+          "name": "Backup Policy"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Engine]",
+          "values[Status]",
+          "values[Environment]",
+          "values[Criticality]"
+        ],
+        "compound": [
+          [
+            "values[Environment]",
+            "values[Status]"
+          ],
+          [
+            "values[Engine]",
+            "values[Environment]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "applications",
+      "name": "Applications",
+      "description": "Application Configuration Items — deployed app instances or services.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Vendor"
+        },
+        {
+          "name": "App Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Tech Stack"
+        },
+        {
+          "name": "Repository URL"
+        },
+        {
+          "name": "Documentation URL"
+        },
+        {
+          "name": "Port"
+        },
+        {
+          "name": "URL"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Status]",
+          "values[Environment]",
+          "values[App Type]",
+          "values[Criticality]",
+          "values[Owner Team]"
+        ],
+        "compound": [
+          [
+            "values[Environment]",
+            "values[Status]"
+          ],
+          [
+            "values[Owner Team]",
+            "values[Environment]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "services",
+      "name": "Services",
+      "description": "Business, technical, and application services — the top of the service map.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Service Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Business Owner"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "SLA Tier"
+        },
+        {
+          "name": "Lifecycle Stage"
+        },
+        {
+          "name": "URL"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Service Type]",
+          "values[Status]",
+          "values[Criticality]",
+          "values[SLA Tier]"
+        ],
+        "compound": [
+          [
+            "values[Service Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Criticality]",
+            "values[SLA Tier]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "network-devices",
+      "name": "Network Devices",
+      "description": "Switches, routers, firewalls, load balancers.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Device Type"
+        },
+        {
+          "name": "Vendor"
+        },
+        {
+          "name": "Model"
+        },
+        {
+          "name": "Management IP"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "OS Version"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Device Type]",
+          "values[Status]",
+          "values[Environment]",
+          "values[Criticality]"
+        ],
+        "compound": [
+          [
+            "values[Device Type]",
+            "values[Environment]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "storage",
+      "name": "Storage",
+      "description": "Storage arrays, NAS, object storage, block volumes.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "Name"
+        },
+        {
+          "name": "Storage Type"
+        },
+        {
+          "name": "Vendor"
+        },
+        {
+          "name": "Capacity TB"
+        },
+        {
+          "name": "Used TB"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Owner Team"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "Protocol"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Last Discovered"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[Name]",
+          "values[Storage Type]",
+          "values[Status]",
+          "values[Environment]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "relationships",
+      "name": "Relationships",
+      "description": "Typed edges between CIs — the graph that powers dependency and impact analysis.",
+      "submissionLabelExpression": "${values('Source Name')} ${values('Type')} ${values('Target Name')}",
+      "fields": [
+        {
+          "name": "Relationship ID"
+        },
+        {
+          "name": "Source Class"
+        },
+        {
+          "name": "Source CI Number"
+        },
+        {
+          "name": "Source Name"
+        },
+        {
+          "name": "Target Class"
+        },
+        {
+          "name": "Target CI Number"
+        },
+        {
+          "name": "Target Name"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Direction"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Discovery Source"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Source CI Number]",
+          "values[Target CI Number]",
+          "values[Type]",
+          "values[Status]",
+          "values[Source Class]",
+          "values[Target Class]"
+        ],
+        "compound": [
+          [
+            "values[Source Class]",
+            "values[Source CI Number]"
+          ],
+          [
+            "values[Target Class]",
+            "values[Target CI Number]"
+          ],
+          [
+            "values[Source CI Number]",
+            "values[Type]"
+          ],
+          [
+            "values[Target CI Number]",
+            "values[Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "ci-change-log",
+      "name": "CI Change Log",
+      "description": "Audit trail of CI changes — created, attribute updates, retire events. Append-only.",
+      "submissionLabelExpression": "${values('CI Number')} ${values('Action')}",
+      "fields": [
+        {
+          "name": "CI Number"
+        },
+        {
+          "name": "CI Class"
+        },
+        {
+          "name": "CI Name"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Field"
+        },
+        {
+          "name": "Old Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Actor"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Timestamp"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CI Number]",
+          "values[CI Class]",
+          "values[Action]",
+          "values[Actor]",
+          "values[Source]"
+        ],
+        "compound": [
+          [
+            "values[CI Number]",
+            "values[Timestamp]"
+          ]
+        ]
+      }
+    }
+  ]
+}

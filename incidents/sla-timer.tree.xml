@@ -1,0 +1,142 @@
+<taskTree schema_version="1.0" version="1">
+<name>SLA Timer</name>
+<author></author>
+<notes></notes>
+<lastID>7</lastID>
+<request>
+  <task name="Start" id="start" definition_id="system_start_v1" x="200" y="50">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>false</defers>
+    <deferrable>false</deferrable>
+    <visible>true</visible>
+    <parameters>
+
+    </parameters>
+    <messages>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete">system_wait_v1_2</task>
+    </dependents>
+  </task>
+  <task name="Wait 50" id="system_wait_v1_2" definition_id="system_wait_v1" x="200" y="150">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>true</defers>
+    <deferrable>true</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="Time to wait" label="Time to wait" required="true">&lt;%= begin; require &apos;time&apos;; t = ((Time.parse(@values[&apos;SLA Due&apos;]) - Time.parse(@values[&apos;Opened At&apos;])) * 0.5).to_i; t &lt; 30 ? 30 : t; rescue; ((({&apos;Critical&apos;=&gt;4,&apos;High&apos;=&gt;8,&apos;Medium&apos;=&gt;24,&apos;Low&apos;=&gt;72}[@values[&apos;Priority&apos;]] || 24) * 3600 * 0.5).to_i); end %&gt;</parameter>
+      <parameter id="Time unit" label="Time unit" required="false">Second</parameter>
+    </parameters>
+    <messages>
+      <message type="Create"></message>
+      <message type="Update"></message>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete">kinetic_core_api_connection_v1_3</task>
+    </dependents>
+  </task>
+  <task name="Fetch Status 50" id="kinetic_core_api_connection_v1_3" definition_id="kinetic_core_api_connection_v1" x="200" y="250">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>false</defers>
+    <deferrable>false</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="method" label="method" required="true">GET</parameter>
+      <parameter id="path" label="path" required="true">/app/api/v1/submissions/&lt;%= @submission[&apos;Id&apos;] %&gt;?include=values</parameter>
+      <parameter id="body" label="body" required="false"></parameter>
+      <parameter id="extra_headers" label="extra_headers" required="false"></parameter>
+      <parameter id="error_handling" label="error_handling" required="true">Error Message</parameter>
+    </parameters>
+    <messages>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete" label="Still Open" value="[&apos;Open&apos;,&apos;In Progress&apos;,&apos;On Hold&apos;].include?((JSON.parse(@results[&apos;Fetch Status 50&apos;][&apos;Response Body&apos;])[&apos;submission&apos;][&apos;values&apos;][&apos;Status&apos;] rescue &apos;Open&apos;))">kinetic_core_api_connection_v1_4</task>
+    </dependents>
+  </task>
+  <task name="Notify 50" id="kinetic_core_api_connection_v1_4" definition_id="kinetic_core_api_connection_v1" x="200" y="350">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>false</defers>
+    <deferrable>false</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="method" label="method" required="true">POST</parameter>
+      <parameter id="path" label="path" required="true">/app/api/v1/kapps/incidents/forms/notifications/submissions?completed=true</parameter>
+      <parameter id="body" label="body" required="false">{&quot;values&quot;:{&quot;To Username&quot;:&quot;Incident Managers&quot;,&quot;Incident Id&quot;:&quot;&lt;%= @submission[&apos;Id&apos;] %&gt;&quot;,&quot;Incident Number&quot;:&quot;&lt;%= @values[&apos;Incident Number&apos;] %&gt;&quot;,&quot;Title&quot;:&quot;&lt;%= @values[&apos;Title&apos;].to_s.gsub(&apos;\\&apos;,&apos;\\\\&apos;).gsub(&apos;&quot;&apos;,&apos;\\&quot;&apos;) %&gt;&quot;,&quot;Threshold&quot;:&quot;50&quot;,&quot;Priority&quot;:&quot;&lt;%= @values[&apos;Priority&apos;] %&gt;&quot;,&quot;Message&quot;:&quot;Incident &lt;%= @values[&apos;Incident Number&apos;] %&gt; reached 50% of SLA window and is still &lt;%= JSON.parse(@results[&apos;Fetch Status 50&apos;][&apos;Response Body&apos;])[&apos;submission&apos;][&apos;values&apos;][&apos;Status&apos;] rescue &apos;Open&apos; %&gt;.&quot;,&quot;Read&quot;:&quot;No&quot;},&quot;coreState&quot;:&quot;Submitted&quot;}</parameter>
+      <parameter id="extra_headers" label="extra_headers" required="false"></parameter>
+      <parameter id="error_handling" label="error_handling" required="true">Error Message</parameter>
+    </parameters>
+    <messages>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete">system_wait_v1_5</task>
+    </dependents>
+  </task>
+  <task name="Wait 90" id="system_wait_v1_5" definition_id="system_wait_v1" x="200" y="450">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>true</defers>
+    <deferrable>true</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="Time to wait" label="Time to wait" required="true">&lt;%= begin; require &apos;time&apos;; t = ((Time.parse(@values[&apos;SLA Due&apos;]) - Time.parse(@values[&apos;Opened At&apos;])) * 0.4).to_i; t &lt; 30 ? 30 : t; rescue; ((({&apos;Critical&apos;=&gt;4,&apos;High&apos;=&gt;8,&apos;Medium&apos;=&gt;24,&apos;Low&apos;=&gt;72}[@values[&apos;Priority&apos;]] || 24) * 3600 * 0.4).to_i); end %&gt;</parameter>
+      <parameter id="Time unit" label="Time unit" required="false">Second</parameter>
+    </parameters>
+    <messages>
+      <message type="Create"></message>
+      <message type="Update"></message>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete">kinetic_core_api_connection_v1_6</task>
+    </dependents>
+  </task>
+  <task name="Fetch Status 90" id="kinetic_core_api_connection_v1_6" definition_id="kinetic_core_api_connection_v1" x="200" y="550">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>false</defers>
+    <deferrable>false</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="method" label="method" required="true">GET</parameter>
+      <parameter id="path" label="path" required="true">/app/api/v1/submissions/&lt;%= @submission[&apos;Id&apos;] %&gt;?include=values</parameter>
+      <parameter id="body" label="body" required="false"></parameter>
+      <parameter id="extra_headers" label="extra_headers" required="false"></parameter>
+      <parameter id="error_handling" label="error_handling" required="true">Error Message</parameter>
+    </parameters>
+    <messages>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+      <task type="Complete" label="Still Open" value="[&apos;Open&apos;,&apos;In Progress&apos;,&apos;On Hold&apos;].include?((JSON.parse(@results[&apos;Fetch Status 90&apos;][&apos;Response Body&apos;])[&apos;submission&apos;][&apos;values&apos;][&apos;Status&apos;] rescue &apos;Open&apos;))">kinetic_core_api_connection_v1_7</task>
+    </dependents>
+  </task>
+  <task name="Notify 90" id="kinetic_core_api_connection_v1_7" definition_id="kinetic_core_api_connection_v1" x="200" y="650">
+    <version>1</version>
+    <configured>true</configured>
+    <defers>false</defers>
+    <deferrable>false</deferrable>
+    <visible>true</visible>
+    <parameters>
+      <parameter id="method" label="method" required="true">POST</parameter>
+      <parameter id="path" label="path" required="true">/app/api/v1/kapps/incidents/forms/notifications/submissions?completed=true</parameter>
+      <parameter id="body" label="body" required="false">{&quot;values&quot;:{&quot;To Username&quot;:&quot;Incident Managers&quot;,&quot;Incident Id&quot;:&quot;&lt;%= @submission[&apos;Id&apos;] %&gt;&quot;,&quot;Incident Number&quot;:&quot;&lt;%= @values[&apos;Incident Number&apos;] %&gt;&quot;,&quot;Title&quot;:&quot;&lt;%= @values[&apos;Title&apos;].to_s.gsub(&apos;\\&apos;,&apos;\\\\&apos;).gsub(&apos;&quot;&apos;,&apos;\\&quot;&apos;) %&gt;&quot;,&quot;Threshold&quot;:&quot;90&quot;,&quot;Priority&quot;:&quot;&lt;%= @values[&apos;Priority&apos;] %&gt;&quot;,&quot;Message&quot;:&quot;Incident &lt;%= @values[&apos;Incident Number&apos;] %&gt; reached 90% of SLA window and is still &lt;%= JSON.parse(@results[&apos;Fetch Status 90&apos;][&apos;Response Body&apos;])[&apos;submission&apos;][&apos;values&apos;][&apos;Status&apos;] rescue &apos;Open&apos; %&gt;.&quot;,&quot;Read&quot;:&quot;No&quot;},&quot;coreState&quot;:&quot;Submitted&quot;}</parameter>
+      <parameter id="extra_headers" label="extra_headers" required="false"></parameter>
+      <parameter id="error_handling" label="error_handling" required="true">Error Message</parameter>
+    </parameters>
+    <messages>
+      <message type="Complete"></message>
+    </messages>
+    <dependents>
+
+    </dependents>
+  </task>
+</request>
+</taskTree>

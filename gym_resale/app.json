@@ -1,0 +1,356 @@
+{
+  "name": "Gym Resale",
+  "slug": "gym-resale",
+  "description": "Used fitness equipment resale — inventory, hours, inquiries & consignment",
+  "category": "Retail",
+  "icon": "activity",
+  "color": "#2E7D32",
+  "bg": "#E8F5E9",
+  "forms": [
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Used workout equipment inventory",
+      "fields": [
+        {
+          "name": "SKU",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Brand"
+        },
+        {
+          "name": "Condition"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Asking Price"
+        },
+        {
+          "name": "Cost"
+        },
+        {
+          "name": "Acquisition Source"
+        },
+        {
+          "name": "Acquisition Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Consignment Number"
+        },
+        {
+          "name": "Listed By"
+        }
+      ],
+      "submissionLabelExpression": "${values('Name')} (${values('SKU')})",
+      "indexes": {
+        "single": [
+          "values[SKU]",
+          "values[Category]",
+          "values[Brand]",
+          "values[Condition]",
+          "values[Status]",
+          "values[Location]",
+          "values[Consignment Number]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Category]"
+          ],
+          [
+            "values[Status]",
+            "values[Condition]"
+          ],
+          [
+            "values[Category]",
+            "values[Brand]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "description": "Staff roster",
+      "fields": [
+        {
+          "name": "Employee ID",
+          "required": true
+        },
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Hourly Rate"
+        },
+        {
+          "name": "Hire Date"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} (${values('Employee ID')})",
+      "indexes": {
+        "single": [
+          "values[Employee ID]",
+          "values[Role]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Role]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "time-entries",
+      "name": "Time Entries",
+      "description": "Employee hours worked",
+      "fields": [
+        {
+          "name": "Entry ID",
+          "required": true
+        },
+        {
+          "name": "Employee ID",
+          "required": true
+        },
+        {
+          "name": "Employee Name"
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Activity"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Date')} (${values('Hours')}h)",
+      "indexes": {
+        "single": [
+          "values[Entry ID]",
+          "values[Employee ID]",
+          "values[Date]",
+          "values[Status]",
+          "values[Activity]"
+        ],
+        "compound": [
+          [
+            "values[Employee ID]",
+            "values[Date]"
+          ],
+          [
+            "values[Employee ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Status]",
+            "values[Date]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "inquiries",
+      "name": "Customer Inquiries",
+      "description": "Customer questions and leads",
+      "fields": [
+        {
+          "name": "Inquiry Number",
+          "required": true
+        },
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Interest"
+        },
+        {
+          "name": "Product SKU"
+        },
+        {
+          "name": "Product Name"
+        },
+        {
+          "name": "Message",
+          "rows": 3
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Assigned To"
+        },
+        {
+          "name": "Created Date"
+        },
+        {
+          "name": "Last Contact Date"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values('Inquiry Number')} - ${values('Customer Name')}",
+      "indexes": {
+        "single": [
+          "values[Inquiry Number]",
+          "values[Interest]",
+          "values[Status]",
+          "values[Source]",
+          "values[Assigned To]",
+          "values[Created Date]",
+          "values[Product SKU]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Interest]"
+          ],
+          [
+            "values[Assigned To]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "consignments",
+      "name": "Consignments",
+      "description": "Items consigned to the store for sale on the consignor's behalf",
+      "fields": [
+        {
+          "name": "Consignment Number",
+          "required": true
+        },
+        {
+          "name": "Consignor Name",
+          "required": true
+        },
+        {
+          "name": "Consignor Email"
+        },
+        {
+          "name": "Consignor Phone"
+        },
+        {
+          "name": "Item Description",
+          "rows": 2
+        },
+        {
+          "name": "Brand"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Condition"
+        },
+        {
+          "name": "Listed Price"
+        },
+        {
+          "name": "Commission Rate"
+        },
+        {
+          "name": "Date Received"
+        },
+        {
+          "name": "Date Sold"
+        },
+        {
+          "name": "Sale Price"
+        },
+        {
+          "name": "Consignor Payout"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Product SKU"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "submissionLabelExpression": "${values('Consignment Number')} - ${values('Item Description')}",
+      "indexes": {
+        "single": [
+          "values[Consignment Number]",
+          "values[Consignor Name]",
+          "values[Status]",
+          "values[Category]",
+          "values[Date Received]",
+          "values[Product SKU]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Category]"
+          ],
+          [
+            "values[Consignor Name]",
+            "values[Status]"
+          ]
+        ]
+      }
+    }
+  ]
+}

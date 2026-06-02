@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto Shop Manager</title>
+<style>
+:root {
+  --blue:#1A2A4F;--blue-light:#2A3D6B;--orange:#E8741C;--orange-light:#FF8F3F;
+  --green:#2E7D32;--red:#C62828;--yellow:#F57F17;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#6A1B9A;--teal:#00695C;--indigo:#283593;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,116,28,.1)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light);position:sticky;top:0;z-index:1}
+td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px}
+tbody tr:hover{background:#FAFAFA}
+tbody tr.clickable{cursor:pointer}tbody tr.clickable:hover{background:#EEF1F6}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0F1B33 0%,#1A2A4F 50%,#243966 100%)}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{margin-bottom:16px}
+.login-box .login-btn{width:100%;padding:12px;background:var(--orange);color:white;border:none;border-radius:8px;font-weight:600;font-size:15px}
+.login-box .login-btn:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;margin-left:32px}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;white-space:nowrap;transition:all .15s}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:var(--orange)}
+
+.main{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.main.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:14px}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:white;border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::before{background:var(--indigo)}.kpi.green::before{background:var(--green)}.kpi.orange::before{background:var(--orange)}.kpi.red::before{background:var(--red)}.kpi.purple::before{background:var(--purple)}.kpi.teal::before{background:var(--teal)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0}
+.kpi.blue .val{color:var(--indigo)}.kpi.green .val{color:var(--green)}.kpi.orange .val{color:var(--orange)}.kpi.red .val{color:var(--red)}.kpi.purple .val{color:var(--purple)}.kpi.teal .val{color:var(--teal)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-gray{background:#F1F3F4;color:#5F6368}
+.badge-blue{background:#E3F2FD;color:#1565C0}
+.badge-orange{background:#FFF3E0;color:#E65100}
+.badge-red{background:#FDECEA;color:#C62828}
+.badge-yellow{background:#FFF8E1;color:#F57F17}
+.badge-purple{background:#F3E5F5;color:#6A1B9A}
+.badge-teal{background:#E0F2F1;color:#00695C}
+
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none}
+.btn-primary{background:var(--blue);color:white}.btn-primary:hover{background:var(--blue-light)}
+.btn-accent{background:var(--orange);color:white}.btn-accent:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border)}.btn-secondary:hover{background:#E8EAED}
+.btn-danger{background:var(--red);color:white}
+.btn-success{background:var(--green);color:white}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:6px}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.toolbar input[type="text"]{flex:1;min-width:180px}
+.toolbar select{min-width:120px;width:auto}
+
+.pagination{display:flex;gap:8px;align-items:center;justify-content:center;padding:12px}
+.pagination .page-info{font-size:12px;color:var(--gray);font-weight:600}
+
+#modal{display:none;position:fixed;inset:0;z-index:200}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--white);margin:40px auto;width:90%;max-width:640px;max-height:85vh;overflow-y:auto;border-radius:16px;box-shadow:var(--shadow-lg);padding:28px;z-index:1}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-close{position:absolute;top:12px;right:16px;background:none;font-size:22px;color:var(--gray);padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--light)}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);transition:transform .3s;z-index:300}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.error{background:var(--red)}
+
+.empty{text-align:center;padding:40px;color:var(--gray);font-size:13px}
+.loading{text-align:center;padding:40px;color:var(--gray)}
+
+@media(max-width:900px){.field-row,.field-row-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Auto Shop Manager</h1>
+    <div class="sub">Parts inventory, vehicle warranties, and shop staff skills</div>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://ai-labs.kinopsdev.io">
+    <label>Username</label>
+    <input id="login-user" value="john">
+    <label>Password</label>
+    <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Auto Shop <span>Manager</span></div>
+    <nav>
+      <button onclick="switchTab('parts')" data-tab="parts">Parts Inventory</button>
+      <button onclick="switchTab('warranties')" data-tab="warranties">Warranties</button>
+      <button onclick="switchTab('employees')" data-tab="employees">Employees & Skills</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ═══ PARTS ═══ -->
+  <div class="main" id="tab-parts">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Car Parts Inventory</div>
+      <button class="btn btn-accent btn-sm" onclick="showPartModal()">+ Add Part</button>
+    </div>
+    <div class="page-sub">Parts on hand, by make/model and category</div>
+    <div id="parts-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="parts-search" placeholder="Search parts..." oninput="renderParts()">
+      <select id="parts-make-filter" onchange="resetParts();loadParts()">
+        <option value="">All Makes</option>
+        <option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option>
+        <option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option>
+        <option>Volkswagen</option><option>Tesla</option><option>Jeep</option><option>Dodge</option>
+        <option>Universal</option>
+      </select>
+      <select id="parts-cat-filter" onchange="resetParts();loadParts()">
+        <option value="">All Categories</option>
+        <option>Engine</option><option>Brakes</option><option>Suspension</option>
+        <option>Electrical</option><option>HVAC</option><option>Exhaust</option>
+        <option>Fuel System</option><option>Transmission</option><option>Cooling</option>
+        <option>Steering</option><option>Tires</option><option>Body</option>
+      </select>
+      <select id="parts-status-filter" onchange="resetParts();loadParts()">
+        <option value="">All Status</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Part Name</th><th>Part #</th><th>Category</th><th>Make</th><th>Model</th><th>Price</th><th>Qty</th><th>Status</th></tr></thead>
+        <tbody id="parts-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="parts-pagination"></div>
+  </div>
+
+  <!-- ═══ WARRANTIES ═══ -->
+  <div class="main" id="tab-warranties">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Vehicle Warranties</div>
+      <button class="btn btn-accent btn-sm" onclick="showWarrantyModal()">+ Add Warranty</button>
+    </div>
+    <div class="page-sub">Customer warranty coverage by vehicle</div>
+    <div id="warranties-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="warranties-search" placeholder="Search by customer, VIN, plate..." oninput="renderWarranties()">
+      <select id="warranties-status-filter" onchange="resetWarranties();loadWarranties()">
+        <option value="">All Status</option><option>Active</option><option>Expiring Soon</option><option>Expired</option>
+      </select>
+      <select id="warranties-make-filter" onchange="resetWarranties();loadWarranties()">
+        <option value="">All Makes</option>
+        <option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option>
+        <option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option>
+        <option>Volkswagen</option><option>Tesla</option><option>Jeep</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Customer</th><th>Vehicle</th><th>VIN</th><th>Coverage</th><th>End Date</th><th>Mileage</th><th>Status</th></tr></thead>
+        <tbody id="warranties-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="warranties-pagination"></div>
+  </div>
+
+  <!-- ═══ EMPLOYEES ═══ -->
+  <div class="main" id="tab-employees">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div class="page-title" style="margin:0">Employees & Skills</div>
+      <button class="btn btn-accent btn-sm" onclick="showEmployeeModal()">+ Add Employee</button>
+    </div>
+    <div class="page-sub">Find techs by make specialty and skill level</div>
+    <div id="employees-kpis" class="kpi-row"></div>
+    <div class="toolbar">
+      <input type="text" id="employees-search" placeholder="Search by name, model, certs..." oninput="renderEmployees()">
+      <select id="employees-make-filter" onchange="resetEmployees();loadEmployees()">
+        <option value="">All Specialties</option>
+        <option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option>
+        <option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option>
+        <option>Volkswagen</option><option>Tesla</option><option>Jeep</option><option>Universal</option>
+      </select>
+      <select id="employees-skill-filter" onchange="resetEmployees();loadEmployees()">
+        <option value="">All Skill Levels</option><option>Expert</option><option>Senior</option><option>Junior</option>
+      </select>
+      <select id="employees-status-filter" onchange="resetEmployees();loadEmployees()">
+        <option value="">All Status</option><option>Active</option><option>On Leave</option><option>Inactive</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Specialty Make</th><th>Models</th><th>Skill</th><th>Years</th><th>Rate</th><th>Status</th></tr></thead>
+        <tbody id="employees-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="employees-pagination"></div>
+  </div>
+</div>
+
+<div id="modal"><div class="modal-overlay" onclick="closeModal()"></div><div class="modal-content" id="modal-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KAPP = 'auto-shop';
+let API = { url: '', user: '', pass: '' };
+
+function authHeader() { return 'Basic ' + btoa(API.user + ':' + API.pass); }
+
+async function api(path, opts = {}) {
+  const headers = { 'Authorization': authHeader(), 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  const res = await fetch(API.url + path, { ...opts, headers });
+  if (!res.ok) { const t = await res.text(); throw new Error(t.slice(0, 200)); }
+  const t = await res.text();
+  return t ? JSON.parse(t) : {};
+}
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, f) { return (sub.values && sub.values[f]) || ''; }
+function toast(msg, err) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show' + (err ? ' error' : ''); setTimeout(() => el.className = 'toast', 3000); }
+function openModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal').style.display = 'block'; }
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+async function doLogin() {
+  const url = document.getElementById('login-url').value.trim().replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  try {
+    const res = await fetch(url + '/app/api/v1/me', { headers: { 'Authorization': 'Basic ' + btoa(user + ':' + pass) } });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const me = await res.json();
+    API = { url: url + '/app/api/v1', user, pass };
+    document.getElementById('user-display').textContent = me.displayName || me.username || user;
+    showApp();
+  } catch (e) {
+    const el = document.getElementById('login-error');
+    el.textContent = e.message; el.style.display = 'block';
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  switchTab('parts');
+}
+
+function doLogout() {
+  API = { url: '', user: '', pass: '' };
+  try { sessionStorage.removeItem('kinetic_session'); } catch {}
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function restoreSession() {
+  try {
+    const s = sessionStorage.getItem('kinetic_session');
+    if (!s) return false;
+    const sess = JSON.parse(s);
+    API = { url: (sess.url || '') + '/app/api/v1', user: sess.user, pass: sess.pass || atob(sess.auth || '').split(':')[1] || '' };
+    document.getElementById('user-display').textContent = sess.displayName || sess.user;
+    return true;
+  } catch { return false; }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.main').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'parts') loadParts();
+  else if (tab === 'warranties') loadWarranties();
+  else if (tab === 'employees') loadEmployees();
+}
+
+/* ══════════════════════════════════════ PARTS ══════════════════════════════════════ */
+let partsData = [], partsPage = 1, partsPageKeys = { 1: null }, partsHasNext = false;
+function resetParts(){ partsPage=1; partsPageKeys={1:null}; partsHasNext=false; }
+
+async function loadParts() {
+  try {
+    const make = document.getElementById('parts-make-filter').value;
+    const cat = document.getElementById('parts-cat-filter').value;
+    const status = document.getElementById('parts-status-filter').value;
+    const filters = [];
+    if (make) filters.push(`values[Compatible Make]="${make}"`);
+    if (cat) filters.push(`values[Category]="${cat}"`);
+    if (status) filters.push(`values[Status]="${status}"`);
+    let kql = filters.join(' AND ');
+
+    const lastCreatedAt = partsPageKeys[partsPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/parts/submissions?limit=25&include=details,values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    partsData = res.submissions || [];
+    partsHasNext = !!res.nextPageToken;
+    if (partsHasNext && partsData.length) partsPageKeys[partsPage + 1] = partsData[partsData.length - 1].createdAt;
+    renderParts();
+  } catch (e) { toast('Failed to load parts: ' + e.message, true); }
+}
+
+function renderParts() {
+  const q = (document.getElementById('parts-search').value || '').toLowerCase();
+  const filtered = partsData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Part Name'),v(s,'Part Number'),v(s,'Manufacturer'),v(s,'Compatible Model')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = partsData.length;
+  const inStock = partsData.filter(s => v(s,'Status') === 'In Stock').length;
+  const low = partsData.filter(s => v(s,'Status') === 'Low Stock').length;
+  const out = partsData.filter(s => v(s,'Status') === 'Out of Stock').length;
+  const totalValue = partsData.reduce((sum, s) => sum + (parseFloat(v(s,'Price')) || 0) * (parseInt(v(s,'Quantity')) || 0), 0);
+  document.getElementById('parts-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">In Stock</div><div class="val">${inStock}</div></div>
+    <div class="kpi orange"><div class="label">Low Stock</div><div class="val">${low}</div></div>
+    <div class="kpi red"><div class="label">Out of Stock</div><div class="val">${out}</div></div>
+    <div class="kpi teal"><div class="label">Page Value</div><div class="val">$${totalValue.toLocaleString()}</div></div>
+  `;
+
+  const tbody = document.getElementById('parts-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No parts found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'In Stock' ? 'badge-green' : s === 'Low Stock' ? 'badge-yellow' : s === 'Out of Stock' ? 'badge-red' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showPartDetail('${esc(s.id)}')">
+      <td><strong>${esc(v(s,'Part Name'))}</strong></td>
+      <td style="font-family:monospace;font-size:11px">${esc(v(s,'Part Number'))}</td>
+      <td><span class="badge badge-purple">${esc(v(s,'Category'))}</span></td>
+      <td>${esc(v(s,'Compatible Make'))}</td>
+      <td>${esc(v(s,'Compatible Model'))}</td>
+      <td>$${esc(v(s,'Price'))}</td>
+      <td>${esc(v(s,'Quantity'))}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('parts-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="partsPrev()" ${partsPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${partsPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="partsNext()" ${!partsHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function partsPrev() { if (partsPage > 1) { partsPage--; loadParts(); } }
+function partsNext() { if (partsHasNext) { partsPage++; loadParts(); } }
+
+function showPartDetail(id) {
+  const s = partsData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Part Name'))}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Part #:</strong> <span style="font-family:monospace">${esc(v(s,'Part Number'))}</span></div>
+      <div><strong style="color:var(--gray)">Category:</strong> <span class="badge badge-purple">${esc(v(s,'Category'))}</span></div>
+      <div><strong style="color:var(--gray)">Make:</strong> ${esc(v(s,'Compatible Make'))}</div>
+      <div><strong style="color:var(--gray)">Model:</strong> ${esc(v(s,'Compatible Model'))}</div>
+      <div><strong style="color:var(--gray)">Manufacturer:</strong> ${esc(v(s,'Manufacturer'))}</div>
+      <div><strong style="color:var(--gray)">Bin:</strong> ${esc(v(s,'Bin Location'))}</div>
+      <div><strong style="color:var(--gray)">Price:</strong> $${esc(v(s,'Price'))}</div>
+      <div><strong style="color:var(--gray)">Quantity:</strong> ${esc(v(s,'Quantity'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showPartModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Part</h2>
+    <div class="field-group"><label>Part Name</label><input id="p-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Part Number</label><input id="p-number"></div>
+      <div class="field-group"><label>Category</label><select id="p-cat"><option>Engine</option><option>Brakes</option><option>Suspension</option><option>Electrical</option><option>HVAC</option><option>Exhaust</option><option>Fuel System</option><option>Transmission</option><option>Cooling</option><option>Steering</option><option>Tires</option><option>Body</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Compatible Make</label><input id="p-make" list="make-list"></div>
+      <div class="field-group"><label>Compatible Model</label><input id="p-model"></div>
+    </div>
+    <datalist id="make-list"><option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option><option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option><option>Volkswagen</option><option>Tesla</option><option>Jeep</option><option>Dodge</option><option>Universal</option></datalist>
+    <div class="field-row">
+      <div class="field-group"><label>Manufacturer</label><input id="p-mfr"></div>
+      <div class="field-group"><label>Bin Location</label><input id="p-bin" placeholder="e.g. A-12-3"></div>
+    </div>
+    <div class="field-row-3">
+      <div class="field-group"><label>Price</label><input id="p-price" placeholder="0.00"></div>
+      <div class="field-group"><label>Quantity</label><input id="p-qty" type="number" value="0"></div>
+      <div class="field-group"><label>Status</label><select id="p-status"><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></select></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="p-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="savePart()">Add Part</button>
+    </div>
+  `);
+}
+
+async function savePart() {
+  const values = {
+    'Part Name': document.getElementById('p-name').value,
+    'Part Number': document.getElementById('p-number').value,
+    'Category': document.getElementById('p-cat').value,
+    'Compatible Make': document.getElementById('p-make').value,
+    'Compatible Model': document.getElementById('p-model').value,
+    'Manufacturer': document.getElementById('p-mfr').value,
+    'Bin Location': document.getElementById('p-bin').value,
+    'Price': document.getElementById('p-price').value,
+    'Quantity': document.getElementById('p-qty').value,
+    'Status': document.getElementById('p-status').value,
+    'Notes': document.getElementById('p-notes').value,
+  };
+  if (!values['Part Name']) { toast('Part Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/parts/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Part added'); resetParts(); loadParts();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════ WARRANTIES ══════════════════════════════════════ */
+let warrantiesData = [], warrantiesPage = 1, warrantiesPageKeys = { 1: null }, warrantiesHasNext = false;
+function resetWarranties(){ warrantiesPage=1; warrantiesPageKeys={1:null}; warrantiesHasNext=false; }
+
+async function loadWarranties() {
+  try {
+    const status = document.getElementById('warranties-status-filter').value;
+    const make = document.getElementById('warranties-make-filter').value;
+    const filters = [];
+    if (status) filters.push(`values[Status]="${status}"`);
+    if (make) filters.push(`values[Make]="${make}"`);
+    let kql = filters.join(' AND ');
+
+    const lastCreatedAt = warrantiesPageKeys[warrantiesPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/warranties/submissions?limit=25&include=details,values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    warrantiesData = res.submissions || [];
+    warrantiesHasNext = !!res.nextPageToken;
+    if (warrantiesHasNext && warrantiesData.length) warrantiesPageKeys[warrantiesPage + 1] = warrantiesData[warrantiesData.length - 1].createdAt;
+    renderWarranties();
+  } catch (e) { toast('Failed to load warranties: ' + e.message, true); }
+}
+
+function renderWarranties() {
+  const q = (document.getElementById('warranties-search').value || '').toLowerCase();
+  const filtered = warrantiesData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Customer Name'),v(s,'VIN'),v(s,'License Plate'),v(s,'Customer Email'),v(s,'Model')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = warrantiesData.length;
+  const active = warrantiesData.filter(s => v(s,'Status') === 'Active').length;
+  const expiring = warrantiesData.filter(s => v(s,'Status') === 'Expiring Soon').length;
+  const expired = warrantiesData.filter(s => v(s,'Status') === 'Expired').length;
+  document.getElementById('warranties-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+    <div class="kpi orange"><div class="label">Expiring Soon</div><div class="val">${expiring}</div></div>
+    <div class="kpi red"><div class="label">Expired</div><div class="val">${expired}</div></div>
+  `;
+
+  const tbody = document.getElementById('warranties-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No warranties found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'Active' ? 'badge-green' : s === 'Expiring Soon' ? 'badge-yellow' : s === 'Expired' ? 'badge-red' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showWarrantyDetail('${esc(s.id)}')">
+      <td><strong>${esc(v(s,'Customer Name'))}</strong></td>
+      <td>${esc(v(s,'Year'))} ${esc(v(s,'Make'))} ${esc(v(s,'Model'))}</td>
+      <td style="font-family:monospace;font-size:11px">${esc(v(s,'VIN'))}</td>
+      <td><span class="badge badge-blue">${esc(v(s,'Coverage Type'))}</span></td>
+      <td>${esc(v(s,'End Date'))}</td>
+      <td>${esc(v(s,'Current Mileage'))} / ${esc(v(s,'Mileage Limit'))}</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('warranties-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="warrantiesPrev()" ${warrantiesPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${warrantiesPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="warrantiesNext()" ${!warrantiesHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function warrantiesPrev() { if (warrantiesPage > 1) { warrantiesPage--; loadWarranties(); } }
+function warrantiesNext() { if (warrantiesHasNext) { warrantiesPage++; loadWarranties(); } }
+
+function showWarrantyDetail(id) {
+  const s = warrantiesData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Customer Name'))}</h2>
+    <div style="font-size:14px;color:var(--gray);margin-bottom:12px">${esc(v(s,'Year'))} ${esc(v(s,'Make'))} ${esc(v(s,'Model'))} &middot; ${esc(v(s,'License Plate'))}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Customer Email'))}</div>
+      <div><strong style="color:var(--gray)">Phone:</strong> ${esc(v(s,'Customer Phone'))}</div>
+      <div><strong style="color:var(--gray)">VIN:</strong> <span style="font-family:monospace;font-size:11px">${esc(v(s,'VIN'))}</span></div>
+      <div><strong style="color:var(--gray)">Coverage:</strong> <span class="badge badge-blue">${esc(v(s,'Coverage Type'))}</span></div>
+      <div><strong style="color:var(--gray)">Provider:</strong> ${esc(v(s,'Provider'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+      <div><strong style="color:var(--gray)">Start:</strong> ${esc(v(s,'Start Date'))}</div>
+      <div><strong style="color:var(--gray)">End:</strong> ${esc(v(s,'End Date'))}</div>
+      <div><strong style="color:var(--gray)">Mileage Limit:</strong> ${esc(v(s,'Mileage Limit'))}</div>
+      <div><strong style="color:var(--gray)">Current:</strong> ${esc(v(s,'Current Mileage'))}</div>
+    </div>
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showWarrantyModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Warranty</h2>
+    <div class="field-row">
+      <div class="field-group"><label>Customer Name</label><input id="w-name"></div>
+      <div class="field-group"><label>Customer Email</label><input id="w-email" type="email"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Customer Phone</label><input id="w-phone"></div>
+      <div class="field-group"><label>License Plate</label><input id="w-plate"></div>
+    </div>
+    <div class="field-group"><label>VIN</label><input id="w-vin" placeholder="17 chars"></div>
+    <div class="field-row-3">
+      <div class="field-group"><label>Year</label><input id="w-year" type="number"></div>
+      <div class="field-group"><label>Make</label><input id="w-make" list="make-list-w"></div>
+      <div class="field-group"><label>Model</label><input id="w-model"></div>
+    </div>
+    <datalist id="make-list-w"><option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option><option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option><option>Volkswagen</option><option>Tesla</option><option>Jeep</option></datalist>
+    <div class="field-row">
+      <div class="field-group"><label>Coverage Type</label><select id="w-cov"><option>Bumper-to-Bumper</option><option>Powertrain</option><option>Comprehensive</option><option>Battery & Drive Unit</option></select></div>
+      <div class="field-group"><label>Provider</label><input id="w-prov"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Start Date</label><input id="w-start" type="date"></div>
+      <div class="field-group"><label>End Date</label><input id="w-end" type="date"></div>
+    </div>
+    <div class="field-row-3">
+      <div class="field-group"><label>Mileage Limit</label><input id="w-limit" type="number"></div>
+      <div class="field-group"><label>Current Mileage</label><input id="w-curr" type="number"></div>
+      <div class="field-group"><label>Status</label><select id="w-status"><option>Active</option><option>Expiring Soon</option><option>Expired</option></select></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="w-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveWarranty()">Add Warranty</button>
+    </div>
+  `);
+}
+
+async function saveWarranty() {
+  const values = {
+    'Customer Name': document.getElementById('w-name').value,
+    'Customer Email': document.getElementById('w-email').value,
+    'Customer Phone': document.getElementById('w-phone').value,
+    'License Plate': document.getElementById('w-plate').value,
+    'VIN': document.getElementById('w-vin').value,
+    'Year': document.getElementById('w-year').value,
+    'Make': document.getElementById('w-make').value,
+    'Model': document.getElementById('w-model').value,
+    'Coverage Type': document.getElementById('w-cov').value,
+    'Provider': document.getElementById('w-prov').value,
+    'Start Date': document.getElementById('w-start').value,
+    'End Date': document.getElementById('w-end').value,
+    'Mileage Limit': document.getElementById('w-limit').value,
+    'Current Mileage': document.getElementById('w-curr').value,
+    'Status': document.getElementById('w-status').value,
+    'Notes': document.getElementById('w-notes').value,
+  };
+  if (!values['Customer Name']) { toast('Customer Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/warranties/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Warranty added'); resetWarranties(); loadWarranties();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+/* ══════════════════════════════════════ EMPLOYEES ══════════════════════════════════════ */
+let employeesData = [], employeesPage = 1, employeesPageKeys = { 1: null }, employeesHasNext = false;
+function resetEmployees(){ employeesPage=1; employeesPageKeys={1:null}; employeesHasNext=false; }
+
+async function loadEmployees() {
+  try {
+    const make = document.getElementById('employees-make-filter').value;
+    const skill = document.getElementById('employees-skill-filter').value;
+    const status = document.getElementById('employees-status-filter').value;
+    const filters = [];
+    if (make) filters.push(`values[Specialty Make]="${make}"`);
+    if (skill) filters.push(`values[Skill Level]="${skill}"`);
+    if (status) filters.push(`values[Status]="${status}"`);
+    let kql = filters.join(' AND ');
+
+    const lastCreatedAt = employeesPageKeys[employeesPage];
+    if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=details,values`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    employeesData = res.submissions || [];
+    employeesHasNext = !!res.nextPageToken;
+    if (employeesHasNext && employeesData.length) employeesPageKeys[employeesPage + 1] = employeesData[employeesData.length - 1].createdAt;
+    renderEmployees();
+  } catch (e) { toast('Failed to load employees: ' + e.message, true); }
+}
+
+function renderEmployees() {
+  const q = (document.getElementById('employees-search').value || '').toLowerCase();
+  const filtered = employeesData.filter(s => {
+    if (!q) return true;
+    return [v(s,'Name'),v(s,'Email'),v(s,'Specialty Models'),v(s,'Certifications'),v(s,'Role')].some(f => (f||'').toLowerCase().includes(q));
+  });
+
+  const total = employeesData.length;
+  const active = employeesData.filter(s => v(s,'Status') === 'Active').length;
+  const experts = employeesData.filter(s => v(s,'Skill Level') === 'Expert').length;
+  const onLeave = employeesData.filter(s => v(s,'Status') === 'On Leave').length;
+  document.getElementById('employees-kpis').innerHTML = `
+    <div class="kpi blue"><div class="label">Showing</div><div class="val">${total}</div></div>
+    <div class="kpi green"><div class="label">Active</div><div class="val">${active}</div></div>
+    <div class="kpi purple"><div class="label">Experts</div><div class="val">${experts}</div></div>
+    <div class="kpi orange"><div class="label">On Leave</div><div class="val">${onLeave}</div></div>
+  `;
+
+  const tbody = document.getElementById('employees-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No employees found</td></tr>'; }
+  else {
+    const statusBadge = s => s === 'Active' ? 'badge-green' : s === 'On Leave' ? 'badge-yellow' : 'badge-gray';
+    const skillBadge = s => s === 'Expert' ? 'badge-purple' : s === 'Senior' ? 'badge-blue' : s === 'Junior' ? 'badge-teal' : 'badge-gray';
+    tbody.innerHTML = filtered.map(s => `<tr class="clickable" onclick="showEmployeeDetail('${esc(s.id)}')">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Role'))}</td>
+      <td>${esc(v(s,'Specialty Make'))}</td>
+      <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Specialty Models'))}</td>
+      <td><span class="badge ${skillBadge(v(s,'Skill Level'))}">${esc(v(s,'Skill Level'))}</span></td>
+      <td>${esc(v(s,'Years Experience'))} yrs</td>
+      <td>$${esc(v(s,'Hourly Rate'))}/hr</td>
+      <td><span class="badge ${statusBadge(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    </tr>`).join('');
+  }
+
+  document.getElementById('employees-pagination').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="employeesPrev()" ${employeesPage <= 1 ? 'disabled' : ''}>&larr; Prev</button>
+    <span class="page-info">Page ${employeesPage}</span>
+    <button class="btn btn-secondary btn-sm" onclick="employeesNext()" ${!employeesHasNext ? 'disabled' : ''}>Next &rarr;</button>
+  `;
+}
+
+function employeesPrev() { if (employeesPage > 1) { employeesPage--; loadEmployees(); } }
+function employeesNext() { if (employeesHasNext) { employeesPage++; loadEmployees(); } }
+
+function showEmployeeDetail(id) {
+  const s = employeesData.find(x => x.id === id);
+  if (!s) return;
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>${esc(v(s,'Name'))}</h2>
+    <div style="font-size:14px;color:var(--gray);margin-bottom:12px">${esc(v(s,'Role'))} &middot; ${esc(v(s,'Specialty Make'))} specialist</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13px;margin-bottom:16px">
+      <div><strong style="color:var(--gray)">Email:</strong> ${esc(v(s,'Email'))}</div>
+      <div><strong style="color:var(--gray)">Phone:</strong> ${esc(v(s,'Phone'))}</div>
+      <div><strong style="color:var(--gray)">Skill Level:</strong> ${esc(v(s,'Skill Level'))}</div>
+      <div><strong style="color:var(--gray)">Years Experience:</strong> ${esc(v(s,'Years Experience'))}</div>
+      <div><strong style="color:var(--gray)">Hourly Rate:</strong> $${esc(v(s,'Hourly Rate'))}</div>
+      <div><strong style="color:var(--gray)">Status:</strong> ${esc(v(s,'Status'))}</div>
+    </div>
+    <div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--gray)">Models:</strong> ${esc(v(s,'Specialty Models'))}</div>
+    ${v(s,'Certifications') ? `<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--gray)">Certifications:</strong> ${esc(v(s,'Certifications'))}</div>` : ''}
+    ${v(s,'Notes') ? `<div style="font-size:13px"><strong style="color:var(--gray)">Notes:</strong> ${esc(v(s,'Notes'))}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+function showEmployeeModal() {
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2>Add Employee</h2>
+    <div class="field-group"><label>Name</label><input id="e-name"></div>
+    <div class="field-row">
+      <div class="field-group"><label>Email</label><input id="e-email" type="email"></div>
+      <div class="field-group"><label>Phone</label><input id="e-phone"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Role</label><select id="e-role"><option>Master Technician</option><option>Technician</option><option>Apprentice</option><option>Service Advisor</option><option>Shop Foreman</option></select></div>
+      <div class="field-group"><label>Skill Level</label><select id="e-skill"><option>Expert</option><option>Senior</option><option>Junior</option></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label>Specialty Make</label><input id="e-make" list="make-list-e"></div>
+      <div class="field-group"><label>Specialty Models</label><input id="e-models" placeholder="Comma-separated"></div>
+    </div>
+    <datalist id="make-list-e"><option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option><option>BMW</option><option>Nissan</option><option>Subaru</option><option>Mazda</option><option>Volkswagen</option><option>Tesla</option><option>Jeep</option><option>Universal</option></datalist>
+    <div class="field-group"><label>Certifications</label><textarea id="e-certs" rows="2" placeholder="ASE Master, Toyota Certified, ..."></textarea></div>
+    <div class="field-row-3">
+      <div class="field-group"><label>Years Experience</label><input id="e-years" type="number"></div>
+      <div class="field-group"><label>Hourly Rate</label><input id="e-rate" placeholder="0.00"></div>
+      <div class="field-group"><label>Status</label><select id="e-status"><option>Active</option><option>On Leave</option><option>Inactive</option></select></div>
+    </div>
+    <div class="field-group"><label>Notes</label><textarea id="e-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEmployee()">Add Employee</button>
+    </div>
+  `);
+}
+
+async function saveEmployee() {
+  const values = {
+    'Name': document.getElementById('e-name').value,
+    'Email': document.getElementById('e-email').value,
+    'Phone': document.getElementById('e-phone').value,
+    'Role': document.getElementById('e-role').value,
+    'Skill Level': document.getElementById('e-skill').value,
+    'Specialty Make': document.getElementById('e-make').value,
+    'Specialty Models': document.getElementById('e-models').value,
+    'Certifications': document.getElementById('e-certs').value,
+    'Years Experience': document.getElementById('e-years').value,
+    'Hourly Rate': document.getElementById('e-rate').value,
+    'Status': document.getElementById('e-status').value,
+    'Notes': document.getElementById('e-notes').value,
+  };
+  if (!values['Name']) { toast('Name is required', true); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/employees/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Employee added'); resetEmployees(); loadEmployees();
+  } catch (e) { toast('Failed: ' + e.message, true); }
+}
+
+(function init() {
+  if (restoreSession()) showApp();
+})();
+</script>
+</body>
+</html>
