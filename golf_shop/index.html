@@ -369,12 +369,12 @@ async function loadSchedule() {
 
   try {
     const kql = `values[Date]="${dateStr}"`;
-    const res = await api(`/kapps/${KAPP}/forms/bay-schedule/submissions?limit=25&include=values&q=${encodeURIComponent(kql)}`);
+    const res = await api(`/kapps/${KAPP}/forms/bay-schedule/submissions?limit=25&include=details,values&q=${encodeURIComponent(kql)}`);
     scheduleData = res.submissions || [];
   } catch (e) {
     // Index may not cover — fetch without KQL
     try {
-      const res = await api(`/kapps/${KAPP}/forms/bay-schedule/submissions?limit=25&include=values`);
+      const res = await api(`/kapps/${KAPP}/forms/bay-schedule/submissions?limit=25&include=details,values`);
       scheduleData = (res.submissions || []).filter(s => v(s, 'Date') === dateStr);
     } catch (e2) { toast('Failed to load schedule: ' + e2.message, true); scheduleData = []; }
   }
@@ -517,7 +517,7 @@ async function loadInventory() {
 
     const lastCreatedAt = invPageKeys[invPage];
     if (lastCreatedAt) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
-    let path = `/kapps/${KAPP}/forms/inventory/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/inventory/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     invData = res.submissions || [];
@@ -653,7 +653,7 @@ async function loadEmployees() {
 
     const empLastCreated = empPageKeys[empPage];
     if (empLastCreated) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + empLastCreated + '"';
-    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/employees/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     empData = res.submissions || [];
@@ -755,7 +755,7 @@ async function loadCustomers() {
     let kql = mem ? `values[Membership]="${mem}"` : '';
     const custLastCreated = custPageKeys[custPage];
     if (custLastCreated) kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + custLastCreated + '"';
-    let path = `/kapps/${KAPP}/forms/customers/submissions?limit=25&include=values`;
+    let path = `/kapps/${KAPP}/forms/customers/submissions?limit=25&include=details,values`;
     if (kql) path += '&q=' + encodeURIComponent(kql);
     const res = await api(path);
     custData = res.submissions || [];

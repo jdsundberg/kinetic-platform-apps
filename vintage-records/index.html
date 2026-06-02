@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vintage Records</title>
+<style>
+:root { --blue:#242F4D; --blue-light:#2E3B5E; --orange:#F36C24; --orange-light:#FF8A4C; --green:#34A853; --red:#EA4335; --yellow:#FBBC04; --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff; --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); --shadow-lg:0 4px 12px rgba(0,0,0,.15); --purple:#7B1FA2; --teal:#00695C; --indigo:#283593; --burgundy:#5C1A2B; --amber:#B7791F; --cream:#FAF6EE; }
+*{margin:0;padding:0;box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#333}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a0e08 0%,#3d1a0b 50%,#5C1A2B 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:24px;color:var(--burgundy);margin-bottom:4px} .login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .orange-bar{height:3px;background:var(--amber);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(183,121,31,.15)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--burgundy);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:#7a2438} .login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--burgundy);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:18px;font-weight:700;letter-spacing:.5px} .topbar .logo span{color:var(--amber)}
+.nav-tabs{display:flex;gap:4px;margin-left:24px;flex-wrap:wrap}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.1);color:white} .nav-tabs button.active{background:var(--amber);color:white}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px} .user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--amber);border-color:var(--amber);color:white}
+
+.console{display:none;padding:24px;max-width:1300px;margin:0 auto} .console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--burgundy);margin-bottom:4px} .page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.kpi .val{font-size:26px;font-weight:700} .kpi .label{font-size:11px;color:var(--gray);margin-top:2px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)} tr:hover td{background:var(--light)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-rock{background:#FFF3E0;color:#E65100} .badge-jazz{background:#E3F2FD;color:#1565C0} .badge-folk{background:#E8F5E9;color:#2E7D32}
+.badge-soul{background:#F3E5F5;color:#7B1FA2} .badge-blues{background:#E0F7FA;color:#00695C} .badge-psychedelic{background:#FCE4EC;color:#AD1457}
+.badge-mint{background:#E8F5E9;color:#2E7D32} .badge-near-mint{background:#E8F5E9;color:#1B5E20} .badge-vg{background:#FFF8E1;color:#F57F17} .badge-vg\+{background:#FFFDE7;color:#F9A825} .badge-good{background:#FFEBEE;color:#C62828}
+.badge-in-stock{background:#E8F5E9;color:#2E7D32} .badge-sold{background:#FFEBEE;color:#C62828} .badge-reserved{background:#FFF8E1;color:#F57F17} .badge-coming-soon{background:#E3F2FD;color:#1565C0}
+.badge-active{background:#E8F5E9;color:#2E7D32} .badge-inactive{background:#FFEBEE;color:#C62828}
+.badge-completed{background:#E8F5E9;color:#2E7D32} .badge-in-progress{background:#FFF8E1;color:#F57F17} .badge-pending{background:#ECEFF1;color:#37474F}
+.badge-pending-review{background:#FFF8E1;color:#F57F17} .badge-offer-made{background:#E3F2FD;color:#1565C0} .badge-accepted{background:#E8F5E9;color:#2E7D32} .badge-declined{background:#FFEBEE;color:#C62828}
+.badge-coffee{background:#EFEBE9;color:#4E342E} .badge-tea{background:#E0F2F1;color:#00695C} .badge-pastry{background:#FFF3E0;color:#E65100} .badge-food{background:#F9FBE7;color:#827717}
+.badge-record{background:#FCE4EC;color:#AD1457} .badge-store{background:#E3F2FD;color:#1565C0} .badge-yes{background:#E8F5E9;color:#2E7D32} .badge-no{background:#FFEBEE;color:#C62828}
+.badge-manager{background:#E3F2FD;color:#1565C0} .badge-vinyl-curator{background:#FCE4EC;color:#AD1457} .badge-sales-associate{background:#E8F5E9;color:#2E7D32} .badge-barista{background:#EFEBE9;color:#4E342E} .badge-repair-tech{background:#FFF3E0;color:#E65100}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--burgundy);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:#7a2438}
+.btn-amber{background:var(--amber);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-amber:hover{background:#cf8b2a}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--border)} .btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:560px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--burgundy)} .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px} .modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--burgundy);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)}
+#toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+.price{font-weight:600;color:var(--burgundy)}
+
+/* Storefront grid */
+.store-hero{background:linear-gradient(135deg,#5C1A2B 0%,#3d1a0b 100%);color:white;padding:36px 28px;border-radius:12px;margin-bottom:24px;box-shadow:var(--shadow)}
+.store-hero h1{font-size:30px;letter-spacing:.5px;margin-bottom:6px} .store-hero h1 span{color:var(--amber)}
+.store-hero p{font-size:14px;opacity:.85;max-width:600px}
+.store-hero .hero-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.record-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
+.record-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.record-sleeve{aspect-ratio:1;background:linear-gradient(135deg,#3d1a0b,#5C1A2B);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;overflow:hidden}
+.record-sleeve.no-cover::before{content:'';position:absolute;width:62%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#222 28%,#0a0a0a 30%,#222 60%,#0a0a0a 62%,#222 90%);right:-15%;box-shadow:0 0 0 2px #000}
+.record-sleeve .label-tag{position:relative;z-index:1;color:var(--amber);font-size:11px;font-weight:700;text-align:center;padding:6px 8px;letter-spacing:.5px;text-transform:uppercase}
+.record-sleeve img{width:100%;height:100%;object-fit:cover;display:block}
+.record-title{font-weight:600;font-size:14px;color:var(--burgundy);line-height:1.3;margin-bottom:2px;min-height:36px}
+.record-artist{font-size:12px;color:var(--gray);margin-bottom:8px}
+.record-meta{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:8px;border-top:1px solid var(--border)}
+.record-price{font-weight:700;color:var(--burgundy);font-size:16px}
+.detail-cover{aspect-ratio:1;width:100%;background:linear-gradient(135deg,#3d1a0b,#5C1A2B);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden}
+.detail-cover.no-cover::before{content:'';position:absolute;width:60%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#222 28%,#0a0a0a 30%,#222 60%,#0a0a0a 62%,#222 90%);right:-12%;box-shadow:0 0 0 2px #000}
+.detail-cover .label-tag{position:relative;z-index:1;color:var(--amber);font-weight:700;font-size:14px;text-align:center;padding:0 16px;letter-spacing:.5px;text-transform:uppercase}
+.detail-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.star-row{color:var(--amber);font-size:14px}
+.stars-bg{color:#ddd} .stars-fg{color:var(--amber)}
+
+/* Schedule grid */
+.shift-table td{vertical-align:top}
+.shift-block{background:#FFF8E1;border-left:3px solid var(--amber);padding:6px 10px;border-radius:4px;font-size:12px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Vintage Records</h1><div class="sub">Vinyl, schedules, coffee shop &amp; storefront</div><div class="orange-bar"></div>
+    <label>Server URL</label><input id="login-url" value="">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Vintage<span>Records</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('store')">Storefront</button>
+      <button onclick="switchTab('records')">Records</button>
+      <button onclick="switchTab('schedules')">Schedules</button>
+      <button onclick="switchTab('employees')">Employees</button>
+      <button onclick="switchTab('ratings')">Ratings</button>
+      <button onclick="switchTab('coffee-menu')">Coffee Menu</button>
+      <button onclick="switchTab('coffee-orders')">Orders</button>
+      <button onclick="switchTab('sell-offers')">Sell Offers</button>
+      <button onclick="switchTab('dash')">Dashboard</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- STOREFRONT -->
+  <div id="console-store" class="console active">
+    <div class="store-hero">
+      <h1>Vintage<span>Records</span></h1>
+      <p>Hand-curated vinyl from the golden era — rock, jazz, folk, soul, psychedelia. Browse the catalog, then come listen at the in-store coffee bar.</p>
+      <div class="hero-actions">
+        <button class="btn-amber" onclick="openSellOfferPublic()">Sell us your records →</button>
+        <button class="btn-secondary" onclick="document.getElementById('catalog-grid').scrollIntoView({behavior:'smooth'})">Browse catalog</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="filter-bar">
+        <select id="sf-genre" onchange="loadStorefront()"><option value="">All Genres</option><option>Rock</option><option>Jazz</option><option>Folk</option><option>Soul</option><option>Blues</option><option>Psychedelic</option></select>
+        <input id="sf-artist" placeholder="Artist contains…" oninput="debouncedStorefront()">
+      </div>
+    </div>
+    <div id="catalog-grid" class="store-grid"></div>
+    <div class="pagination" id="store-pag"></div>
+  </div>
+
+  <!-- RECORDS (admin) -->
+  <div id="console-records" class="console">
+    <h2 class="page-title">Records</h2><div class="page-sub">Inventory of vintage vinyl</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openRecModal()">+ Add Record</button>
+      <div class="filter-bar">
+        <select id="f-genre" onchange="loadRec()"><option value="">All Genres</option><option>Rock</option><option>Jazz</option><option>Folk</option><option>Soul</option><option>Blues</option><option>Psychedelic</option></select>
+        <select id="f-status" onchange="loadRec()"><option value="">All Status</option><option>In Stock</option><option>Sold</option><option>Reserved</option><option>Coming Soon</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Title</th><th>Artist</th><th>Genre</th><th>Year</th><th>Cond.</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody id="rec-body"></tbody></table></div>
+    <div class="pagination" id="rec-pag"></div>
+  </div>
+
+  <!-- SCHEDULES -->
+  <div id="console-schedules" class="console">
+    <h2 class="page-title">Schedules</h2><div class="page-sub">Employee shifts</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openSchedModal()">+ Add Shift</button>
+      <div class="filter-bar">
+        <input id="f-shiftdate" type="date" onchange="loadSched()">
+        <input id="f-shiftemp" placeholder="Employee filter…" oninput="debouncedSched()">
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Date</th><th>Employee</th><th>Role</th><th>Start</th><th>End</th><th>Notes</th><th></th></tr></thead><tbody id="sched-body"></tbody></table></div>
+    <div class="pagination" id="sched-pag"></div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div id="console-employees" class="console">
+    <h2 class="page-title">Employees</h2><div class="page-sub">Store staff</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEmpModal()">+ Add Employee</button>
+      <div class="filter-bar">
+        <select id="f-role" onchange="loadEmp()"><option value="">All Roles</option><option>Manager</option><option>Vinyl Curator</option><option>Sales Associate</option><option>Barista</option><option>Repair Tech</option></select>
+        <select id="f-empstatus" onchange="loadEmp()"><option value="">All</option><option>Active</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Hired</th><th>Rate</th><th>Status</th><th></th></tr></thead><tbody id="emp-body"></tbody></table></div>
+    <div class="pagination" id="emp-pag"></div>
+  </div>
+
+  <!-- RATINGS -->
+  <div id="console-ratings" class="console">
+    <h2 class="page-title">Ratings &amp; Reviews</h2><div class="page-sub">Customer feedback</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openRatModal()">+ Add Review</button>
+      <div class="filter-bar">
+        <select id="f-rating" onchange="loadRat()"><option value="">All Ratings</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+        <select id="f-rtype" onchange="loadRat()"><option value="">All Types</option><option>Record</option><option>Store</option><option>Coffee</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Customer</th><th>Rating</th><th>Type</th><th>Record</th><th>Review</th><th>Date</th><th></th></tr></thead><tbody id="rat-body"></tbody></table></div>
+    <div class="pagination" id="rat-pag"></div>
+  </div>
+
+  <!-- COFFEE MENU -->
+  <div id="console-coffee-menu" class="console">
+    <h2 class="page-title">Coffee Menu</h2><div class="page-sub">In-store café offerings</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openMenuModal()">+ Add Menu Item</button>
+      <div class="filter-bar">
+        <select id="f-mcat" onchange="loadMenu()"><option value="">All Categories</option><option>Coffee</option><option>Tea</option><option>Pastry</option><option>Food</option></select>
+        <select id="f-mavail" onchange="loadMenu()"><option value="">All</option><option>Yes</option><option>No</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Description</th><th>Available</th><th></th></tr></thead><tbody id="menu-body"></tbody></table></div>
+    <div class="pagination" id="menu-pag"></div>
+  </div>
+
+  <!-- COFFEE ORDERS -->
+  <div id="console-coffee-orders" class="console">
+    <h2 class="page-title">Coffee Orders</h2><div class="page-sub">Café orders</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openOrderModal()">+ New Order</button>
+      <div class="filter-bar">
+        <select id="f-ostatus" onchange="loadOrders()"><option value="">All Status</option><option>Pending</option><option>In Progress</option><option>Completed</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody id="order-body"></tbody></table></div>
+    <div class="pagination" id="order-pag"></div>
+  </div>
+
+  <!-- SELL OFFERS -->
+  <div id="console-sell-offers" class="console">
+    <h2 class="page-title">Sell Offers</h2><div class="page-sub">Records offered by customers</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openSellModal()">+ Log Offer</button>
+      <div class="filter-bar">
+        <select id="f-sstatus" onchange="loadSell()"><option value="">All Status</option><option>Pending Review</option><option>Offer Made</option><option>Accepted</option><option>Declined</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Customer</th><th>Record</th><th>Artist</th><th>Year</th><th>Cond.</th><th>Asking</th><th>Status</th><th></th></tr></thead><tbody id="sell-body"></tbody></table></div>
+    <div class="pagination" id="sell-pag"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="console-dash" class="console">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">Store at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Inventory by Genre</h3><div id="genre-dist"></div></div>
+      <div class="card"><h3>Inventory by Status</h3><div id="status-dist"></div></div>
+      <div class="card"><h3>Recent Ratings</h3><div id="rating-summary"></div></div>
+      <div class="card"><h3>Staff by Role</h3><div id="role-dist"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='vintage-records';
+const PS={rec:{pt:null,p:1,h:[]},sched:{pt:null,p:1,h:[]},emp:{pt:null,p:1,h:[]},rat:{pt:null,p:1,h:[]},menu:{pt:null,p:1,h:[]},order:{pt:null,p:1,h:[]},sell:{pt:null,p:1,h:[]},store:{pt:null,p:1,h:[]}};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function stars(n){n=parseInt(n||0,10);return `<span class="star-row">${'★'.repeat(n)}<span class="stars-bg">${'★'.repeat(Math.max(0,5-n))}</span></span>`}
+function money(n){if(n==null||n==='')return'';const f=parseFloat(n);return isNaN(f)?esc(n):'$'+f.toFixed(2)}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(()=>fn.apply(this,arguments),ms)}}
+const debouncedStorefront=debounce(loadStorefront,300);
+const debouncedSched=debounce(loadSched,300);
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid credentials');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('login-pass').value=''}
+
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+const TABS=['store','records','schedules','employees','ratings','coffee-menu','coffee-orders','sell-offers','dash'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='store')loadStorefront();
+  else if(tab==='records')loadRec();
+  else if(tab==='schedules')loadSched();
+  else if(tab==='employees')loadEmp();
+  else if(tab==='ratings')loadRat();
+  else if(tab==='coffee-menu')loadMenu();
+  else if(tab==='coffee-orders')loadOrders();
+  else if(tab==='sell-offers')loadSell();
+  else loadDash();
+}
+function enterApp(){loadStorefront()}
+
+function pager(ps,pagId,loadFn){
+  return `<button class="btn-secondary btn-sm" onclick="${loadFn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="${loadFn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+
+function paginateState(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+
+/* ── STOREFRONT ── */
+async function loadStorefront(dir){
+  const ps=PS.store;paginateState(ps,dir);
+  const genre=document.getElementById('sf-genre').value,artist=document.getElementById('sf-artist').value.trim();
+  let p=`/kapps/${KAPP}/forms/records/submissions?include=details,values&limit=25`;
+  const q=[`values[Status]="In Stock"`];if(genre)q.push(`values[Genre]="${genre}"`);
+  if(artist)q.push(`values[Artist] *=* "${artist.replace(/"/g,'\\"')}"`);
+  p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('catalog-grid').innerHTML=subs.length?subs.map(s=>{
+    const cover=v(s,'Cover URL');
+    return `<div class="record-card" onclick="showRecordDetail('${s.id}')">
+      <div class="record-sleeve${cover?'':' no-cover'}">${cover?`<img src="${esc(cover)}" alt="${esc(v(s,'Title'))}" loading="lazy" onerror="this.parentElement.classList.add('no-cover');this.remove()">`:`<div class="label-tag">${esc(v(s,'Label')||v(s,'Artist'))}</div>`}</div>
+      <div class="record-title">${esc(v(s,'Title'))}</div>
+      <div class="record-artist">${esc(v(s,'Artist'))} · ${esc(v(s,'Year'))}</div>
+      <div class="record-meta"><span class="record-price">${money(v(s,'Price'))}</span>${badge(v(s,'Condition'))}</div>
+    </div>`;}).join(''):'<div class="card" style="grid-column:1/-1;text-align:center;color:var(--gray)">No records match</div>';
+  document.getElementById('store-pag').innerHTML=pager(ps,'store-pag','loadStorefront');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+async function showRecordDetail(id){
+  try{const d=await api(`/submissions/${id}?include=details,values`);const s=d.submission||d,vl=s.values||{};
+  document.getElementById('modal-title').textContent=vl.Title||'Record';
+  const cover=vl['Cover URL'];
+  document.getElementById('modal-body').innerHTML=`
+    <div class="detail-cover${cover?'':' no-cover'}">${cover?`<img src="${esc(cover)}" alt="${esc(vl.Title||'')}" onerror="this.parentElement.classList.add('no-cover');this.remove()">`:`<div class="label-tag">${esc(vl.Artist||'')}<br>${esc(vl.Title||'')}</div>`}</div>
+    <div style="font-weight:700;color:var(--burgundy);font-size:20px">${esc(vl.Title||'')}</div>
+    <div style="color:var(--gray);font-size:14px;margin-bottom:12px">${esc(vl.Artist||'')} · ${esc(vl.Year||'')} · ${esc(vl.Label||'')}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">${badge(vl.Genre)}${badge(vl.Condition)}${badge(vl.Status)}</div>
+    <div style="font-size:13px;color:#333;margin-bottom:14px">${esc(vl.Description||'')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:24px;font-weight:700;color:var(--burgundy)">${money(vl.Price)}</div>
+      <div style="font-size:12px;color:var(--gray)">${esc(vl.Stock||'0')} in stock</div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Close</button><button class="btn-amber" onclick="toast('Contact the store to reserve this record.');closeModal()">Reserve</button>`;
+  document.getElementById('modal').classList.add('open');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+function openSellOfferPublic(){
+  document.getElementById('modal-title').textContent='Sell us your record';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:12px;color:var(--gray);margin-bottom:10px">Tell us about the record you'd like to sell. We'll reach out within a couple of days.</div>
+    <div class="modal-grid">
+      <div><label>Your name *</label><input id="so-name"></div>
+      <div><label>Email *</label><input id="so-email" type="email"></div>
+      <div><label>Phone</label><input id="so-phone"></div>
+      <div><label>Asking price ($)</label><input id="so-price" placeholder="50.00"></div>
+      <div><label>Record title *</label><input id="so-title"></div>
+      <div><label>Artist *</label><input id="so-artist"></div>
+      <div><label>Year</label><input id="so-year"></div>
+      <div><label>Condition</label><select id="so-cond"><option value="">Select…</option><option>Mint</option><option>Near Mint</option><option>VG+</option><option>VG</option><option>Good</option></select></div>
+    </div>
+    <label>Notes</label><textarea id="so-notes" placeholder="Pressing, sleeve condition, anything else we should know."></textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-amber" onclick="submitSellOffer()">Submit Offer</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function submitSellOffer(){
+  const v={
+    'Customer Name':document.getElementById('so-name').value.trim(),
+    'Contact Email':document.getElementById('so-email').value.trim(),
+    'Contact Phone':document.getElementById('so-phone').value.trim(),
+    'Record Title':document.getElementById('so-title').value.trim(),
+    'Artist':document.getElementById('so-artist').value.trim(),
+    'Year':document.getElementById('so-year').value.trim(),
+    'Condition':document.getElementById('so-cond').value,
+    'Asking Price':document.getElementById('so-price').value.trim(),
+    'Notes':document.getElementById('so-notes').value.trim(),
+    'Status':'Pending Review'
+  };
+  if(!v['Customer Name']||!v['Contact Email']||!v['Record Title']||!v['Artist']){toast('Name, email, title, and artist are required.');return}
+  try{await api(`/kapps/${KAPP}/forms/sell-offers/submissions`,{method:'POST',body:JSON.stringify({values:v,coreState:'Submitted'})});
+  closeModal();toast('Offer submitted — we\'ll be in touch!');}catch(e){toast('Error: '+e.message)}
+}
+
+/* ── RECORDS (admin) ── */
+async function loadRec(dir){
+  const ps=PS.rec;paginateState(ps,dir);
+  const genre=document.getElementById('f-genre').value,stat=document.getElementById('f-status').value;
+  let p=`/kapps/${KAPP}/forms/records/submissions?include=details,values&limit=25`;const q=[];
+  if(genre)q.push(`values[Genre]="${genre}"`);if(stat)q.push(`values[Status]="${stat}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('rec-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Title'))}</strong></td><td>${esc(v(s,'Artist'))}</td><td>${badge(v(s,'Genre'))}</td>
+    <td>${esc(v(s,'Year'))}</td><td>${badge(v(s,'Condition'))}</td><td class="price">${money(v(s,'Price'))}</td>
+    <td>${esc(v(s,'Stock'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editRec('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="9" style="text-align:center;color:var(--gray)">No records</td></tr>';
+  document.getElementById('rec-pag').innerHTML=pager(ps,'rec-pag','loadRec');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+function openRecModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Record':'New Record';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Title *</label><input id="m-title" value="${esc(vl.Title||'')}"></div>
+      <div><label>Artist *</label><input id="m-artist" value="${esc(vl.Artist||'')}"></div>
+      <div><label>Genre</label><select id="m-genre"><option value="">…</option>${['Rock','Jazz','Folk','Soul','Blues','Psychedelic'].map(g=>`<option ${vl.Genre===g?'selected':''}>${g}</option>`).join('')}</select></div>
+      <div><label>Year</label><input id="m-year" value="${esc(vl.Year||'')}"></div>
+      <div><label>Label</label><input id="m-label" value="${esc(vl.Label||'')}"></div>
+      <div><label>Condition</label><select id="m-cond">${['Mint','Near Mint','VG+','VG','Good'].map(c=>`<option ${vl.Condition===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Price ($)</label><input id="m-price" value="${esc(vl.Price||'')}"></div>
+      <div><label>Stock</label><input id="m-stock" value="${esc(vl.Stock||'1')}"></div>
+      <div><label>Status</label><select id="m-status">${['In Stock','Sold','Reserved','Coming Soon'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Cover URL</label><input id="m-cover" value="${esc(vl['Cover URL']||'')}"></div>
+    </div>
+    <label>Description</label><textarea id="m-desc">${esc(vl.Description||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveRec('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadRec')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editRec(id){const d=await api(`/submissions/${id}?include=details,values`);openRecModal(d.submission||d)}
+async function saveRec(id){const values={Title:document.getElementById('m-title').value,Artist:document.getElementById('m-artist').value,Genre:document.getElementById('m-genre').value,Year:document.getElementById('m-year').value,Label:document.getElementById('m-label').value,Condition:document.getElementById('m-cond').value,Price:document.getElementById('m-price').value,Stock:document.getElementById('m-stock').value,Status:document.getElementById('m-status').value,'Cover URL':document.getElementById('m-cover').value,Description:document.getElementById('m-desc').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/records/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadRec()}catch(e){toast('Error: '+e.message)}}
+
+/* ── SCHEDULES ── */
+async function loadSched(dir){
+  const ps=PS.sched;paginateState(ps,dir);
+  const date=document.getElementById('f-shiftdate').value,emp=document.getElementById('f-shiftemp').value.trim();
+  let p=`/kapps/${KAPP}/forms/schedules/submissions?include=details,values&limit=25`;const q=[];
+  if(date)q.push(`values[Shift Date]="${date}"`);if(emp)q.push(`values[Employee] *=* "${emp.replace(/"/g,'\\"')}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('sched-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Shift Date'))}</strong></td><td>${esc(v(s,'Employee'))}</td><td>${badge(v(s,'Role'))}</td>
+    <td>${esc(v(s,'Start Time'))}</td><td>${esc(v(s,'End Time'))}</td>
+    <td style="max-width:240px;color:var(--gray);font-size:12px">${esc(v(s,'Notes'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editSched('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No shifts</td></tr>';
+  document.getElementById('sched-pag').innerHTML=pager(ps,'sched-pag','loadSched');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openSchedModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Shift':'New Shift';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Employee *</label><input id="sh-emp" value="${esc(vl.Employee||'')}"></div>
+      <div><label>Shift Date *</label><input id="sh-date" type="date" value="${esc(vl['Shift Date']||'')}"></div>
+      <div><label>Start Time</label><input id="sh-start" type="time" value="${esc(vl['Start Time']||'')}"></div>
+      <div><label>End Time</label><input id="sh-end" type="time" value="${esc(vl['End Time']||'')}"></div>
+      <div><label>Role</label><select id="sh-role"><option value="">…</option>${['Manager','Vinyl Curator','Sales Associate','Barista','Repair Tech'].map(r=>`<option ${vl.Role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    </div>
+    <label>Notes</label><textarea id="sh-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveSched('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadSched')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editSched(id){const d=await api(`/submissions/${id}?include=details,values`);openSchedModal(d.submission||d)}
+async function saveSched(id){const values={Employee:document.getElementById('sh-emp').value,'Shift Date':document.getElementById('sh-date').value,'Start Time':document.getElementById('sh-start').value,'End Time':document.getElementById('sh-end').value,Role:document.getElementById('sh-role').value,Notes:document.getElementById('sh-notes').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/schedules/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadSched()}catch(e){toast('Error: '+e.message)}}
+
+/* ── EMPLOYEES ── */
+async function loadEmp(dir){
+  const ps=PS.emp;paginateState(ps,dir);
+  const role=document.getElementById('f-role').value,stat=document.getElementById('f-empstatus').value;
+  let p=`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`;const q=[];
+  if(role)q.push(`values[Role]="${role}"`);if(stat)q.push(`values[Status]="${stat}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('emp-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Name'))}</strong></td><td>${badge(v(s,'Role'))}</td><td>${esc(v(s,'Email'))}</td>
+    <td>${esc(v(s,'Phone'))}</td><td>${esc(v(s,'Hire Date'))}</td><td class="price">${money(v(s,'Hourly Rate'))}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editEmp('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--gray)">No employees</td></tr>';
+  document.getElementById('emp-pag').innerHTML=pager(ps,'emp-pag','loadEmp');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openEmpModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Employee':'New Employee';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Name *</label><input id="me-name" value="${esc(vl.Name||'')}"></div>
+      <div><label>Role</label><select id="me-role"><option value="">…</option>${['Manager','Vinyl Curator','Sales Associate','Barista','Repair Tech'].map(r=>`<option ${vl.Role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div><label>Email</label><input id="me-email" value="${esc(vl.Email||'')}"></div>
+      <div><label>Phone</label><input id="me-phone" value="${esc(vl.Phone||'')}"></div>
+      <div><label>Hire Date</label><input id="me-hire" type="date" value="${esc(vl['Hire Date']||'')}"></div>
+      <div><label>Hourly Rate ($)</label><input id="me-rate" value="${esc(vl['Hourly Rate']||'')}"></div>
+      <div><label>Status</label><select id="me-stat">${['Active','Inactive'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEmp('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadEmp')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editEmp(id){const d=await api(`/submissions/${id}?include=details,values`);openEmpModal(d.submission||d)}
+async function saveEmp(id){const values={Name:document.getElementById('me-name').value,Role:document.getElementById('me-role').value,Email:document.getElementById('me-email').value,Phone:document.getElementById('me-phone').value,'Hire Date':document.getElementById('me-hire').value,'Hourly Rate':document.getElementById('me-rate').value,Status:document.getElementById('me-stat').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/employees/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Added');loadEmp()}catch(e){toast('Error: '+e.message)}}
+
+/* ── RATINGS ── */
+async function loadRat(dir){
+  const ps=PS.rat;paginateState(ps,dir);
+  const rating=document.getElementById('f-rating').value,type=document.getElementById('f-rtype').value;
+  let p=`/kapps/${KAPP}/forms/ratings/submissions?include=details,values&limit=25`;const q=[];
+  if(rating)q.push(`values[Rating]="${rating}"`);if(type)q.push(`values[Review Type]="${type}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('rat-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Customer Name'))}</strong></td><td>${stars(v(s,'Rating'))}</td>
+    <td>${badge(v(s,'Review Type'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Record Artist')||'—')} ${v(s,'Record Title')?'— '+esc(v(s,'Record Title')):''}</td>
+    <td style="max-width:280px;font-size:12px">${esc(v(s,'Review'))}</td>
+    <td>${esc(v(s,'Review Date'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editRat('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No reviews</td></tr>';
+  document.getElementById('rat-pag').innerHTML=pager(ps,'rat-pag','loadRat');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openRatModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Review':'New Review';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Customer *</label><input id="r-name" value="${esc(vl['Customer Name']||'')}"></div>
+      <div><label>Rating (1-5) *</label><select id="r-rating">${['5','4','3','2','1'].map(n=>`<option ${vl.Rating===n?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div><label>Review Type</label><select id="r-type">${['Record','Store','Coffee'].map(t=>`<option ${vl['Review Type']===t?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div><label>Review Date</label><input id="r-date" type="date" value="${esc(vl['Review Date']||new Date().toISOString().slice(0,10))}"></div>
+      <div><label>Record Artist</label><input id="r-art" value="${esc(vl['Record Artist']||'')}"></div>
+      <div><label>Record Title</label><input id="r-rt" value="${esc(vl['Record Title']||'')}"></div>
+    </div>
+    <label>Review</label><textarea id="r-text">${esc(vl.Review||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveRat('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadRat')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editRat(id){const d=await api(`/submissions/${id}?include=details,values`);openRatModal(d.submission||d)}
+async function saveRat(id){const values={'Customer Name':document.getElementById('r-name').value,Rating:document.getElementById('r-rating').value,'Review Type':document.getElementById('r-type').value,'Review Date':document.getElementById('r-date').value,'Record Artist':document.getElementById('r-art').value,'Record Title':document.getElementById('r-rt').value,Review:document.getElementById('r-text').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/ratings/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Posted');loadRat()}catch(e){toast('Error: '+e.message)}}
+
+/* ── COFFEE MENU ── */
+async function loadMenu(dir){
+  const ps=PS.menu;paginateState(ps,dir);
+  const cat=document.getElementById('f-mcat').value,avail=document.getElementById('f-mavail').value;
+  let p=`/kapps/${KAPP}/forms/coffee-menu/submissions?include=details,values&limit=25`;const q=[];
+  if(cat)q.push(`values[Category]="${cat}"`);if(avail)q.push(`values[Available]="${avail}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('menu-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Item Name'))}</strong></td><td>${badge(v(s,'Category'))}</td><td class="price">${money(v(s,'Price'))}</td>
+    <td style="max-width:300px;color:var(--gray);font-size:12px">${esc(v(s,'Description'))}</td>
+    <td>${badge(v(s,'Available'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editMenu('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No menu items</td></tr>';
+  document.getElementById('menu-pag').innerHTML=pager(ps,'menu-pag','loadMenu');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openMenuModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Item':'New Menu Item';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Item Name *</label><input id="cm-name" value="${esc(vl['Item Name']||'')}"></div>
+      <div><label>Category</label><select id="cm-cat">${['Coffee','Tea','Pastry','Food'].map(c=>`<option ${vl.Category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Price ($)</label><input id="cm-price" value="${esc(vl.Price||'')}"></div>
+      <div><label>Available</label><select id="cm-avail">${['Yes','No'].map(c=>`<option ${vl.Available===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <label>Description</label><textarea id="cm-desc">${esc(vl.Description||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveMenu('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadMenu')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editMenu(id){const d=await api(`/submissions/${id}?include=details,values`);openMenuModal(d.submission||d)}
+async function saveMenu(id){const values={'Item Name':document.getElementById('cm-name').value,Category:document.getElementById('cm-cat').value,Price:document.getElementById('cm-price').value,Available:document.getElementById('cm-avail').value,Description:document.getElementById('cm-desc').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/coffee-menu/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadMenu()}catch(e){toast('Error: '+e.message)}}
+
+/* ── COFFEE ORDERS ── */
+async function loadOrders(dir){
+  const ps=PS.order;paginateState(ps,dir);
+  const stat=document.getElementById('f-ostatus').value;
+  let p=`/kapps/${KAPP}/forms/coffee-orders/submissions?include=details,values&limit=25`;
+  if(stat)p+='&q='+encodeURIComponent(`values[Status]="${stat}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('order-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Customer Name'))}</strong></td>
+    <td style="max-width:300px">${esc(v(s,'Items'))}</td>
+    <td class="price">${money(v(s,'Total'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td>${esc(v(s,'Order Date'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editOrder('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No orders</td></tr>';
+  document.getElementById('order-pag').innerHTML=pager(ps,'order-pag','loadOrders');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openOrderModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Order':'New Order';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Customer *</label><input id="co-name" value="${esc(vl['Customer Name']||'')}"></div>
+      <div><label>Total ($)</label><input id="co-total" value="${esc(vl.Total||'')}"></div>
+      <div><label>Status</label><select id="co-stat">${['Pending','In Progress','Completed'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Order Date</label><input id="co-date" type="date" value="${esc(vl['Order Date']||new Date().toISOString().slice(0,10))}"></div>
+    </div>
+    <label>Items</label><textarea id="co-items">${esc(vl.Items||'')}</textarea>
+    <label>Notes</label><textarea id="co-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveOrder('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadOrders')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editOrder(id){const d=await api(`/submissions/${id}?include=details,values`);openOrderModal(d.submission||d)}
+async function saveOrder(id){const values={'Customer Name':document.getElementById('co-name').value,Total:document.getElementById('co-total').value,Status:document.getElementById('co-stat').value,'Order Date':document.getElementById('co-date').value,Items:document.getElementById('co-items').value,Notes:document.getElementById('co-notes').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/coffee-orders/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Logged');loadOrders()}catch(e){toast('Error: '+e.message)}}
+
+/* ── SELL OFFERS ── */
+async function loadSell(dir){
+  const ps=PS.sell;paginateState(ps,dir);
+  const stat=document.getElementById('f-sstatus').value;
+  let p=`/kapps/${KAPP}/forms/sell-offers/submissions?include=details,values&limit=25`;
+  if(stat)p+='&q='+encodeURIComponent(`values[Status]="${stat}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('sell-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Customer Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Contact Email'))}</div></td>
+    <td>${esc(v(s,'Record Title'))}</td><td>${esc(v(s,'Artist'))}</td><td>${esc(v(s,'Year'))}</td>
+    <td>${badge(v(s,'Condition'))}</td><td class="price">${money(v(s,'Asking Price'))}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editSell('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--gray)">No offers</td></tr>';
+  document.getElementById('sell-pag').innerHTML=pager(ps,'sell-pag','loadSell');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openSellModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Offer':'New Sell Offer';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Customer *</label><input id="so-name2" value="${esc(vl['Customer Name']||'')}"></div>
+      <div><label>Email *</label><input id="so-email2" value="${esc(vl['Contact Email']||'')}"></div>
+      <div><label>Phone</label><input id="so-phone2" value="${esc(vl['Contact Phone']||'')}"></div>
+      <div><label>Asking Price ($)</label><input id="so-price2" value="${esc(vl['Asking Price']||'')}"></div>
+      <div><label>Record Title *</label><input id="so-title2" value="${esc(vl['Record Title']||'')}"></div>
+      <div><label>Artist *</label><input id="so-artist2" value="${esc(vl.Artist||'')}"></div>
+      <div><label>Year</label><input id="so-year2" value="${esc(vl.Year||'')}"></div>
+      <div><label>Condition</label><select id="so-cond2"><option value="">…</option>${['Mint','Near Mint','VG+','VG','Good'].map(c=>`<option ${vl.Condition===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Status</label><select id="so-status2">${['Pending Review','Offer Made','Accepted','Declined'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <label>Notes</label><textarea id="so-notes2">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveSell('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadSell')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editSell(id){const d=await api(`/submissions/${id}?include=details,values`);openSellModal(d.submission||d)}
+async function saveSell(id){const values={'Customer Name':document.getElementById('so-name2').value,'Contact Email':document.getElementById('so-email2').value,'Contact Phone':document.getElementById('so-phone2').value,'Asking Price':document.getElementById('so-price2').value,'Record Title':document.getElementById('so-title2').value,Artist:document.getElementById('so-artist2').value,Year:document.getElementById('so-year2').value,Condition:document.getElementById('so-cond2').value,Status:document.getElementById('so-status2').value,Notes:document.getElementById('so-notes2').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/sell-offers/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Logged');loadSell()}catch(e){toast('Error: '+e.message)}}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const[rec,emp,rat,sell]=await Promise.all([
+    api(`/kapps/${KAPP}/forms/records/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/ratings/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/sell-offers/submissions?include=details,values&limit=25`)]);
+  const recs=rec.submissions||[],emps=emp.submissions||[],rats=rat.submissions||[],sells=sell.submissions||[];
+  const inStock=recs.filter(s=>v(s,'Status')==='In Stock').length;
+  const totalValue=recs.filter(s=>v(s,'Status')==='In Stock').reduce((sum,s)=>sum+parseFloat(v(s,'Price')||0)*parseFloat(v(s,'Stock')||0),0);
+  const activeEmp=emps.filter(s=>v(s,'Status')==='Active').length;
+  const avgRating=rats.length?(rats.reduce((sum,s)=>sum+parseInt(v(s,'Rating')||0),0)/rats.length).toFixed(1):'—';
+  const pendingOffers=sells.filter(s=>v(s,'Status')==='Pending Review').length;
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="val" style="color:var(--burgundy)">${recs.length}</div><div class="label">Records (sample)</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green)">${inStock}</div><div class="label">In Stock</div></div>
+    <div class="kpi"><div class="val" style="color:var(--burgundy)">$${Math.round(totalValue).toLocaleString()}</div><div class="label">Stock Value</div></div>
+    <div class="kpi"><div class="val" style="color:var(--amber)">${activeEmp}</div><div class="label">Active Staff</div></div>
+    <div class="kpi"><div class="val" style="color:var(--amber)">${avgRating}★</div><div class="label">Avg Rating</div></div>
+    <div class="kpi"><div class="val" style="color:var(--orange)">${pendingOffers}</div><div class="label">Pending Offers</div></div>`;
+  const countBy=(arr,field)=>{const m={};arr.forEach(s=>{const k=v(s,field)||'Other';m[k]=(m[k]||0)+1});return m};
+  const distHtml=(obj)=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${badge(k)} <strong>${c}</strong></div>`).join('');
+  document.getElementById('genre-dist').innerHTML=distHtml(countBy(recs,'Genre'));
+  document.getElementById('status-dist').innerHTML=distHtml(countBy(recs,'Status'));
+  document.getElementById('rating-summary').innerHTML=rats.slice(0,5).map(s=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><strong>${esc(v(s,'Customer Name'))}</strong> ${stars(v(s,'Rating'))}<div style="color:var(--gray);font-size:12px;margin-top:2px">${esc((v(s,'Review')||'').slice(0,100))}${(v(s,'Review')||'').length>100?'…':''}</div></div>`).join('')||'<div style="color:var(--gray);font-size:13px">No reviews yet</div>';
+  document.getElementById('role-dist').innerHTML=distHtml(countBy(emps.filter(s=>v(s,'Status')==='Active'),'Role'));
+  }catch(e){toast('Dashboard error: '+e.message)}
+}
+
+/* ── SHARED ── */
+async function delSub(id,fn){if(!confirm('Delete?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>

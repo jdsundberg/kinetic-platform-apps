@@ -201,7 +201,7 @@ document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('
 async function enterApp(){await loadLocationNames();loadRes()}
 
 async function loadLocationNames(){
-  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`);
+  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=details,values&limit=25`);
   locationNames=(d.submissions||[]).map(s=>v(s,'Name')).sort();
   const sel=document.getElementById('f-rloc');sel.innerHTML='<option value="">All Locations</option>'+locationNames.map(n=>`<option>${esc(n)}</option>`).join('')}catch{}}
 
@@ -209,7 +209,7 @@ async function loadLocationNames(){
 async function loadRes(dir){
   const ps=PS.res;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
   const stat=document.getElementById('f-rstat').value,loc=document.getElementById('f-rloc').value;
-  let p=`/kapps/${KAPP}/forms/reservations/submissions?include=values&limit=25`;const q=[];
+  let p=`/kapps/${KAPP}/forms/reservations/submissions?include=details,values&limit=25`;const q=[];
   if(stat)q.push(`values[Status]="${stat}"`);if(loc)q.push(`values[Location]="${loc}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
@@ -237,14 +237,14 @@ function openResModal(ex){const s=ex||{},vl=s.values||{};
     ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadRes')">Delete</button>`:''}`;
   document.getElementById('modal').classList.add('open')}
 
-async function editRes(id){const d=await api(`/submissions/${id}?include=values`);openResModal(d.submission||d)}
+async function editRes(id){const d=await api(`/submissions/${id}?include=details,values`);openResModal(d.submission||d)}
 async function saveRes(id){const values={'Guest Name':document.getElementById('mr-guest').value,Location:document.getElementById('mr-loc').value,'Site Number':document.getElementById('mr-site').value,'Check In':document.getElementById('mr-in').value,'Check Out':document.getElementById('mr-out').value,Guests:document.getElementById('mr-guests').value,Status:document.getElementById('mr-stat').value,Notes:document.getElementById('mr-notes').value};
   try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/reservations/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
   closeModal();toast(id?'Updated':'Booked');loadRes()}catch(e){toast('Error: '+e.message)}}
 
 /* ── LOCATIONS ── */
 async function loadLocs(){
-  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`);const subs=d.submissions||[];
+  try{const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=details,values&limit=25`);const subs=d.submissions||[];
   document.getElementById('loc-grid').innerHTML=subs.map(s=>`
     <div class="loc-card" onclick="viewLoc('${s.id}')">
       <h4>${esc(v(s,'Name'))}</h4>
@@ -253,7 +253,7 @@ async function loadLocs(){
     </div>`).join('')}catch(e){toast('Error: '+e.message)}}
 
 async function viewLoc(id){
-  const d=await api(`/submissions/${id}?include=values`);const s=d.submission||d;
+  const d=await api(`/submissions/${id}?include=details,values`);const s=d.submission||d;
   document.getElementById('modal-title').textContent=v(s,'Name');
   document.getElementById('modal-body').innerHTML=`
     <div style="margin-bottom:12px">${badge(v(s,'Region'))} ${badge(v(s,'Status'))} <span style="font-size:13px;color:var(--gray);margin-left:8px">${esc(v(s,'State'))}</span></div>
@@ -267,7 +267,7 @@ async function viewLoc(id){
 async function loadStore(dir){
   const ps=PS.store;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
   const cat=document.getElementById('f-scat').value,stat=document.getElementById('f-sstat').value;
-  let p=`/kapps/${KAPP}/forms/store-inventory/submissions?include=values&limit=25`;const q=[];
+  let p=`/kapps/${KAPP}/forms/store-inventory/submissions?include=details,values&limit=25`;const q=[];
   if(cat)q.push(`values[Category]="${cat}"`);if(stat)q.push(`values[Status]="${stat}"`);if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
@@ -290,7 +290,7 @@ function openStoreModal(ex){const s=ex||{},vl=s.values||{};
     ${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadStore')">Delete</button>`:''}`;
   document.getElementById('modal').classList.add('open')}
 
-async function editStore(id){const d=await api(`/submissions/${id}?include=values`);openStoreModal(d.submission||d)}
+async function editStore(id){const d=await api(`/submissions/${id}?include=details,values`);openStoreModal(d.submission||d)}
 async function saveStore(id){const values={'Item Name':document.getElementById('ms-name').value,Category:document.getElementById('ms-cat').value,Price:document.getElementById('ms-price').value,Quantity:document.getElementById('ms-qty').value,Status:document.getElementById('ms-stat').value};
   try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/store-inventory/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
   closeModal();toast(id?'Updated':'Added');loadStore()}catch(e){toast('Error: '+e.message)}}
@@ -298,7 +298,7 @@ async function saveStore(id){const values={'Item Name':document.getElementById('
 /* ── FEEDBACK ── */
 async function loadFb(dir){
   const ps=PS.fb;if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
-  let p=`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`;
+  let p=`/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`;
   if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
   try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
   document.getElementById('fb-body').innerHTML=subs.length?subs.map(s=>`<tr>
@@ -308,7 +308,7 @@ async function loadFb(dir){
     :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No feedback</td></tr>';
   document.getElementById('fb-pag').innerHTML=`<button class="btn-secondary btn-sm" onclick="loadFb('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="loadFb('next')" ${!ps.pt?'disabled':''}>Next</button>`}catch(e){toast('Error: '+e.message)}}
 
-async function viewFb(id){const d=await api(`/submissions/${id}?include=values`);const s=d.submission||d;
+async function viewFb(id){const d=await api(`/submissions/${id}?include=details,values`);const s=d.submission||d;
   document.getElementById('modal-title').textContent='Feedback from '+v(s,'Guest Name');
   document.getElementById('modal-body').innerHTML=`
     <div style="margin-bottom:12px">${stars(v(s,'Rating'))} <span style="color:var(--gray);font-size:13px;margin-left:8px">${esc(v(s,'Location'))} &mdash; ${esc(v(s,'Date'))}</span></div>
@@ -333,10 +333,10 @@ async function saveFb(){const values={'Guest Name':document.getElementById('mf-g
 /* ── DASHBOARD ── */
 async function loadDash(){
   try{const[rD,lD,sD,fD]=await Promise.all([
-    api(`/kapps/${KAPP}/forms/reservations/submissions?include=values&limit=25`),
-    api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`),
-    api(`/kapps/${KAPP}/forms/store-inventory/submissions?include=values&limit=25`),
-    api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`)]);
+    api(`/kapps/${KAPP}/forms/reservations/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/locations/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/store-inventory/submissions?include=details,values&limit=25`),
+    api(`/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`)]);
   const res=rD.submissions||[],locs=lD.submissions||[],store=sD.submissions||[],fb=fD.submissions||[];
   const confirmed=res.filter(s=>v(s,'Status')==='Confirmed').length;
   const checkedIn=res.filter(s=>v(s,'Status')==='Checked In').length;

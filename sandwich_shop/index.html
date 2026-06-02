@@ -363,7 +363,7 @@ async function loadRecipes(direction) {
   const cat = document.getElementById('filter-category').value;
   const active = document.getElementById('filter-active').value;
 
-  let path = `/kapps/${KAPP}/forms/recipes/submissions?include=values&limit=25`;
+  let path = `/kapps/${KAPP}/forms/recipes/submissions?include=details,values&limit=25`;
   const qParts = [];
   if (cat) qParts.push(`values[Category]="${cat}"`);
   if (active) qParts.push(`values[Active]="${active}"`);
@@ -395,7 +395,7 @@ async function loadRecipes(direction) {
 
 async function viewRecipe(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission || data;
     document.getElementById('modal-title').textContent = v(s, 'Name');
     document.getElementById('modal-body').innerHTML = `
@@ -443,7 +443,7 @@ function openRecipeModal(existing) {
 }
 
 async function editRecipe(id) {
-  const data = await api(`/submissions/${id}?include=values`);
+  const data = await api(`/submissions/${id}?include=details,values`);
   openRecipeModal(data.submission || data);
 }
 
@@ -476,7 +476,7 @@ async function loadEmployees(direction) {
   const role = document.getElementById('filter-role').value;
   const status = document.getElementById('filter-status').value;
 
-  let path = `/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`;
+  let path = `/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`;
   const qParts = [];
   if (role) qParts.push(`values[Role]="${role}"`);
   if (status) qParts.push(`values[Status]="${status}"`);
@@ -531,7 +531,7 @@ function openEmployeeModal(existing) {
 }
 
 async function editEmployee(id) {
-  const data = await api(`/submissions/${id}?include=values`);
+  const data = await api(`/submissions/${id}?include=details,values`);
   openEmployeeModal(data.submission || data);
 }
 
@@ -560,7 +560,7 @@ async function loadFeedback(direction) {
   else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
   else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
 
-  let path = `/kapps/${KAPP}/forms/customer-feedback/submissions?include=values&limit=25`;
+  let path = `/kapps/${KAPP}/forms/customer-feedback/submissions?include=details,values&limit=25`;
   if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
 
   try {
@@ -585,7 +585,7 @@ async function loadFeedback(direction) {
 }
 
 async function viewFeedback(id) {
-  const data = await api(`/submissions/${id}?include=values`);
+  const data = await api(`/submissions/${id}?include=details,values`);
   const s = data.submission || data;
   document.getElementById('modal-title').textContent = 'Feedback from ' + v(s, 'Customer Name');
   document.getElementById('modal-body').innerHTML = `
@@ -635,9 +635,9 @@ async function saveFeedback() {
 async function loadDashboard() {
   try {
     const [recipesData, employeesData, feedbackData] = await Promise.all([
-      api(`/kapps/${KAPP}/forms/recipes/submissions?include=values&limit=25`),
-      api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`),
-      api(`/kapps/${KAPP}/forms/customer-feedback/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/recipes/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/employees/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/customer-feedback/submissions?include=details,values&limit=25`),
     ]);
 
     const recipes = recipesData.submissions || [];

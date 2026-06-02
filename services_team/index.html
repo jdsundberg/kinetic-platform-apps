@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services Team - Kinetic Platform</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:30px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:10px 14px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0;color:var(--blue)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active,.badge-completed,.badge-approved,.badge-yes{background:#E8F5E9;color:#2E7D32}
+.badge-in-progress,.badge-working{background:#E0F2F1;color:#00695C}
+.badge-planning,.badge-pending,.badge-prospect{background:#E3F2FD;color:#1565C0}
+.badge-on-hold,.badge-medium{background:#FFF8E1;color:#F9A825}
+.badge-cancelled,.badge-rejected,.badge-inactive,.badge-high{background:#FDECEA;color:#C62828}
+.badge-low{background:#E8F5E9;color:#2E7D32}
+.badge-default,.badge-no{background:var(--light);color:var(--gray)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stars{color:#F5A623;letter-spacing:1px;font-size:14px}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:650px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Services <span>Team</span></h1>
+    <p class="sub">Project delivery, time tracking, and customer management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://server.example.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Services <span>Team</span></div>
+    <nav>
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('projects')">Projects</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('time')">Time</button>
+      <button onclick="switchTab('costs')">Costs</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('checkouts')">Checkouts</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Services team overview</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2">
+      <div class="card"><h3>Active Projects</h3><div id="dash-projects"></div></div>
+      <div class="card"><h3>Today's Time Entries</h3><div id="dash-time"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>Pending Costs</h3><div id="dash-costs"></div></div>
+      <div class="card"><h3>Recent Feedback</h3><div id="dash-feedback"></div></div>
+    </div>
+  </div>
+
+  <div class="console" id="tab-projects">
+    <div class="page-title">Projects</div>
+    <div class="page-sub">Service delivery projects</div>
+    <div class="toolbar">
+      <input type="text" id="prj-search" placeholder="Search projects..." oninput="prjResetPage()">
+      <select id="prj-status" onchange="prjResetPage()"><option value="">All Status</option><option>Planning</option><option>In Progress</option><option>On Hold</option><option>Completed</option><option>Cancelled</option></select>
+      <button class="btn-primary" onclick="showModal('project')">+ New Project</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Project</th><th>Customer</th><th>Status</th><th>Budget</th><th>Hours</th><th>Progress</th></tr></thead><tbody id="prj-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="prjPrev()" id="prj-prev" disabled>Prev</button><span class="page-info" id="prj-page-info">Page 1</span><button class="btn-outline" onclick="prjNext()" id="prj-next" disabled>Next</button></div>
+  </div>
+
+  <div class="console" id="tab-customers">
+    <div class="page-title">Customers</div>
+    <div class="page-sub">Customer accounts and contacts</div>
+    <div class="toolbar">
+      <input type="text" id="cust-search" placeholder="Search customers..." oninput="custResetPage()">
+      <select id="cust-status" onchange="custResetPage()"><option value="">All Status</option><option>Active</option><option>Prospect</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showModal('customer')">+ New Customer</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Company</th><th>Contact</th><th>Industry</th><th>Status</th><th>Account Mgr</th></tr></thead><tbody id="cust-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="custPrev()" id="cust-prev" disabled>Prev</button><span class="page-info" id="cust-page-info">Page 1</span><button class="btn-outline" onclick="custNext()" id="cust-next" disabled>Next</button></div>
+  </div>
+
+  <div class="console" id="tab-time">
+    <div class="page-title">Time Entries</div>
+    <div class="page-sub">Hours logged against projects</div>
+    <div class="toolbar">
+      <input type="text" id="time-search" placeholder="Search..." oninput="timeResetPage()">
+      <select id="time-project" onchange="timeResetPage()"><option value="">All Projects</option></select>
+      <button class="btn-primary" onclick="showModal('time')">+ Log Time</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Employee</th><th>Project</th><th>Hours</th><th>Category</th><th>Billable</th></tr></thead><tbody id="time-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="timePrev()" id="time-prev" disabled>Prev</button><span class="page-info" id="time-page-info">Page 1</span><button class="btn-outline" onclick="timeNext()" id="time-next" disabled>Next</button></div>
+  </div>
+
+  <div class="console" id="tab-costs">
+    <div class="page-title">Project Costs</div>
+    <div class="page-sub">Expenses and cost tracking</div>
+    <div class="toolbar">
+      <select id="cost-project" onchange="costResetPage()"><option value="">All Projects</option></select>
+      <select id="cost-status" onchange="costResetPage()"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+      <button class="btn-primary" onclick="showModal('cost')">+ Add Cost</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody id="cost-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="costPrev()" id="cost-prev" disabled>Prev</button><span class="page-info" id="cost-page-info">Page 1</span><button class="btn-outline" onclick="costNext()" id="cost-next" disabled>Next</button></div>
+  </div>
+
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Customer Feedback</div>
+    <div class="page-sub">Post-project satisfaction surveys</div>
+    <div class="toolbar"><button class="btn-primary" onclick="showModal('feedback')">+ New Feedback</button></div>
+    <div id="fb-cards"></div>
+  </div>
+
+  <div class="console" id="tab-checkouts">
+    <div class="page-title">Project Checkouts</div>
+    <div class="page-sub">Post-project closeout reviews</div>
+    <div class="toolbar"><button class="btn-primary" onclick="showModal('checkout')">+ New Checkout</button></div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Project</th><th>Customer</th><th>Date</th><th>Deliverables</th><th>Docs</th><th>Training</th><th>Status</th></tr></thead><tbody id="chk-body"></tbody></table></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP = 'services-team';
+let API = { url:'', auth:'', user:'', displayName:'', spaceSlug:'' };
+
+function esc(s){ if(s==null)return''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function v(sub,f){ return sub.values?.[f]||''; }
+function fmt$(n){ const num=parseFloat(n); return isNaN(num)?'$0':'$'+num.toLocaleString('en-US',{maximumFractionDigits:0}); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function badgeClass(val){ if(!val)return'badge-default'; return'badge-'+val.toLowerCase().replace(/\s+/g,'-'); }
+function stars(n){ const num=parseInt(n)||0; return '<span class="stars">'+'&#9733;'.repeat(num)+'&#9734;'.repeat(5-num)+'</span>'; }
+function pctBar(logged,budgeted,color){
+  const l=parseFloat(logged)||0, b=parseFloat(budgeted)||1, pct=Math.min(100,Math.round(l/b*100));
+  const c = pct>90 ? 'var(--red)' : pct>70 ? 'var(--yellow)' : (color||'var(--green)');
+  return `<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:600;min-width:35px">${pct}%</span><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div></div>`;
+}
+
+async function api(path,opts={}){
+  const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+  if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''), user=document.getElementById('login-user').value, pass=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error'); errEl.style.display='none';
+  try{ API.url=url; API.auth=btoa(user+':'+pass); const me=await api('/me'); API.user=me.username; API.displayName=me.displayName||me.username;
+    try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||'';}catch(e){} enterApp();
+  }catch(e){ errEl.textContent='Login failed: '+e.message; errEl.style.display='block'; }
+}
+function enterApp(){
+  document.getElementById('login-screen').style.display='none'; document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' \u00b7 '+API.spaceSlug:'');
+  requestAnimationFrame(()=>switchTab('dashboard'));
+}
+function doLogout(){ API={url:'',auth:'',user:'',displayName:'',spaceSlug:''}; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('login-pass').value=''; sessionStorage.removeItem('kinetic_session'); }
+
+(function(){ const sess=sessionStorage.getItem('kinetic_session'); if(sess){ try{ const s=JSON.parse(sess); API.url=s.url||''; API.auth=s.auth; API.user=s.user||''; API.displayName=s.displayName||s.user||''; API.spaceSlug=s.spaceSlug||''; enterApp(); return; }catch(e){} } document.getElementById('login-screen').style.display='flex'; })();
+
+let activeTab='dashboard';
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b=>{ if(b.textContent.toLowerCase()===tab)b.classList.add('active'); });
+  if(tab==='dashboard')loadDashboard();
+  else if(tab==='projects')prjResetPage();
+  else if(tab==='customers')custResetPage();
+  else if(tab==='time'){populateProjectFilter('time-project');timeResetPage();}
+  else if(tab==='costs'){populateProjectFilter('cost-project');costResetPage();}
+  else if(tab==='feedback')loadFeedback();
+  else if(tab==='checkouts')loadCheckouts();
+}
+
+// === HELPERS ===
+async function populateProjectFilter(selId){
+  const sel=document.getElementById(selId);
+  if(sel.options.length>1)return;
+  try{ const r=await api(`/kapps/${KAPP}/forms/projects/submissions?include=values&limit=25`);
+    (r.submissions||[]).forEach(s=>{ const o=document.createElement('option'); o.value=v(s,'Project Name'); o.textContent=v(s,'Project Name'); sel.appendChild(o); });
+  }catch(e){}
+}
+
+// === DASHBOARD ===
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px">Loading...</div>';
+  try{
+    const [prjR,custR,timeR,costR,fbR]=await Promise.all([
+      api(`/kapps/${KAPP}/forms/projects/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/time-entries/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/costs/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`)
+    ]);
+    const prjs=prjR.submissions||[], custs=custR.submissions||[], times=timeR.submissions||[], costs=costR.submissions||[], fbs=fbR.submissions||[];
+    const active=prjs.filter(s=>['In Progress','Planning'].includes(v(s,'Status'))).length;
+    const completed=prjs.filter(s=>v(s,'Status')==='Completed').length;
+    const totalBudget=prjs.reduce((s,p)=>s+(parseFloat(v(p,'Budget'))||0),0);
+    const totalCost=prjs.reduce((s,p)=>s+(parseFloat(v(p,'Actual Cost'))||0),0);
+    const totalHours=times.reduce((s,t)=>s+(parseFloat(v(t,'Hours'))||0),0);
+    const avgRating=fbs.length?fbs.reduce((s,f)=>s+(parseFloat(v(f,'Overall Rating'))||0),0)/fbs.length:0;
+    const pendingCosts=costs.filter(c=>v(c,'Status')==='Pending').reduce((s,c)=>s+(parseFloat(v(c,'Amount'))||0),0);
+
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi orange"><div class="val">${active}</div><div class="label">Active Projects</div></div>
+      <div class="kpi green"><div class="val">${completed}</div><div class="label">Completed</div></div>
+      <div class="kpi teal"><div class="val">${custs.filter(s=>v(s,'Status')==='Active').length}</div><div class="label">Active Customers</div></div>
+      <div class="kpi purple"><div class="val">${fmt$(totalBudget)}</div><div class="label">Total Budget</div></div>
+      <div class="kpi"><div class="val">${fmt$(totalCost)}</div><div class="label">Total Spent</div></div>
+      <div class="kpi yellow"><div class="val">${fmt$(pendingCosts)}</div><div class="label">Pending Costs</div></div>
+      <div class="kpi green"><div class="val">${totalHours.toFixed(0)}</div><div class="label">Hours Logged</div></div>
+      <div class="kpi orange"><div class="val">${avgRating.toFixed(1)}</div><div class="label">Avg Rating</div></div>`;
+
+    const activeProjs=prjs.filter(s=>['In Progress','Planning'].includes(v(s,'Status')));
+    document.getElementById('dash-projects').innerHTML=activeProjs.length===0?'<p style="color:var(--gray);font-size:13px">No active projects</p>'
+      :`<table><thead><tr><th>Project</th><th>Customer</th><th>Status</th><th>Budget Used</th></tr></thead><tbody>${
+      activeProjs.map(s=>`<tr><td style="font-weight:600">${esc(v(s,'Project Name'))}</td><td>${esc(v(s,'Customer'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td><td>${pctBar(v(s,'Actual Cost'),v(s,'Budget'))}</td></tr>`).join('')}</tbody></table>`;
+
+    const today=new Date().toISOString().slice(0,10);
+    const todayTime=times.filter(t=>v(t,'Date')===today);
+    document.getElementById('dash-time').innerHTML=todayTime.length===0?'<p style="color:var(--gray);font-size:13px">No time logged today</p>'
+      :`<table><thead><tr><th>Employee</th><th>Project</th><th>Hours</th><th>Category</th></tr></thead><tbody>${
+      todayTime.map(t=>`<tr><td>${esc(v(t,'Employee'))}</td><td>${esc(v(t,'Project'))}</td><td style="font-weight:600">${esc(v(t,'Hours'))}</td><td>${esc(v(t,'Category'))}</td></tr>`).join('')}</tbody></table>`;
+
+    const pending=costs.filter(c=>v(c,'Status')==='Pending');
+    document.getElementById('dash-costs').innerHTML=pending.length===0?'<p style="color:var(--gray);font-size:13px">No pending costs</p>'
+      :`<table><thead><tr><th>Project</th><th>Category</th><th>Amount</th></tr></thead><tbody>${
+      pending.map(c=>`<tr><td>${esc(v(c,'Project'))}</td><td>${esc(v(c,'Category'))}</td><td style="font-weight:600">${fmt$(v(c,'Amount'))}</td></tr>`).join('')}</tbody></table>`;
+
+    document.getElementById('dash-feedback').innerHTML=fbs.length===0?'<p style="color:var(--gray);font-size:13px">No feedback yet</p>'
+      :`<table><thead><tr><th>Customer</th><th>Project</th><th>Rating</th></tr></thead><tbody>${
+      fbs.slice(0,5).map(f=>`<tr><td>${esc(v(f,'Customer'))}</td><td>${esc(v(f,'Project'))}</td><td>${stars(v(f,'Overall Rating'))}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){ document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red)">Error: ${esc(e.message)}</p>`; }
+}
+
+// === GENERIC PAGER ===
+function makePager(){ return {data:[],page:1,pageKeys:{1:null},hasNext:false}; }
+async function loadPage(pager,form,filterFn,bodyId,renderRow,pageInfoId,prevId,nextId,extraKql){
+  try{
+    const lastCA=pager.pageKeys[pager.page]; let kql=extraKql||'';
+    if(lastCA) kql=kql?`(${kql}) AND createdAt < "${lastCA}"`:`createdAt < "${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql) path+='&q='+encodeURIComponent(kql);
+    const res=await api(path); pager.data=res.submissions||[]; pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&pager.data.length) pager.pageKeys[pager.page+1]=pager.data[pager.data.length-1].createdAt;
+    let filtered=filterFn?pager.data.filter(filterFn):pager.data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0
+      ?`<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>`
+      :filtered.map(renderRow).join('');
+    document.getElementById(pageInfoId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){ document.getElementById(bodyId).innerHTML=`<tr><td colspan="10" style="color:var(--red)">${esc(e.message)}</td></tr>`; }
+}
+
+// === PROJECTS ===
+const prjPager=makePager();
+function prjResetPage(){prjPager.page=1;prjPager.pageKeys={1:null};prjPager.hasNext=false;loadPrj();}
+function prjNext(){if(prjPager.hasNext){prjPager.page++;loadPrj();}}
+function prjPrev(){if(prjPager.page>1){prjPager.page--;loadPrj();}}
+function loadPrj(){
+  const status=document.getElementById('prj-status').value;
+  const search=document.getElementById('prj-search').value.toLowerCase();
+  const kql=status?`values[Status]="${status}"`:'';
+  const filter=search?s=>v(s,'Project Name').toLowerCase().includes(search)||v(s,'Customer').toLowerCase().includes(search):null;
+  loadPage(prjPager,'projects',filter,'prj-body',s=>`<tr class="clickable-row" onclick="showDetail('project','${s.id}')">
+    <td style="font-weight:600">${esc(v(s,'Project ID'))}</td><td>${esc(v(s,'Project Name'))}</td><td>${esc(v(s,'Customer'))}</td>
+    <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    <td>${fmt$(v(s,'Budget'))}</td><td>${v(s,'Hours Logged')||0}/${v(s,'Hours Budgeted')||0}</td>
+    <td style="min-width:120px">${pctBar(v(s,'Hours Logged'),v(s,'Hours Budgeted'))}</td></tr>`,'prj-page-info','prj-prev','prj-next',kql);
+}
+
+// === CUSTOMERS ===
+const custPager=makePager();
+function custResetPage(){custPager.page=1;custPager.pageKeys={1:null};custPager.hasNext=false;loadCust();}
+function custNext(){if(custPager.hasNext){custPager.page++;loadCust();}}
+function custPrev(){if(custPager.page>1){custPager.page--;loadCust();}}
+function loadCust(){
+  const status=document.getElementById('cust-status').value;
+  const search=document.getElementById('cust-search').value.toLowerCase();
+  const kql=status?`values[Status]="${status}"`:'';
+  const filter=search?s=>v(s,'Company Name').toLowerCase().includes(search)||v(s,'Contact Name').toLowerCase().includes(search):null;
+  loadPage(custPager,'customers',filter,'cust-body',s=>`<tr class="clickable-row" onclick="showDetail('customer','${s.id}')">
+    <td style="font-weight:600">${esc(v(s,'Company Name'))}</td><td>${esc(v(s,'Contact Name'))}<br><span style="font-size:11px;color:var(--gray)">${esc(v(s,'Contact Email'))}</span></td>
+    <td>${esc(v(s,'Industry'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+    <td>${esc(v(s,'Account Manager'))}</td></tr>`,'cust-page-info','cust-prev','cust-next',kql);
+}
+
+// === TIME ===
+const timePager=makePager();
+function timeResetPage(){timePager.page=1;timePager.pageKeys={1:null};timePager.hasNext=false;loadTime();}
+function timeNext(){if(timePager.hasNext){timePager.page++;loadTime();}}
+function timePrev(){if(timePager.page>1){timePager.page--;loadTime();}}
+function loadTime(){
+  const proj=document.getElementById('time-project').value;
+  const search=document.getElementById('time-search').value.toLowerCase();
+  const kql=proj?`values[Project]="${proj}"`:'';
+  const filter=search?s=>v(s,'Employee').toLowerCase().includes(search)||v(s,'Description').toLowerCase().includes(search):null;
+  loadPage(timePager,'time-entries',filter,'time-body',s=>`<tr class="clickable-row" onclick="showDetail('time','${s.id}')">
+    <td>${esc(v(s,'Date'))}</td><td style="font-weight:600">${esc(v(s,'Employee'))}</td><td>${esc(v(s,'Project'))}</td>
+    <td style="font-weight:600">${esc(v(s,'Hours'))}h</td><td>${esc(v(s,'Category'))}</td>
+    <td><span class="badge ${badgeClass(v(s,'Billable'))}">${esc(v(s,'Billable'))}</span></td></tr>`,'time-page-info','time-prev','time-next',kql);
+}
+
+// === COSTS ===
+const costPager=makePager();
+function costResetPage(){costPager.page=1;costPager.pageKeys={1:null};costPager.hasNext=false;loadCost();}
+function costNext(){if(costPager.hasNext){costPager.page++;loadCost();}}
+function costPrev(){if(costPager.page>1){costPager.page--;loadCost();}}
+function loadCost(){
+  const proj=document.getElementById('cost-project').value;
+  const status=document.getElementById('cost-status').value;
+  let kql='';
+  if(proj) kql=`values[Project]="${proj}"`;
+  if(status) kql=kql?`${kql} AND values[Status]="${status}"`:`values[Status]="${status}"`;
+  loadPage(costPager,'costs',null,'cost-body',s=>`<tr class="clickable-row" onclick="showDetail('cost','${s.id}')">
+    <td>${esc(v(s,'Date'))}</td><td>${esc(v(s,'Project'))}</td><td>${esc(v(s,'Category'))}</td>
+    <td>${esc(v(s,'Description'))}</td><td style="font-weight:600">${fmt$(v(s,'Amount'))}</td>
+    <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'cost-page-info','cost-prev','cost-next',kql);
+}
+
+// === FEEDBACK ===
+async function loadFeedback(){
+  try{
+    const r=await api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`);
+    const fbs=r.submissions||[];
+    document.getElementById('fb-cards').innerHTML=fbs.length===0?'<div class="card"><p style="color:var(--gray)">No feedback yet</p></div>'
+      :fbs.map(s=>`<div class="card" style="cursor:pointer" onclick="showDetail('feedback','${s.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>${esc(v(s,'Customer'))}</strong> &mdash; ${esc(v(s,'Project'))}</div>
+          <div>${stars(v(s,'Overall Rating'))}</div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--gray);margin-bottom:8px">
+          <span>Communication: ${v(s,'Communication')}/5</span>
+          <span>Quality: ${v(s,'Quality')}/5</span>
+          <span>Timeliness: ${v(s,'Timeliness')}/5</span>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">${esc(v(s,'Comments'))}</p>
+        ${v(s,'Follow Up Required')==='Yes'?'<div style="margin-top:8px"><span class="badge badge-yellow">Follow Up Required</span></div>':''}
+      </div>`).join('');
+  }catch(e){ document.getElementById('fb-cards').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`; }
+}
+
+// === CHECKOUTS ===
+async function loadCheckouts(){
+  try{
+    const r=await api(`/kapps/${KAPP}/forms/checkouts/submissions?include=values&limit=25`);
+    const chks=r.submissions||[];
+    document.getElementById('chk-body').innerHTML=chks.length===0?'<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:24px">No checkouts yet</td></tr>'
+      :chks.map(s=>`<tr class="clickable-row" onclick="showDetail('checkout','${s.id}')">
+        <td style="font-weight:600">${esc(v(s,'Project'))}</td><td>${esc(v(s,'Customer'))}</td><td>${esc(v(s,'Checkout Date'))}</td>
+        <td><span class="badge ${badgeClass(v(s,'Deliverables Complete'))}">${esc(v(s,'Deliverables Complete'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s,'Documentation Complete'))}">${esc(v(s,'Documentation Complete'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s,'Training Complete'))}">${esc(v(s,'Training Complete'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`).join('');
+  }catch(e){ document.getElementById('chk-body').innerHTML=`<tr><td colspan="7" style="color:var(--red)">${esc(e.message)}</td></tr>`; }
+}
+
+// === MODAL ===
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+const FORMS = {
+  project: { form:'projects', fields:[
+    {r:['Project ID','Project Name']}, {r:['Customer','Lead']}, {r:['Status|select:Planning,In Progress,On Hold,Completed,Cancelled','Priority|select:High,Medium,Low']},
+    {r:['Start Date|date','Target End Date|date']}, {r:['Budget|number','Actual Cost|number']}, {r:['Hours Budgeted|number','Hours Logged|number']},
+    {r:['Team Size|number','Actual End Date|date']}, 'Description|textarea', 'Notes|textarea'
+  ]},
+  customer: { form:'customers', fields:[
+    {r:['Customer ID','Company Name']}, {r:['Contact Name','Contact Email']}, {r:['Contact Phone','Industry|select:Healthcare,Energy,Financial Services,Defense,Federal Government,Education,Technology,Other']},
+    {r:['Status|select:Active,Prospect,Inactive','Account Manager']}, 'Notes|textarea'
+  ]},
+  time: { form:'time-entries', fields:[
+    {r:['Entry ID','Employee']}, {r:['Project','Date|date']}, {r:['Hours|number','Category|select:Development,Configuration,Training,Meeting,Support,Travel']},
+    'Description', {r:['Billable|select:Yes,No','']}
+  ]},
+  cost: { form:'costs', fields:[
+    {r:['Cost ID','Project']}, {r:['Category|select:Travel,Software,Hardware,Subcontractor,Labor,Other','Amount|number']},
+    {r:['Date|date','Status|select:Pending,Approved,Rejected']}, 'Description', {r:['Submitted By','']}
+  ]},
+  feedback: { form:'feedback', fields:[
+    {r:['Feedback ID','Date|date']}, {r:['Project','Customer']}, {r:['Overall Rating|select:1,2,3,4,5','Follow Up Required|select:Yes,No']},
+    {r:['Communication|select:1,2,3,4,5','Quality|select:1,2,3,4,5']}, {r:['Timeliness|select:1,2,3,4,5','']}, 'Comments|textarea'
+  ]},
+  checkout: { form:'checkouts', fields:[
+    {r:['Checkout ID','Checkout Date|date']}, {r:['Project','Customer']},
+    {r:['Deliverables Complete|select:Yes,No','Documentation Complete|select:Yes,No']}, {r:['Training Complete|select:Yes,No','Status|select:Pending,Completed']},
+    'Knowledge Transfer|textarea', 'Outstanding Issues|textarea', 'Lessons Learned|textarea', {r:['Sign Off By','']}
+  ]}
+};
+
+function showModal(type, sub){
+  const def=FORMS[type]; const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${type.charAt(0).toUpperCase()+type.slice(1)}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){ html+=renderField(field,sub); }
+    else if(field.r){ html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'; }
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>
+    ${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}','${type}')">Delete</button>`:''}
+    <button class="btn-primary" onclick="saveSub('${type}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;
+  document.getElementById('modal').classList.add('show');
+}
+
+function renderField(spec, sub){
+  const parts=spec.split('|'); const name=parts[0]; const type=parts[1]||'text';
+  const id='m-'+name.replace(/\s+/g,'-').toLowerCase();
+  const val=sub?v(sub,name):'';
+  let input;
+  if(type.startsWith('select:')){
+    const opts=type.replace('select:','').split(',');
+    input=`<select id="${id}">${opts.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;
+  } else if(type==='textarea'){
+    input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`;
+  } else if(type==='date'){
+    input=`<input id="${id}" type="date" value="${esc(val)}">`;
+  } else if(type==='number'){
+    input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`;
+  } else {
+    input=`<input id="${id}" type="text" value="${esc(val)}">`;
+  }
+  return `<label>${name}</label>${input}`;
+}
+
+async function saveSub(type, id){
+  const def=FORMS[type]; const vals={};
+  for(const field of def.fields){
+    const names=typeof field==='string'?[field]:(field.r||[]);
+    for(const spec of names){
+      if(!spec)continue;
+      const name=spec.split('|')[0];
+      const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();
+      const el=document.getElementById(elId);
+      if(el) vals[name]=el.value;
+    }
+  }
+  try{
+    if(id){ await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})}); toast('Updated'); }
+    else{ await api(`/kapps/${KAPP}/forms/${def.form}/submissions`,{method:'POST',body:JSON.stringify({values:vals})}); toast('Created'); }
+    closeModal(); switchTab(activeTab);
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function showDetail(type, id){
+  try{ const r=await api(`/submissions/${id}?include=values`); showModal(type,r.submission); }catch(e){ alert('Error: '+e.message); }
+}
+
+async function deleteSub(id, type){
+  if(!confirm('Delete this record?'))return;
+  try{ await api(`/submissions/${id}`,{method:'DELETE'}); toast('Deleted'); closeModal(); switchTab(activeTab); }catch(e){ alert('Error: '+e.message); }
+}
+</script>
+</body>
+</html>

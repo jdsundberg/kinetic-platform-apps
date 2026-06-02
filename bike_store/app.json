@@ -1,0 +1,433 @@
+{
+  "name": "Bike Store",
+  "slug": "bike-store",
+  "description": "Cross-US shipping & inventory: warehouses, in-flight orders, transfers, network map",
+  "category": "Industry",
+  "icon": "bike",
+  "color": "#1A237E",
+  "bg": "#E8EAF6",
+  "kapp": "bike-store",
+  "forms": [
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Bike catalog — SKU, make/model, category, pricing, weight.",
+      "submissionLabelExpression": "${values('Make')} ${values('Model')} (${values('SKU')})",
+      "fields": [
+        {
+          "name": "SKU",
+          "required": true
+        },
+        {
+          "name": "Make",
+          "required": true
+        },
+        {
+          "name": "Model",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Frame Size"
+        },
+        {
+          "name": "Color"
+        },
+        {
+          "name": "Weight"
+        },
+        {
+          "name": "Price"
+        },
+        {
+          "name": "MSRP"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[SKU]",
+          "values[Category]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Category]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "warehouses",
+      "name": "Warehouses",
+      "description": "Fulfillment network — geo-located warehouses across the US.",
+      "submissionLabelExpression": "${values('Code')} — ${values('City')}, ${values('State')}",
+      "fields": [
+        {
+          "name": "Code",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Zip"
+        },
+        {
+          "name": "Lat"
+        },
+        {
+          "name": "Lng"
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Manager Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Code]",
+          "values[State]",
+          "values[Status]"
+        ]
+      }
+    },
+    {
+      "slug": "inventory",
+      "name": "Inventory",
+      "description": "Stock-on-hand per warehouse × product.",
+      "submissionLabelExpression": "${values('Warehouse Code')} / ${values('Product SKU')} — ${values('On Hand')} units",
+      "fields": [
+        {
+          "name": "Warehouse Code",
+          "required": true
+        },
+        {
+          "name": "Product SKU",
+          "required": true
+        },
+        {
+          "name": "On Hand"
+        },
+        {
+          "name": "Reserved"
+        },
+        {
+          "name": "Reorder Threshold"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Warehouse Code]",
+          "values[Product SKU]"
+        ],
+        "compound": [
+          [
+            "values[Warehouse Code]",
+            "values[Product SKU]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "shipments",
+      "name": "Shipments",
+      "description": "Cross-US customer shipments — origin warehouse → destination address.",
+      "submissionLabelExpression": "${values('Order Number')} — ${values('From Warehouse Code')}→${values('To State')} (${values('Status')})",
+      "fields": [
+        {
+          "name": "Order Number",
+          "required": true
+        },
+        {
+          "name": "Customer Name"
+        },
+        {
+          "name": "Customer Email"
+        },
+        {
+          "name": "From Warehouse Code",
+          "required": true
+        },
+        {
+          "name": "To Street"
+        },
+        {
+          "name": "To City"
+        },
+        {
+          "name": "To State"
+        },
+        {
+          "name": "To Zip"
+        },
+        {
+          "name": "To Lat"
+        },
+        {
+          "name": "To Lng"
+        },
+        {
+          "name": "Product SKU"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Carrier"
+        },
+        {
+          "name": "Tracking Number"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Ship Date"
+        },
+        {
+          "name": "Est Delivery Date"
+        },
+        {
+          "name": "Distance Miles"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Order Number]",
+          "values[Status]",
+          "values[From Warehouse Code]",
+          "values[Carrier]"
+        ],
+        "compound": [
+          [
+            "values[From Warehouse Code]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audit-log",
+      "name": "Audit Log",
+      "description": "Every edit to every record — who, what, when, and an AI-generated narrative summary.",
+      "submissionLabelExpression": "${values('Form Slug')} ${values('Record Label')} — ${values('Action')} by ${values('Changed By')}",
+      "fields": [
+        {
+          "name": "Record ID",
+          "required": true
+        },
+        {
+          "name": "Form Slug",
+          "required": true
+        },
+        {
+          "name": "Record Label"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Changed By"
+        },
+        {
+          "name": "Changed At"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        },
+        {
+          "name": "Diff JSON",
+          "rows": 4
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Record ID]",
+          "values[Form Slug]",
+          "values[Changed By]"
+        ],
+        "compound": [
+          [
+            "values[Form Slug]",
+            "values[Record ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "bike-trails",
+      "name": "Bike Trails",
+      "description": "Catalog of bike trails — geo-located with difficulty, surface, length, and elevation.",
+      "submissionLabelExpression": "${values('Name')} — ${values('City')}, ${values('State')} (${values('Difficulty')})",
+      "fields": [
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Length Miles"
+        },
+        {
+          "name": "Elevation Gain"
+        },
+        {
+          "name": "Difficulty"
+        },
+        {
+          "name": "Surface"
+        },
+        {
+          "name": "Lat"
+        },
+        {
+          "name": "Lng"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Name]",
+          "values[State]",
+          "values[Difficulty]",
+          "values[Surface]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Difficulty]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "trail-comments",
+      "name": "Trail Comments",
+      "description": "Customer comments + ratings on bike trails. Public/anonymous submission allowed.",
+      "anonymous": true,
+      "submissionLabelExpression": "${values('Customer Name')} on ${values('Trail Name')} (${values('Rating')}★)",
+      "fields": [
+        {
+          "name": "Trail ID",
+          "required": true
+        },
+        {
+          "name": "Trail Name"
+        },
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Rating"
+        },
+        {
+          "name": "Comment",
+          "required": true,
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Trail ID]",
+          "values[Rating]"
+        ]
+      }
+    },
+    {
+      "slug": "transfers",
+      "name": "Transfers",
+      "description": "Warehouse-to-warehouse inventory rebalancing.",
+      "submissionLabelExpression": "${values('Transfer Number')} — ${values('From Warehouse Code')}→${values('To Warehouse Code')} (${values('Status')})",
+      "fields": [
+        {
+          "name": "Transfer Number",
+          "required": true
+        },
+        {
+          "name": "From Warehouse Code",
+          "required": true
+        },
+        {
+          "name": "To Warehouse Code",
+          "required": true
+        },
+        {
+          "name": "Product SKU"
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Requested Date"
+        },
+        {
+          "name": "Ship Date"
+        },
+        {
+          "name": "Carrier"
+        },
+        {
+          "name": "Tracking Number"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Transfer Number]",
+          "values[Status]",
+          "values[From Warehouse Code]",
+          "values[To Warehouse Code]"
+        ]
+      }
+    }
+  ]
+}

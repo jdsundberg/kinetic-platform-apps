@@ -342,7 +342,7 @@ async function fetchSubs(form, kql, lastCreatedAt) {
     const dateClause = `createdAt < "${lastCreatedAt}"`;
     fullKql = fullKql ? `(${fullKql}) AND ${dateClause}` : dateClause;
   }
-  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=${LIMIT}`;
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=${LIMIT}`;
   if (fullKql) path += `&q=${encodeURIComponent(fullKql)}`;
   return api(path);
 }
@@ -551,7 +551,7 @@ async function loadCourses(page) {
 
 async function showCourseDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     showModal(`
       <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -616,7 +616,7 @@ async function loadAssignments(page) {
 
 async function showAssignmentDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     showModal(`
       <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -680,7 +680,7 @@ async function loadGradebook(page) {
 
 async function showGradebookDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     showModal(`
       <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -749,7 +749,7 @@ async function loadMaterials(page) {
 
 async function showMaterialDetail(id) {
   try {
-    const data = await api(`/submissions/${id}?include=values`);
+    const data = await api(`/submissions/${id}?include=details,values`);
     const s = data.submission;
     const url = v(s, 'URL');
     showModal(`

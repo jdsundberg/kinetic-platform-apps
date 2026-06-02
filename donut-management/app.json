@@ -1,0 +1,227 @@
+{
+  "name": "Donut Management",
+  "slug": "donut-management",
+  "description": "Donut inventory, 20 store locations, employees & customer feedback",
+  "category": "Retail",
+  "icon": "donut",
+  "color": "#5D3A1A",
+  "bg": "#FFF1F6",
+  "forms": [
+    {
+      "slug": "stores",
+      "name": "Stores",
+      "description": "Donut shop locations",
+      "fields": [
+        {
+          "name": "Code",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Zip"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Manager"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Opening Date"
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Has Security Cameras"
+        }
+      ],
+      "submissionLabelExpression": "${values('Name')} (${values('City')})",
+      "indexes": {
+        "single": [
+          "values[Code]",
+          "values[City]",
+          "values[State]",
+          "values[Status]",
+          "values[Has Security Cameras]"
+        ],
+        "compound": [
+          [
+            "values[State]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "description": "Staff assigned to stores",
+      "fields": [
+        {
+          "name": "First Name",
+          "required": true
+        },
+        {
+          "name": "Last Name",
+          "required": true
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Store Code"
+        },
+        {
+          "name": "Hire Date"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} - ${values('Role')}",
+      "indexes": {
+        "single": [
+          "values[Role]",
+          "values[Store Code]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Store Code]",
+            "values[Status]"
+          ],
+          [
+            "values[Store Code]",
+            "values[Role]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "inventory",
+      "name": "Inventory",
+      "description": "Donut inventory per store",
+      "fields": [
+        {
+          "name": "Store Code",
+          "required": true
+        },
+        {
+          "name": "Donut Type",
+          "required": true
+        },
+        {
+          "name": "Quantity"
+        },
+        {
+          "name": "Batch Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Unit Price"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "submissionLabelExpression": "${values('Donut Type')} @ ${values('Store Code')}",
+      "indexes": {
+        "single": [
+          "values[Store Code]",
+          "values[Donut Type]",
+          "values[Status]",
+          "values[Batch Date]"
+        ],
+        "compound": [
+          [
+            "values[Store Code]",
+            "values[Donut Type]"
+          ],
+          [
+            "values[Store Code]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Customer Feedback",
+      "description": "Customer reviews and ratings",
+      "fields": [
+        {
+          "name": "Customer Name",
+          "required": true
+        },
+        {
+          "name": "Customer Email"
+        },
+        {
+          "name": "Store Code"
+        },
+        {
+          "name": "Donut Type"
+        },
+        {
+          "name": "Rating"
+        },
+        {
+          "name": "Visit Date"
+        },
+        {
+          "name": "Comments",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Follow Up Needed"
+        }
+      ],
+      "submissionLabelExpression": "${values('Customer Name')} - ${values('Rating')}",
+      "indexes": {
+        "single": [
+          "values[Store Code]",
+          "values[Rating]",
+          "values[Status]",
+          "values[Visit Date]"
+        ],
+        "compound": [
+          [
+            "values[Store Code]",
+            "values[Status]"
+          ],
+          [
+            "values[Store Code]",
+            "values[Rating]"
+          ]
+        ]
+      }
+    }
+  ]
+}

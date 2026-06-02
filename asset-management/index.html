@@ -509,7 +509,7 @@ function warrantyStatus(a) {
 
 async function fetchCatalogPage(lastCreatedAt) {
   const kql = buildCatalogKql(lastCreatedAt);
-  const params = { include: 'values', limit: String(CATALOG_PAGE_SIZE) };
+  const params = { include: 'details,values', limit: String(CATALOG_PAGE_SIZE) };
   if (kql) params.q = kql;
   const qs = new URLSearchParams(params);
   return api(`/kapps/asset-management/forms/assets/submissions?${qs}`);
@@ -684,7 +684,7 @@ async function viewAsset(id) {
   let a = catalogPage.find(x => x.id === id) || D.find(x => x.id === id);
   if (!a) {
     try {
-      const data = await api(`/submissions/${id}?include=values`);
+      const data = await api(`/submissions/${id}?include=details,values`);
       a = data.submission;
     } catch(e) { showToast('Could not load asset'); return; }
   }

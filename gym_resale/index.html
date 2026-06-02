@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Resale</title>
+<style>
+:root {
+  --slate: #0F172A; --slate-2: #1E293B; --slate-3: #334155;
+  --orange: #F97316; --orange-light: #FB923C; --orange-bg: #FFEDD5;
+  --green: #16A34A; --green-bg: #DCFCE7;
+  --red: #DC2626; --red-bg: #FEE2E2;
+  --yellow: #EAB308; --yellow-bg: #FEF9C3;
+  --blue: #2563EB; --blue-bg: #DBEAFE;
+  --purple: #7C3AED; --purple-bg: #EDE9FE;
+  --gray: #64748B; --light: #F8FAFC; --border: #E2E8F0; --bg: #F1F5F9;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #0F172A; }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0F172A 0%, #334155 50%, #F97316 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--slate); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--orange); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,.25); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--slate); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--slate-2); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: var(--red-bg); color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--slate); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--orange); }
+.nav-tabs { display: flex; gap: 2px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.75); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.12); color: white; }
+.nav-tabs button.active { background: var(--orange); color: white; }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--orange); border-color: var(--orange); color: white; }
+
+/* ── Consoles ── */
+.console { display: none; padding: 24px; max-width: 1320px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--slate); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); border-left: 4px solid var(--orange); }
+.kpi.good { border-left-color: var(--green); }
+.kpi.warn { border-left-color: var(--yellow); }
+.kpi.bad { border-left-color: var(--red); }
+.kpi.info { border-left-color: var(--blue); }
+.kpi.special { border-left-color: var(--purple); }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--slate); }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Two-column dashboard rows ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); background: var(--light); }
+td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: var(--light); }
+tr.clickable { cursor: pointer; }
+.empty { padding: 24px; text-align: center; color: var(--gray); font-size: 13px; }
+code { background: var(--light); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-active, .badge-for-sale, .badge-approved, .badge-converted, .badge-excellent { background: var(--green-bg); color: var(--green); }
+.badge-sold, .badge-paid { background: var(--purple-bg); color: var(--purple); }
+.badge-new { background: var(--blue-bg); color: var(--blue); }
+.badge-contacted, .badge-quote-sent, .badge-submitted, .badge-on-hold { background: var(--yellow-bg); color: #92400E; }
+.badge-shipping { background: var(--blue-bg); color: var(--blue); }
+.badge-closed, .badge-withdrawn, .badge-expired, .badge-cancelled, .badge-inactive { background: #F1F5F9; color: var(--gray); }
+.badge-consignment { background: var(--orange-bg); color: var(--orange); }
+.badge-good, .badge-refurbished { background: var(--blue-bg); color: var(--blue); }
+.badge-fair { background: var(--yellow-bg); color: #92400E; }
+.badge-poor { background: var(--red-bg); color: var(--red); }
+.badge-buying { background: var(--green-bg); color: var(--green); }
+.badge-selling { background: var(--orange-bg); color: var(--orange); }
+.badge-trade { background: var(--purple-bg); color: var(--purple); }
+.badge-manager { background: var(--purple-bg); color: var(--purple); }
+.badge-sales { background: var(--blue-bg); color: var(--blue); }
+.badge-tech { background: var(--orange-bg); color: var(--orange); }
+.badge-cleaner { background: var(--green-bg); color: var(--green); }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--slate); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--slate-2); }
+.btn-secondary { background: var(--light); color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-orange { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-orange:hover { background: var(--orange-light); }
+.btn-success { background: var(--green); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+/* ── Filter ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; }
+.filter-bar label { font-size: 12px; color: var(--gray); margin-right: 4px; }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.show { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 560px; max-width: 90vw; padding: 24px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
+.modal-box h2 { font-size: 18px; color: var(--slate); margin-bottom: 4px; }
+.modal-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.modal-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 10px; }
+.modal-box input, .modal-box select, .modal-box textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-box input:focus, .modal-box select:focus, .modal-box textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,.2); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.modal-info { background: var(--light); border-radius: 8px; padding: 12px; font-size: 13px; margin-bottom: 12px; }
+.modal-info .row { display: flex; justify-content: space-between; padding: 4px 0; }
+.modal-info .row .k { color: var(--gray); }
+.modal-info .row .v { font-weight: 600; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid > div { display: flex; flex-direction: column; }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; right: 24px; background: var(--slate); color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); z-index: 300; display: none; }
+#toast.show { display: block; animation: slidein .2s; }
+@keyframes slidein { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.price { font-weight: 700; color: var(--slate); }
+.muted { color: var(--gray); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ LOGIN ══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🏋️ Gym Resale</h1>
+    <div class="sub">Used Workout Equipment</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://ai-labs.kinopsdev.io" />
+    <label>Username</label>
+    <input id="login-user" value="john" />
+    <label>Password</label>
+    <input id="login-pass" type="password" />
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ APP ══════════════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">🏋️ Gym <span>Resale</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('inventory')">Inventory</button>
+      <button onclick="switchTab('inquiries')">Inquiries</button>
+      <button onclick="switchTab('consignments')">Consignments</button>
+      <button onclick="switchTab('employees')">Employees</button>
+      <button onclick="switchTab('time')">Time Tracking</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span>Signed in as <strong id="user-display"></strong></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="console-dash">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Sales, inventory, and team performance overview</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="two-col">
+      <div class="card">
+        <h3>Recent Inquiries</h3>
+        <div id="dash-inquiries"></div>
+      </div>
+      <div class="card">
+        <h3>Active Consignments</h3>
+        <div id="dash-consignments"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Top Inventory</h3>
+      <div id="dash-inventory"></div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="console" id="console-inventory">
+    <div class="page-title">Inventory</div>
+    <div class="page-sub">Used equipment in stock</div>
+    <div class="toolbar filter-bar">
+      <label>Category</label>
+      <select id="f-inv-cat" onchange="loadInventory()">
+        <option value="">All</option>
+        <option>Cardio</option><option>Strength</option>
+        <option>Free Weights</option><option>Accessories</option>
+      </select>
+      <label>Status</label>
+      <select id="f-inv-status" onchange="loadInventory()">
+        <option value="">All</option>
+        <option>For Sale</option><option>Sold</option>
+        <option>On Hold</option><option>Consignment</option>
+        <option>Shipping</option>
+      </select>
+      <label>Condition</label>
+      <select id="f-inv-cond" onchange="loadInventory()">
+        <option value="">All</option>
+        <option>New</option><option>Excellent</option><option>Good</option>
+        <option>Fair</option><option>Refurbished</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-primary btn-sm" onclick="openAddProduct()">+ Add Product</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>SKU</th><th>Name</th><th>Category</th><th>Brand</th>
+          <th>Condition</th><th>Price</th><th>Status</th><th>Location</th>
+        </tr></thead>
+        <tbody id="inv-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="inv-pagination"></div>
+  </div>
+
+  <!-- INQUIRIES -->
+  <div class="console" id="console-inquiries">
+    <div class="page-title">Customer Inquiries</div>
+    <div class="page-sub">Track leads and customer questions</div>
+    <div class="toolbar filter-bar">
+      <label>Status</label>
+      <select id="f-inq-status" onchange="loadInquiries()">
+        <option value="">All</option>
+        <option>New</option><option>Contacted</option>
+        <option>Quote Sent</option><option>Converted</option><option>Closed</option>
+      </select>
+      <label>Interest</label>
+      <select id="f-inq-interest" onchange="loadInquiries()">
+        <option value="">All</option>
+        <option>Buying</option><option>Selling</option><option>Trade</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-primary btn-sm" onclick="openAddInquiry()">+ Log Inquiry</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Customer</th><th>Interest</th><th>Product</th>
+          <th>Source</th><th>Status</th><th>Assigned</th><th>Created</th>
+        </tr></thead>
+        <tbody id="inq-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="inq-pagination"></div>
+  </div>
+
+  <!-- CONSIGNMENTS -->
+  <div class="console" id="console-consignments">
+    <div class="page-title">Consignment Sales</div>
+    <div class="page-sub">Items consigned to the store — automatic payout calculation on sale</div>
+    <div class="toolbar filter-bar">
+      <label>Status</label>
+      <select id="f-con-status" onchange="loadConsignments()">
+        <option value="">All</option>
+        <option>Active</option><option>Sold</option>
+        <option>Withdrawn</option><option>Expired</option>
+      </select>
+      <label>Category</label>
+      <select id="f-con-cat" onchange="loadConsignments()">
+        <option value="">All</option>
+        <option>Cardio</option><option>Strength</option>
+        <option>Free Weights</option><option>Accessories</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-orange btn-sm" onclick="openConsignmentIntake()">+ Consignment Intake</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Consignor</th><th>Item</th><th>Listed</th>
+          <th>Commission</th><th>Received</th><th>Sale Price</th>
+          <th>Payout</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="con-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="con-pagination"></div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="console" id="console-employees">
+    <div class="page-title">Employees</div>
+    <div class="page-sub">Staff roster</div>
+    <div class="toolbar filter-bar">
+      <label>Role</label>
+      <select id="f-emp-role" onchange="loadEmployees()">
+        <option value="">All</option>
+        <option>Manager</option><option>Sales</option>
+        <option>Tech</option><option>Cleaner</option>
+      </select>
+      <label>Status</label>
+      <select id="f-emp-status" onchange="loadEmployees()">
+        <option value="">All</option>
+        <option>Active</option><option>Inactive</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-primary btn-sm" onclick="openAddEmployee()">+ Add Employee</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>ID</th><th>Name</th><th>Email</th><th>Phone</th>
+          <th>Role</th><th>Rate</th><th>Hired</th><th>Status</th>
+        </tr></thead>
+        <tbody id="emp-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="emp-pagination"></div>
+  </div>
+
+  <!-- TIME TRACKING -->
+  <div class="console" id="console-time">
+    <div class="page-title">Time Tracking</div>
+    <div class="page-sub">Hours logged by employees</div>
+    <div class="toolbar filter-bar">
+      <label>Employee</label>
+      <select id="f-time-emp" onchange="loadTime()">
+        <option value="">All</option>
+      </select>
+      <label>Status</label>
+      <select id="f-time-status" onchange="loadTime()">
+        <option value="">All</option>
+        <option>Submitted</option><option>Approved</option><option>Paid</option>
+      </select>
+      <label>Activity</label>
+      <select id="f-time-activity" onchange="loadTime()">
+        <option value="">All</option>
+        <option>Sales</option><option>Repair</option>
+        <option>Cleaning</option><option>Inventory</option><option>Pickup</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-primary btn-sm" onclick="openLogTime()">+ Log Time</button>
+    </div>
+    <div class="kpi-row" id="time-summary"></div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>Entry</th><th>Employee</th><th>Date</th><th>Hours</th>
+          <th>Activity</th><th>Notes</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="time-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="time-pagination"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-box" id="modal-content"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   CONFIG & STATE
+   ══════════════════════════════════════════════ */
+const KAPP = 'gym-resale';
+let API = { url: '', auth: '', user: '', displayName: '' };
+let EMPLOYEES_CACHE = [];
+const PAGE_STATE = {
+  inv: { page: 1, history: [], pageToken: null },
+  inq: { page: 1, history: [], pageToken: null },
+  con: { page: 1, history: [], pageToken: null },
+  emp: { page: 1, history: [], pageToken: null },
+  time: { page: 1, history: [], pageToken: null }
+};
+
+/* ══════════════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════════════ */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub?.values?.[field] ?? ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function num(x) { const n = parseFloat(x); return Number.isFinite(n) ? n : 0; }
+function today() { return new Date().toISOString().slice(0, 10); }
+function money(x) { const n = num(x); return n ? '$' + n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : ''; }
+
+function statusBadge(s) { if (!s) return ''; return `<span class="badge badge-${s.toLowerCase().replace(/\s+/g, '-')}">${esc(s)}</span>`; }
+
+/* ══════════════════════════════════════════════
+   LOGIN / SESSION
+   ══════════════════════════════════════════════ */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const auth = btoa(`${user}:${pass}`);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: 'Basic ' + auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth, user, displayName: data.displayName || data.username || user };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ══════════════════════════════════════════════
+   API
+   ══════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function nextSeq(formSlug, prefix) {
+  const data = await api(`/kapps/${KAPP}/forms/${formSlug}/submissions?include=details&limit=1&count=true`);
+  const n = (data.count || 0) + 1;
+  return prefix + '-' + String(n).padStart(4, '0');
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════ */
+async function enterApp() {
+  // Cache employees for time-tracking filter + assignment dropdowns
+  try {
+    const d = await api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="Active"')}`);
+    EMPLOYEES_CACHE = d.submissions || [];
+    const sel = document.getElementById('f-time-emp');
+    sel.innerHTML = '<option value="">All</option>' + EMPLOYEES_CACHE
+      .map(e => `<option value="${esc(v(e, 'Employee ID'))}">${esc(v(e, 'First Name'))} ${esc(v(e, 'Last Name'))}</option>`).join('');
+  } catch {}
+  loadDashboard();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  const tabs = ['dash', 'inventory', 'inquiries', 'consignments', 'employees', 'time'];
+  document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  else if (tab === 'inventory') { PAGE_STATE.inv = { page: 1, history: [], pageToken: null }; loadInventory(); }
+  else if (tab === 'inquiries') { PAGE_STATE.inq = { page: 1, history: [], pageToken: null }; loadInquiries(); }
+  else if (tab === 'consignments') { PAGE_STATE.con = { page: 1, history: [], pageToken: null }; loadConsignments(); }
+  else if (tab === 'employees') { PAGE_STATE.emp = { page: 1, history: [], pageToken: null }; loadEmployees(); }
+  else if (tab === 'time') { PAGE_STATE.time = { page: 1, history: [], pageToken: null }; loadTime(); }
+}
+
+function updatePageState(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+
+function paginationHtml(ps, fn) {
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [forSale, sold, openInq, activeCon, pendingHours, allProducts] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="For Sale"')}`),
+      api(`/kapps/${KAPP}/forms/products/submissions?include=details&limit=1&count=true&q=${encodeURIComponent('values[Status]="Sold"')}`),
+      api(`/kapps/${KAPP}/forms/inquiries/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status] IN ("New","Contacted","Quote Sent")')}`),
+      api(`/kapps/${KAPP}/forms/consignments/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="Active"')}`),
+      api(`/kapps/${KAPP}/forms/time-entries/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="Submitted"')}`),
+      api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="For Sale"')}`)
+    ]);
+
+    const totalForSaleValue = (forSale.submissions || []).reduce((sum, p) => sum + num(v(p, 'Asking Price')), 0);
+    const pendingHrs = (pendingHours.submissions || []).reduce((sum, t) => sum + num(v(t, 'Hours')), 0);
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi good"><div class="val">${(forSale.submissions || []).length}</div><div class="label">For Sale (page)</div></div>
+      <div class="kpi special"><div class="val">${sold.count || 0}</div><div class="label">Sold (Total)</div></div>
+      <div class="kpi info"><div class="val">${(openInq.submissions || []).length}</div><div class="label">Open Inquiries</div></div>
+      <div class="kpi"><div class="val">${(activeCon.submissions || []).length}</div><div class="label">Active Consignments</div></div>
+      <div class="kpi warn"><div class="val">${pendingHrs.toFixed(1)}</div><div class="label">Hours Pending Approval</div></div>
+      <div class="kpi good"><div class="val">${money(totalForSaleValue)}</div><div class="label">Inv. Asking Value</div></div>
+    `;
+
+    const inqs = (openInq.submissions || []).slice(0, 5);
+    document.getElementById('dash-inquiries').innerHTML = inqs.length ? `<table>
+      <thead><tr><th>#</th><th>Customer</th><th>Interest</th><th>Status</th></tr></thead>
+      <tbody>${inqs.map(i => `<tr class="clickable" onclick="openInquiryEdit('${i.id}')">
+        <td><strong>${esc(v(i, 'Inquiry Number'))}</strong></td>
+        <td>${esc(v(i, 'Customer Name'))}<div class="muted">${esc(v(i, 'Product Name') || v(i, 'Email'))}</div></td>
+        <td>${statusBadge(v(i, 'Interest'))}</td>
+        <td>${statusBadge(v(i, 'Status'))}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="empty">No open inquiries</div>';
+
+    const cons = (activeCon.submissions || []).slice(0, 5);
+    document.getElementById('dash-consignments').innerHTML = cons.length ? `<table>
+      <thead><tr><th>#</th><th>Item</th><th>Consignor</th><th>Listed</th></tr></thead>
+      <tbody>${cons.map(c => `<tr class="clickable" onclick="openConsignmentEdit('${c.id}')">
+        <td><strong>${esc(v(c, 'Consignment Number'))}</strong></td>
+        <td>${esc(v(c, 'Item Description'))}<div class="muted">${esc(v(c, 'Brand'))}</div></td>
+        <td>${esc(v(c, 'Consignor Name'))}</td>
+        <td class="price">${money(v(c, 'Listed Price'))}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="empty">No active consignments</div>';
+
+    const top = (allProducts.submissions || []).slice().sort((a, b) => num(v(b, 'Asking Price')) - num(v(a, 'Asking Price'))).slice(0, 8);
+    document.getElementById('dash-inventory').innerHTML = top.length ? `<table>
+      <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Condition</th><th>Price</th></tr></thead>
+      <tbody>${top.map(p => `<tr>
+        <td><code>${esc(v(p, 'SKU'))}</code></td>
+        <td><strong>${esc(v(p, 'Name'))}</strong><div class="muted">${esc(v(p, 'Brand'))}</div></td>
+        <td>${esc(v(p, 'Category'))}</td>
+        <td>${statusBadge(v(p, 'Condition'))}</td>
+        <td class="price">${money(v(p, 'Asking Price'))}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="empty">No inventory</div>';
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="kpi bad"><div class="val">!</div><div class="label">Error: ${esc(e.message)}</div></div>`;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   INVENTORY
+   ══════════════════════════════════════════════ */
+async function loadInventory(direction) {
+  const ps = PAGE_STATE.inv;
+  updatePageState(ps, direction);
+  const cat = document.getElementById('f-inv-cat').value;
+  const status = document.getElementById('f-inv-status').value;
+  const cond = document.getElementById('f-inv-cond').value;
+  let path = `/kapps/${KAPP}/forms/products/submissions?include=values&limit=25`;
+  const q = [];
+  if (cat) q.push(`values[Category]="${cat}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (cond) q.push(`values[Condition]="${cond}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('inv-body').innerHTML = subs.length ? subs.map(p => `
+      <tr class="clickable" onclick="openProductEdit('${p.id}')">
+        <td><code>${esc(v(p, 'SKU'))}</code></td>
+        <td><strong>${esc(v(p, 'Name'))}</strong>${v(p, 'Consignment Number') ? `<div class="muted">${esc(v(p, 'Consignment Number'))}</div>` : ''}</td>
+        <td>${esc(v(p, 'Category'))}</td>
+        <td>${esc(v(p, 'Brand'))}</td>
+        <td>${statusBadge(v(p, 'Condition'))}</td>
+        <td class="price">${money(v(p, 'Asking Price'))}</td>
+        <td>${statusBadge(v(p, 'Status'))}</td>
+        <td>${esc(v(p, 'Location'))}</td>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty">No products</td></tr>';
+    document.getElementById('inv-pagination').innerHTML = paginationHtml(ps, 'loadInventory');
+  } catch (e) {
+    document.getElementById('inv-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function openAddProduct() { openProductForm(null, null); }
+async function openProductEdit(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openProductForm(id, d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+function openProductForm(id, sub) {
+  const get = f => sub ? esc(v(sub, f)) : '';
+  const sel = (f, opts) => opts.map(o => `<option ${sub && v(sub, f) === o ? 'selected' : ''}>${o}</option>`).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <h2>${id ? 'Edit Product' : 'Add Product'}</h2>
+    <div class="form-grid">
+      <div><label>SKU</label><input id="p-sku" value="${get('SKU')}" /></div>
+      <div><label>Name</label><input id="p-name" value="${get('Name')}" /></div>
+      <div><label>Category</label><select id="p-cat">${sel('Category', ['Cardio', 'Strength', 'Free Weights', 'Accessories'])}</select></div>
+      <div><label>Brand</label><input id="p-brand" value="${get('Brand')}" /></div>
+      <div><label>Condition</label><select id="p-cond">${sel('Condition', ['New', 'Excellent', 'Good', 'Fair', 'Refurbished'])}</select></div>
+      <div><label>Status</label><select id="p-status">${sel('Status', ['For Sale', 'Sold', 'On Hold', 'Consignment', 'Shipping'])}</select></div>
+      <div><label>Asking Price ($)</label><input id="p-price" type="number" step="0.01" value="${get('Asking Price')}" /></div>
+      <div><label>Cost ($)</label><input id="p-cost" type="number" step="0.01" value="${get('Cost')}" /></div>
+      <div><label>Acquisition Source</label><input id="p-acq" value="${get('Acquisition Source')}" /></div>
+      <div><label>Acquisition Date</label><input id="p-acqdate" type="date" value="${get('Acquisition Date')}" /></div>
+      <div><label>Location</label><input id="p-loc" value="${get('Location')}" /></div>
+      <div><label>Consignment #</label><input id="p-con" value="${get('Consignment Number')}" /></div>
+    </div>
+    <label>Description</label><textarea id="p-desc" rows="3">${get('Description')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="p-submit" onclick="saveProduct('${id || ''}')">${id ? 'Save' : 'Add'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+async function saveProduct(id) {
+  const btn = document.getElementById('p-submit'); btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const values = {
+      'SKU': document.getElementById('p-sku').value,
+      'Name': document.getElementById('p-name').value,
+      'Category': document.getElementById('p-cat').value,
+      'Brand': document.getElementById('p-brand').value,
+      'Condition': document.getElementById('p-cond').value,
+      'Status': document.getElementById('p-status').value,
+      'Asking Price': document.getElementById('p-price').value,
+      'Cost': document.getElementById('p-cost').value,
+      'Acquisition Source': document.getElementById('p-acq').value,
+      'Acquisition Date': document.getElementById('p-acqdate').value,
+      'Location': document.getElementById('p-loc').value,
+      'Consignment Number': document.getElementById('p-con').value,
+      'Description': document.getElementById('p-desc').value,
+      'Listed By': API.user
+    };
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    else await api(`/kapps/${KAPP}/forms/products/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Product updated' : 'Product added'); loadInventory();
+  } catch (e) { btn.disabled = false; btn.textContent = id ? 'Save' : 'Add'; toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   INQUIRIES
+   ══════════════════════════════════════════════ */
+async function loadInquiries(direction) {
+  const ps = PAGE_STATE.inq;
+  updatePageState(ps, direction);
+  const status = document.getElementById('f-inq-status').value;
+  const interest = document.getElementById('f-inq-interest').value;
+  let path = `/kapps/${KAPP}/forms/inquiries/submissions?include=values&limit=25`;
+  const q = [];
+  if (status) q.push(`values[Status]="${status}"`);
+  if (interest) q.push(`values[Interest]="${interest}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('inq-body').innerHTML = subs.length ? subs.map(i => `
+      <tr class="clickable" onclick="openInquiryEdit('${i.id}')">
+        <td><strong>${esc(v(i, 'Inquiry Number'))}</strong></td>
+        <td>${esc(v(i, 'Customer Name'))}<div class="muted">${esc(v(i, 'Email'))}</div></td>
+        <td>${statusBadge(v(i, 'Interest'))}</td>
+        <td>${esc(v(i, 'Product Name')) || '<span class="muted">—</span>'}</td>
+        <td>${esc(v(i, 'Source'))}</td>
+        <td>${statusBadge(v(i, 'Status'))}</td>
+        <td>${esc(v(i, 'Assigned To')) || '<span class="muted">unassigned</span>'}</td>
+        <td>${esc(v(i, 'Created Date'))}</td>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty">No inquiries</td></tr>';
+    document.getElementById('inq-pagination').innerHTML = paginationHtml(ps, 'loadInquiries');
+  } catch (e) {
+    document.getElementById('inq-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function openAddInquiry() { openInquiryForm(null, null); }
+async function openInquiryEdit(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openInquiryForm(id, d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+function openInquiryForm(id, sub) {
+  const get = f => sub ? esc(v(sub, f)) : '';
+  const sel = (f, opts) => opts.map(o => `<option ${sub && v(sub, f) === o ? 'selected' : ''}>${o}</option>`).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <h2>${id ? 'Edit Inquiry' : 'Log Inquiry'} ${id ? esc(v(sub, 'Inquiry Number')) : ''}</h2>
+    <div class="form-grid">
+      <div><label>Customer Name</label><input id="i-name" value="${get('Customer Name')}" /></div>
+      <div><label>Email</label><input id="i-email" value="${get('Email')}" /></div>
+      <div><label>Phone</label><input id="i-phone" value="${get('Phone')}" /></div>
+      <div><label>Source</label><select id="i-source">${sel('Source', ['Web', 'Phone', 'Walk-in', 'Referral'])}</select></div>
+      <div><label>Interest</label><select id="i-interest">${sel('Interest', ['Buying', 'Selling', 'Trade'])}</select></div>
+      <div><label>Status</label><select id="i-status">${sel('Status', ['New', 'Contacted', 'Quote Sent', 'Converted', 'Closed'])}</select></div>
+      <div><label>Product SKU</label><input id="i-sku" value="${get('Product SKU')}" /></div>
+      <div><label>Product Name</label><input id="i-pname" value="${get('Product Name')}" /></div>
+      <div><label>Assigned To</label><input id="i-assigned" value="${get('Assigned To') || (id ? '' : API.user)}" /></div>
+      <div><label>Last Contact</label><input id="i-lastcontact" type="date" value="${get('Last Contact Date')}" /></div>
+    </div>
+    <label>Message</label><textarea id="i-msg" rows="2">${get('Message')}</textarea>
+    <label>Notes</label><textarea id="i-notes" rows="2">${get('Notes')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="i-submit" onclick="saveInquiry('${id || ''}')">${id ? 'Save' : 'Create'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+async function saveInquiry(id) {
+  const btn = document.getElementById('i-submit'); btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const values = {
+      'Customer Name': document.getElementById('i-name').value,
+      'Email': document.getElementById('i-email').value,
+      'Phone': document.getElementById('i-phone').value,
+      'Source': document.getElementById('i-source').value,
+      'Interest': document.getElementById('i-interest').value,
+      'Status': document.getElementById('i-status').value,
+      'Product SKU': document.getElementById('i-sku').value,
+      'Product Name': document.getElementById('i-pname').value,
+      'Assigned To': document.getElementById('i-assigned').value,
+      'Last Contact Date': document.getElementById('i-lastcontact').value,
+      'Message': document.getElementById('i-msg').value,
+      'Notes': document.getElementById('i-notes').value
+    };
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    } else {
+      values['Inquiry Number'] = await nextSeq('inquiries', 'INQ');
+      values['Created Date'] = today();
+      await api(`/kapps/${KAPP}/forms/inquiries/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    }
+    closeModal(); toast(id ? 'Inquiry updated' : `Inquiry ${values['Inquiry Number'] || ''} created`); loadInquiries();
+  } catch (e) { btn.disabled = false; btn.textContent = id ? 'Save' : 'Create'; toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   CONSIGNMENTS
+   ══════════════════════════════════════════════ */
+async function loadConsignments(direction) {
+  const ps = PAGE_STATE.con;
+  updatePageState(ps, direction);
+  const status = document.getElementById('f-con-status').value;
+  const cat = document.getElementById('f-con-cat').value;
+  let path = `/kapps/${KAPP}/forms/consignments/submissions?include=values&limit=25`;
+  const q = [];
+  if (status) q.push(`values[Status]="${status}"`);
+  if (cat) q.push(`values[Category]="${cat}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('con-body').innerHTML = subs.length ? subs.map(c => {
+      const status = v(c, 'Status');
+      const actionBtn = status === 'Active'
+        ? `<button class="btn-success btn-sm" onclick="event.stopPropagation();openMarkSold('${c.id}')">Mark Sold</button>`
+        : '';
+      return `<tr class="clickable" onclick="openConsignmentEdit('${c.id}')">
+        <td><strong>${esc(v(c, 'Consignment Number'))}</strong></td>
+        <td>${esc(v(c, 'Consignor Name'))}<div class="muted">${esc(v(c, 'Consignor Email'))}</div></td>
+        <td>${esc(v(c, 'Item Description'))}<div class="muted">${esc(v(c, 'Brand'))} • ${esc(v(c, 'Category'))}</div></td>
+        <td class="price">${money(v(c, 'Listed Price'))}</td>
+        <td>${esc(v(c, 'Commission Rate'))}%</td>
+        <td>${esc(v(c, 'Date Received'))}</td>
+        <td class="price">${money(v(c, 'Sale Price'))}</td>
+        <td class="price">${money(v(c, 'Consignor Payout'))}</td>
+        <td>${statusBadge(status)}</td>
+        <td>${actionBtn}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="10" class="empty">No consignments</td></tr>';
+    document.getElementById('con-pagination').innerHTML = paginationHtml(ps, 'loadConsignments');
+  } catch (e) {
+    document.getElementById('con-body').innerHTML = `<tr><td colspan="10" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function openConsignmentIntake() {
+  document.getElementById('modal-content').innerHTML = `
+    <h2>Consignment Intake</h2>
+    <div class="sub">Creates a consignment record and a linked product listed at the agreed price</div>
+    <div class="form-grid">
+      <div><label>Consignor Name</label><input id="c-name" /></div>
+      <div><label>Email</label><input id="c-email" /></div>
+      <div><label>Phone</label><input id="c-phone" /></div>
+      <div><label>Brand</label><input id="c-brand" /></div>
+      <div><label>Category</label><select id="c-cat"><option>Cardio</option><option>Strength</option><option>Free Weights</option><option>Accessories</option></select></div>
+      <div><label>Condition</label><select id="c-cond"><option>Excellent</option><option>Good</option><option>Fair</option><option>Refurbished</option><option>New</option></select></div>
+      <div><label>Listed Price ($)</label><input id="c-price" type="number" step="0.01" /></div>
+      <div><label>Commission Rate (%)</label><input id="c-comm" type="number" value="30" /></div>
+      <div><label>Date Received</label><input id="c-recvd" type="date" value="${today()}" /></div>
+      <div><label>Location</label><input id="c-loc" placeholder="Floor A/B/Front" /></div>
+    </div>
+    <label>Item Description</label><textarea id="c-desc" rows="2"></textarea>
+    <label>Notes</label><textarea id="c-notes" rows="2"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-orange" id="c-submit" onclick="submitConsignmentIntake()">Create Consignment</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function submitConsignmentIntake() {
+  const btn = document.getElementById('c-submit'); btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    const desc = document.getElementById('c-desc').value;
+    const brand = document.getElementById('c-brand').value;
+    const cat = document.getElementById('c-cat').value;
+    const cond = document.getElementById('c-cond').value;
+    const price = document.getElementById('c-price').value;
+    const comm = document.getElementById('c-comm').value;
+    const name = document.getElementById('c-name').value;
+    if (!name || !desc || !price) { toast('Consignor name, description, and price required'); btn.disabled = false; btn.textContent = 'Create Consignment'; return; }
+
+    const cn = await nextSeq('consignments', 'CN');
+    const sku = await nextSeq('products', cat === 'Cardio' ? 'CON-CRD' : cat === 'Strength' ? 'CON-STR' : cat === 'Free Weights' ? 'CON-FW' : 'CON-ACC');
+
+    // Create consignment
+    const conValues = {
+      'Consignment Number': cn,
+      'Consignor Name': name,
+      'Consignor Email': document.getElementById('c-email').value,
+      'Consignor Phone': document.getElementById('c-phone').value,
+      'Item Description': desc,
+      'Brand': brand,
+      'Category': cat,
+      'Condition': cond,
+      'Listed Price': price,
+      'Commission Rate': comm,
+      'Date Received': document.getElementById('c-recvd').value,
+      'Status': 'Active',
+      'Product SKU': sku,
+      'Notes': document.getElementById('c-notes').value
+    };
+    await api(`/kapps/${KAPP}/forms/consignments/submissions`, { method: 'POST', body: JSON.stringify({ values: conValues, coreState: 'Submitted' }) });
+
+    // Create linked product
+    const prodValues = {
+      'SKU': sku,
+      'Name': desc.split('\n')[0].slice(0, 100),
+      'Category': cat,
+      'Brand': brand,
+      'Condition': cond,
+      'Description': desc,
+      'Asking Price': price,
+      'Cost': '0',
+      'Acquisition Source': 'Consignment',
+      'Acquisition Date': document.getElementById('c-recvd').value,
+      'Status': 'Consignment',
+      'Location': document.getElementById('c-loc').value,
+      'Consignment Number': cn,
+      'Listed By': API.user
+    };
+    await api(`/kapps/${KAPP}/forms/products/submissions`, { method: 'POST', body: JSON.stringify({ values: prodValues, coreState: 'Submitted' }) });
+
+    closeModal(); toast(`Consignment ${cn} + product ${sku} created`); loadConsignments();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Create Consignment'; toast('Error: ' + e.message); }
+}
+
+async function openConsignmentEdit(id) {
+  try {
+    const d = await api(`/submissions/${id}?include=values`);
+    const c = d.submission;
+    document.getElementById('modal-content').innerHTML = `
+      <h2>Consignment ${esc(v(c, 'Consignment Number'))}</h2>
+      <div class="sub">${esc(v(c, 'Item Description'))}</div>
+      <div class="modal-info">
+        <div class="row"><span class="k">Consignor</span><span class="v">${esc(v(c, 'Consignor Name'))}</span></div>
+        <div class="row"><span class="k">Email</span><span class="v">${esc(v(c, 'Consignor Email'))}</span></div>
+        <div class="row"><span class="k">Phone</span><span class="v">${esc(v(c, 'Consignor Phone'))}</span></div>
+        <div class="row"><span class="k">Listed Price</span><span class="v">${money(v(c, 'Listed Price'))}</span></div>
+        <div class="row"><span class="k">Commission</span><span class="v">${esc(v(c, 'Commission Rate'))}%</span></div>
+        <div class="row"><span class="k">Date Received</span><span class="v">${esc(v(c, 'Date Received'))}</span></div>
+        <div class="row"><span class="k">Linked Product</span><span class="v">${esc(v(c, 'Product SKU')) || '—'}</span></div>
+        ${v(c, 'Date Sold') ? `<div class="row"><span class="k">Date Sold</span><span class="v">${esc(v(c, 'Date Sold'))}</span></div>` : ''}
+        ${v(c, 'Sale Price') ? `<div class="row"><span class="k">Sale Price</span><span class="v">${money(v(c, 'Sale Price'))}</span></div>` : ''}
+        ${v(c, 'Consignor Payout') ? `<div class="row"><span class="k">Payout</span><span class="v">${money(v(c, 'Consignor Payout'))}</span></div>` : ''}
+      </div>
+      <label>Status</label>
+      <select id="ce-status">
+        ${['Active', 'Sold', 'Withdrawn', 'Expired'].map(s => `<option ${v(c, 'Status') === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <label>Notes</label><textarea id="ce-notes" rows="3">${esc(v(c, 'Notes'))}</textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        ${v(c, 'Status') === 'Active' ? `<button class="btn-success" onclick="openMarkSold('${id}')">Mark Sold</button>` : ''}
+        <button class="btn-primary" id="ce-submit" onclick="saveConsignmentEdit('${id}')">Save</button>
+      </div>`;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function saveConsignmentEdit(id) {
+  const btn = document.getElementById('ce-submit'); btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const values = {
+      'Status': document.getElementById('ce-status').value,
+      'Notes': document.getElementById('ce-notes').value
+    };
+    await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Consignment updated'); loadConsignments();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Save'; toast('Error: ' + e.message); }
+}
+
+async function openMarkSold(id) {
+  try {
+    const d = await api(`/submissions/${id}?include=values`);
+    const c = d.submission;
+    const listed = num(v(c, 'Listed Price'));
+    const rate = num(v(c, 'Commission Rate'));
+    document.getElementById('modal-content').innerHTML = `
+      <h2>Mark Sold — ${esc(v(c, 'Consignment Number'))}</h2>
+      <div class="sub">${esc(v(c, 'Item Description'))}</div>
+      <div class="modal-info">
+        <div class="row"><span class="k">Consignor</span><span class="v">${esc(v(c, 'Consignor Name'))}</span></div>
+        <div class="row"><span class="k">Listed Price</span><span class="v">${money(listed)}</span></div>
+        <div class="row"><span class="k">Commission Rate</span><span class="v">${rate}%</span></div>
+      </div>
+      <label>Actual Sale Price ($)</label>
+      <input id="ms-price" type="number" step="0.01" value="${listed}" oninput="updateMSPayout(${rate})" />
+      <label>Date Sold</label>
+      <input id="ms-date" type="date" value="${today()}" />
+      <div class="modal-info" style="margin-top:12px;background:var(--green-bg);border:1px solid var(--green);">
+        <div class="row"><span class="k">Store Commission (${rate}%)</span><span class="v" id="ms-commission">${money(listed * rate / 100)}</span></div>
+        <div class="row"><span class="k" style="font-weight:700;color:var(--green);">Consignor Payout</span><span class="v" style="font-weight:700;color:var(--green);" id="ms-payout">${money(listed * (1 - rate / 100))}</span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-success" id="ms-submit" onclick="submitMarkSold('${id}', ${rate}, '${esc(v(c, 'Product SKU'))}')">Confirm Sale</button>
+      </div>`;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function updateMSPayout(rate) {
+  const price = num(document.getElementById('ms-price').value);
+  document.getElementById('ms-commission').textContent = money(price * rate / 100);
+  document.getElementById('ms-payout').textContent = money(price * (1 - rate / 100));
+}
+
+async function submitMarkSold(id, rate, productSku) {
+  const btn = document.getElementById('ms-submit'); btn.disabled = true; btn.textContent = 'Processing...';
+  try {
+    const price = num(document.getElementById('ms-price').value);
+    const date = document.getElementById('ms-date').value;
+    const payout = price * (1 - rate / 100);
+    await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({
+      values: {
+        'Status': 'Sold',
+        'Sale Price': String(price),
+        'Date Sold': date,
+        'Consignor Payout': payout.toFixed(2)
+      },
+      coreState: 'Submitted'
+    }) });
+    // Update linked product to Sold
+    if (productSku) {
+      const pdata = await api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=1&q=${encodeURIComponent(`values[SKU]="${productSku}"`)}`);
+      const prod = (pdata.submissions || [])[0];
+      if (prod) await api(`/submissions/${prod.id}`, { method: 'PUT', body: JSON.stringify({ values: { 'Status': 'Sold' }, coreState: 'Submitted' }) });
+    }
+    closeModal(); toast(`Sale recorded — payout ${money(payout)}`); loadConsignments();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Confirm Sale'; toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   EMPLOYEES
+   ══════════════════════════════════════════════ */
+async function loadEmployees(direction) {
+  const ps = PAGE_STATE.emp;
+  updatePageState(ps, direction);
+  const role = document.getElementById('f-emp-role').value;
+  const status = document.getElementById('f-emp-status').value;
+  let path = `/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`;
+  const q = [];
+  if (role) q.push(`values[Role]="${role}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+    document.getElementById('emp-body').innerHTML = subs.length ? subs.map(e => `
+      <tr class="clickable" onclick="openEmployeeEdit('${e.id}')">
+        <td><code>${esc(v(e, 'Employee ID'))}</code></td>
+        <td><strong>${esc(v(e, 'First Name'))} ${esc(v(e, 'Last Name'))}</strong></td>
+        <td>${esc(v(e, 'Email'))}</td>
+        <td>${esc(v(e, 'Phone'))}</td>
+        <td>${statusBadge(v(e, 'Role'))}</td>
+        <td class="price">${money(v(e, 'Hourly Rate'))}/hr</td>
+        <td>${esc(v(e, 'Hire Date'))}</td>
+        <td>${statusBadge(v(e, 'Status'))}</td>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty">No employees</td></tr>';
+    document.getElementById('emp-pagination').innerHTML = paginationHtml(ps, 'loadEmployees');
+  } catch (e) {
+    document.getElementById('emp-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function openAddEmployee() { openEmployeeForm(null, null); }
+async function openEmployeeEdit(id) {
+  try { const d = await api(`/submissions/${id}?include=values`); openEmployeeForm(id, d.submission); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+function openEmployeeForm(id, sub) {
+  const get = f => sub ? esc(v(sub, f)) : '';
+  const sel = (f, opts) => opts.map(o => `<option ${sub && v(sub, f) === o ? 'selected' : ''}>${o}</option>`).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <h2>${id ? 'Edit Employee' : 'Add Employee'}</h2>
+    <div class="form-grid">
+      <div><label>Employee ID</label><input id="e-id" value="${get('Employee ID')}" ${id ? 'readonly' : ''} /></div>
+      <div><label>Role</label><select id="e-role">${sel('Role', ['Manager', 'Sales', 'Tech', 'Cleaner'])}</select></div>
+      <div><label>First Name</label><input id="e-first" value="${get('First Name')}" /></div>
+      <div><label>Last Name</label><input id="e-last" value="${get('Last Name')}" /></div>
+      <div><label>Email</label><input id="e-email" value="${get('Email')}" /></div>
+      <div><label>Phone</label><input id="e-phone" value="${get('Phone')}" /></div>
+      <div><label>Hourly Rate ($)</label><input id="e-rate" type="number" step="0.01" value="${get('Hourly Rate')}" /></div>
+      <div><label>Hire Date</label><input id="e-hire" type="date" value="${get('Hire Date') || today()}" /></div>
+      <div><label>Status</label><select id="e-status">${sel('Status', ['Active', 'Inactive'])}</select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="e-submit" onclick="saveEmployee('${id || ''}')">${id ? 'Save' : 'Add'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+async function saveEmployee(id) {
+  const btn = document.getElementById('e-submit'); btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const values = {
+      'Employee ID': document.getElementById('e-id').value || await nextSeq('employees', 'EMP'),
+      'First Name': document.getElementById('e-first').value,
+      'Last Name': document.getElementById('e-last').value,
+      'Email': document.getElementById('e-email').value,
+      'Phone': document.getElementById('e-phone').value,
+      'Role': document.getElementById('e-role').value,
+      'Hourly Rate': document.getElementById('e-rate').value,
+      'Hire Date': document.getElementById('e-hire').value,
+      'Status': document.getElementById('e-status').value
+    };
+    if (id) await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    else await api(`/kapps/${KAPP}/forms/employees/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(id ? 'Employee updated' : 'Employee added'); loadEmployees();
+    // Refresh cache
+    const d = await api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25&q=${encodeURIComponent('values[Status]="Active"')}`);
+    EMPLOYEES_CACHE = d.submissions || [];
+  } catch (e) { btn.disabled = false; btn.textContent = id ? 'Save' : 'Add'; toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   TIME TRACKING
+   ══════════════════════════════════════════════ */
+async function loadTime(direction) {
+  const ps = PAGE_STATE.time;
+  updatePageState(ps, direction);
+  const empId = document.getElementById('f-time-emp').value;
+  const status = document.getElementById('f-time-status').value;
+  const activity = document.getElementById('f-time-activity').value;
+  let path = `/kapps/${KAPP}/forms/time-entries/submissions?include=values&limit=25`;
+  const q = [];
+  if (empId) q.push(`values[Employee ID]="${empId}"`);
+  if (status) q.push(`values[Status]="${status}"`);
+  if (activity) q.push(`values[Activity]="${activity}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    // Page summary
+    const totalHours = subs.reduce((s, t) => s + num(v(t, 'Hours')), 0);
+    const submitted = subs.filter(t => v(t, 'Status') === 'Submitted').reduce((s, t) => s + num(v(t, 'Hours')), 0);
+    const approved = subs.filter(t => v(t, 'Status') === 'Approved').reduce((s, t) => s + num(v(t, 'Hours')), 0);
+    document.getElementById('time-summary').innerHTML = `
+      <div class="kpi"><div class="val">${totalHours.toFixed(1)}</div><div class="label">Hours on Page</div></div>
+      <div class="kpi warn"><div class="val">${submitted.toFixed(1)}</div><div class="label">Pending Approval</div></div>
+      <div class="kpi good"><div class="val">${approved.toFixed(1)}</div><div class="label">Approved</div></div>
+    `;
+
+    document.getElementById('time-body').innerHTML = subs.length ? subs.map(t => {
+      const isSubmitted = v(t, 'Status') === 'Submitted';
+      return `<tr>
+        <td><strong>${esc(v(t, 'Entry ID'))}</strong></td>
+        <td>${esc(v(t, 'Employee Name'))}<div class="muted">${esc(v(t, 'Employee ID'))}</div></td>
+        <td>${esc(v(t, 'Date'))}</td>
+        <td><strong>${esc(v(t, 'Hours'))}</strong></td>
+        <td>${esc(v(t, 'Activity'))}</td>
+        <td>${esc(v(t, 'Notes'))}</td>
+        <td>${statusBadge(v(t, 'Status'))}</td>
+        <td>${isSubmitted ? `<button class="btn-success btn-sm" onclick="approveTime('${t.id}')">Approve</button>` : ''}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="8" class="empty">No time entries</td></tr>';
+    document.getElementById('time-pagination').innerHTML = paginationHtml(ps, 'loadTime');
+  } catch (e) {
+    document.getElementById('time-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function approveTime(id) {
+  try {
+    await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: { 'Status': 'Approved' }, coreState: 'Submitted' }) });
+    toast('Approved'); loadTime();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function openLogTime() {
+  const empOpts = EMPLOYEES_CACHE.map(e => `<option value="${esc(v(e, 'Employee ID'))}" data-name="${esc(v(e, 'First Name'))} ${esc(v(e, 'Last Name'))}">${esc(v(e, 'First Name'))} ${esc(v(e, 'Last Name'))} (${esc(v(e, 'Employee ID'))})</option>`).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <h2>Log Time</h2>
+    <div class="form-grid">
+      <div><label>Employee</label><select id="t-emp">${empOpts}</select></div>
+      <div><label>Date</label><input id="t-date" type="date" value="${today()}" /></div>
+      <div><label>Hours</label><input id="t-hours" type="number" step="0.25" value="8" /></div>
+      <div><label>Activity</label><select id="t-activity"><option>Sales</option><option>Repair</option><option>Cleaning</option><option>Inventory</option><option>Pickup</option></select></div>
+    </div>
+    <label>Notes</label><textarea id="t-notes" rows="2"></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="t-submit" onclick="submitLogTime()">Submit</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function submitLogTime() {
+  const btn = document.getElementById('t-submit'); btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    const empSel = document.getElementById('t-emp');
+    const empId = empSel.value;
+    const empName = empSel.options[empSel.selectedIndex]?.dataset?.name || '';
+    if (!empId) { toast('Select an employee'); btn.disabled = false; btn.textContent = 'Submit'; return; }
+    const entryId = await nextSeq('time-entries', 'TE');
+    const values = {
+      'Entry ID': entryId,
+      'Employee ID': empId,
+      'Employee Name': empName,
+      'Date': document.getElementById('t-date').value,
+      'Hours': document.getElementById('t-hours').value,
+      'Activity': document.getElementById('t-activity').value,
+      'Notes': document.getElementById('t-notes').value,
+      'Status': 'Submitted'
+    };
+    await api(`/kapps/${KAPP}/forms/time-entries/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast(`Time entry ${entryId} submitted`); loadTime();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Submit'; toast('Error: ' + e.message); }
+}
+
+/* ══════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════ */
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+</script>
+</body>
+</html>

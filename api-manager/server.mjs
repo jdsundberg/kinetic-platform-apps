@@ -159,7 +159,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
   }
 
   // GET /api/apimgr/apis/:id/detail — Full detail for one API
-  const detailMatch = pathname.match(/^\/api\/api-manager\/apis\/([^/]+)\/detail$/);
+  const detailMatch = pathname.match(/^\/api\/apimgr\/apis\/([^/]+)\/detail$/);
   if (detailMatch && req.method === "GET") {
     const apiId = decodeURIComponent(detailMatch[1]);
     try {

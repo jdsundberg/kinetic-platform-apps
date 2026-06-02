@@ -432,7 +432,7 @@ function kqlFetch(form, kql, lastCreatedAt) {
   if (lastCreatedAt) {
     kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
   }
-  let url = API + `/app/api/v1/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=${PAGE_SIZE}`;
+  let url = API + `/app/api/v1/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=${PAGE_SIZE}`;
   if (kql) url += `&q=${encodeURIComponent(kql)}`;
   return fetch(url, { headers: { Authorization: AUTH } }).then(r => r.json());
 }

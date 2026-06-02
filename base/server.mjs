@@ -24,6 +24,10 @@ const APP_REGISTRY = {};
 const APP_HANDLERS = []; // [{prefix, handler, appId}]
 
 async function discoverApps() {
+  // Reset so this can be re-run (e.g. via /api/base/rescan) without duplicating handlers
+  for (const k of Object.keys(APP_REGISTRY)) delete APP_REGISTRY[k];
+  APP_HANDLERS.length = 0;
+
   const appsDir = path.resolve(__dir, "..");
   const dirs = fs.readdirSync(appsDir, { withFileTypes: true })
     .filter(d => d.isDirectory() && !d.name.startsWith(".") && d.name !== "base" && d.name !== "home" && d.name !== "node_modules")
@@ -44,8 +48,24 @@ async function discoverApps() {
     const hasForms = appDef?.forms?.length > 0;
     const kappSlug = hasForms ? (appDef?.slug || slug) : null;
 
+    // Directory creation time (birthtime) as the app's "date created".
+    // Fall back to mtime when birthtime is unavailable (0 on some filesystems).
+    let created = '';
+    try {
+      const st = fs.statSync(appDir);
+      created = (st.birthtimeMs ? st.birthtime : st.mtime).toISOString();
+    } catch {}
+
     // Register in APP_REGISTRY
-    APP_REGISTRY[slug] = { dir, name, kapp: kappSlug, description: appDef?.description || '', category: appDef?.category || '' };
+    APP_REGISTRY[slug] = {
+      dir, name, kapp: kappSlug,
+      description: appDef?.description || '',
+      category: appDef?.category || '',
+      icon: appDef?.icon || '',
+      color: appDef?.color || '',
+      bg: appDef?.bg || '',
+      created,
+    };
 
     // Try to import server.mjs for custom API handler
     const serverPath = path.join(appDir, "server.mjs");
@@ -221,26 +241,30 @@ const appHelpers = {
 
 /* ───── APP_ABOUT (auto-generated from app.json) ───── */
 const APP_ABOUT = {};
-for (const [slug, reg] of Object.entries(APP_REGISTRY)) {
-  const appJsonPath = path.join(__dir, "..", reg.dir, "app.json");
-  if (fs.existsSync(appJsonPath)) {
-    try {
-      const def = JSON.parse(fs.readFileSync(appJsonPath, "utf-8"));
-      APP_ABOUT[slug] = {
-        title: def.name || slug,
-        overview: def.description || "",
-        kapp: def.slug || slug,
-        tabs: [],
-        entities: (def.forms || []).map(f => ({
-          name: f.name,
-          color: "#5F6368",
-          fields: (f.fields || []).slice(0, 6).map(fi => fi.name),
-        })),
-        rels: [],
-      };
-    } catch {}
+function buildAppAbout() {
+  for (const k of Object.keys(APP_ABOUT)) delete APP_ABOUT[k];
+  for (const [slug, reg] of Object.entries(APP_REGISTRY)) {
+    const appJsonPath = path.join(__dir, "..", reg.dir, "app.json");
+    if (fs.existsSync(appJsonPath)) {
+      try {
+        const def = JSON.parse(fs.readFileSync(appJsonPath, "utf-8"));
+        APP_ABOUT[slug] = {
+          title: def.name || slug,
+          overview: def.description || "",
+          kapp: def.slug || slug,
+          tabs: [],
+          entities: (def.forms || []).map(f => ({
+            name: f.name,
+            color: "#5F6368",
+            fields: (f.fields || []).slice(0, 6).map(fi => fi.name),
+          })),
+          rels: [],
+        };
+      } catch {}
+    }
   }
 }
+buildAppAbout();
 
 /* ───── Script injection for auto-login ───── */
 function injectScripts(html, appSlug) {
@@ -683,9 +707,33 @@ const server = http.createServer((req, res) => {
   // GET /api/base/apps — list all auto-discovered apps
   if (pathname === "/api/base/apps" && req.method === "GET") {
     const apps = Object.entries(APP_REGISTRY).map(([slug, reg]) => ({
-      slug, name: reg.name, kapp: reg.kapp, description: reg.description || '', category: reg.category || '',
+      slug, name: reg.name, kapp: reg.kapp,
+      description: reg.description || '', category: reg.category || '',
+      icon: reg.icon || '', color: reg.color || '', bg: reg.bg || '', created: reg.created || '',
     })).sort((a, b) => a.name.localeCompare(b.name));
     jsonResp(res, 200, { apps });
+    return;
+  }
+
+  // POST /api/base/rescan — re-scan the apps/ directory on disk so newly-added
+  // apps appear without a server restart, then return the refreshed list.
+  if (pathname === "/api/base/rescan" && req.method === "POST") {
+    const before = Object.keys(APP_REGISTRY).length;
+    const beforeSlugs = new Set(Object.keys(APP_REGISTRY));
+    try {
+      await discoverApps();
+      buildAppAbout();
+    } catch (e) {
+      jsonResp(res, 500, { error: "Rescan failed: " + e.message });
+      return;
+    }
+    const added = Object.keys(APP_REGISTRY).filter(s => !beforeSlugs.has(s));
+    const apps = Object.entries(APP_REGISTRY).map(([slug, reg]) => ({
+      slug, name: reg.name, kapp: reg.kapp,
+      description: reg.description || '', category: reg.category || '',
+      icon: reg.icon || '', color: reg.color || '', bg: reg.bg || '', created: reg.created || '',
+    })).sort((a, b) => a.name.localeCompare(b.name));
+    jsonResp(res, 200, { apps, total: apps.length, before, added });
     return;
   }
 

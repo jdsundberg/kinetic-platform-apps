@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Tracker</title>
+<style>
+:root {
+  --primary: #1B5E7C; --primary-dark: #134B65; --primary-light: #4A8FA8;
+  --accent: #F0A500; --accent-bg: #FFF7E0;
+  --bg: #F4F6F8; --white: #fff; --border: #E1E4E8; --light: #FAFBFC;
+  --gray: #586069; --gray-dark: #24292E;
+  --green: #2DA44E; --green-bg: #DCFCE7;
+  --red: #CF222E; --red-bg: #FFEBE9;
+  --yellow: #BF8700; --yellow-bg: #FFF8C5;
+  --blue: #0969DA; --blue-bg: #DDF4FF;
+  --purple: #8250DF; --purple-bg: #F4EAFC;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--gray-dark); }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1B5E7C 0%, #4A8FA8 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--primary); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--accent); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,94,124,.18); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--primary-dark); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: var(--red-bg); color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--primary); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--accent); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.78); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.12); color: white; }
+.nav-tabs button.active { background: var(--accent); color: var(--gray-dark); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--gray-dark); }
+
+/* ── Consoles ── */
+.console { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); box-shadow: var(--shadow); border-left: 4px solid var(--primary); }
+.kpi .val { font-size: 26px; font-weight: 700; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .3px; }
+.kpi.green { border-left-color: var(--green); }
+.kpi.yellow { border-left-color: var(--yellow); }
+.kpi.red { border-left-color: var(--red); }
+.kpi.blue { border-left-color: var(--blue); }
+.kpi.accent { border-left-color: var(--accent); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); background: var(--light); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--light); }
+td.mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-active { background: var(--green-bg); color: var(--green); }
+.badge-in-supply { background: var(--blue-bg); color: var(--blue); }
+.badge-decommissioned { background: var(--red-bg); color: var(--red); }
+.badge-in-transit { background: var(--yellow-bg); color: var(--yellow); }
+.badge-supply { background: var(--accent-bg); color: var(--accent); }
+.badge-branch { background: var(--blue-bg); color: var(--blue); }
+.badge-warehouse { background: var(--purple-bg); color: var(--purple); }
+.badge-completed { background: var(--green-bg); color: var(--green); }
+.badge-pending { background: var(--yellow-bg); color: var(--yellow); }
+.badge-cancelled { background: #F0F0F0; color: var(--gray); }
+.badge-deployment, .badge-reassignment { background: var(--blue-bg); color: var(--blue); }
+.badge-decommission { background: var(--red-bg); color: var(--red); }
+.badge-repair { background: var(--yellow-bg); color: var(--yellow); }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-accent { background: var(--accent); color: var(--gray-dark); border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-accent:hover { filter: brightness(0.95); }
+.btn-secondary { background: var(--light); color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.btn-link { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 12px; padding: 0; text-decoration: underline; }
+
+/* ── Filter ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.filter-bar input[type=text] { min-width: 200px; }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 560px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-header h2 { font-size: 16px; color: var(--primary); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 60px; }
+.modal-body .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-body .info { background: var(--light); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--gray); }
+.modal-body .info b { color: var(--gray-dark); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+#toast.error { background: var(--red); }
+#toast.success { background: var(--green); }
+
+/* ── Dashboard ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+.row-bar { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.row-bar:last-child { border-bottom: none; }
+.row-bar .lbl { font-size: 13px; flex: 1; }
+.row-bar .ct { font-size: 12px; color: var(--gray); }
+.row-bar .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; max-width: 180px; }
+.row-bar .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+
+.supply-banner { background: linear-gradient(90deg, var(--accent-bg), var(--white)); border: 1px solid var(--accent); border-left: 5px solid var(--accent); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+.supply-banner .icon { font-size: 28px; }
+.supply-banner .text { flex: 1; }
+.supply-banner .text b { color: var(--primary); display: block; font-size: 14px; }
+.supply-banner .text span { font-size: 12px; color: var(--gray); }
+.supply-banner button { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* History list */
+.history-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.history-item:last-child { border-bottom: none; }
+.history-item .h-row1 { display: flex; justify-content: space-between; align-items: center; }
+.history-item .h-row1 b { font-size: 13px; color: var(--gray-dark); }
+.history-item .h-row1 .h-date { font-size: 11px; color: var(--gray); }
+.history-item .h-row2 { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.history-item .arrow { color: var(--accent); font-weight: 700; padding: 0 6px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Asset Tracker</h1>
+    <div class="sub">Track equipment across locations</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://first.kinetics.com" placeholder="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Asset<span>Tracker</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('assets')">Assets</button>
+      <button onclick="switchTab('locations')">Locations</button>
+      <button onclick="switchTab('transfers')">Transfers</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2>
+    <div class="page-sub">Asset distribution across the fleet</div>
+
+    <div class="supply-banner">
+      <div class="icon">📦</div>
+      <div class="text">
+        <b>Supply</b>
+        <span>Central warehouse for decommissioned, staged, and in-repair assets.</span>
+      </div>
+      <button onclick="openShipFromSupplyModal()">Ship from Supply →</button>
+    </div>
+
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Status Breakdown</h3><div id="dash-status"></div></div>
+      <div class="card"><h3>By Asset Type</h3><div id="dash-type"></div></div>
+      <div class="card"><h3>Top Locations (by asset count)</h3><div id="dash-locations"></div></div>
+      <div class="card"><h3>Recent Transfers</h3><div id="dash-transfers"></div></div>
+    </div>
+  </div>
+
+  <!-- ── Assets ── -->
+  <div id="console-assets" class="console">
+    <h2 class="page-title">Assets</h2>
+    <div class="page-sub">Tracked equipment across all locations</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openAssetModal()">+ New Asset</button>
+      <div class="filter-bar">
+        <input type="text" id="filter-asset-search" placeholder="Search tag / serial / model…" oninput="debouncedAssetLoad()">
+        <select id="filter-asset-status" onchange="loadAssets()">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>In Supply</option><option>In Transit</option><option>Decommissioned</option>
+        </select>
+        <select id="filter-asset-location" onchange="loadAssets()"><option value="">All Locations</option></select>
+        <select id="filter-asset-type" onchange="loadAssets()">
+          <option value="">All Types</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Tag</th><th>Serial</th><th>Type</th><th>Model</th><th>Location</th><th>Assigned</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="assets-body"></tbody>
+    </table></div>
+    <div class="pagination" id="assets-pagination"></div>
+  </div>
+
+  <!-- ── Locations ── -->
+  <div id="console-locations" class="console">
+    <h2 class="page-title">Locations</h2>
+    <div class="page-sub">Physical sites where assets reside</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openLocationModal()">+ New Location</button>
+      <div class="filter-bar">
+        <input type="text" id="filter-loc-search" placeholder="Search name / city…" oninput="debouncedLocLoad()">
+        <select id="filter-loc-type" onchange="loadLocations()">
+          <option value="">All Types</option>
+          <option>Supply</option><option>Branch</option><option>Warehouse</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>City</th><th>State</th><th>Zip</th><th>Assets</th><th>Active</th></tr></thead>
+      <tbody id="locations-body"></tbody>
+    </table></div>
+    <div class="pagination" id="locations-pagination"></div>
+  </div>
+
+  <!-- ── Transfers ── -->
+  <div id="console-transfers" class="console">
+    <h2 class="page-title">Transfers</h2>
+    <div class="page-sub">History of asset movements</div>
+    <div class="toolbar">
+      <div class="filter-bar">
+        <input type="text" id="filter-tr-search" placeholder="Search transfer ID / asset tag…" oninput="debouncedTrLoad()">
+        <select id="filter-tr-reason" onchange="loadTransfers()">
+          <option value="">All Reasons</option>
+          <option>Deployment</option><option>Reassignment</option><option>Decommission</option><option>Repair</option><option>Other</option>
+        </select>
+        <select id="filter-tr-to" onchange="loadTransfers()"><option value="">All Destinations</option></select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Transfer ID</th><th>Asset</th><th>From</th><th>To</th><th>Date</th><th>Reason</th><th>Status</th><th>By</th></tr></thead>
+      <tbody id="transfers-body"></tbody>
+    </table></div>
+    <div class="pagination" id="transfers-pagination"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<script>
+/* ── State ── */
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'asset-tracker';
+const SUPPLY = 'Supply';
+const ASSET_TYPES = ["Laptop","Desktop","Monitor","Phone","Printer","Tablet","Server","Switch","Router","Headset","Dock","Projector"];
+const MANUFACTURERS = ["Dell","HP","Lenovo","Apple","Samsung","LG","Cisco","Aruba","Juniper","Microsoft","Google","Brother","Canon"];
+
+const PAGE_STATE = {
+  assets:    { pageToken: null, page: 1, history: [] },
+  locations: { pageToken: null, page: 1, history: [] },
+  transfers: { pageToken: null, page: 1, history: [] },
+};
+
+// caches
+let LOCATIONS_CACHE = [];
+
+/* ── Helpers ── */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = type || ''; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+function badge(val) {
+  if (!val) return '';
+  const cls = String(val).toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge badge-${esc(cls)}">${esc(val)}</span>`;
+}
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+const debouncedAssetLoad = debounce(() => { resetPage('assets'); loadAssets(); }, 300);
+const debouncedLocLoad   = debounce(() => { resetPage('locations'); loadLocations(); }, 300);
+const debouncedTrLoad    = debounce(() => { resetPage('transfers'); loadTransfers(); }, 300);
+
+function resetPage(key) { PAGE_STATE[key] = { pageToken: null, page: 1, history: [] }; }
+
+/* ── Auth ── */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+/* ── Session Restore ── */
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ── API ── */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 250)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function customApi(path, opts = {}) {
+  // Custom endpoints live on the base launcher, NOT on the kinetic server.
+  // Use same-origin so it works under /asset-tracker/ via base/server.mjs.
+  const res = await fetch(path, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  const text = await res.text();
+  let body; try { body = text ? JSON.parse(text) : {}; } catch { body = text; }
+  if (!res.ok) throw new Error(body?.error || `${res.status}: ${text.slice(0, 250)}`);
+  return body;
+}
+
+/* ── Switch tabs ── */
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById(`console-${tab}`).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  if (tab === 'assets') { resetPage('assets'); loadAssets(); }
+  if (tab === 'locations') { resetPage('locations'); loadLocations(); }
+  if (tab === 'transfers') { resetPage('transfers'); loadTransfers(); }
+}
+
+/* ── Enter App: cache locations for dropdowns, then load dashboard ── */
+async function enterApp() {
+  try {
+    // cache locations across multiple pages for dropdowns (server-side, so capped at 100 ok)
+    let token = null, all = [], guard = 0;
+    do {
+      const url = `/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25${token ? `&pageToken=${encodeURIComponent(token)}` : ''}`;
+      const r = await api(url);
+      all.push(...(r.submissions || []));
+      token = r.nextPageToken;
+    } while (token && ++guard < 8);
+    LOCATIONS_CACHE = all;
+  } catch (e) { console.warn('Locations cache failed:', e.message); }
+
+  populateLocationFilters();
+  populateTypeFilters();
+  loadDashboard();
+}
+
+function populateLocationFilters() {
+  const sel = document.getElementById('filter-asset-location');
+  const sel2 = document.getElementById('filter-tr-to');
+  const names = LOCATIONS_CACHE.map(l => v(l, 'Location Name')).filter(Boolean).sort();
+  const opts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if (sel) sel.innerHTML = '<option value="">All Locations</option>' + opts;
+  if (sel2) sel2.innerHTML = '<option value="">All Destinations</option>' + opts;
+}
+
+function populateTypeFilters() {
+  const sel = document.getElementById('filter-asset-type');
+  if (sel) sel.innerHTML = '<option value="">All Types</option>' + ASSET_TYPES.map(t => `<option>${esc(t)}</option>`).join('');
+}
+
+/* ── Dashboard ── */
+async function loadDashboard() {
+  try {
+    const d = await customApi('/api/asset-tracker/dashboard');
+    const k = d.kpis;
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val">${k.totalAssets}</div><div class="label">Total Assets</div></div>
+      <div class="kpi green"><div class="val">${k.active}</div><div class="label">Active</div></div>
+      <div class="kpi blue"><div class="val">${k.inSupply}</div><div class="label">In Supply</div></div>
+      <div class="kpi yellow"><div class="val">${k.inTransit}</div><div class="label">In Transit</div></div>
+      <div class="kpi red"><div class="val">${k.decommissioned}</div><div class="label">Decommissioned</div></div>
+      <div class="kpi accent"><div class="val">${k.totalLocations}</div><div class="label">Locations</div></div>
+      <div class="kpi"><div class="val">${k.totalTransfers}</div><div class="label">Transfers</div></div>
+    `;
+
+    const totalStatus = Object.values(d.byStatus).reduce((a,b)=>a+b, 0) || 1;
+    document.getElementById('dash-status').innerHTML = Object.entries(d.byStatus)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>`<div class="row-bar"><div class="lbl">${badge(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/totalStatus*100).toFixed(0)}%"></div></div><div class="ct">${v}</div></div>`)
+      .join('');
+
+    const totalType = Object.values(d.byType).reduce((a,b)=>a+b, 0) || 1;
+    document.getElementById('dash-type').innerHTML = Object.entries(d.byType)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>`<div class="row-bar"><div class="lbl">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/totalType*100).toFixed(0)}%"></div></div><div class="ct">${v}</div></div>`)
+      .join('');
+
+    const maxLoc = Math.max(...d.topLocations.map(l=>l.count), 1);
+    document.getElementById('dash-locations').innerHTML = d.topLocations
+      .map(l => `<div class="row-bar"><div class="lbl">${esc(l.name)}${l.name===SUPPLY?' <span class="badge badge-supply">SUPPLY</span>':''}</div><div class="bar-track"><div class="bar-fill" style="width:${(l.count/maxLoc*100).toFixed(0)}%"></div></div><div class="ct">${l.count}</div></div>`)
+      .join('') || '<div style="color:var(--gray);font-size:13px">No data</div>';
+
+    document.getElementById('dash-transfers').innerHTML = d.recentTransfers.length
+      ? d.recentTransfers.map(t => `
+          <div class="history-item">
+            <div class="h-row1"><b>${esc(t.assetTag)}</b> <span class="h-date">${esc(t.date)}</span></div>
+            <div class="h-row2">${esc(t.from || '—')} <span class="arrow">→</span> ${esc(t.to)} · ${badge(t.reason)} <span style="color:var(--gray)">by ${esc(t.by)}</span></div>
+          </div>`).join('')
+      : '<div style="color:var(--gray);font-size:13px">No transfers yet</div>';
+  } catch (e) {
+    toast('Dashboard load failed: ' + e.message, 'error');
+  }
+}
+
+/* ── Build KQL for assets / locations / transfers ── */
+function buildAssetKql() {
+  const status = document.getElementById('filter-asset-status').value;
+  const loc = document.getElementById('filter-asset-location').value;
+  const type = document.getElementById('filter-asset-type').value;
+  const search = document.getElementById('filter-asset-search').value.trim();
+  const parts = [];
+  if (status) parts.push(`values[Status] = "${status}"`);
+  if (loc) parts.push(`values[Current Location] = "${loc}"`);
+  if (type) parts.push(`values[Asset Type] = "${type}"`);
+  if (search) parts.push(`(values[Asset Tag] =~ "*${search}*" OR values[Serial Number] =~ "*${search}*" OR values[Model] =~ "*${search}*")`);
+  return parts.join(' AND ');
+}
+function buildLocKql() {
+  const type = document.getElementById('filter-loc-type').value;
+  const search = document.getElementById('filter-loc-search').value.trim();
+  const parts = [];
+  if (type) parts.push(`values[Type] = "${type}"`);
+  if (search) parts.push(`(values[Location Name] =~ "*${search}*" OR values[City] =~ "*${search}*")`);
+  return parts.join(' AND ');
+}
+function buildTrKql() {
+  const reason = document.getElementById('filter-tr-reason').value;
+  const to = document.getElementById('filter-tr-to').value;
+  const search = document.getElementById('filter-tr-search').value.trim();
+  const parts = [];
+  if (reason) parts.push(`values[Reason] = "${reason}"`);
+  if (to) parts.push(`values[To Location] = "${to}"`);
+  if (search) parts.push(`(values[Transfer ID] =~ "*${search}*" OR values[Asset Tag] =~ "*${search}*")`);
+  return parts.join(' AND ');
+}
+
+/* ── List loaders (25 per page) ── */
+async function fetchPage(formSlug, kql, key) {
+  const st = PAGE_STATE[key];
+  let url = `/kapps/${KAPP}/forms/${formSlug}/submissions?include=values&limit=25`;
+  if (kql) url += `&q=${encodeURIComponent(kql)}`;
+  if (st.pageToken) url += `&pageToken=${encodeURIComponent(st.pageToken)}`;
+  const r = await api(url);
+  return { subs: r.submissions || [], next: r.nextPageToken || null };
+}
+
+function renderPagination(key, hasNext, onPrev, onNext) {
+  const st = PAGE_STATE[key];
+  const el = document.getElementById(`${key}-pagination`);
+  el.innerHTML = `
+    <button class="btn-secondary btn-sm" ${st.page <= 1 ? 'disabled' : ''} onclick="(${onPrev.toString()})()">‹ Prev</button>
+    <span>Page ${st.page}</span>
+    <button class="btn-secondary btn-sm" ${!hasNext ? 'disabled' : ''} onclick="(${onNext.toString()})()">Next ›</button>
+  `;
+}
+
+/* === Assets === */
+async function loadAssets() {
+  try {
+    const kql = buildAssetKql();
+    const { subs, next } = await fetchPage('assets', kql, 'assets');
+    PAGE_STATE.assets.nextToken = next;
+    const tbody = document.getElementById('assets-body');
+    tbody.innerHTML = subs.length ? subs.map(s => `
+      <tr>
+        <td class="mono"><b>${esc(v(s,'Asset Tag'))}</b></td>
+        <td class="mono">${esc(v(s,'Serial Number'))}</td>
+        <td>${esc(v(s,'Asset Type'))}</td>
+        <td>${esc(v(s,'Manufacturer'))} ${esc(v(s,'Model'))}</td>
+        <td>${esc(v(s,'Current Location'))}${v(s,'Current Location')===SUPPLY?' <span class="badge badge-supply">SUPPLY</span>':''}</td>
+        <td>${esc(v(s,'Assigned Person') || '—')}</td>
+        <td>${badge(v(s,'Status'))}</td>
+        <td>
+          ${v(s,'Status') !== 'Decommissioned' ? `
+            <button class="btn-secondary btn-sm" onclick='openTransferModal(${JSON.stringify({id:s.id, tag:v(s,'Asset Tag'), from:v(s,'Current Location'), serial:v(s,'Serial Number'), person:v(s,'Assigned Person')})})'>Transfer</button>
+            ${v(s,'Current Location') !== SUPPLY ? `<button class="btn-secondary btn-sm" onclick='openDecommissionModal(${JSON.stringify({tag:v(s,'Asset Tag'), from:v(s,'Current Location')})})'>↓ Supply</button>` : ''}
+          ` : '<span style="color:var(--gray);font-size:11px">— end of life —</span>'}
+          <button class="btn-link" onclick="showHistory('${esc(v(s,'Asset Tag'))}')">History</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px">No assets</td></tr>';
+
+    renderPagination('assets', !!next,
+      () => { PAGE_STATE.assets.pageToken = PAGE_STATE.assets.history.pop() || null; PAGE_STATE.assets.page = Math.max(1, PAGE_STATE.assets.page - 1); loadAssets(); },
+      () => { PAGE_STATE.assets.history.push(PAGE_STATE.assets.pageToken); PAGE_STATE.assets.pageToken = PAGE_STATE.assets.nextToken; PAGE_STATE.assets.page++; loadAssets(); }
+    );
+  } catch (e) { toast('Asset load failed: ' + e.message, 'error'); }
+}
+
+/* === Locations === */
+async function loadLocations() {
+  try {
+    const kql = buildLocKql();
+    const { subs, next } = await fetchPage('locations', kql, 'locations');
+    PAGE_STATE.locations.nextToken = next;
+
+    // Count assets per location (from cache pulled at enterApp)
+    const countByLoc = {};
+    for (const a of LOCATIONS_CACHE) {} // no-op
+    // need asset counts; use the dashboard endpoint we already have for totals.
+    // For simplicity, just show "—". Could fetch byLocation per page but skip to stay <=25 ops.
+
+    const tbody = document.getElementById('locations-body');
+    tbody.innerHTML = subs.length ? subs.map(s => `
+      <tr>
+        <td><b>${esc(v(s,'Location Name'))}</b>${v(s,'Location Name')===SUPPLY?' <span class="badge badge-supply">SUPPLY</span>':''}</td>
+        <td>${badge(v(s,'Type'))}</td>
+        <td>${esc(v(s,'City'))}</td>
+        <td>${esc(v(s,'State'))}</td>
+        <td>${esc(v(s,'Zip'))}</td>
+        <td><button class="btn-link" onclick="viewLocationAssets('${esc(v(s,'Location Name'))}')">view</button></td>
+        <td>${esc(v(s,'Active'))}</td>
+      </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px">No locations</td></tr>';
+
+    renderPagination('locations', !!next,
+      () => { PAGE_STATE.locations.pageToken = PAGE_STATE.locations.history.pop() || null; PAGE_STATE.locations.page = Math.max(1, PAGE_STATE.locations.page - 1); loadLocations(); },
+      () => { PAGE_STATE.locations.history.push(PAGE_STATE.locations.pageToken); PAGE_STATE.locations.pageToken = PAGE_STATE.locations.nextToken; PAGE_STATE.locations.page++; loadLocations(); }
+    );
+  } catch (e) { toast('Location load failed: ' + e.message, 'error'); }
+}
+
+function viewLocationAssets(loc) {
+  switchTabProgrammatic('assets');
+  document.getElementById('filter-asset-location').value = loc;
+  resetPage('assets');
+  loadAssets();
+}
+
+function switchTabProgrammatic(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById(`console-${tab}`).classList.add('active');
+  const buttons = document.querySelectorAll('.nav-tabs button');
+  buttons.forEach(b => b.classList.remove('active'));
+  const idx = ['dash','assets','locations','transfers'].indexOf(tab);
+  if (buttons[idx]) buttons[idx].classList.add('active');
+}
+
+/* === Transfers === */
+async function loadTransfers() {
+  try {
+    const kql = buildTrKql();
+    const { subs, next } = await fetchPage('transfers', kql, 'transfers');
+    PAGE_STATE.transfers.nextToken = next;
+    const tbody = document.getElementById('transfers-body');
+    tbody.innerHTML = subs.length ? subs.map(s => `
+      <tr>
+        <td class="mono"><b>${esc(v(s,'Transfer ID'))}</b></td>
+        <td class="mono">${esc(v(s,'Asset Tag'))}</td>
+        <td>${esc(v(s,'From Location') || '—')}</td>
+        <td>${esc(v(s,'To Location'))}${v(s,'To Location')===SUPPLY?' <span class="badge badge-supply">SUPPLY</span>':''}</td>
+        <td>${esc(v(s,'Transfer Date'))}</td>
+        <td>${badge(v(s,'Reason'))}</td>
+        <td>${badge(v(s,'Status'))}</td>
+        <td>${esc(v(s,'Transferred By'))}</td>
+      </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px">No transfers</td></tr>';
+
+    renderPagination('transfers', !!next,
+      () => { PAGE_STATE.transfers.pageToken = PAGE_STATE.transfers.history.pop() || null; PAGE_STATE.transfers.page = Math.max(1, PAGE_STATE.transfers.page - 1); loadTransfers(); },
+      () => { PAGE_STATE.transfers.history.push(PAGE_STATE.transfers.pageToken); PAGE_STATE.transfers.pageToken = PAGE_STATE.transfers.nextToken; PAGE_STATE.transfers.page++; loadTransfers(); }
+    );
+  } catch (e) { toast('Transfer load failed: ' + e.message, 'error'); }
+}
+
+/* ── Modals ── */
+function openModal(title, body, footer) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-footer').innerHTML = footer;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+/* ── Transfer Modal ── */
+function locationOptions(exclude) {
+  return LOCATIONS_CACHE
+    .map(l => v(l, 'Location Name'))
+    .filter(n => n && n !== exclude)
+    .sort()
+    .map(n => `<option value="${esc(n)}">${esc(n)}${n===SUPPLY?' (Supply)':''}</option>`)
+    .join('');
+}
+
+function openTransferModal(asset) {
+  const body = `
+    <div class="info">
+      <b>${esc(asset.tag)}</b> · serial ${esc(asset.serial) || '—'}<br>
+      Currently at <b>${esc(asset.from || '—')}</b>, assigned to <b>${esc(asset.person || '—')}</b>
+    </div>
+    <label>To Location *</label>
+    <select id="tr-to"><option value="">Select destination…</option>${locationOptions(asset.from)}</select>
+    <label>Reason *</label>
+    <select id="tr-reason">
+      <option value="">Select reason…</option>
+      <option>Reassignment</option><option>Deployment</option><option>Repair</option><option>Other</option>
+    </select>
+    <label>New Assigned Person</label>
+    <input id="tr-person" placeholder="Leave blank to clear">
+    <label>Notes</label>
+    <textarea id="tr-notes" placeholder="Optional"></textarea>
+  `;
+  const footer = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick='submitTransfer("${esc(asset.tag)}")'>Transfer Asset</button>
+  `;
+  openModal(`Transfer ${asset.tag}`, body, footer);
+}
+
+async function submitTransfer(tag) {
+  const to = document.getElementById('tr-to').value;
+  const reason = document.getElementById('tr-reason').value;
+  const person = document.getElementById('tr-person').value;
+  const notes = document.getElementById('tr-notes').value;
+  if (!to || !reason) { toast('Destination and reason required', 'error'); return; }
+  try {
+    const r = await customApi('/api/asset-tracker/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ assetTag: tag, toLocation: to, reason, transferredBy: API.displayName, newAssignedPerson: person, notes }),
+    });
+    closeModal();
+    toast(`Transferred ${tag} → ${to} (${r.transferId})`, 'success');
+    loadAssets();
+  } catch (e) { toast('Transfer failed: ' + e.message, 'error'); }
+}
+
+/* ── Decommission (send to Supply) ── */
+function openDecommissionModal(asset) {
+  const body = `
+    <div class="info">
+      <b>${esc(asset.tag)}</b> is currently at <b>${esc(asset.from)}</b>.<br>
+      Sending to <b>Supply</b> for decommissioning. Asset status will become <b>Decommissioned</b>.
+    </div>
+    <label>Reason</label>
+    <select id="dc-reason">
+      <option>Decommission</option>
+      <option>Repair</option>
+    </select>
+    <label>Notes</label>
+    <textarea id="dc-notes" placeholder="Optional reason details"></textarea>
+  `;
+  const footer = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-danger" onclick='submitDecommission("${esc(asset.tag)}")'>Send to Supply</button>
+  `;
+  openModal(`Decommission ${asset.tag}`, body, footer);
+}
+
+async function submitDecommission(tag) {
+  const reason = document.getElementById('dc-reason').value;
+  const notes = document.getElementById('dc-notes').value;
+  try {
+    const r = await customApi('/api/asset-tracker/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ assetTag: tag, toLocation: SUPPLY, reason, transferredBy: API.displayName, notes }),
+    });
+    closeModal();
+    toast(`${tag} → Supply (${r.transferId})`, 'success');
+    loadAssets();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+/* ── Ship from Supply ── */
+async function openShipFromSupplyModal() {
+  try {
+    // Pull assets currently at Supply that aren't Decommissioned
+    const url = `/kapps/${KAPP}/forms/assets/submissions?include=values&limit=25&q=${encodeURIComponent('values[Current Location] = "Supply" AND values[Status] = "In Supply"')}`;
+    const r = await api(url);
+    const stock = r.submissions || [];
+
+    if (stock.length === 0) {
+      openModal('Ship from Supply',
+        '<div class="info">No deployable assets currently in Supply. Decommissioned items cannot be re-deployed.</div>',
+        '<button class="btn-secondary" onclick="closeModal()">Close</button>');
+      return;
+    }
+
+    const body = `
+      <label>Select Asset (${stock.length} available)</label>
+      <select id="ship-asset">
+        ${stock.map(a => `<option value="${esc(v(a,'Asset Tag'))}">${esc(v(a,'Asset Tag'))} — ${esc(v(a,'Manufacturer'))} ${esc(v(a,'Model'))} (${esc(v(a,'Asset Type'))})</option>`).join('')}
+      </select>
+      <label>Ship To *</label>
+      <select id="ship-to"><option value="">Select destination…</option>${locationOptions(SUPPLY)}</select>
+      <label>Assign To Person</label>
+      <input id="ship-person" placeholder="Recipient name">
+      <label>Notes</label>
+      <textarea id="ship-notes" placeholder="Optional"></textarea>
+    `;
+    const footer = `
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-accent" onclick="submitShipFromSupply()">Ship Asset</button>
+    `;
+    openModal('Ship from Supply', body, footer);
+  } catch (e) { toast('Ship dialog failed: ' + e.message, 'error'); }
+}
+
+async function submitShipFromSupply() {
+  const tag = document.getElementById('ship-asset').value;
+  const to = document.getElementById('ship-to').value;
+  const person = document.getElementById('ship-person').value;
+  const notes = document.getElementById('ship-notes').value;
+  if (!to) { toast('Destination required', 'error'); return; }
+  try {
+    const r = await customApi('/api/asset-tracker/transfer', {
+      method: 'POST',
+      body: JSON.stringify({ assetTag: tag, toLocation: to, reason: 'Deployment', transferredBy: API.displayName, newAssignedPerson: person, notes }),
+    });
+    closeModal();
+    toast(`Shipped ${tag} from Supply → ${to} (${r.transferId})`, 'success');
+    loadDashboard();
+  } catch (e) { toast('Ship failed: ' + e.message, 'error'); }
+}
+
+/* ── History view ── */
+async function showHistory(tag) {
+  try {
+    const d = await customApi(`/api/asset-tracker/asset/${encodeURIComponent(tag)}/history`);
+    const body = `
+      <div class="info">
+        <b>${esc(d.asset['Asset Tag'])}</b> — ${esc(d.asset['Manufacturer'])} ${esc(d.asset['Model'])}<br>
+        Serial: ${esc(d.asset['Serial Number'] || '—')}<br>
+        Currently at <b>${esc(d.asset['Current Location'])}</b> · ${badge(d.asset['Status'])}
+      </div>
+      <h3 style="font-size:13px;color:var(--gray);text-transform:uppercase;margin:14px 0 8px">Transfer History (${d.transfers.length})</h3>
+      ${d.transfers.length ? d.transfers.map(t => `
+        <div class="history-item">
+          <div class="h-row1"><b>${esc(t['Transfer ID'])}</b><span class="h-date">${esc(t['Transfer Date'])}</span></div>
+          <div class="h-row2">${esc(t['From Location'] || '—')} <span class="arrow">→</span> ${esc(t['To Location'])} · ${badge(t['Reason'])} <span style="color:var(--gray)">by ${esc(t['Transferred By'])}</span></div>
+        </div>`).join('') : '<div style="color:var(--gray);font-size:12px">No transfer history</div>'}
+    `;
+    openModal(`History — ${tag}`, body, '<button class="btn-secondary" onclick="closeModal()">Close</button>');
+  } catch (e) { toast('History failed: ' + e.message, 'error'); }
+}
+
+/* ── New Asset modal ── */
+function openAssetModal() {
+  const body = `
+    <div class="row">
+      <div><label>Asset Tag *</label><input id="a-tag" placeholder="AT-00100"></div>
+      <div><label>Serial Number</label><input id="a-serial"></div>
+    </div>
+    <div class="row">
+      <div><label>Asset Type</label><select id="a-type">${ASSET_TYPES.map(t=>`<option>${esc(t)}</option>`).join('')}</select></div>
+      <div><label>Manufacturer</label><select id="a-mfr">${MANUFACTURERS.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div>
+    </div>
+    <label>Model</label><input id="a-model">
+    <div class="row">
+      <div><label>Current Location</label><select id="a-loc">${locationOptions(null)}</select></div>
+      <div><label>Status</label><select id="a-status"><option>Active</option><option>In Supply</option><option>In Transit</option><option>Decommissioned</option></select></div>
+    </div>
+    <label>Assigned Person</label><input id="a-person">
+    <div class="row">
+      <div><label>Purchase Date</label><input id="a-date" type="date"></div>
+      <div><label>Purchase Cost</label><input id="a-cost" type="number"></div>
+    </div>
+    <label>Notes</label><textarea id="a-notes"></textarea>
+  `;
+  openModal('New Asset', body,
+    `<button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="submitNewAsset()">Create Asset</button>`);
+}
+
+async function submitNewAsset() {
+  const values = {
+    "Asset Tag": document.getElementById('a-tag').value.trim(),
+    "Serial Number": document.getElementById('a-serial').value.trim(),
+    "Asset Type": document.getElementById('a-type').value,
+    "Manufacturer": document.getElementById('a-mfr').value,
+    "Model": document.getElementById('a-model').value,
+    "Current Location": document.getElementById('a-loc').value,
+    "Status": document.getElementById('a-status').value,
+    "Assigned Person": document.getElementById('a-person').value,
+    "Purchase Date": document.getElementById('a-date').value,
+    "Purchase Cost": document.getElementById('a-cost').value,
+    "Notes": document.getElementById('a-notes').value,
+  };
+  if (!values["Asset Tag"]) { toast('Asset Tag required', 'error'); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/assets/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Asset created', 'success'); loadAssets();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+/* ── New Location modal ── */
+function openLocationModal() {
+  const body = `
+    <label>Location Name *</label><input id="l-name" placeholder="e.g. Anywhere Branch">
+    <div class="row">
+      <div><label>Type</label><select id="l-type"><option>Branch</option><option>Warehouse</option><option>Supply</option></select></div>
+      <div><label>Active</label><select id="l-active"><option>Yes</option><option>No</option></select></div>
+    </div>
+    <label>Address</label><input id="l-addr">
+    <div class="row">
+      <div><label>City</label><input id="l-city"></div>
+      <div><label>State</label><input id="l-state" value="MN"></div>
+    </div>
+    <label>Zip</label><input id="l-zip">
+    <label>Notes</label><textarea id="l-notes"></textarea>
+  `;
+  openModal('New Location', body,
+    `<button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="submitNewLocation()">Create Location</button>`);
+}
+
+async function submitNewLocation() {
+  const values = {
+    "Location Name": document.getElementById('l-name').value.trim(),
+    "Type": document.getElementById('l-type').value,
+    "Active": document.getElementById('l-active').value,
+    "Address": document.getElementById('l-addr').value,
+    "City": document.getElementById('l-city').value,
+    "State": document.getElementById('l-state').value,
+    "Zip": document.getElementById('l-zip').value,
+    "Notes": document.getElementById('l-notes').value,
+  };
+  if (!values["Location Name"]) { toast('Name required', 'error'); return; }
+  try {
+    await api(`/kapps/${KAPP}/forms/locations/submissions`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+    closeModal(); toast('Location created', 'success');
+    // refresh cache + lists
+    await enterApp();
+    loadLocations();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+</script>
+</body>
+</html>

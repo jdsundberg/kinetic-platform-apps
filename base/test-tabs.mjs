@@ -138,6 +138,41 @@ async function main() {
         }
       }
 
+      // ── Interactive test: click first clickable row to test detail views ──
+      // Go back to first tab
+      const firstTabSels = [".topbar nav button", "nav button", ".tab-bar button", "[role='tab']"];
+      for (const sel of firstTabSels) {
+        const count = await page.locator(sel).count();
+        if (count > 0) { await page.locator(sel).first().click(); break; }
+      }
+      await page.waitForTimeout(2000);
+
+      jsErrors.length = 0;
+      apiErrors.length = 0;
+      const clickableRow = page.locator("tr.clickable-row").first();
+      if (await clickableRow.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await clickableRow.click();
+        await page.waitForTimeout(3000);
+        // Check if a modal opened with an error
+        const modalError = await page.evaluate(() => {
+          const modal = document.querySelector('.modal-content, #modal');
+          if (!modal) return null;
+          const text = modal.innerText || '';
+          if (/error|404|not found|500/i.test(text) && !/error.*handling|error.*log/i.test(text))
+            return text.slice(0, 200);
+          return null;
+        });
+        if (modalError || jsErrors.length > 0) {
+          const msg = modalError || jsErrors[0] || apiErrors[0]?.toString() || "detail view error";
+          tabResults.push({ tab: "ROW_CLICK", error: msg });
+          console.log(`    FAIL row click: ${msg.slice(0, 80)}`);
+          await page.screenshot({ path: `${SCREENSHOT_DIR}/${slug}_row_click.png` });
+        }
+        // Close modal if open
+        await page.evaluate(() => { if (typeof closeModal === 'function') closeModal(); });
+        await page.waitForTimeout(500);
+      }
+
       const failures = tabResults.filter(t => t.error);
       if (failures.length === 0) {
         console.log(`    OK (${tabs.length} tabs)`);

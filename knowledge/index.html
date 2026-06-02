@@ -406,7 +406,7 @@ async function fetchSubsPaged(kapp, form, params = {}) {
     const dc = `createdAt < "${params.lastCreatedAt}"`;
     kql = kql ? `(${kql}) AND ${dc}` : dc;
   }
-  const qsParams = { include: 'values', limit: params.limit || '25' };
+  const qsParams = { include: 'details,values', limit: params.limit || '25' };
   if (kql) qsParams.q = kql;
   const qs = new URLSearchParams(qsParams);
   const data = await api(`/kapps/${kapp}/forms/${form}/submissions?${qs}`);
@@ -938,7 +938,7 @@ async function viewVersionHistory(articleNumber) {
 
 async function viewVersionContent(versionId) {
   try {
-    const data = await api(`/submissions/${versionId}?include=values`);
+    const data = await api(`/submissions/${versionId}?include=details,values`);
     const ver = data.submission;
     const content = renderMarkdown(v(ver,'Content'));
     openModal(`

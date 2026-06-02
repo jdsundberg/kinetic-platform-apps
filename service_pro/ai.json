@@ -1,0 +1,226 @@
+{
+  "description": "Enterprise professional services management — projects, customers, time tracking, costs, milestones, risks/issues, customer feedback, post-project checkout, and executive reporting",
+  "tools": [
+    {
+      "name": "get_portfolio_dashboard",
+      "description": "Get executive portfolio dashboard — active projects, health distribution, at-risk projects, KPIs, utilization, overdue milestones, and recent feedback",
+      "params": {}
+    },
+    {
+      "name": "get_project_detail",
+      "description": "Get full project detail including milestones, risks/issues, time summary, costs, status history, team assignments, deliverables, and feedback",
+      "params": {
+        "projectId": { "type": "string", "required": true, "description": "Submission ID of the project" }
+      }
+    },
+    {
+      "name": "get_customer_360",
+      "description": "Get customer 360 view — projects, contacts, feedback, revenue summary, and satisfaction trends",
+      "params": {
+        "customerName": { "type": "string", "required": true, "description": "Company name of the customer" }
+      }
+    },
+    {
+      "name": "submit_status_update",
+      "description": "Submit a weekly project status update with health indicators, accomplishments, next steps, and blockers",
+      "params": {
+        "project": { "type": "string", "required": true, "description": "Project name" },
+        "week": { "type": "string", "required": true, "description": "Week date (ISO date of Monday)" },
+        "overallHealth": { "type": "string", "required": true, "description": "Overall health", "values": ["Green", "Yellow", "Red"] },
+        "scheduleHealth": { "type": "string", "required": false, "values": ["Green", "Yellow", "Red"] },
+        "budgetHealth": { "type": "string", "required": false, "values": ["Green", "Yellow", "Red"] },
+        "scopeHealth": { "type": "string", "required": false, "values": ["Green", "Yellow", "Red"] },
+        "accomplishments": { "type": "string", "required": false, "description": "What was accomplished this week" },
+        "nextSteps": { "type": "string", "required": false, "description": "Planned work for next week" },
+        "blockers": { "type": "string", "required": false, "description": "Current blockers or impediments" },
+        "execAttention": { "type": "string", "required": false, "description": "Flag for executive attention", "values": ["Yes", "No"] }
+      }
+    },
+    {
+      "name": "log_time",
+      "description": "Log hours worked against a project",
+      "params": {
+        "project": { "type": "string", "required": true, "description": "Project name" },
+        "employee": { "type": "string", "required": true, "description": "Employee name" },
+        "date": { "type": "string", "required": true, "description": "ISO date" },
+        "hours": { "type": "string", "required": true, "description": "Hours worked" },
+        "category": { "type": "string", "required": false, "description": "Work category", "values": ["Development", "Configuration", "Training", "Meeting", "Support", "Travel"] },
+        "description": { "type": "string", "required": false, "description": "Description of work performed" },
+        "billable": { "type": "string", "required": false, "values": ["Yes", "No"] }
+      }
+    },
+    {
+      "name": "add_risk_or_issue",
+      "description": "Create a new risk or issue against a project",
+      "params": {
+        "project": { "type": "string", "required": true, "description": "Project name" },
+        "type": { "type": "string", "required": true, "values": ["Risk", "Issue"] },
+        "title": { "type": "string", "required": true, "description": "Short title" },
+        "description": { "type": "string", "required": false, "description": "Full description" },
+        "severity": { "type": "string", "required": false, "values": ["Critical", "High", "Medium", "Low"] },
+        "owner": { "type": "string", "required": false, "description": "Person responsible" },
+        "mitigation": { "type": "string", "required": false, "description": "Mitigation or resolution plan" },
+        "escalated": { "type": "string", "required": false, "values": ["Yes", "No"] }
+      }
+    },
+    {
+      "name": "record_feedback",
+      "description": "Record customer satisfaction feedback for a project",
+      "params": {
+        "project": { "type": "string", "required": true, "description": "Project name" },
+        "customer": { "type": "string", "required": true, "description": "Customer company name" },
+        "type": { "type": "string", "required": true, "values": ["Mid-Project", "End of Project", "Executive Sponsor"] },
+        "overallRating": { "type": "string", "required": true, "description": "Rating 1-5" },
+        "communication": { "type": "string", "required": false, "description": "Rating 1-5" },
+        "quality": { "type": "string", "required": false, "description": "Rating 1-5" },
+        "timeliness": { "type": "string", "required": false, "description": "Rating 1-5" },
+        "nps": { "type": "string", "required": false, "description": "Net Promoter Score 0-10" },
+        "comments": { "type": "string", "required": false, "description": "Freeform feedback comments" },
+        "followUpRequired": { "type": "string", "required": false, "values": ["Yes", "No"] }
+      }
+    },
+    {
+      "name": "get_profitability_report",
+      "description": "Get project profitability report — budget vs forecast vs actual, margin by project",
+      "params": {}
+    },
+    {
+      "name": "get_utilization_report",
+      "description": "Get team utilization report — hours, billable percentage, and project allocation by employee",
+      "params": {}
+    }
+  ],
+  "forms": {
+    "customers": {
+      "description": "Customer accounts and relationship management",
+      "fields": {
+        "Status": { "values": ["Active", "Prospect", "Inactive"] },
+        "Health": { "values": ["Green", "Yellow", "Red"], "hint": "Overall customer health indicator" },
+        "Industry": { "values": ["Healthcare", "Energy", "Financial Services", "Defense", "Federal Government", "Education", "Technology", "Other"] },
+        "Region": { "values": ["Northeast", "Southeast", "Midwest", "West", "South", "Federal"] },
+        "Revenue Tier": { "values": ["Enterprise", "Mid-Market", "SMB"] }
+      }
+    },
+    "contacts": {
+      "description": "Customer contacts linked to accounts",
+      "fields": {
+        "Role": { "values": ["Executive Sponsor", "Technical Lead", "Business Owner", "End User", "Decision Maker"] },
+        "Primary": { "values": ["Yes", "No"] }
+      }
+    },
+    "projects": {
+      "description": "Service delivery projects with full lifecycle tracking",
+      "fields": {
+        "Status": { "values": ["Proposed", "Approved", "Planning", "In Progress", "At Risk", "On Hold", "Completed", "Closed", "Archived"] },
+        "Phase": { "values": ["Discovery", "Planning", "Execution", "Closed", "On Hold"] },
+        "Health": { "values": ["Green", "Yellow", "Red"], "hint": "Overall project health" },
+        "Priority": { "values": ["High", "Medium", "Low"] },
+        "Methodology": { "values": ["Agile", "Waterfall", "Hybrid", "Discovery"] },
+        "Budget": { "hint": "Total project budget in dollars" },
+        "Margin Estimate": { "hint": "Estimated margin percentage" }
+      }
+    },
+    "team-assignments": {
+      "description": "Project team allocations and rates",
+      "fields": {
+        "Role": { "values": ["Project Manager", "Lead Developer", "Senior Developer", "Platform Consultant", "Developer"] },
+        "Status": { "values": ["Active", "Planned", "Completed"] },
+        "Allocation": { "hint": "Percentage allocation (0-100)" }
+      }
+    },
+    "status-updates": {
+      "description": "Weekly project status reports with multi-dimension health scoring",
+      "fields": {
+        "Overall Health": { "values": ["Green", "Yellow", "Red"] },
+        "Schedule Health": { "values": ["Green", "Yellow", "Red"] },
+        "Budget Health": { "values": ["Green", "Yellow", "Red"] },
+        "Scope Health": { "values": ["Green", "Yellow", "Red"] },
+        "Resource Health": { "values": ["Green", "Yellow", "Red"] },
+        "Customer Sentiment": { "values": ["Positive", "Neutral", "Negative"] },
+        "Exec Attention": { "values": ["Yes", "No"], "hint": "Flag for executive review" }
+      }
+    },
+    "milestones": {
+      "description": "Project milestones and delivery gates",
+      "fields": {
+        "Status": { "values": ["Not Started", "In Progress", "At Risk", "Completed", "Overdue"] }
+      }
+    },
+    "risks-issues": {
+      "description": "Combined risk and issue tracker with escalation",
+      "fields": {
+        "Type": { "values": ["Risk", "Issue"] },
+        "Severity": { "values": ["Critical", "High", "Medium", "Low"] },
+        "Impact": { "values": ["Critical", "High", "Medium", "Low"] },
+        "Probability": { "values": ["High", "Medium", "Low"] },
+        "Status": { "values": ["Open", "In Progress", "Mitigated", "Closed"] },
+        "Escalated": { "values": ["Yes", "No"] }
+      }
+    },
+    "time-entries": {
+      "description": "Hours logged against projects by team members",
+      "fields": {
+        "Category": { "values": ["Development", "Configuration", "Training", "Meeting", "Support", "Travel"] },
+        "Billable": { "values": ["Yes", "No"] },
+        "Approved": { "values": ["Yes", "No"] },
+        "Hours": { "hint": "Decimal hours (e.g. 6.5)" }
+      }
+    },
+    "costs": {
+      "description": "Project expenses — travel, software, hardware, subcontractors",
+      "fields": {
+        "Category": { "values": ["Travel", "Software", "Hardware", "Subcontractor", "Labor", "Training", "Other"] },
+        "Status": { "values": ["Pending", "Approved", "Rejected"] },
+        "Amount": { "hint": "Dollar amount" }
+      }
+    },
+    "feedback": {
+      "description": "Customer satisfaction surveys with multi-dimension ratings",
+      "fields": {
+        "Type": { "values": ["Mid-Project", "End of Project", "Executive Sponsor"] },
+        "Overall Rating": { "values": ["1", "2", "3", "4", "5"], "hint": "1=Poor, 5=Excellent" },
+        "Communication": { "values": ["1", "2", "3", "4", "5"] },
+        "Quality": { "values": ["1", "2", "3", "4", "5"] },
+        "Timeliness": { "values": ["1", "2", "3", "4", "5"] },
+        "NPS": { "hint": "Net Promoter Score 0-10" },
+        "Follow Up Required": { "values": ["Yes", "No"] }
+      }
+    },
+    "checkouts": {
+      "description": "Post-project closeout checklist and compliance tracking",
+      "fields": {
+        "Deliverables Complete": { "values": ["Yes", "No"] },
+        "Customer Signoff": { "values": ["Yes", "No"] },
+        "Time Complete": { "values": ["Yes", "No"] },
+        "Costs Complete": { "values": ["Yes", "No"] },
+        "Invoice Ready": { "values": ["Yes", "No"] },
+        "Lessons Captured": { "values": ["Yes", "No"] },
+        "Quality Score": { "values": ["1", "2", "3", "4", "5"], "hint": "1=Poor, 5=Excellent" },
+        "Status": { "values": ["Pending", "Completed"] }
+      }
+    },
+    "lessons-learned": {
+      "description": "Reusable delivery insights and retrospective learnings",
+      "fields": {
+        "Category": { "values": ["Scope", "Integration", "Delivery", "Process", "Technical", "Communication"] },
+        "Impact": { "values": ["High", "Medium", "Low"] },
+        "Reusable": { "values": ["Yes", "No"] }
+      }
+    },
+    "deliverables": {
+      "description": "Project deliverables with acceptance tracking",
+      "fields": {
+        "Status": { "values": ["Not Started", "In Progress", "At Risk", "Completed"] },
+        "Customer Acknowledged": { "values": ["Yes", "No"] }
+      }
+    },
+    "notifications": {
+      "description": "Escalation and notification log",
+      "fields": {
+        "Type": { "values": ["Budget Alert", "Health Change", "Scope Alert", "Status Change", "Escalation", "Reminder"] },
+        "Severity": { "values": ["High", "Medium", "Low"] },
+        "Acknowledged": { "values": ["Yes", "No"] }
+      }
+    }
+  }
+}

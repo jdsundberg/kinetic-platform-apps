@@ -1,0 +1,188 @@
+{
+  "name": "Asset Tracker",
+  "slug": "asset-tracker",
+  "description": "Track assets across locations with transfers, decommissioning to Supply & ship-from-Supply deployment",
+  "category": "Operations",
+  "icon": "truck",
+  "color": "#1B5E7C",
+  "bg": "#E1F0F5",
+  "forms": [
+    {
+      "slug": "locations",
+      "name": "Locations",
+      "description": "Physical sites that hold assets. The 'Supply' location is the central warehouse for decommissioned/staged assets.",
+      "submissionLabelExpression": "${values('Location Name')}",
+      "fields": [
+        {
+          "name": "Location Name",
+          "required": true
+        },
+        {
+          "name": "Address"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Zip"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Active"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Location Name]",
+          "values[Type]",
+          "values[City]",
+          "values[Active]"
+        ],
+        "compound": [
+          [
+            "values[Type]",
+            "values[Active]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "assets",
+      "name": "Assets",
+      "description": "Tracked equipment with serial, location, and assigned person.",
+      "submissionLabelExpression": "${values('Asset Tag')} - ${values('Model')}",
+      "fields": [
+        {
+          "name": "Asset Tag",
+          "required": true
+        },
+        {
+          "name": "Serial Number"
+        },
+        {
+          "name": "Manufacturer"
+        },
+        {
+          "name": "Model"
+        },
+        {
+          "name": "Asset Type"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Current Location"
+        },
+        {
+          "name": "Assigned Person"
+        },
+        {
+          "name": "Purchase Date"
+        },
+        {
+          "name": "Purchase Cost"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Asset Tag]",
+          "values[Serial Number]",
+          "values[Status]",
+          "values[Current Location]",
+          "values[Assigned Person]",
+          "values[Asset Type]",
+          "values[Manufacturer]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Current Location]"
+          ],
+          [
+            "values[Current Location]",
+            "values[Asset Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "transfers",
+      "name": "Transfers",
+      "description": "History of asset movements between locations.",
+      "submissionLabelExpression": "${values('Transfer ID')}",
+      "fields": [
+        {
+          "name": "Transfer ID",
+          "required": true
+        },
+        {
+          "name": "Asset Tag",
+          "required": true
+        },
+        {
+          "name": "Asset Serial"
+        },
+        {
+          "name": "From Location"
+        },
+        {
+          "name": "To Location"
+        },
+        {
+          "name": "Transfer Date"
+        },
+        {
+          "name": "Reason"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Transferred By"
+        },
+        {
+          "name": "New Assigned Person"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Transfer ID]",
+          "values[Asset Tag]",
+          "values[From Location]",
+          "values[To Location]",
+          "values[Reason]",
+          "values[Status]",
+          "values[Transfer Date]"
+        ],
+        "compound": [
+          [
+            "values[Asset Tag]",
+            "values[Transfer Date]"
+          ],
+          [
+            "values[To Location]",
+            "values[Status]"
+          ]
+        ]
+      }
+    }
+  ]
+}

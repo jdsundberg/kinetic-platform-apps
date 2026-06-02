@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appliance Store - Kinetic Platform</title>
+<style>
+:root {
+  --blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;
+  --green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;
+  --light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --purple:#7B1FA2;--teal:#00695C;--indigo:#283593;--deep-orange:#BF360C;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+a{color:var(--orange);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+textarea{resize:vertical}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:24px;margin-bottom:4px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px;border:none;border-radius:8px}
+.login-box button:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* App shell */
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:30px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:10px 16px;font-size:13px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+/* Console */
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+/* Cards */
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0;color:var(--blue)}
+.kpi .label{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-in-stock,.badge-active,.badge-delivered,.badge-completed,.badge-scheduled{background:#E8F5E9;color:#2E7D32}
+.badge-low-stock,.badge-waiting-on-parts,.badge-shipped,.badge-medium{background:#FFF8E1;color:#F9A825}
+.badge-out-of-stock,.badge-backordered,.badge-high,.badge-cancelled{background:#FDECEA;color:#C62828}
+.badge-processing,.badge-pending,.badge-open,.badge-new{background:#E3F2FD;color:#1565C0}
+.badge-in-progress{background:#E0F2F1;color:#00695C}
+.badge-closed,.badge-default{background:var(--light);color:var(--gray)}
+.badge-low{background:#E8F5E9;color:#2E7D32}
+/* Category badges */
+.badge-refrigerators{background:#E3F2FD;color:#1565C0}
+.badge-washers{background:#E0F2F1;color:#00695C}
+.badge-dryers{background:#FFF3E0;color:#E65100}
+.badge-dishwashers{background:#F3E5F5;color:#7B1FA2}
+.badge-ranges{background:#FDECEA;color:#C62828}
+.badge-microwaves{background:#E8EAF6;color:#283593}
+.badge-freezers{background:#E0F7FA;color:#00838F}
+/* Schedule */
+.sched-scheduled{background:#E3F2FD;color:#1565C0}
+.sched-worked{background:#E8F5E9;color:#2E7D32}
+.sched-called-out{background:#FDECEA;color:#C62828}
+.sched-off{background:var(--light);color:var(--gray)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+
+/* Pagination */
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+
+/* Schedule grid */
+.sched-table th,.sched-table td{text-align:center;padding:8px 6px;font-size:12px}
+.sched-table th:first-child,.sched-table td:first-child{text-align:left;font-weight:600;white-space:nowrap}
+.sched-cell{min-height:32px}
+.sched-cell .shift-time{font-size:11px;font-weight:600;margin-bottom:2px}
+.sched-nav{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.sched-nav .sched-label{font-size:15px;font-weight:600;color:var(--blue);min-width:220px;text-align:center}
+
+/* Modal */
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:650px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+/* Toast */
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Appliance <span>Store</span></h1>
+    <p class="sub">Inventory, orders, scheduling, and service management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label>
+    <input type="text" id="login-url" placeholder="https://server.example.com">
+    <label>Username</label>
+    <input type="text" id="login-user" placeholder="username">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Appliance <span>Store</span></div>
+    <nav>
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('inventory')">Inventory</button>
+      <button onclick="switchTab('orders')">Orders</button>
+      <button onclick="switchTab('schedules')">Schedules</button>
+      <button onclick="switchTab('service')">Service</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Appliance store overview</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2">
+      <div class="card"><h3>Recent Orders</h3><div id="dash-orders"></div></div>
+      <div class="card"><h3>Open Service Tickets</h3><div id="dash-tickets"></div></div>
+    </div>
+  </div>
+
+  <!-- Inventory -->
+  <div class="console" id="tab-inventory">
+    <div class="page-title">Inventory</div>
+    <div class="page-sub">Appliance catalog and stock levels</div>
+    <div class="toolbar">
+      <input type="text" id="inv-search" placeholder="Search products..." oninput="invResetPage()">
+      <select id="inv-cat" onchange="invResetPage()"><option value="">All Categories</option></select>
+      <select id="inv-status" onchange="invResetPage()">
+        <option value="">All Status</option>
+        <option>In Stock</option>
+        <option>Low Stock</option>
+        <option>Out of Stock</option>
+      </select>
+      <button class="btn-primary" onclick="showProductModal()">+ Add Product</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table><thead><tr>
+        <th>SKU</th><th>Product</th><th>Category</th><th>Brand</th><th>Price</th><th>Qty</th><th>Status</th>
+      </tr></thead><tbody id="inv-body"></tbody></table>
+    </div>
+    <div class="pagination">
+      <button class="btn-outline" onclick="invPrev()" id="inv-prev" disabled>Prev</button>
+      <span class="page-info" id="inv-page-info">Page 1</span>
+      <button class="btn-outline" onclick="invNext()" id="inv-next" disabled>Next</button>
+    </div>
+  </div>
+
+  <!-- Orders -->
+  <div class="console" id="tab-orders">
+    <div class="page-title">Orders</div>
+    <div class="page-sub">Customer orders and fulfillment</div>
+    <div class="toolbar">
+      <input type="text" id="ord-search" placeholder="Search orders..." oninput="ordResetPage()">
+      <select id="ord-status" onchange="ordResetPage()">
+        <option value="">All Status</option>
+        <option>Pending</option>
+        <option>Processing</option>
+        <option>Shipped</option>
+        <option>Delivered</option>
+        <option>Backordered</option>
+        <option>Cancelled</option>
+      </select>
+      <button class="btn-primary" onclick="showOrderModal()">+ New Order</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table><thead><tr>
+        <th>Order #</th><th>Customer</th><th>Product</th><th>Total</th><th>Status</th><th>Delivery</th>
+      </tr></thead><tbody id="ord-body"></tbody></table>
+    </div>
+    <div class="pagination">
+      <button class="btn-outline" onclick="ordPrev()" id="ord-prev" disabled>Prev</button>
+      <span class="page-info" id="ord-page-info">Page 1</span>
+      <button class="btn-outline" onclick="ordNext()" id="ord-next" disabled>Next</button>
+    </div>
+  </div>
+
+  <!-- Schedules -->
+  <div class="console" id="tab-schedules">
+    <div class="page-title">Schedules</div>
+    <div class="page-sub">Employee shift schedules</div>
+    <div class="toolbar">
+      <select id="sched-dept" onchange="loadScheduleWeek()">
+        <option value="">All Departments</option>
+        <option>Sales Floor</option>
+        <option>Delivery</option>
+        <option>Service</option>
+        <option>Management</option>
+      </select>
+      <button class="btn-primary" onclick="showScheduleModal()">+ Add Shift</button>
+    </div>
+    <div class="sched-nav">
+      <button class="btn-outline btn-small" onclick="schedPrev()">&larr; Prev Week</button>
+      <span class="sched-label" id="sched-week-label"></span>
+      <button class="btn-outline btn-small" onclick="schedNext()">Next Week &rarr;</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table class="sched-table"><thead id="sched-head"></thead><tbody id="sched-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Service -->
+  <div class="console" id="tab-service">
+    <div class="page-title">Service Tickets</div>
+    <div class="page-sub">Appliance repair and warranty service</div>
+    <div class="toolbar">
+      <input type="text" id="svc-search" placeholder="Search tickets..." oninput="svcResetPage()">
+      <select id="svc-status" onchange="svcResetPage()">
+        <option value="">All Status</option>
+        <option>Open</option>
+        <option>In Progress</option>
+        <option>Waiting on Parts</option>
+        <option>Completed</option>
+        <option>Closed</option>
+      </select>
+      <select id="svc-priority" onchange="svcResetPage()">
+        <option value="">All Priority</option>
+        <option>High</option>
+        <option>Medium</option>
+        <option>Low</option>
+      </select>
+      <button class="btn-primary" onclick="showTicketModal()">+ New Ticket</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table><thead><tr>
+        <th>Ticket #</th><th>Customer</th><th>Appliance</th><th>Priority</th><th>Status</th><th>Assigned</th>
+      </tr></thead><tbody id="svc-body"></tbody></table>
+    </div>
+    <div class="pagination">
+      <button class="btn-outline" onclick="svcPrev()" id="svc-prev" disabled>Prev</button>
+      <span class="page-info" id="svc-page-info">Page 1</span>
+      <button class="btn-outline" onclick="svcNext()" id="svc-next" disabled>Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-inner"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const KAPP = 'appliance-store';
+let API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+function v(sub, f) { return sub.values?.[f] || ''; }
+function fmt$(n) { const num = parseFloat(n); return isNaN(num) ? '$0.00' : '$' + num.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function badgeClass(val) {
+  if (!val) return 'badge-default';
+  return 'badge-' + val.toLowerCase().replace(/\s+/g, '-');
+}
+
+// --- API ---
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { 'Authorization': 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+// --- Auth ---
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    API.url = url;
+    API.auth = btoa(user + ':' + pass);
+    const me = await api('/me');
+    API.user = me.username;
+    API.displayName = me.displayName || me.username;
+    try { const sp = await api('/space'); API.spaceSlug = sp.space?.slug || ''; } catch(e) {}
+    enterApp();
+  } catch(e) {
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const userDisp = document.getElementById('user-display');
+  userDisp.textContent = API.displayName + (API.spaceSlug ? ' \u00b7 ' + API.spaceSlug : '');
+  // Defer to next frame so DOM is fully visible before loading data
+  requestAnimationFrame(() => switchTab('dashboard'));
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '', spaceSlug: '' };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  sessionStorage.removeItem('kinetic_session');
+}
+
+// --- Session restore ---
+(function() {
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API.url = s.url || '';
+      API.auth = s.auth;
+      API.user = s.user || '';
+      API.displayName = s.displayName || s.user || '';
+      API.spaceSlug = s.spaceSlug || '';
+      enterApp();
+      return;
+    } catch(e) {}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+
+// --- Tab switching ---
+let activeTab = 'dashboard';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.topbar nav button').forEach(b => {
+    if (b.textContent.toLowerCase().replace(/\s/g,'') === tab.replace(/\s/g,'')) b.classList.add('active');
+  });
+  if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'inventory') { populateInvFilters(); invResetPage(); }
+  else if (tab === 'orders') ordResetPage();
+  else if (tab === 'schedules') loadScheduleWeek();
+  else if (tab === 'service') svcResetPage();
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  document.getElementById('dash-kpis').innerHTML = '<div style="color:var(--gray);text-align:center;padding:16px">Loading...</div>';
+  try {
+    const [prodRes, ordRes, svcRes, schedRes] = await Promise.all([
+      api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/orders/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/service-tickets/submissions?include=values&limit=25`),
+      api(`/kapps/${KAPP}/forms/schedules/submissions?include=values&limit=25`)
+    ]);
+    const prods = prodRes.submissions || [];
+    const ords = ordRes.submissions || [];
+    const svcs = svcRes.submissions || [];
+    const scheds = schedRes.submissions || [];
+
+    const totalProducts = prods.length;
+    const inStock = prods.filter(s => v(s,'Status') === 'In Stock').length;
+    const lowStock = prods.filter(s => v(s,'Status') === 'Low Stock').length;
+    const outStock = prods.filter(s => v(s,'Status') === 'Out of Stock').length;
+    const totalValue = prods.reduce((sum, s) => sum + (parseFloat(v(s,'Price'))||0) * (parseInt(v(s,'Quantity'))||0), 0);
+    const activeOrders = ords.filter(s => ['Pending','Processing','Shipped','Backordered'].includes(v(s,'Status'))).length;
+    const openTickets = svcs.filter(s => ['Open','In Progress','Waiting on Parts'].includes(v(s,'Status'))).length;
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi orange"><div class="val">${totalProducts}</div><div class="label">Products</div></div>
+      <div class="kpi green"><div class="val">${inStock}</div><div class="label">In Stock</div></div>
+      <div class="kpi yellow"><div class="val">${lowStock}</div><div class="label">Low Stock</div></div>
+      <div class="kpi red"><div class="val">${outStock}</div><div class="label">Out of Stock</div></div>
+      <div class="kpi teal"><div class="val">${fmt$(totalValue)}</div><div class="label">Inventory Value</div></div>
+      <div class="kpi purple"><div class="val">${activeOrders}</div><div class="label">Active Orders</div></div>
+    `;
+
+    // Recent orders
+    const recentOrds = ords.slice(0, 5);
+    document.getElementById('dash-orders').innerHTML = recentOrds.length === 0
+      ? '<p style="color:var(--gray);font-size:13px">No orders yet</p>'
+      : `<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>${
+        recentOrds.map(s => `<tr><td>${esc(v(s,'Order Number'))}</td><td>${esc(v(s,'Customer Name'))}</td><td>${fmt$(v(s,'Total'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`).join('')
+      }</tbody></table>`;
+
+    // Open tickets
+    const openSvcs = svcs.filter(s => ['Open','In Progress','Waiting on Parts'].includes(v(s,'Status'))).slice(0, 5);
+    document.getElementById('dash-tickets').innerHTML = openSvcs.length === 0
+      ? '<p style="color:var(--gray);font-size:13px">No open tickets</p>'
+      : `<table><thead><tr><th>Ticket</th><th>Appliance</th><th>Priority</th><th>Status</th></tr></thead><tbody>${
+        openSvcs.map(s => `<tr><td>${esc(v(s,'Ticket Number'))}</td><td>${esc(v(s,'Appliance'))}</td><td><span class="badge ${badgeClass(v(s,'Priority'))}">${esc(v(s,'Priority'))}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`).join('')
+      }</tbody></table>`;
+  } catch(e) {
+    document.getElementById('dash-kpis').innerHTML = `<p style="color:var(--red)">Error loading dashboard: ${esc(e.message)}</p>`;
+  }
+}
+
+// ===== INVENTORY =====
+let invData = [], invPage = 1, invPageKeys = { 1: null }, invHasNext = false;
+
+function populateInvFilters() {
+  const cats = ['Refrigerators','Washers','Dryers','Dishwashers','Ranges','Microwaves','Freezers'];
+  const sel = document.getElementById('inv-cat');
+  if (sel.options.length <= 1) {
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  }
+}
+
+async function loadInvPage() {
+  try {
+    const lastCA = invPageKeys[invPage];
+    let kql = '';
+    const cat = document.getElementById('inv-cat').value;
+    const status = document.getElementById('inv-status').value;
+    if (cat) kql = `values[Category]="${cat}"`;
+    if (status) kql = kql ? `${kql} AND values[Status]="${status}"` : `values[Status]="${status}"`;
+    if (lastCA) kql = kql ? `(${kql}) AND createdAt < "${lastCA}"` : `createdAt < "${lastCA}"`;
+
+    let path = `/kapps/${KAPP}/forms/products/submissions?include=details,values&limit=25`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    invData = res.submissions || [];
+    invHasNext = !!res.nextPageToken;
+    if (invHasNext && invData.length) invPageKeys[invPage + 1] = invData[invData.length - 1].createdAt;
+
+    // Client-side text search
+    const search = document.getElementById('inv-search').value.toLowerCase();
+    let filtered = invData;
+    if (search) {
+      filtered = invData.filter(s =>
+        v(s,'Product Name').toLowerCase().includes(search) ||
+        v(s,'SKU').toLowerCase().includes(search) ||
+        v(s,'Brand').toLowerCase().includes(search)
+      );
+    }
+
+    document.getElementById('inv-body').innerHTML = filtered.length === 0
+      ? '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:24px">No products found</td></tr>'
+      : filtered.map(s => `<tr class="clickable-row" onclick="showProductDetail('${s.id}')">
+        <td style="font-weight:600">${esc(v(s,'SKU'))}</td>
+        <td>${esc(v(s,'Product Name'))}</td>
+        <td><span class="badge ${badgeClass(v(s,'Category'))}">${esc(v(s,'Category'))}</span></td>
+        <td>${esc(v(s,'Brand'))}</td>
+        <td style="font-weight:600">${fmt$(v(s,'Price'))}</td>
+        <td style="font-weight:600">${esc(v(s,'Quantity'))}</td>
+        <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+      </tr>`).join('');
+
+    document.getElementById('inv-page-info').textContent = 'Page ' + invPage;
+    document.getElementById('inv-prev').disabled = invPage <= 1;
+    document.getElementById('inv-next').disabled = !invHasNext;
+  } catch(e) {
+    document.getElementById('inv-body').innerHTML = `<tr><td colspan="7" style="color:var(--red)">${esc(e.message)}</td></tr>`;
+  }
+}
+function invResetPage() { invPage = 1; invPageKeys = { 1: null }; invHasNext = false; loadInvPage(); }
+function invNext() { if (invHasNext) { invPage++; loadInvPage(); } }
+function invPrev() { if (invPage > 1) { invPage--; loadInvPage(); } }
+
+// ===== ORDERS =====
+let ordData = [], ordPage = 1, ordPageKeys = { 1: null }, ordHasNext = false;
+
+async function loadOrdPage() {
+  try {
+    const lastCA = ordPageKeys[ordPage];
+    let kql = '';
+    const status = document.getElementById('ord-status').value;
+    if (status) kql = `values[Status]="${status}"`;
+    if (lastCA) kql = kql ? `(${kql}) AND createdAt < "${lastCA}"` : `createdAt < "${lastCA}"`;
+
+    let path = `/kapps/${KAPP}/forms/orders/submissions?include=details,values&limit=25`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    ordData = res.submissions || [];
+    ordHasNext = !!res.nextPageToken;
+    if (ordHasNext && ordData.length) ordPageKeys[ordPage + 1] = ordData[ordData.length - 1].createdAt;
+
+    const search = document.getElementById('ord-search').value.toLowerCase();
+    let filtered = ordData;
+    if (search) {
+      filtered = ordData.filter(s =>
+        v(s,'Customer Name').toLowerCase().includes(search) ||
+        v(s,'Order Number').toLowerCase().includes(search) ||
+        v(s,'Product').toLowerCase().includes(search)
+      );
+    }
+
+    document.getElementById('ord-body').innerHTML = filtered.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px">No orders found</td></tr>'
+      : filtered.map(s => `<tr class="clickable-row" onclick="showOrderDetail('${s.id}')">
+        <td style="font-weight:600">${esc(v(s,'Order Number'))}</td>
+        <td>${esc(v(s,'Customer Name'))}</td>
+        <td>${esc(v(s,'Product'))}</td>
+        <td style="font-weight:600">${fmt$(v(s,'Total'))}</td>
+        <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+        <td>${esc(v(s,'Delivery Date'))}</td>
+      </tr>`).join('');
+
+    document.getElementById('ord-page-info').textContent = 'Page ' + ordPage;
+    document.getElementById('ord-prev').disabled = ordPage <= 1;
+    document.getElementById('ord-next').disabled = !ordHasNext;
+  } catch(e) {
+    document.getElementById('ord-body').innerHTML = `<tr><td colspan="6" style="color:var(--red)">${esc(e.message)}</td></tr>`;
+  }
+}
+function ordResetPage() { ordPage = 1; ordPageKeys = { 1: null }; ordHasNext = false; loadOrdPage(); }
+function ordNext() { if (ordHasNext) { ordPage++; loadOrdPage(); } }
+function ordPrev() { if (ordPage > 1) { ordPage--; loadOrdPage(); } }
+
+// ===== SCHEDULES =====
+let schedWeekStart = getMonday(new Date());
+function getMonday(d) { const dt = new Date(d); const day = dt.getDay(); const diff = dt.getDate() - day + (day === 0 ? -6 : 1); dt.setDate(diff); dt.setHours(0,0,0,0); return dt; }
+function fmtDate(d) { return d.toISOString().slice(0,10); }
+function shortDay(d) { return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+
+async function loadScheduleWeek() {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(schedWeekStart);
+    d.setDate(d.getDate() + i);
+    days.push(d);
+  }
+
+  document.getElementById('sched-week-label').textContent =
+    shortDay(days[0]) + ' \u2013 ' + shortDay(days[6]);
+
+  try {
+    // Range query with proper indexes: values[Date] index for all depts, compound [Department,Date] for filtered
+    const startDate = fmtDate(days[0]);
+    const endDate = fmtDate(days[6]);
+    const dept = document.getElementById('sched-dept').value;
+    let kql = dept
+      ? `values[Department]="${dept}" AND values[Date] >= "${startDate}" AND values[Date] <= "${endDate}"`
+      : `values[Date] >= "${startDate}" AND values[Date] <= "${endDate}"`;
+    let path = `/kapps/${KAPP}/forms/schedules/submissions?include=values&limit=25&orderBy=${encodeURIComponent('values[Date]')}&direction=ASC&q=` + encodeURIComponent(kql);
+
+    const res = await api(path);
+    const scheds = res.submissions || [];
+
+    // Group by employee
+    const byEmployee = {};
+    scheds.forEach(s => {
+      const name = v(s, 'Employee Name');
+      if (!byEmployee[name]) byEmployee[name] = { role: v(s,'Role'), shifts: {} };
+      byEmployee[name].shifts[v(s,'Date')] = s;
+    });
+
+    // Render header
+    document.getElementById('sched-head').innerHTML = `<tr><th style="text-align:left">Employee</th>${
+      days.map(d => `<th>${shortDay(d)}</th>`).join('')
+    }</tr>`;
+
+    const employees = Object.keys(byEmployee).sort();
+    document.getElementById('sched-body').innerHTML = employees.length === 0
+      ? `<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:24px">No shifts scheduled this week</td></tr>`
+      : employees.map(name => {
+        const emp = byEmployee[name];
+        return `<tr><td style="text-align:left"><strong>${esc(name)}</strong><br><span style="font-size:11px;color:var(--gray)">${esc(emp.role)}</span></td>${
+          days.map(d => {
+            const dateStr = fmtDate(d);
+            const shift = emp.shifts[dateStr];
+            if (!shift) return '<td class="sched-cell" style="color:var(--border)">-</td>';
+            const start = v(shift, 'Shift Start');
+            const end = v(shift, 'Shift End');
+            const status = v(shift, 'Status') || 'Scheduled';
+            return `<td class="sched-cell"><div class="shift-time">${esc(start)}-${esc(end)}</div><span class="badge sched-${status.toLowerCase().replace(/\s+/g,'-')}">${esc(status)}</span></td>`;
+          }).join('')
+        }</tr>`;
+      }).join('');
+  } catch(e) {
+    document.getElementById('sched-body').innerHTML = `<tr><td colspan="8" style="color:var(--red)">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function schedPrev() { schedWeekStart.setDate(schedWeekStart.getDate() - 7); loadScheduleWeek(); }
+function schedNext() { schedWeekStart.setDate(schedWeekStart.getDate() + 7); loadScheduleWeek(); }
+
+// ===== SERVICE TICKETS =====
+let svcData = [], svcPage = 1, svcPageKeys = { 1: null }, svcHasNext = false;
+
+async function loadSvcPage() {
+  try {
+    const lastCA = svcPageKeys[svcPage];
+    let kql = '';
+    const status = document.getElementById('svc-status').value;
+    const priority = document.getElementById('svc-priority').value;
+    if (status) kql = `values[Status]="${status}"`;
+    if (priority) kql = kql ? `${kql} AND values[Priority]="${priority}"` : `values[Priority]="${priority}"`;
+    if (lastCA) kql = kql ? `(${kql}) AND createdAt < "${lastCA}"` : `createdAt < "${lastCA}"`;
+
+    let path = `/kapps/${KAPP}/forms/service-tickets/submissions?include=details,values&limit=25`;
+    if (kql) path += '&q=' + encodeURIComponent(kql);
+    const res = await api(path);
+    svcData = res.submissions || [];
+    svcHasNext = !!res.nextPageToken;
+    if (svcHasNext && svcData.length) svcPageKeys[svcPage + 1] = svcData[svcData.length - 1].createdAt;
+
+    const search = document.getElementById('svc-search').value.toLowerCase();
+    let filtered = svcData;
+    if (search) {
+      filtered = svcData.filter(s =>
+        v(s,'Customer Name').toLowerCase().includes(search) ||
+        v(s,'Ticket Number').toLowerCase().includes(search) ||
+        v(s,'Appliance').toLowerCase().includes(search)
+      );
+    }
+
+    document.getElementById('svc-body').innerHTML = filtered.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:24px">No tickets found</td></tr>'
+      : filtered.map(s => `<tr class="clickable-row" onclick="showTicketDetail('${s.id}')">
+        <td style="font-weight:600">${esc(v(s,'Ticket Number'))}</td>
+        <td>${esc(v(s,'Customer Name'))}</td>
+        <td>${esc(v(s,'Appliance'))} ${esc(v(s,'Brand'))}</td>
+        <td><span class="badge ${badgeClass(v(s,'Priority'))}">${esc(v(s,'Priority'))}</span></td>
+        <td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td>
+        <td>${esc(v(s,'Assigned To')) || '<span style="color:var(--gray)">Unassigned</span>'}</td>
+      </tr>`).join('');
+
+    document.getElementById('svc-page-info').textContent = 'Page ' + svcPage;
+    document.getElementById('svc-prev').disabled = svcPage <= 1;
+    document.getElementById('svc-next').disabled = !svcHasNext;
+  } catch(e) {
+    document.getElementById('svc-body').innerHTML = `<tr><td colspan="6" style="color:var(--red)">${esc(e.message)}</td></tr>`;
+  }
+}
+function svcResetPage() { svcPage = 1; svcPageKeys = { 1: null }; svcHasNext = false; loadSvcPage(); }
+function svcNext() { if (svcHasNext) { svcPage++; loadSvcPage(); } }
+function svcPrev() { if (svcPage > 1) { svcPage--; loadSvcPage(); } }
+
+// ===== MODALS =====
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+// --- Product Modal ---
+function showProductModal(sub) {
+  const isEdit = !!sub;
+  document.getElementById('modal-inner').innerHTML = `
+    <h2>${isEdit ? 'Edit Product' : 'Add Product'}</h2>
+    <div class="field-row">
+      <div><label>SKU</label><input id="m-sku" value="${esc(isEdit ? v(sub,'SKU') : '')}"></div>
+      <div><label>Product Name</label><input id="m-pname" value="${esc(isEdit ? v(sub,'Product Name') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Category</label>
+        <select id="m-pcat">
+          <option value="">Select...</option>
+          ${['Refrigerators','Washers','Dryers','Dishwashers','Ranges','Microwaves','Freezers'].map(c =>
+            `<option ${isEdit && v(sub,'Category')===c ? 'selected' : ''}>${c}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div><label>Brand</label><input id="m-brand" value="${esc(isEdit ? v(sub,'Brand') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Model Number</label><input id="m-model" value="${esc(isEdit ? v(sub,'Model Number') : '')}"></div>
+      <div><label>Color</label><input id="m-color" value="${esc(isEdit ? v(sub,'Color') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Price</label><input id="m-price" type="number" step="0.01" value="${isEdit ? v(sub,'Price') : ''}"></div>
+      <div><label>Cost</label><input id="m-cost" type="number" step="0.01" value="${isEdit ? v(sub,'Cost') : ''}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Quantity</label><input id="m-qty" type="number" value="${isEdit ? v(sub,'Quantity') : ''}"></div>
+      <div><label>Reorder Level</label><input id="m-reorder" type="number" value="${isEdit ? v(sub,'Reorder Level') : ''}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Status</label>
+        <select id="m-pstatus">
+          ${['In Stock','Low Stock','Out of Stock'].map(s =>
+            `<option ${isEdit && v(sub,'Status')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div><label>Energy Rating</label><input id="m-energy" value="${esc(isEdit ? v(sub,'Energy Rating') : '')}"></div>
+    </div>
+    <label>Warranty (Months)</label><input id="m-warranty" type="number" value="${isEdit ? v(sub,'Warranty Months') : '12'}">
+    <label>Description</label><textarea id="m-desc" rows="3">${esc(isEdit ? v(sub,'Description') : '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      ${isEdit ? `<button class="btn-danger btn-small" onclick="deleteSubmission('${sub.id}','products','inventory')">Delete</button>` : ''}
+      <button class="btn-primary" onclick="saveProduct('${isEdit ? sub.id : ''}')">${isEdit ? 'Update' : 'Create'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function saveProduct(id) {
+  const vals = {
+    'SKU': document.getElementById('m-sku').value,
+    'Product Name': document.getElementById('m-pname').value,
+    'Category': document.getElementById('m-pcat').value,
+    'Brand': document.getElementById('m-brand').value,
+    'Model Number': document.getElementById('m-model').value,
+    'Color': document.getElementById('m-color').value,
+    'Price': document.getElementById('m-price').value,
+    'Cost': document.getElementById('m-cost').value,
+    'Quantity': document.getElementById('m-qty').value,
+    'Reorder Level': document.getElementById('m-reorder').value,
+    'Status': document.getElementById('m-pstatus').value,
+    'Energy Rating': document.getElementById('m-energy').value,
+    'Warranty Months': document.getElementById('m-warranty').value,
+    'Description': document.getElementById('m-desc').value
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: vals }) });
+      toast('Product updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/products/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+      toast('Product created');
+    }
+    closeModal();
+    invResetPage();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showProductDetail(id) {
+  try {
+    const res = await api(`/submissions/${id}?include=values`);
+    showProductModal(res.submission);
+  } catch(e) { alert('Error loading product: ' + e.message); }
+}
+
+// --- Order Modal ---
+function showOrderModal(sub) {
+  const isEdit = !!sub;
+  document.getElementById('modal-inner').innerHTML = `
+    <h2>${isEdit ? 'Edit Order' : 'New Order'}</h2>
+    <div class="field-row">
+      <div><label>Order Number</label><input id="m-ordnum" value="${esc(isEdit ? v(sub,'Order Number') : 'ORD-' + (1000 + Math.floor(Math.random()*9000)))}"></div>
+      <div><label>Status</label>
+        <select id="m-ordstatus">
+          ${['Pending','Processing','Shipped','Delivered','Backordered','Cancelled'].map(s =>
+            `<option ${isEdit && v(sub,'Status')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div><label>Customer Name</label><input id="m-cname" value="${esc(isEdit ? v(sub,'Customer Name') : '')}"></div>
+      <div><label>Customer Email</label><input id="m-cemail" type="email" value="${esc(isEdit ? v(sub,'Customer Email') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Customer Phone</label><input id="m-cphone" value="${esc(isEdit ? v(sub,'Customer Phone') : '')}"></div>
+      <div><label>Payment Method</label>
+        <select id="m-payment">
+          ${['Credit Card','Debit Card','Cash','Financing','Check'].map(s =>
+            `<option ${isEdit && v(sub,'Payment Method')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div><label>Product</label><input id="m-oprod" value="${esc(isEdit ? v(sub,'Product') : '')}"></div>
+      <div><label>SKU</label><input id="m-osku" value="${esc(isEdit ? v(sub,'SKU') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Quantity</label><input id="m-oqty" type="number" value="${isEdit ? v(sub,'Quantity') : '1'}"></div>
+      <div><label>Unit Price</label><input id="m-oprice" type="number" step="0.01" value="${isEdit ? v(sub,'Unit Price') : ''}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Total</label><input id="m-ototal" type="number" step="0.01" value="${isEdit ? v(sub,'Total') : ''}"></div>
+      <div><label>Delivery Date</label><input id="m-odate" type="date" value="${isEdit ? v(sub,'Delivery Date') : ''}"></div>
+    </div>
+    <label>Delivery Address</label><textarea id="m-oaddr" rows="2">${esc(isEdit ? v(sub,'Delivery Address') : '')}</textarea>
+    <label>Notes</label><textarea id="m-onotes" rows="2">${esc(isEdit ? v(sub,'Notes') : '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      ${isEdit ? `<button class="btn-danger btn-small" onclick="deleteSubmission('${sub.id}','orders','orders')">Delete</button>` : ''}
+      <button class="btn-primary" onclick="saveOrder('${isEdit ? sub.id : ''}')">${isEdit ? 'Update' : 'Create'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function saveOrder(id) {
+  const vals = {
+    'Order Number': document.getElementById('m-ordnum').value,
+    'Customer Name': document.getElementById('m-cname').value,
+    'Customer Email': document.getElementById('m-cemail').value,
+    'Customer Phone': document.getElementById('m-cphone').value,
+    'Product': document.getElementById('m-oprod').value,
+    'SKU': document.getElementById('m-osku').value,
+    'Quantity': document.getElementById('m-oqty').value,
+    'Unit Price': document.getElementById('m-oprice').value,
+    'Total': document.getElementById('m-ototal').value,
+    'Status': document.getElementById('m-ordstatus').value,
+    'Payment Method': document.getElementById('m-payment').value,
+    'Delivery Date': document.getElementById('m-odate').value,
+    'Delivery Address': document.getElementById('m-oaddr').value,
+    'Notes': document.getElementById('m-onotes').value
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: vals }) });
+      toast('Order updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/orders/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+      toast('Order created');
+    }
+    closeModal();
+    ordResetPage();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showOrderDetail(id) {
+  try {
+    const res = await api(`/submissions/${id}?include=values`);
+    showOrderModal(res.submission);
+  } catch(e) { alert('Error loading order: ' + e.message); }
+}
+
+// --- Schedule Modal ---
+function showScheduleModal(sub) {
+  const isEdit = !!sub;
+  document.getElementById('modal-inner').innerHTML = `
+    <h2>${isEdit ? 'Edit Shift' : 'Add Shift'}</h2>
+    <div class="field-row">
+      <div><label>Employee Name</label><input id="m-sname" value="${esc(isEdit ? v(sub,'Employee Name') : '')}"></div>
+      <div><label>Role</label>
+        <select id="m-srole">
+          ${['Sales Associate','Delivery Driver','Service Technician','Store Manager','Cashier'].map(s =>
+            `<option ${isEdit && v(sub,'Role')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div><label>Date</label><input id="m-sdate" type="date" value="${isEdit ? v(sub,'Date') : fmtDate(new Date())}"></div>
+      <div><label>Department</label>
+        <select id="m-sdept">
+          ${['Sales Floor','Delivery','Service','Management'].map(s =>
+            `<option ${isEdit && v(sub,'Department')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div><label>Shift Start</label><input id="m-sstart" type="time" value="${isEdit ? v(sub,'Shift Start') : '09:00'}"></div>
+      <div><label>Shift End</label><input id="m-send" type="time" value="${isEdit ? v(sub,'Shift End') : '17:00'}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Hours</label><input id="m-shours" type="number" value="${isEdit ? v(sub,'Hours') : '8'}"></div>
+      <div><label>Status</label>
+        <select id="m-sstatus">
+          ${['Scheduled','Worked','Called Out','Off'].map(s =>
+            `<option ${isEdit && v(sub,'Status')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <label>Notes</label><textarea id="m-snotes" rows="2">${esc(isEdit ? v(sub,'Notes') : '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      ${isEdit ? `<button class="btn-danger btn-small" onclick="deleteSubmission('${sub.id}','schedules','schedules')">Delete</button>` : ''}
+      <button class="btn-primary" onclick="saveSchedule('${isEdit ? sub.id : ''}')">${isEdit ? 'Update' : 'Create'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function saveSchedule(id) {
+  const vals = {
+    'Employee Name': document.getElementById('m-sname').value,
+    'Role': document.getElementById('m-srole').value,
+    'Date': document.getElementById('m-sdate').value,
+    'Department': document.getElementById('m-sdept').value,
+    'Shift Start': document.getElementById('m-sstart').value,
+    'Shift End': document.getElementById('m-send').value,
+    'Hours': document.getElementById('m-shours').value,
+    'Status': document.getElementById('m-sstatus').value,
+    'Notes': document.getElementById('m-snotes').value
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: vals }) });
+      toast('Shift updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/schedules/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+      toast('Shift created');
+    }
+    closeModal();
+    loadScheduleWeek();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// --- Service Ticket Modal ---
+function showTicketModal(sub) {
+  const isEdit = !!sub;
+  document.getElementById('modal-inner').innerHTML = `
+    <h2>${isEdit ? 'Edit Service Ticket' : 'New Service Ticket'}</h2>
+    <div class="field-row">
+      <div><label>Ticket Number</label><input id="m-tnum" value="${esc(isEdit ? v(sub,'Ticket Number') : 'SVC-' + String(Math.floor(Math.random()*900)+100).padStart(3,'0'))}"></div>
+      <div><label>Priority</label>
+        <select id="m-tpriority">
+          ${['Low','Medium','High'].map(s =>
+            `<option ${isEdit && v(sub,'Priority')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div><label>Customer Name</label><input id="m-tcust" value="${esc(isEdit ? v(sub,'Customer Name') : '')}"></div>
+      <div><label>Customer Phone</label><input id="m-tphone" value="${esc(isEdit ? v(sub,'Customer Phone') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Appliance</label><input id="m-tappl" value="${esc(isEdit ? v(sub,'Appliance') : '')}"></div>
+      <div><label>Brand</label><input id="m-tbrand" value="${esc(isEdit ? v(sub,'Brand') : '')}"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Model Number</label><input id="m-tmodel" value="${esc(isEdit ? v(sub,'Model Number') : '')}"></div>
+      <div><label>Warranty</label>
+        <select id="m-twarranty">
+          ${['Yes','No'].map(s =>
+            `<option ${isEdit && v(sub,'Warranty')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <label>Issue Description</label><textarea id="m-tissue" rows="3">${esc(isEdit ? v(sub,'Issue') : '')}</textarea>
+    <div class="field-row">
+      <div><label>Status</label>
+        <select id="m-tstatus">
+          ${['Open','In Progress','Waiting on Parts','Completed','Closed'].map(s =>
+            `<option ${isEdit && v(sub,'Status')===s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+      <div><label>Assigned To</label><input id="m-tassign" value="${esc(isEdit ? v(sub,'Assigned To') : '')}"></div>
+    </div>
+    <label>Resolution</label><textarea id="m-tresolution" rows="3">${esc(isEdit ? v(sub,'Resolution') : '')}</textarea>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      ${isEdit ? `<button class="btn-danger btn-small" onclick="deleteSubmission('${sub.id}','service-tickets','service')">Delete</button>` : ''}
+      <button class="btn-primary" onclick="saveTicket('${isEdit ? sub.id : ''}')">${isEdit ? 'Update' : 'Create'}</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function saveTicket(id) {
+  const vals = {
+    'Ticket Number': document.getElementById('m-tnum').value,
+    'Customer Name': document.getElementById('m-tcust').value,
+    'Customer Phone': document.getElementById('m-tphone').value,
+    'Appliance': document.getElementById('m-tappl').value,
+    'Brand': document.getElementById('m-tbrand').value,
+    'Model Number': document.getElementById('m-tmodel').value,
+    'Issue': document.getElementById('m-tissue').value,
+    'Priority': document.getElementById('m-tpriority').value,
+    'Status': document.getElementById('m-tstatus').value,
+    'Assigned To': document.getElementById('m-tassign').value,
+    'Resolution': document.getElementById('m-tresolution').value,
+    'Warranty': document.getElementById('m-twarranty').value
+  };
+  try {
+    if (id) {
+      await api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values: vals }) });
+      toast('Ticket updated');
+    } else {
+      await api(`/kapps/${KAPP}/forms/service-tickets/submissions`, { method: 'POST', body: JSON.stringify({ values: vals }) });
+      toast('Ticket created');
+    }
+    closeModal();
+    svcResetPage();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showTicketDetail(id) {
+  try {
+    const res = await api(`/submissions/${id}?include=values`);
+    showTicketModal(res.submission);
+  } catch(e) { alert('Error loading ticket: ' + e.message); }
+}
+
+// --- Delete ---
+async function deleteSubmission(id, form, tab) {
+  if (!confirm('Delete this record?')) return;
+  try {
+    await api(`/submissions/${id}`, { method: 'DELETE' });
+    toast('Record deleted');
+    closeModal();
+    if (tab === 'inventory') invResetPage();
+    else if (tab === 'orders') ordResetPage();
+    else if (tab === 'schedules') loadScheduleWeek();
+    else if (tab === 'service') svcResetPage();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+</script>
+</body>
+</html>

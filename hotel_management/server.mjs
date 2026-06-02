@@ -121,8 +121,9 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const user = body.user || "System";
 
       // Get the reservation
-      const resData = await kineticRequest("GET", `/kapps/${KAPP}/forms/reservations/submissions/${resId}?include=values`, null, auth);
-      const reservation = resData.submission;
+      const resData = await kineticRequest("GET", `/submissions/${resId}?include=values`, null, auth);
+      const reservation = resData.data?.submission;
+      if (!reservation) { jsonResp(res, 404, { error: "Reservation not found" }); return true; }
       const roomNumber = reservation.values["Room Number"];
       const guestName = reservation.values["Guest Name"];
 
@@ -151,7 +152,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const now = new Date().toISOString();
 
       // Update reservation
-      await kineticRequest("PUT", `/kapps/${KAPP}/forms/reservations/submissions/${resId}`, {
+      await kineticRequest("PUT", `/submissions/${resId}`, {
         values: {
           "Status": "Checked In",
           "Room Number": assignedRoom,
@@ -162,7 +163,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       }, auth);
 
       // Update room
-      await kineticRequest("PUT", `/kapps/${KAPP}/forms/rooms/submissions/${targetRoom.id}`, {
+      await kineticRequest("PUT", `/submissions/${targetRoom.id}`, {
         values: {
           "Status": "Occupied",
           "Current Guest": guestName,
@@ -185,13 +186,14 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const now = new Date().toISOString();
 
       // Get the reservation
-      const resData = await kineticRequest("GET", `/kapps/${KAPP}/forms/reservations/submissions/${resId}?include=values`, null, auth);
-      const reservation = resData.submission;
+      const resData = await kineticRequest("GET", `/submissions/${resId}?include=values`, null, auth);
+      const reservation = resData.data?.submission;
+      if (!reservation) { jsonResp(res, 404, { error: "Reservation not found" }); return true; }
       const roomId = reservation.values["Room ID"];
       const roomNumber = reservation.values["Room Number"];
 
       // Update reservation
-      await kineticRequest("PUT", `/kapps/${KAPP}/forms/reservations/submissions/${resId}`, {
+      await kineticRequest("PUT", `/submissions/${resId}`, {
         values: {
           "Status": "Checked Out",
           "Checked Out At": now,
@@ -201,7 +203,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
 
       // Update room
       if (roomId) {
-        await kineticRequest("PUT", `/kapps/${KAPP}/forms/rooms/submissions/${roomId}`, {
+        await kineticRequest("PUT", `/submissions/${roomId}`, {
           values: {
             "Status": "Maintenance",
             "Condition": "Dirty",
@@ -250,10 +252,10 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         updates = { "Status": "Verified", "Verified By": user, "Verified At": now };
 
         // When verified, update the room back to Available/Clean
-        const hkData = await kineticRequest("GET", `/kapps/${KAPP}/forms/housekeeping/submissions/${taskSubId}?include=values`, null, auth);
-        const roomId = hkData.submission?.values?.["Room ID"];
+        const hkData = await kineticRequest("GET", `/submissions/${taskSubId}?include=values`, null, auth);
+        const roomId = hkData.data?.submission?.values?.["Room ID"];
         if (roomId) {
-          await kineticRequest("PUT", `/kapps/${KAPP}/forms/rooms/submissions/${roomId}`, {
+          await kineticRequest("PUT", `/submissions/${roomId}`, {
             values: {
               "Status": "Available",
               "Condition": "Clean",
@@ -267,7 +269,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         return true;
       }
 
-      await kineticRequest("PUT", `/kapps/${KAPP}/forms/housekeeping/submissions/${taskSubId}`, {
+      await kineticRequest("PUT", `/submissions/${taskSubId}`, {
         values: updates,
       }, auth);
 

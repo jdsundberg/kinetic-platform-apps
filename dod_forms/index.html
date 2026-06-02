@@ -660,7 +660,7 @@ async function kapi(path, opts = {}) {
   return r.json();
 }
 
-async function kfetch(formSlug, { kql = '', limit = 25, lastCreatedAt = '', coreState = '', include = 'values' } = {}) {
+async function kfetch(formSlug, { kql = '', limit = 25, lastCreatedAt = '', coreState = '', include = 'details,values' } = {}) {
   let path = `/kapps/${KAPP}/forms/${formSlug}/submissions?include=${include}&limit=${limit}`;
   if (lastCreatedAt) {
     kql = (kql ? '(' + kql + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
@@ -1327,7 +1327,7 @@ async function saveContact(id) {
 
 async function editContact(id) {
   try {
-    const res = await kapi(`/submissions/${id}?include=values`);
+    const res = await kapi(`/submissions/${id}?include=details,values`);
     openContactModal(res.submission);
   } catch (e) { toast('Error: ' + e.message); }
 }
@@ -1472,7 +1472,7 @@ async function saveBeneficiary(id) {
 
 async function editBeneficiary(id) {
   try {
-    const res = await kapi(`/submissions/${id}?include=values`);
+    const res = await kapi(`/submissions/${id}?include=details,values`);
     openBeneficiaryModal(res.submission);
   } catch (e) { toast('Error: ' + e.message); }
 }
@@ -1705,7 +1705,7 @@ async function saveInsurance(id) {
 
 async function editInsurance(id) {
   try {
-    const res = await kapi(`/submissions/${id}?include=values`);
+    const res = await kapi(`/submissions/${id}?include=details,values`);
     openInsuranceModal(res.submission);
   } catch (e) { toast('Error: ' + e.message); }
 }

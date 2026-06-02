@@ -809,7 +809,7 @@ async function loadDashboard() {
 let _allEvents = [];
 async function loadEvents() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/event/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/event/submissions?include=details,values&limit=100`);
     _allEvents = r.submissions || [];
     window._eventsLoaded = true;
     document.getElementById("events-loading").style.display = "none";
@@ -840,7 +840,7 @@ setupFilter("events-filter-severity", renderEvents);
 setupFilter("events-filter-status", renderEvents);
 
 async function showEventDetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   const status = v["Status"] || "";
   const transitions = { New: ["Triaged", "Suppressed"], Triaged: ["Correlated", "Case Created", "Suppressed"], Correlated: ["Case Created", "Suppressed"] };
@@ -881,7 +881,7 @@ async function transitionEvent(id, newStatus) {
 let _allCases = [];
 async function loadCases() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/case/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/case/submissions?include=details,values&limit=100`);
     _allCases = r.submissions || [];
     window._casesLoaded = true;
     document.getElementById("cases-loading").style.display = "none";
@@ -924,7 +924,7 @@ setupFilter("cases-filter-type", renderCases);
 setupFilter("cases-filter-status", renderCases);
 
 async function showCaseDetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   const status = v["Status"] || "";
   const transitions = { New: ["Triage"], Triage: ["Investigation", "Closed"], Investigation: ["Remediation", "Closed"], Remediation: ["Validation", "Investigation"], Validation: ["Closure Pending", "Remediation"], "Closure Pending": ["Closed", "Validation"], Closed: ["Reopened"], Reopened: ["Triage"] };
@@ -972,7 +972,7 @@ async function transitionCase(id, newStatus) {
 let _allCAPAs = [];
 async function loadCAPAs() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/capa/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/capa/submissions?include=details,values&limit=100`);
     _allCAPAs = r.submissions || [];
     window._capasLoaded = true;
     document.getElementById("capas-loading").style.display = "none";
@@ -1012,7 +1012,7 @@ setupFilter("capas-filter-status", renderCAPAs);
 setupFilter("capas-filter-type", renderCAPAs);
 
 async function showCAPADetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   const status = v["Status"] || "";
   const transitions = { Open: ["In Progress"], "In Progress": ["Pending Verification"], "Pending Verification": ["Verified", "In Progress"], Verified: ["Closed", "In Progress"] };
@@ -1055,7 +1055,7 @@ async function transitionCAPA(id, newStatus) {
 /* ===== KNOWLEDGE: CONTROLS ===== */
 async function loadControls() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/control/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/control/submissions?include=details,values&limit=100`);
     window._controlsLoaded = true;
     document.getElementById("controls-loading").style.display = "none";
     const tb = document.querySelector("#controls-table tbody");
@@ -1074,7 +1074,7 @@ async function loadControls() {
 }
 
 async function showControlDetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   showModal(`
     <h2>${v["Control ID"]} - ${v["Name"]}</h2>
@@ -1100,7 +1100,7 @@ async function showControlDetail(id) {
 /* ===== KNOWLEDGE: REQUIREMENTS ===== */
 async function loadRequirements() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/requirement/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/requirement/submissions?include=details,values&limit=100`);
     window._requirementsLoaded = true;
     document.getElementById("requirements-loading").style.display = "none";
     const tb = document.querySelector("#requirements-table tbody");
@@ -1117,7 +1117,7 @@ async function loadRequirements() {
 /* ===== KNOWLEDGE: POLICIES ===== */
 async function loadPolicies() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/policy/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/policy/submissions?include=details,values&limit=100`);
     window._policiesLoaded = true;
     document.getElementById("policies-loading").style.display = "none";
     const tb = document.querySelector("#policies-table tbody");
@@ -1134,7 +1134,7 @@ async function loadPolicies() {
 /* ===== KNOWLEDGE: PLAYBOOKS ===== */
 async function loadPlaybooks() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/playbook/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/playbook/submissions?include=details,values&limit=100`);
     window._playbooksLoaded = true;
     document.getElementById("playbooks-loading").style.display = "none";
     const tb = document.querySelector("#playbooks-table tbody");
@@ -1151,7 +1151,7 @@ async function loadPlaybooks() {
 /* ===== REGISTRY: SITES ===== */
 async function loadSites() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/site/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/site/submissions?include=details,values&limit=100`);
     window._sitesLoaded = true;
     document.getElementById("sites-loading").style.display = "none";
     const subs = r.submissions || [];
@@ -1173,7 +1173,7 @@ async function loadSites() {
 }
 
 async function showSiteDetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   showModal(`
     <h2>${v["Name"]}</h2>
@@ -1206,7 +1206,7 @@ async function showSiteDetail(id) {
 /* ===== REGISTRY: ASSETS ===== */
 async function loadAssets() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/asset/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/asset/submissions?include=details,values&limit=100`);
     window._assetsLoaded = true;
     document.getElementById("assets-loading").style.display = "none";
     const tb = document.querySelector("#assets-table tbody");
@@ -1223,7 +1223,7 @@ async function loadAssets() {
 /* ===== REGISTRY: VENDORS ===== */
 async function loadVendors() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/vendor/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/vendor/submissions?include=details,values&limit=100`);
     window._vendorsLoaded = true;
     document.getElementById("vendors-loading").style.display = "none";
     const tb = document.querySelector("#vendors-table tbody");
@@ -1240,7 +1240,7 @@ async function loadVendors() {
 /* ===== AUDITS ===== */
 async function loadAudits() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/audit/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/audit/submissions?include=details,values&limit=100`);
     window._auditsLoaded = true;
     document.getElementById("audits-loading").style.display = "none";
     const tb = document.querySelector("#audits-table tbody");
@@ -1259,7 +1259,7 @@ async function loadAudits() {
 }
 
 async function showAuditDetail(id) {
-  const r = await kapi(`/submissions/${id}?include=values`);
+  const r = await kapi(`/submissions/${id}?include=details,values`);
   const v = r.submission?.values || {};
   const status = v["Status"] || "";
   const transitions = { Planned: ["In Progress"], "In Progress": ["Review"], Review: ["Closed", "In Progress"] };
@@ -1300,7 +1300,7 @@ async function transitionAudit(id, newStatus) {
 
 async function loadFindings() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/audit-finding/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/audit-finding/submissions?include=details,values&limit=100`);
     window._findingsLoaded = true;
     document.getElementById("findings-loading").style.display = "none";
     const tb = document.querySelector("#findings-table tbody");
@@ -1317,7 +1317,7 @@ async function loadFindings() {
 /* ===== SUSTAINABILITY ===== */
 async function loadCycles() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/reporting-cycle/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/reporting-cycle/submissions?include=details,values&limit=100`);
     window._cyclesLoaded = true;
     document.getElementById("cycles-loading").style.display = "none";
     const tb = document.querySelector("#cycles-table tbody");
@@ -1333,7 +1333,7 @@ async function loadCycles() {
 
 async function loadAttestations() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/attestation/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/attestation/submissions?include=details,values&limit=100`);
     window._attestationsLoaded = true;
     document.getElementById("attestations-loading").style.display = "none";
     const tb = document.querySelector("#attestations-table tbody");
@@ -1349,7 +1349,7 @@ async function loadAttestations() {
 
 async function loadEvidence() {
   try {
-    const r = await kapi(`/kapps/${KAPP}/forms/evidence/submissions?include=values&limit=100`);
+    const r = await kapi(`/kapps/${KAPP}/forms/evidence/submissions?include=details,values&limit=100`);
     window._evidenceLoaded = true;
     document.getElementById("evidence-loading").style.display = "none";
     const tb = document.querySelector("#evidence-table tbody");

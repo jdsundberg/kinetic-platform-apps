@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Supplies</title>
+<style>
+:root {
+  --navy: #0F2D52; --navy-light: #1B4380;
+  --amber: #F59E0B; --amber-light: #FBBF24; --amber-bg: #FFF8E1;
+  --green: #16A34A; --green-bg: #DCFCE7;
+  --red: #DC2626; --red-bg: #FEE2E2;
+  --yellow: #EAB308; --yellow-bg: #FEF9C3;
+  --blue: #2563EB; --blue-bg: #DBEAFE;
+  --purple: #7C3AED; --purple-bg: #EDE9FE;
+  --gray: #6B7280; --light: #F9FAFB; --border: #E5E7EB; --bg: #F3F4F6;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #1F2937; }
+
+/* ── Login ── */
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0F2D52 0%, #1B4380 50%, #F59E0B 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--navy); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--amber); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.25); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--navy); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--navy-light); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: var(--red-bg); color: var(--red); border-radius: 6px; font-size: 13px; }
+
+/* ── App Shell ── */
+#app { display: none; }
+.topbar { background: var(--navy); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--amber); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.75); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.12); color: white; }
+.nav-tabs button.active { background: var(--amber); color: var(--navy); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--amber); border-color: var(--amber); color: var(--navy); }
+
+/* ── Consoles ── */
+.console { display: none; padding: 24px; max-width: 1280px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+/* ── Cards & KPIs ── */
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); border-left: 4px solid var(--navy); }
+.kpi.warn { border-left-color: var(--amber); }
+.kpi.bad { border-left-color: var(--red); }
+.kpi.good { border-left-color: var(--green); }
+.kpi .val { font-size: 28px; font-weight: 700; color: var(--navy); }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); background: var(--light); }
+td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--light); }
+tr.row-low td { background: #FFF7ED; }
+tr.row-low:hover td { background: #FFEDD5; }
+tr.row-out td { background: var(--red-bg); }
+tr.row-out:hover td { background: #FECACA; }
+
+/* ── Badges ── */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-active, .badge-fulfilled, .badge-received { background: var(--green-bg); color: var(--green); }
+.badge-discontinued, .badge-cancelled { background: #F3F4F6; color: var(--gray); }
+.badge-open { background: var(--blue-bg); color: var(--blue); }
+.badge-in-progress, .badge-ordered { background: var(--purple-bg); color: var(--purple); }
+.badge-low { background: var(--amber-bg); color: var(--amber); }
+.badge-out { background: var(--red-bg); color: var(--red); }
+.badge-ok { background: var(--green-bg); color: var(--green); }
+.badge-urgent { background: var(--red-bg); color: var(--red); }
+.badge-high { background: var(--amber-bg); color: var(--amber); }
+.badge-normal { background: var(--blue-bg); color: var(--blue); }
+.badge-low-pri { background: #F3F4F6; color: var(--gray); }
+
+/* ── Buttons ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--navy); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--navy-light); }
+.btn-secondary { background: var(--light); color: var(--navy); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-amber { background: var(--amber); color: var(--navy); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-amber:hover { background: var(--amber-light); }
+.btn-amber:disabled { background: var(--border); color: var(--gray); cursor: not-allowed; }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+/* ── Filter ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; }
+.filter-bar label { font-size: 12px; color: var(--gray); margin-right: 4px; }
+
+/* ── Stock indicator ── */
+.stock { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.stock-bar { width: 60px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.stock-fill { height: 100%; background: var(--green); }
+.stock-fill.low { background: var(--amber); }
+.stock-fill.out { background: var(--red); }
+
+/* ── Modal ── */
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.show { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 500px; max-width: 90vw; padding: 24px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
+.modal-box h2 { font-size: 18px; color: var(--navy); margin-bottom: 4px; }
+.modal-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.modal-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 10px; }
+.modal-box input, .modal-box select, .modal-box textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-box input:focus, .modal-box select:focus, .modal-box textarea:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.modal-info { background: var(--light); border-radius: 8px; padding: 12px; font-size: 13px; margin-bottom: 12px; }
+.modal-info .row { display: flex; justify-content: space-between; padding: 4px 0; }
+.modal-info .row .k { color: var(--gray); }
+.modal-info .row .v { font-weight: 600; }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); z-index: 300; display: none; }
+#toast.show { display: block; animation: slidein .2s; }
+@keyframes slidein { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ LOGIN ══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>📦 Office Supplies</h1>
+    <div class="sub">Inventory & Reorder Management</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://ai-labs.kinopsdev.io" />
+    <label>Username</label>
+    <input id="login-user" value="john" />
+    <label>Password</label>
+    <input id="login-pass" type="password" />
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ APP ══════════════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">📦 Office <span>Supplies</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('supplies')">Supplies</button>
+      <button onclick="switchTab('tasks')">Reorder Tasks</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <span>Signed in as <strong id="user-display"></strong></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="console-dash">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Inventory health and reorder activity at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="card">
+      <h3>Items Needing Reorder</h3>
+      <div id="dash-low-stock"></div>
+    </div>
+    <div class="card">
+      <h3>Open Reorder Tasks</h3>
+      <div id="dash-open-tasks"></div>
+    </div>
+  </div>
+
+  <!-- SUPPLIES -->
+  <div class="console" id="console-supplies">
+    <div class="page-title">Supplies</div>
+    <div class="page-sub">Click "Reorder" on a low-stock item to create a fulfillment task</div>
+    <div class="toolbar filter-bar">
+      <label>Category</label>
+      <select id="filter-sup-cat" onchange="loadSupplies()">
+        <option value="">All</option>
+        <option>Paper</option><option>Writing</option><option>Electronics</option>
+        <option>Breakroom</option><option>Cleaning</option>
+      </select>
+      <label>Location</label>
+      <select id="filter-sup-loc" onchange="loadSupplies()">
+        <option value="">All</option>
+        <option>Storage A</option><option>Storage B</option>
+        <option>IT Closet</option><option>Breakroom</option>
+      </select>
+      <label>Stock</label>
+      <select id="filter-sup-stock" onchange="loadSupplies()">
+        <option value="">All</option>
+        <option value="low">Low or Out</option>
+        <option value="ok">OK</option>
+      </select>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn-primary btn-sm" onclick="openAddSupply()">+ Add Supply</button>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>SKU</th><th>Name</th><th>Category</th><th>Location</th>
+          <th>On Hand</th><th>Stock</th><th>Vendor</th><th></th>
+        </tr></thead>
+        <tbody id="supplies-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="supplies-pagination"></div>
+  </div>
+
+  <!-- TASKS -->
+  <div class="console" id="console-tasks">
+    <div class="page-title">Reorder Tasks</div>
+    <div class="page-sub">Fulfillment queue — click a task to update status</div>
+    <div class="toolbar filter-bar">
+      <label>Status</label>
+      <select id="filter-task-status" onchange="loadTasks()">
+        <option value="">All</option>
+        <option>Open</option><option>In Progress</option>
+        <option>Ordered</option><option>Received</option><option>Cancelled</option>
+      </select>
+      <label>Priority</label>
+      <select id="filter-task-priority" onchange="loadTasks()">
+        <option value="">All</option>
+        <option>Urgent</option><option>High</option>
+        <option>Normal</option><option>Low</option>
+      </select>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead><tr>
+          <th>Task</th><th>Item</th><th>Qty</th><th>Vendor</th>
+          <th>Priority</th><th>Status</th><th>Assigned</th><th>Requested</th>
+        </tr></thead>
+        <tbody id="tasks-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="tasks-pagination"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="modal-box" id="modal-content"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   CONFIG & STATE
+   ══════════════════════════════════════════════ */
+const KAPP = 'office-supplies';
+let API = { url: '', auth: '', user: '', displayName: '' };
+const PAGE_STATE = {
+  supplies: { page: 1, history: [], pageToken: null },
+  tasks: { page: 1, history: [], pageToken: null }
+};
+
+/* ══════════════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════════════ */
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub?.values?.[field] ?? ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function num(x) { const n = parseFloat(x); return Number.isFinite(n) ? n : 0; }
+function today() { return new Date().toISOString().slice(0, 10); }
+
+function stockLevel(s) {
+  const oh = num(v(s, 'Quantity On Hand'));
+  const thr = num(v(s, 'Reorder Threshold'));
+  if (oh <= 0) return 'out';
+  if (oh <= thr) return 'low';
+  return 'ok';
+}
+
+function stockBadge(level) {
+  if (level === 'out') return '<span class="badge badge-out">Out</span>';
+  if (level === 'low') return '<span class="badge badge-low">Low</span>';
+  return '<span class="badge badge-ok">OK</span>';
+}
+
+function stockBar(s) {
+  const oh = num(v(s, 'Quantity On Hand'));
+  const thr = num(v(s, 'Reorder Threshold'));
+  const cap = Math.max(thr * 2, oh, 1);
+  const pct = Math.min(100, (oh / cap) * 100);
+  const level = stockLevel(s);
+  return `<div class="stock"><div class="stock-bar"><div class="stock-fill ${level === 'ok' ? '' : level}" style="width:${pct}%"></div></div><span>${oh}</span></div>`;
+}
+
+function statusBadge(status) {
+  if (!status) return '';
+  const cls = status.toLowerCase().replace(/\s+/g, '-');
+  return `<span class="badge badge-${cls}">${esc(status)}</span>`;
+}
+
+function priorityBadge(p) {
+  if (!p) return '';
+  const cls = p === 'Low' ? 'low-pri' : p.toLowerCase();
+  return `<span class="badge badge-${cls}">${esc(p)}</span>`;
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN / SESSION
+   ══════════════════════════════════════════════ */
+async function doLogin() {
+  const url = document.getElementById('login-url').value.replace(/\/$/, '');
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const auth = btoa(`${user}:${pass}`);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: 'Basic ' + auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth, user, displayName: data.displayName || data.username || user };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ══════════════════════════════════════════════
+   API
+   ══════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers }
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════ */
+function enterApp() { loadDashboard(); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  const tabs = ['dash', 'supplies', 'tasks'];
+  document.querySelectorAll('.nav-tabs button')[tabs.indexOf(tab)].classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  else if (tab === 'supplies') { PAGE_STATE.supplies = { page: 1, history: [], pageToken: null }; loadSupplies(); }
+  else if (tab === 'tasks') { PAGE_STATE.tasks = { page: 1, history: [], pageToken: null }; loadTasks(); }
+}
+
+function updatePageState(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+
+function paginationHtml(ps, fn) {
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD
+   ══════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    // First page of supplies for KPIs / low-stock list (limit=25 enforced)
+    const supData = await api(`/kapps/${KAPP}/forms/supplies/submissions?include=details,values&limit=25&q=${encodeURIComponent('values[Status]="Active"')}`);
+    const supplies = supData.submissions || [];
+
+    const total = supplies.length;
+    const out = supplies.filter(s => stockLevel(s) === 'out').length;
+    const low = supplies.filter(s => stockLevel(s) === 'low').length;
+    const ok = total - out - low;
+
+    // Open tasks count
+    const taskData = await api(`/kapps/${KAPP}/forms/reorder-tasks/submissions?include=details,values&limit=25&q=${encodeURIComponent('values[Status]="Open"')}`);
+    const openTasks = taskData.submissions || [];
+
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val">${total}</div><div class="label">Active Supplies</div></div>
+      <div class="kpi good"><div class="val">${ok}</div><div class="label">In Stock</div></div>
+      <div class="kpi warn"><div class="val">${low}</div><div class="label">Running Low</div></div>
+      <div class="kpi bad"><div class="val">${out}</div><div class="label">Out of Stock</div></div>
+      <div class="kpi"><div class="val">${openTasks.length}</div><div class="label">Open Reorder Tasks</div></div>
+    `;
+
+    const needs = supplies.filter(s => stockLevel(s) !== 'ok')
+      .sort((a, b) => (stockLevel(a) === 'out' ? -1 : 1) - (stockLevel(b) === 'out' ? -1 : 1));
+
+    document.getElementById('dash-low-stock').innerHTML = needs.length ? `
+      <table><thead><tr><th>SKU</th><th>Name</th><th>On Hand</th><th>Threshold</th><th>Status</th><th></th></tr></thead>
+      <tbody>${needs.map(s => `
+        <tr class="${stockLevel(s) === 'out' ? 'row-out' : 'row-low'}">
+          <td>${esc(v(s, 'SKU'))}</td>
+          <td>${esc(v(s, 'Name'))}</td>
+          <td>${esc(v(s, 'Quantity On Hand'))} ${esc(v(s, 'Unit'))}</td>
+          <td>${esc(v(s, 'Reorder Threshold'))}</td>
+          <td>${stockBadge(stockLevel(s))}</td>
+          <td><button class="btn-amber btn-sm" onclick="openReorder('${s.id}')">Reorder</button></td>
+        </tr>`).join('')}</tbody></table>` : '<div style="padding:12px;color:var(--gray);font-size:13px;">All supplies are in stock 🎉</div>';
+
+    document.getElementById('dash-open-tasks').innerHTML = openTasks.length ? `
+      <table><thead><tr><th>Task</th><th>Item</th><th>Qty</th><th>Priority</th><th>Assigned</th><th>Requested</th></tr></thead>
+      <tbody>${openTasks.map(t => `
+        <tr style="cursor:pointer" onclick="openTaskEdit('${t.id}')">
+          <td><strong>${esc(v(t, 'Task Number'))}</strong></td>
+          <td>${esc(v(t, 'Item Name'))}</td>
+          <td>${esc(v(t, 'Quantity Requested'))}</td>
+          <td>${priorityBadge(v(t, 'Priority'))}</td>
+          <td>${esc(v(t, 'Assigned To'))}</td>
+          <td>${esc(v(t, 'Requested Date'))}</td>
+        </tr>`).join('')}</tbody></table>` : '<div style="padding:12px;color:var(--gray);font-size:13px;">No open tasks</div>';
+  } catch (e) {
+    document.getElementById('dash-kpis').innerHTML = `<div class="kpi bad"><div class="val">!</div><div class="label">Error: ${esc(e.message)}</div></div>`;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SUPPLIES
+   ══════════════════════════════════════════════ */
+async function loadSupplies(direction) {
+  const ps = PAGE_STATE.supplies;
+  updatePageState(ps, direction);
+  const cat = document.getElementById('filter-sup-cat').value;
+  const loc = document.getElementById('filter-sup-loc').value;
+  const stockF = document.getElementById('filter-sup-stock').value;
+
+  let path = `/kapps/${KAPP}/forms/supplies/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (cat) q.push(`values[Category]="${cat}"`);
+  if (loc) q.push(`values[Location]="${loc}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+
+  try {
+    const data = await api(path);
+    let subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    // Stock filter is client-side (computed)
+    if (stockF === 'low') subs = subs.filter(s => stockLevel(s) !== 'ok');
+    else if (stockF === 'ok') subs = subs.filter(s => stockLevel(s) === 'ok');
+
+    document.getElementById('supplies-body').innerHTML = subs.length ? subs.map(s => {
+      const level = stockLevel(s);
+      const rowCls = level === 'out' ? 'row-out' : level === 'low' ? 'row-low' : '';
+      const btnLabel = level === 'ok' ? 'Reorder' : level === 'out' ? 'Reorder Now' : 'Reorder';
+      return `<tr class="${rowCls}">
+        <td><code>${esc(v(s, 'SKU'))}</code></td>
+        <td><strong>${esc(v(s, 'Name'))}</strong></td>
+        <td>${esc(v(s, 'Category'))}</td>
+        <td>${esc(v(s, 'Location'))}</td>
+        <td>${esc(v(s, 'Quantity On Hand'))} ${esc(v(s, 'Unit'))}</td>
+        <td>${stockBar(s)} ${stockBadge(level)}</td>
+        <td>${esc(v(s, 'Vendor'))}</td>
+        <td><button class="btn-amber btn-sm" onclick="openReorder('${s.id}')">${btnLabel}</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:24px;">No supplies found</td></tr>';
+
+    document.getElementById('supplies-pagination').innerHTML = paginationHtml(ps, 'loadSupplies');
+  } catch (e) {
+    document.getElementById('supplies-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   REORDER MODAL
+   ══════════════════════════════════════════════ */
+async function openReorder(supplyId) {
+  try {
+    const data = await api(`/submissions/${supplyId}?include=values`);
+    const s = data.submission;
+    const sku = v(s, 'SKU'); const name = v(s, 'Name');
+    const oh = num(v(s, 'Quantity On Hand')); const thr = num(v(s, 'Reorder Threshold'));
+    const defaultQty = v(s, 'Reorder Quantity') || Math.max(thr * 2 - oh, thr);
+    const vendor = v(s, 'Vendor') || '';
+    const level = stockLevel(s);
+    const defaultPri = level === 'out' ? 'Urgent' : level === 'low' ? 'High' : 'Normal';
+
+    document.getElementById('modal-content').innerHTML = `
+      <h2>Create Reorder Task</h2>
+      <div class="sub">A task will be added to the fulfillment queue</div>
+      <div class="modal-info">
+        <div class="row"><span class="k">SKU</span><span class="v">${esc(sku)}</span></div>
+        <div class="row"><span class="k">Item</span><span class="v">${esc(name)}</span></div>
+        <div class="row"><span class="k">On Hand</span><span class="v">${oh} ${esc(v(s, 'Unit'))}</span></div>
+        <div class="row"><span class="k">Threshold</span><span class="v">${thr}</span></div>
+        <div class="row"><span class="k">Status</span><span class="v">${stockBadge(level)}</span></div>
+      </div>
+      <label>Quantity to Order</label>
+      <input id="ro-qty" type="number" value="${esc(defaultQty)}" />
+      <label>Vendor</label>
+      <input id="ro-vendor" value="${esc(vendor)}" />
+      <label>Priority</label>
+      <select id="ro-priority">
+        <option ${defaultPri === 'Urgent' ? 'selected' : ''}>Urgent</option>
+        <option ${defaultPri === 'High' ? 'selected' : ''}>High</option>
+        <option ${defaultPri === 'Normal' ? 'selected' : ''}>Normal</option>
+        <option ${defaultPri === 'Low' ? 'selected' : ''}>Low</option>
+      </select>
+      <label>Assigned To</label>
+      <input id="ro-assigned" value="${esc(API.user)}" />
+      <label>Notes</label>
+      <textarea id="ro-notes" rows="3" placeholder="Optional notes for the fulfiller..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="ro-submit" onclick="submitReorder('${supplyId}', '${esc(sku)}', '${esc(name).replace(/'/g, '&apos;')}')">Create Task</button>
+      </div>`;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function submitReorder(supplyId, sku, name) {
+  const btn = document.getElementById('ro-submit');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    // Generate task number RT-XXXX based on count of existing tasks
+    const countData = await api(`/kapps/${KAPP}/forms/reorder-tasks/submissions?include=details&limit=1&count=true`);
+    const next = (countData.count || 0) + 1;
+    const taskNumber = 'RT-' + String(next).padStart(4, '0');
+
+    const values = {
+      'Task Number': taskNumber,
+      'SKU': sku,
+      'Item Name': name,
+      'Quantity Requested': document.getElementById('ro-qty').value,
+      'Vendor': document.getElementById('ro-vendor').value,
+      'Priority': document.getElementById('ro-priority').value,
+      'Status': 'Open',
+      'Assigned To': document.getElementById('ro-assigned').value,
+      'Requested By': API.user,
+      'Requested Date': today(),
+      'Completed Date': '',
+      'Notes': document.getElementById('ro-notes').value
+    };
+
+    await api(`/kapps/${KAPP}/forms/reorder-tasks/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({ values, coreState: 'Submitted' })
+    });
+
+    closeModal();
+    toast(`Task ${taskNumber} created`);
+    loadDashboard();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Create Task';
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   TASKS
+   ══════════════════════════════════════════════ */
+async function loadTasks(direction) {
+  const ps = PAGE_STATE.tasks;
+  updatePageState(ps, direction);
+  const status = document.getElementById('filter-task-status').value;
+  const priority = document.getElementById('filter-task-priority').value;
+
+  let path = `/kapps/${KAPP}/forms/reorder-tasks/submissions?include=details,values&limit=25`;
+  const q = [];
+  if (status) q.push(`values[Status]="${status}"`);
+  if (priority) q.push(`values[Priority]="${priority}"`);
+  if (q.length) path += '&q=' + encodeURIComponent(q.join(' AND '));
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+
+  try {
+    const data = await api(path);
+    const subs = data.submissions || [];
+    ps.pageToken = data.nextPageToken || null;
+
+    document.getElementById('tasks-body').innerHTML = subs.length ? subs.map(t => `
+      <tr style="cursor:pointer" onclick="openTaskEdit('${t.id}')">
+        <td><strong>${esc(v(t, 'Task Number'))}</strong></td>
+        <td>${esc(v(t, 'Item Name'))} <span style="color:var(--gray);font-size:11px">(${esc(v(t, 'SKU'))})</span></td>
+        <td>${esc(v(t, 'Quantity Requested'))}</td>
+        <td>${esc(v(t, 'Vendor'))}</td>
+        <td>${priorityBadge(v(t, 'Priority'))}</td>
+        <td>${statusBadge(v(t, 'Status'))}</td>
+        <td>${esc(v(t, 'Assigned To'))}</td>
+        <td>${esc(v(t, 'Requested Date'))}</td>
+      </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:24px;">No tasks found</td></tr>';
+
+    document.getElementById('tasks-pagination').innerHTML = paginationHtml(ps, 'loadTasks');
+  } catch (e) {
+    document.getElementById('tasks-body').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function openTaskEdit(taskId) {
+  try {
+    const data = await api(`/submissions/${taskId}?include=values`);
+    const t = data.submission;
+    const statuses = ['Open', 'In Progress', 'Ordered', 'Received', 'Cancelled'];
+    const priorities = ['Urgent', 'High', 'Normal', 'Low'];
+
+    document.getElementById('modal-content').innerHTML = `
+      <h2>Reorder Task ${esc(v(t, 'Task Number'))}</h2>
+      <div class="sub">${esc(v(t, 'Item Name'))} (${esc(v(t, 'SKU'))})</div>
+      <div class="modal-info">
+        <div class="row"><span class="k">Quantity</span><span class="v">${esc(v(t, 'Quantity Requested'))}</span></div>
+        <div class="row"><span class="k">Vendor</span><span class="v">${esc(v(t, 'Vendor'))}</span></div>
+        <div class="row"><span class="k">Requested By</span><span class="v">${esc(v(t, 'Requested By'))} on ${esc(v(t, 'Requested Date'))}</span></div>
+      </div>
+      <label>Status</label>
+      <select id="te-status">
+        ${statuses.map(s => `<option ${v(t, 'Status') === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <label>Priority</label>
+      <select id="te-priority">
+        ${priorities.map(p => `<option ${v(t, 'Priority') === p ? 'selected' : ''}>${p}</option>`).join('')}
+      </select>
+      <label>Assigned To</label>
+      <input id="te-assigned" value="${esc(v(t, 'Assigned To'))}" />
+      <label>Notes</label>
+      <textarea id="te-notes" rows="3">${esc(v(t, 'Notes'))}</textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="te-submit" onclick="saveTask('${taskId}')">Save</button>
+      </div>`;
+    document.getElementById('modal').classList.add('show');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function saveTask(taskId) {
+  const btn = document.getElementById('te-submit');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    const newStatus = document.getElementById('te-status').value;
+    const values = {
+      'Status': newStatus,
+      'Priority': document.getElementById('te-priority').value,
+      'Assigned To': document.getElementById('te-assigned').value,
+      'Notes': document.getElementById('te-notes').value
+    };
+    if (newStatus === 'Received') values['Completed Date'] = today();
+
+    await api(`/submissions/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ values, coreState: 'Submitted' })
+    });
+    closeModal();
+    toast('Task updated');
+    loadTasks();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Save';
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   ADD SUPPLY
+   ══════════════════════════════════════════════ */
+function openAddSupply() {
+  document.getElementById('modal-content').innerHTML = `
+    <h2>Add Supply</h2>
+    <div class="sub">Add a new item to the inventory</div>
+    <label>SKU</label><input id="as-sku" />
+    <label>Name</label><input id="as-name" />
+    <label>Category</label>
+    <select id="as-cat">
+      <option>Paper</option><option>Writing</option><option>Electronics</option>
+      <option>Breakroom</option><option>Cleaning</option>
+    </select>
+    <label>Location</label>
+    <select id="as-loc">
+      <option>Storage A</option><option>Storage B</option>
+      <option>IT Closet</option><option>Breakroom</option>
+    </select>
+    <label>Quantity On Hand</label><input id="as-qty" type="number" value="0" />
+    <label>Unit</label>
+    <select id="as-unit"><option>Each</option><option>Box</option><option>Pack</option><option>Case</option><option>Ream</option></select>
+    <label>Reorder Threshold</label><input id="as-thr" type="number" value="5" />
+    <label>Reorder Quantity</label><input id="as-roq" type="number" value="10" />
+    <label>Vendor</label><input id="as-vendor" />
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="as-submit" onclick="submitAddSupply()">Add</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+async function submitAddSupply() {
+  const btn = document.getElementById('as-submit');
+  btn.disabled = true; btn.textContent = 'Adding...';
+  try {
+    const values = {
+      'SKU': document.getElementById('as-sku').value,
+      'Name': document.getElementById('as-name').value,
+      'Category': document.getElementById('as-cat').value,
+      'Location': document.getElementById('as-loc').value,
+      'Quantity On Hand': document.getElementById('as-qty').value,
+      'Unit': document.getElementById('as-unit').value,
+      'Reorder Threshold': document.getElementById('as-thr').value,
+      'Reorder Quantity': document.getElementById('as-roq').value,
+      'Vendor': document.getElementById('as-vendor').value,
+      'Status': 'Active'
+    };
+    if (!values['SKU'] || !values['Name']) { toast('SKU and Name required'); btn.disabled = false; btn.textContent = 'Add'; return; }
+    await api(`/kapps/${KAPP}/forms/supplies/submissions`, {
+      method: 'POST',
+      body: JSON.stringify({ values, coreState: 'Submitted' })
+    });
+    closeModal();
+    toast('Supply added');
+    loadSupplies();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Add';
+    toast('Error: ' + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════ */
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+</script>
+</body>
+</html>

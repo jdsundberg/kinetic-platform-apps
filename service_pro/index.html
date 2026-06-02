@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServicePro - Kinetic Platform</title>
+<style>
+:root{--blue:#242F4D;--blue-light:#2E3B5E;--orange:#F36C24;--orange-light:#FF8A4C;--green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;--light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15);--purple:#7B1FA2;--teal:#00695C;--indigo:#283593}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.1)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:26px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:24px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.3px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:24px;font-weight:700;margin:4px 0;color:var(--blue)}
+.kpi .label{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active,.badge-completed,.badge-approved,.badge-yes{background:#E8F5E9;color:#2E7D32}
+.badge-in-progress,.badge-working{background:#E0F2F1;color:#00695C}
+.badge-planning,.badge-pending,.badge-proposed,.badge-prospect,.badge-not-started,.badge-discovery{background:#E3F2FD;color:#1565C0}
+.badge-on-hold,.badge-medium,.badge-at-risk,.badge-yellow{background:#FFF8E1;color:#F9A825}
+.badge-cancelled,.badge-rejected,.badge-inactive,.badge-high,.badge-red,.badge-overdue{background:#FDECEA;color:#C62828}
+.badge-low,.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-default,.badge-no,.badge-closed{background:var(--light);color:var(--gray)}
+.badge-execution{background:#E8EAF6;color:#283593}
+
+.health-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.health-dot.green{background:var(--green)}.health-dot.yellow{background:var(--yellow)}.health-dot.red{background:var(--red)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stars{color:#F5A623;letter-spacing:1px;font-size:14px}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.health-row{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.health-item{display:flex;align-items:center;gap:4px;font-size:12px}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--blue);color:white;border-color:var(--blue)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+.checklist-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.checklist-item:last-child{border-bottom:none}
+.check-yes{color:var(--green);font-weight:700;font-size:16px}
+.check-no{color:var(--red);font-weight:700;font-size:16px}
+
+.status-timeline{display:flex;flex-direction:column;gap:16px}
+.status-entry{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.status-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.status-week{font-weight:700;color:var(--blue);font-size:14px}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:750px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Service<span>Pro</span></h1>
+    <p class="sub">Professional services management platform</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://server.example.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Service<span>Pro</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('projects')">Projects</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('status')">Status</button>
+      <button onclick="switchTab('time')">Time</button>
+      <button onclick="switchTab('costs')">Costs</button>
+      <button onclick="switchTab('risksIssues')">Risks & Issues</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('checkouts')">Checkouts</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Executive Dashboard</div>
+    <div class="page-sub">Portfolio overview and delivery health</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2" id="dash-grid1"></div>
+    <div class="grid-2" id="dash-grid2"></div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="console" id="tab-projects">
+    <div class="page-title">Projects</div>
+    <div class="page-sub">Service delivery portfolio</div>
+    <div class="toolbar">
+      <input type="text" id="prj-search" placeholder="Search projects..." oninput="prjLoad()">
+      <select id="prj-status" onchange="prjLoad()"><option value="">All Status</option><option>Proposed</option><option>Approved</option><option>Planning</option><option>In Progress</option><option>At Risk</option><option>On Hold</option><option>Completed</option></select>
+      <select id="prj-health" onchange="prjLoad()"><option value="">All Health</option><option>Green</option><option>Yellow</option><option>Red</option></select>
+      <button class="btn-primary" onclick="showForm('projects')">+ New Project</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th></th><th>Project</th><th>Customer</th><th>PM</th><th>Phase</th><th>Status</th><th>Budget</th><th>Hours</th></tr></thead><tbody id="prj-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="prjPrev()" id="prj-prev" disabled>Prev</button><span class="page-info" id="prj-page-info">Page 1</span><button class="btn-outline" onclick="prjNext()" id="prj-next" disabled>Next</button></div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="console" id="tab-customers">
+    <div class="page-title">Customers</div>
+    <div class="page-sub">Customer accounts and relationships</div>
+    <div class="toolbar">
+      <input type="text" id="cust-search" placeholder="Search customers..." oninput="custLoad()">
+      <select id="cust-status" onchange="custLoad()"><option value="">All Status</option><option>Active</option><option>Prospect</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('customers')">+ New Customer</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th></th><th>Company</th><th>Industry</th><th>Region</th><th>Account Owner</th><th>Status</th><th>Revenue Tier</th></tr></thead><tbody id="cust-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="custPrev()" id="cust-prev" disabled>Prev</button><span class="page-info" id="cust-page-info">Page 1</span><button class="btn-outline" onclick="custNext()" id="cust-next" disabled>Next</button></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="console" id="tab-status">
+    <div class="page-title">Status Reports</div>
+    <div class="page-sub">Weekly project status updates</div>
+    <div class="toolbar">
+      <select id="stat-project" onchange="statLoad()"><option value="">All Projects</option></select>
+      <button class="btn-primary" onclick="showForm('status-updates')">+ New Status Update</button>
+    </div>
+    <div id="stat-timeline"></div>
+  </div>
+
+  <!-- TIME -->
+  <div class="console" id="tab-time">
+    <div class="page-title">Time Entries</div>
+    <div class="page-sub">Hours logged against projects</div>
+    <div class="toolbar">
+      <input type="text" id="time-search" placeholder="Search..." oninput="timeLoad()">
+      <select id="time-project" onchange="timeLoad()"><option value="">All Projects</option></select>
+      <button class="btn-primary" onclick="showForm('time-entries')">+ Log Time</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Employee</th><th>Project</th><th>Hours</th><th>Category</th><th>Billable</th><th>Approved</th></tr></thead><tbody id="time-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="timePrev()" id="time-prev" disabled>Prev</button><span class="page-info" id="time-page-info">Page 1</span><button class="btn-outline" onclick="timeNext()" id="time-next" disabled>Next</button></div>
+  </div>
+
+  <!-- COSTS -->
+  <div class="console" id="tab-costs">
+    <div class="page-title">Project Costs</div>
+    <div class="page-sub">Expenses, travel, and cost tracking</div>
+    <div class="toolbar">
+      <select id="cost-project" onchange="costLoad()"><option value="">All Projects</option></select>
+      <select id="cost-status" onchange="costLoad()"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+      <button class="btn-primary" onclick="showForm('costs')">+ Add Cost</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Submitted By</th><th>Status</th></tr></thead><tbody id="cost-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="costPrev()" id="cost-prev" disabled>Prev</button><span class="page-info" id="cost-page-info">Page 1</span><button class="btn-outline" onclick="costNext()" id="cost-next" disabled>Next</button></div>
+  </div>
+
+  <!-- RISKS & ISSUES -->
+  <div class="console" id="tab-risksIssues">
+    <div class="page-title">Risks & Issues</div>
+    <div class="page-sub">Project risks, issues, and escalations</div>
+    <div class="toolbar">
+      <input type="text" id="ri-search" placeholder="Search..." oninput="riLoad()">
+      <select id="ri-type" onchange="riLoad()"><option value="">All Types</option><option>Risk</option><option>Issue</option></select>
+      <select id="ri-status" onchange="riLoad()"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Closed</option><option>Mitigated</option></select>
+      <button class="btn-primary" onclick="showForm('risks-issues')">+ New</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Type</th><th>Title</th><th>Project</th><th>Severity</th><th>Owner</th><th>Status</th><th>Esc</th></tr></thead><tbody id="ri-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="riPrev()" id="ri-prev" disabled>Prev</button><span class="page-info" id="ri-page-info">Page 1</span><button class="btn-outline" onclick="riNext()" id="ri-next" disabled>Next</button></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Customer Feedback</div>
+    <div class="page-sub">Satisfaction surveys and sentiment</div>
+    <div class="toolbar"><button class="btn-primary" onclick="showForm('feedback')">+ New Feedback</button></div>
+    <div id="fb-cards"></div>
+  </div>
+
+  <!-- CHECKOUTS -->
+  <div class="console" id="tab-checkouts">
+    <div class="page-title">Project Checkouts</div>
+    <div class="page-sub">Post-project closeout and compliance</div>
+    <div class="toolbar"><button class="btn-primary" onclick="showForm('checkouts')">+ New Checkout</button></div>
+    <div id="chk-cards"></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Operational, financial, and delivery reporting</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('profitability')">Profitability</button>
+      <button class="subtab" onclick="showReport('utilization')">Utilization</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='service-pro';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function fmt$(n){const num=parseFloat(n);return isNaN(num)?'$0':'$'+num.toLocaleString('en-US',{maximumFractionDigits:0})}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/\s+/g,'-')}
+function stars(n){const num=parseInt(n)||0;return'<span class="stars">'+'&#9733;'.repeat(num)+'&#9734;'.repeat(5-num)+'</span>'}
+function healthDot(h){return`<span class="health-dot ${(h||'').toLowerCase()}"></span>`}
+function pctBar(used,total){const u=parseFloat(used)||0,t=parseFloat(total)||1,pct=Math.min(100,Math.round(u/t*100));const c=pct>90?'var(--red)':pct>70?'var(--yellow)':'var(--green)';return`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:600;min-width:30px">${pct}%</span><div class="progress-bar" style="flex:1;min-width:60px"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div></div>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' \u00b7 '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={'dashboard':'Dashboard','projects':'Projects','customers':'Customers','status':'Status','time':'Time','costs':'Costs','risksIssues':'Risks & Issues','feedback':'Feedback','checkouts':'Checkouts','reports':'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>{b.classList.toggle('active',b.textContent===TAB_MAP[tab])});
+if(tab==='dashboard')loadDashboard();else if(tab==='projects')prjLoad();else if(tab==='customers')custLoad();else if(tab==='status'){fillProjectSelect('stat-project');statLoad()}else if(tab==='time'){fillProjectSelect('time-project');timeLoad()}else if(tab==='costs'){fillProjectSelect('cost-project');costLoad()}else if(tab==='risksIssues')riLoad();else if(tab==='feedback')fbLoad();else if(tab==='checkouts')chkLoad();else if(tab==='reports')showReport('profitability')}
+
+async function fillProjectSelect(id){const sel=document.getElementById(id);if(sel.options.length>1)return;try{const r=await api(`/kapps/${KAPP}/forms/projects/submissions?include=values&limit=25`);(r.submissions||[]).forEach(s=>{const o=document.createElement('option');o.value=v(s,'Project Name');o.textContent=v(s,'Project Name');sel.appendChild(o)})}catch(e){}}
+
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px;grid-column:1/-1">Loading dashboard...</div>';
+  try{
+    const d=await sapi('/api/servicepro/dashboard');const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi orange"><div class="val">${k.activeProjects}</div><div class="label">Active Projects</div></div>
+      <div class="kpi green"><div class="val">${k.completedProjects}</div><div class="label">Completed</div></div>
+      <div class="kpi red"><div class="val">${k.atRiskProjects}</div><div class="label">At Risk</div></div>
+      <div class="kpi teal"><div class="val">${k.activeCustomers}</div><div class="label">Active Customers</div></div>
+      <div class="kpi purple"><div class="val">${fmt$(k.totalBudget)}</div><div class="label">Portfolio Budget</div></div>
+      <div class="kpi"><div class="val">${fmt$(k.totalForecast)}</div><div class="label">Forecast</div></div>
+      <div class="kpi yellow"><div class="val">${fmt$(k.pendingCosts)}</div><div class="label">Pending Costs</div></div>
+      <div class="kpi green"><div class="val">${k.avgRating}/5</div><div class="label">Avg Satisfaction</div></div>`;
+
+    // Grid 1: Active projects + Health distribution
+    document.getElementById('dash-grid1').innerHTML=`
+      <div class="card"><h3>Active Projects</h3><table><thead><tr><th></th><th>Project</th><th>Customer</th><th>Status</th><th>Budget Used</th></tr></thead><tbody>${
+        d.activeProjects.map(p=>`<tr class="clickable-row" onclick="openProjectDetail('${p.id}')"><td>${healthDot(p.health)}</td><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.customer)}</td><td><span class="badge ${badgeClass(p.status)}">${esc(p.status)}</span></td><td style="min-width:100px">${pctBar(p.actual,p.budget)}</td></tr>`).join('')
+      }</tbody></table></div>
+      <div class="card"><h3>Portfolio Health</h3>
+        <div style="display:flex;gap:16px;margin-bottom:16px">${['Green','Yellow','Red'].map(h=>`<div style="text-align:center;flex:1;padding:16px;background:var(--light);border-radius:8px"><div style="font-size:28px;font-weight:700;color:var(--${h.toLowerCase()})">${d.healthDist[h]||0}</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;font-weight:600">${h}</div></div>`).join('')}</div>
+        <h3 style="margin-top:16px">Key Metrics</h3>
+        <div style="font-size:13px;line-height:2">
+          <div>Open Risks/Issues: <strong>${k.openRisks}</strong> (${k.escalated} escalated)</div>
+          <div>Overdue Milestones: <strong style="color:${k.overdueMilestones>0?'var(--red)':'inherit'}">${k.overdueMilestones}</strong></div>
+          <div>Hours: <strong>${k.totalActualHrs.toLocaleString()}</strong> / ${k.totalPlannedHrs.toLocaleString()} planned</div>
+          <div>Checkout Compliance: <strong>${k.checkoutCompliance}%</strong></div>
+        </div>
+      </div>`;
+
+    // Grid 2: At-risk + Feedback
+    document.getElementById('dash-grid2').innerHTML=`
+      <div class="card"><h3>At-Risk Projects</h3>${d.atRiskProjects.length===0?'<p style="color:var(--gray);font-size:13px">No at-risk projects</p>':`<table><thead><tr><th></th><th>Project</th><th>Customer</th><th>PM</th><th>Issue</th></tr></thead><tbody>${
+        d.atRiskProjects.map(p=>{const issues=[];if(p.budgetHealth==='Red')issues.push('Budget');if(p.scheduleHealth==='Red'||p.scheduleHealth==='Yellow')issues.push('Schedule');return`<tr class="clickable-row" onclick="openProjectDetail('${p.id}')"><td>${healthDot(p.health)}</td><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.customer)}</td><td>${esc(p.pm)}</td><td style="font-size:12px;color:var(--red)">${issues.join(', ')||'Health'}</td></tr>`}).join('')
+      }</tbody></table>`}</div>
+      <div class="card"><h3>Recent Feedback</h3>${d.recentFeedback.length===0?'<p style="color:var(--gray);font-size:13px">No feedback</p>':`<table><thead><tr><th>Customer</th><th>Project</th><th>Rating</th><th>Type</th></tr></thead><tbody>${
+        d.recentFeedback.map(f=>`<tr><td>${esc(f.customer)}</td><td>${esc(f.project)}</td><td>${stars(f.rating)}</td><td>${esc(f.type)}</td></tr>`).join('')
+      }</tbody></table>`}</div>`;
+  }catch(e){document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red)">Error: ${esc(e.message)}</p>`}}
+
+// ===== GENERIC PAGER =====
+function makePager(){return{page:1,pageKeys:{1:null},hasNext:false}}
+async function loadPaged(pager,form,bodyId,renderRow,pageId,prevId,nextId,kqlFn,filterFn){
+  try{
+    const lastCA=pager.pageKeys[pager.page];let kql=kqlFn?kqlFn():'';
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);const data=res.submissions||[];pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&data.length)pager.pageKeys[pager.page+1]=data[data.length-1].createdAt;
+    const filtered=filterFn?data.filter(filterFn):data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0?'<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>':filtered.map(renderRow).join('');
+    document.getElementById(pageId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){document.getElementById(bodyId).innerHTML=`<tr><td colspan="10" style="color:var(--red)">${esc(e.message)}</td></tr>`}}
+
+// ===== PROJECTS =====
+const prjP=makePager();
+function prjLoad(){prjP.page=1;prjP.pageKeys={1:null};prjP.hasNext=false;loadProjects()}
+function prjNext(){if(prjP.hasNext){prjP.page++;loadProjects()}}
+function prjPrev(){if(prjP.page>1){prjP.page--;loadProjects()}}
+function loadProjects(){const search=document.getElementById('prj-search').value.toLowerCase();loadPaged(prjP,'projects','prj-body',s=>`<tr class="clickable-row" onclick="openProjectDetail('${s.id}')"><td>${healthDot(v(s,'Health'))}</td><td style="font-weight:600">${esc(v(s,'Project Name'))}</td><td>${esc(v(s,'Customer'))}</td><td>${esc(v(s,'Project Manager'))}</td><td><span class="badge ${badgeClass(v(s,'Phase'))}">${esc(v(s,'Phase'))}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td><td>${fmt$(v(s,'Budget'))}</td><td style="min-width:100px">${pctBar(v(s,'Actual Hours'),v(s,'Planned Hours'))}</td></tr>`,'prj-page-info','prj-prev','prj-next',()=>{let kql='';const st=document.getElementById('prj-status').value;const h=document.getElementById('prj-health').value;if(st)kql=`values[Status]="${st}"`;if(h)kql=kql?`${kql} AND values[Health]="${h}"`:`values[Health]="${h}"`;return kql},search?s=>v(s,'Project Name').toLowerCase().includes(search)||v(s,'Customer').toLowerCase().includes(search):null)}
+
+// ===== CUSTOMERS =====
+const custP=makePager();
+function custLoad(){custP.page=1;custP.pageKeys={1:null};custP.hasNext=false;loadCustomers()}
+function custNext(){if(custP.hasNext){custP.page++;loadCustomers()}}
+function custPrev(){if(custP.page>1){custP.page--;loadCustomers()}}
+function loadCustomers(){const search=document.getElementById('cust-search').value.toLowerCase();loadPaged(custP,'customers','cust-body',s=>`<tr class="clickable-row" onclick="openCustomer360('${esc(v(s,'Company Name'))}')"><td>${healthDot(v(s,'Health'))}</td><td style="font-weight:600">${esc(v(s,'Company Name'))}</td><td>${esc(v(s,'Industry'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Account Owner'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td><td>${esc(v(s,'Revenue Tier'))}</td></tr>`,'cust-page-info','cust-prev','cust-next',()=>{const st=document.getElementById('cust-status').value;return st?`values[Status]="${st}"`:''},search?s=>v(s,'Company Name').toLowerCase().includes(search):null)}
+
+// ===== STATUS =====
+async function statLoad(){
+  const proj=document.getElementById('stat-project').value;
+  try{
+    let path=`/kapps/${KAPP}/forms/status-updates/submissions?include=values&limit=25`;
+    if(proj)path+='&q='+encodeURIComponent(`values[Project]="${proj}"`);
+    const res=await api(path);const statuses=res.submissions||[];
+    document.getElementById('stat-timeline').innerHTML=statuses.length===0?'<div class="card"><p style="color:var(--gray)">No status updates found</p></div>'
+      :`<div class="status-timeline">${statuses.map(s=>`<div class="status-entry" onclick="showEditForm('status-updates','${s.id}')" style="cursor:pointer">
+        <div class="status-header"><div class="status-week">${healthDot(v(s,'Overall Health'))} ${esc(v(s,'Project'))} &mdash; Week of ${esc(v(s,'Week'))}</div>
+        ${v(s,'Exec Attention')==='Yes'?'<span class="badge badge-red">Exec Attention</span>':''}</div>
+        <div class="health-row">
+          <div class="health-item">${healthDot(v(s,'Schedule Health'))} Schedule</div>
+          <div class="health-item">${healthDot(v(s,'Budget Health'))} Budget</div>
+          <div class="health-item">${healthDot(v(s,'Scope Health'))} Scope</div>
+          <div class="health-item">${healthDot(v(s,'Resource Health'))} Resources</div>
+        </div>
+        <div style="margin-top:8px;font-size:13px"><strong style="color:var(--blue)">Accomplishments:</strong> ${esc(v(s,'Accomplishments'))}</div>
+        <div style="margin-top:4px;font-size:13px"><strong style="color:var(--blue)">Next Steps:</strong> ${esc(v(s,'Next Steps'))}</div>
+        ${v(s,'Blockers')?`<div style="margin-top:4px;font-size:13px;color:var(--red)"><strong>Blockers:</strong> ${esc(v(s,'Blockers'))}</div>`:''}
+      </div>`).join('')}</div>`;
+  }catch(e){document.getElementById('stat-timeline').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== TIME =====
+const timeP=makePager();
+function timeLoad(){timeP.page=1;timeP.pageKeys={1:null};timeP.hasNext=false;loadTime()}
+function timeNext(){if(timeP.hasNext){timeP.page++;loadTime()}}
+function timePrev(){if(timeP.page>1){timeP.page--;loadTime()}}
+function loadTime(){const search=document.getElementById('time-search').value.toLowerCase();const proj=document.getElementById('time-project').value;loadPaged(timeP,'time-entries','time-body',s=>`<tr class="clickable-row" onclick="showEditForm('time-entries','${s.id}')"><td>${esc(v(s,'Date'))}</td><td style="font-weight:600">${esc(v(s,'Employee'))}</td><td>${esc(v(s,'Project'))}</td><td style="font-weight:600">${esc(v(s,'Hours'))}h</td><td>${esc(v(s,'Category'))}</td><td><span class="badge ${badgeClass(v(s,'Billable'))}">${esc(v(s,'Billable'))}</span></td><td><span class="badge ${badgeClass(v(s,'Approved'))}">${esc(v(s,'Approved'))}</span></td></tr>`,'time-page-info','time-prev','time-next',()=>proj?`values[Project]="${proj}"`:'',search?s=>v(s,'Employee').toLowerCase().includes(search)||v(s,'Description').toLowerCase().includes(search):null)}
+
+// ===== COSTS =====
+const costP=makePager();
+function costLoad(){costP.page=1;costP.pageKeys={1:null};costP.hasNext=false;loadCosts()}
+function costNext(){if(costP.hasNext){costP.page++;loadCosts()}}
+function costPrev(){if(costP.page>1){costP.page--;loadCosts()}}
+function loadCosts(){const proj=document.getElementById('cost-project').value;const st=document.getElementById('cost-status').value;loadPaged(costP,'costs','cost-body',s=>`<tr class="clickable-row" onclick="showEditForm('costs','${s.id}')"><td>${esc(v(s,'Date'))}</td><td>${esc(v(s,'Project'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Description'))}</td><td style="font-weight:600">${fmt$(v(s,'Amount'))}</td><td>${esc(v(s,'Submitted By'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'cost-page-info','cost-prev','cost-next',()=>{let kql='';if(proj)kql=`values[Project]="${proj}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},null)}
+
+// ===== RISKS & ISSUES =====
+const riP=makePager();
+function riLoad(){riP.page=1;riP.pageKeys={1:null};riP.hasNext=false;loadRI()}
+function riNext(){if(riP.hasNext){riP.page++;loadRI()}}
+function riPrev(){if(riP.page>1){riP.page--;loadRI()}}
+function loadRI(){const search=document.getElementById('ri-search').value.toLowerCase();const type=document.getElementById('ri-type').value;const st=document.getElementById('ri-status').value;loadPaged(riP,'risks-issues','ri-body',s=>`<tr class="clickable-row" onclick="showEditForm('risks-issues','${s.id}')"><td><span class="badge ${v(s,'Type')==='Risk'?'badge-yellow':'badge-red'}">${esc(v(s,'Type'))}</span></td><td style="font-weight:600">${esc(v(s,'Title'))}</td><td>${esc(v(s,'Project'))}</td><td><span class="badge ${badgeClass(v(s,'Severity'))}">${esc(v(s,'Severity'))}</span></td><td>${esc(v(s,'Owner'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td><td>${v(s,'Escalated')==='Yes'?'<span class="badge badge-red">Yes</span>':''}</td></tr>`,'ri-page-info','ri-prev','ri-next',()=>{let kql='';if(type)kql=`values[Type]="${type}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Title').toLowerCase().includes(search)||v(s,'Project').toLowerCase().includes(search):null)}
+
+// ===== FEEDBACK =====
+async function fbLoad(){
+  try{const r=await api(`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`);const fbs=r.submissions||[];
+    document.getElementById('fb-cards').innerHTML=fbs.length===0?'<div class="card"><p style="color:var(--gray)">No feedback yet</p></div>'
+      :fbs.map(s=>`<div class="card" style="cursor:pointer" onclick="showEditForm('feedback','${s.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>${esc(v(s,'Customer'))}</strong> &mdash; ${esc(v(s,'Project'))}</div>
+          <div>${stars(v(s,'Overall Rating'))}</div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--gray);margin-bottom:8px;flex-wrap:wrap">
+          <span>Type: ${esc(v(s,'Type'))}</span><span>Communication: ${v(s,'Communication')}/5</span><span>Quality: ${v(s,'Quality')}/5</span><span>Timeliness: ${v(s,'Timeliness')}/5</span><span>NPS: ${v(s,'NPS')}/10</span>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.5;margin:0">${esc(v(s,'Comments'))}</p>
+        ${v(s,'Follow Up Required')==='Yes'?'<div style="margin-top:8px"><span class="badge badge-yellow">Follow Up Required</span></div>':''}
+      </div>`).join('')
+  }catch(e){document.getElementById('fb-cards').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== CHECKOUTS =====
+async function chkLoad(){
+  try{const r=await api(`/kapps/${KAPP}/forms/checkouts/submissions?include=values&limit=25`);const chks=r.submissions||[];
+    document.getElementById('chk-cards').innerHTML=chks.length===0?'<div class="card"><p style="color:var(--gray)">No checkouts yet</p></div>'
+      :chks.map(s=>{const checks=[['Deliverables Complete',v(s,'Deliverables Complete')],['Customer Signoff',v(s,'Customer Signoff')],['Time Complete',v(s,'Time Complete')],['Costs Complete',v(s,'Costs Complete')],['Invoice Ready',v(s,'Invoice Ready')],['Lessons Captured',v(s,'Lessons Captured')]];const done=checks.filter(c=>c[1]==='Yes').length;
+      return`<div class="card" style="cursor:pointer" onclick="showEditForm('checkouts','${s.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div><strong style="font-size:15px;color:var(--blue)">${esc(v(s,'Project'))}</strong> &mdash; ${esc(v(s,'Customer'))}</div>
+          <span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px"><span style="font-size:12px;color:var(--gray)">Quality: <strong>${v(s,'Quality Score')}/5</strong></span><span style="font-size:12px;color:var(--gray)">Date: ${esc(v(s,'Checkout Date'))}</span><span style="font-size:12px;color:var(--gray)">Completed By: ${esc(v(s,'Completed By'))}</span></div>
+        <div style="margin-bottom:12px">${pctBar(done,checks.length)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">${checks.map(c=>`<div class="checklist-item"><span class="${c[1]==='Yes'?'check-yes':'check-no'}">${c[1]==='Yes'?'&#10003;':'&#10007;'}</span>${c[0]}</div>`).join('')}</div>
+        ${v(s,'Success Summary')?`<div style="margin-top:12px;font-size:13px;color:var(--gray)"><strong style="color:var(--blue)">Summary:</strong> ${esc(v(s,'Success Summary'))}</div>`:''}
+      </div>`}).join('')
+  }catch(e){document.getElementById('chk-cards').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== REPORTS =====
+async function showReport(type){
+  document.querySelectorAll('.subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===type));
+  document.getElementById('report-content').innerHTML='<div class="card"><p style="color:var(--gray)">Loading report...</p></div>';
+  try{
+    if(type==='profitability'){
+      const r=await sapi('/api/servicepro/reports/profitability');
+      document.getElementById('report-content').innerHTML=`<div class="card"><h3>Project Profitability</h3><table><thead><tr><th>Project</th><th>Customer</th><th>Status</th><th>Budget</th><th>Forecast</th><th>Actual</th><th>Margin</th><th>Health</th></tr></thead><tbody>${
+        r.projects.map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.customer)}</td><td><span class="badge ${badgeClass(p.status)}">${esc(p.status)}</span></td><td>${fmt$(p.budget)}</td><td>${fmt$(p.forecast)}</td><td>${fmt$(p.actual)}</td><td style="font-weight:700;color:${p.margin<20?'var(--red)':p.margin<35?'var(--yellow)':'var(--green)'}">${p.margin}%</td><td>${healthDot(p.health)}</td></tr>`).join('')
+      }</tbody></table></div>`;
+    } else if(type==='utilization'){
+      const r=await sapi('/api/servicepro/reports/utilization');
+      document.getElementById('report-content').innerHTML=`<div class="card"><h3>Team Utilization</h3><table><thead><tr><th>Employee</th><th>Total Hours</th><th>Billable Hours</th><th>Billable %</th><th>Projects</th><th>Top Category</th></tr></thead><tbody>${
+        r.employees.map(e=>{const topCat=Object.entries(e.byCategory).sort((a,b)=>b[1]-a[1])[0];return`<tr><td style="font-weight:600">${esc(e.employee)}</td><td>${e.totalHours}h</td><td>${e.billableHours}h</td><td style="font-weight:700;color:${e.billablePct>=80?'var(--green)':e.billablePct>=60?'var(--yellow)':'var(--red)'}">${e.billablePct}%</td><td>${e.projectCount}</td><td>${topCat?esc(topCat[0])+' ('+topCat[1]+'h)':''}</td></tr>`}).join('')
+      }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== PROJECT DETAIL (MODAL) =====
+async function openProjectDetail(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading project...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/servicepro/project/${id}`);const p=d.project;const s=d.summary;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${healthDot(v(p,'Health'))} ${esc(v(p,'Project Name'))}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>Customer: <strong>${esc(v(p,'Customer'))}</strong></span>
+        <span>PM: <strong>${esc(v(p,'Project Manager'))}</strong></span>
+        <span>Phase: <span class="badge ${badgeClass(v(p,'Phase'))}">${esc(v(p,'Phase'))}</span></span>
+        <span>Status: <span class="badge ${badgeClass(v(p,'Status'))}">${esc(v(p,'Status'))}</span></span>
+        <span>Priority: <span class="badge ${badgeClass(v(p,'Priority'))}">${esc(v(p,'Priority'))}</span></span>
+      </div>
+      <div class="health-row" style="margin-bottom:16px">
+        <div class="health-item">${healthDot(v(p,'Schedule Health'))} Schedule</div>
+        <div class="health-item">${healthDot(v(p,'Budget Health'))} Budget</div>
+        <div class="health-item">${healthDot(v(p,'Scope Health'))} Scope</div>
+      </div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div style="background:var(--light);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--gray);text-transform:uppercase;font-weight:600">Budget</div><div style="font-size:18px;font-weight:700;color:var(--blue)">${fmt$(v(p,'Budget'))}</div>${pctBar(v(p,'Actual Cost'),v(p,'Budget'))}<div style="font-size:11px;color:var(--gray);margin-top:4px">Actual: ${fmt$(v(p,'Actual Cost'))} | Forecast: ${fmt$(v(p,'Forecast Cost'))}</div></div>
+        <div style="background:var(--light);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--gray);text-transform:uppercase;font-weight:600">Hours</div><div style="font-size:18px;font-weight:700;color:var(--blue)">${v(p,'Actual Hours')} / ${v(p,'Planned Hours')}</div>${pctBar(v(p,'Actual Hours'),v(p,'Planned Hours'))}<div style="font-size:11px;color:var(--gray);margin-top:4px">Billable: ${s.billablePct}% | Margin: ${esc(v(p,'Margin Estimate'))}%</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px">${esc(v(p,'Scope Summary'))}</div>
+
+      <div class="subtabs"><button class="subtab active" onclick="showProjTab(this,'pd-ms')">Milestones (${d.milestones.length})</button><button class="subtab" onclick="showProjTab(this,'pd-ri')">Risks/Issues (${d.risks.length})</button><button class="subtab" onclick="showProjTab(this,'pd-dl')">Deliverables (${d.deliverables.length})</button><button class="subtab" onclick="showProjTab(this,'pd-tm')">Team (${d.team.length})</button><button class="subtab" onclick="showProjTab(this,'pd-st')">Status (${d.statusUpdates.length})</button></div>
+
+      <div id="pd-ms" class="subtab-panel active"><table><thead><tr><th>Milestone</th><th>Planned</th><th>Actual</th><th>Status</th><th>Owner</th></tr></thead><tbody>${d.milestones.map(m=>`<tr><td style="font-weight:600">${esc(m.name)}</td><td>${esc(m.planned)}</td><td>${esc(m.actual)}</td><td><span class="badge ${badgeClass(m.status)}">${esc(m.status)}</span></td><td>${esc(m.owner)}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">None</td></tr>'}</tbody></table></div>
+      <div id="pd-ri" class="subtab-panel"><table><thead><tr><th>Type</th><th>Title</th><th>Severity</th><th>Status</th><th>Esc</th></tr></thead><tbody>${d.risks.map(r=>`<tr><td><span class="badge ${r.type==='Risk'?'badge-yellow':'badge-red'}">${esc(r.type)}</span></td><td>${esc(r.title)}</td><td><span class="badge ${badgeClass(r.severity)}">${esc(r.severity)}</span></td><td><span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span></td><td>${r.escalated==='Yes'?'<span class="badge badge-red">Yes</span>':''}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">None</td></tr>'}</tbody></table></div>
+      <div id="pd-dl" class="subtab-panel"><table><thead><tr><th>Deliverable</th><th>Due</th><th>Owner</th><th>Status</th><th>Ack</th></tr></thead><tbody>${d.deliverables.map(dl=>`<tr><td style="font-weight:600">${esc(dl.name)}</td><td>${esc(dl.due)}</td><td>${esc(dl.owner)}</td><td><span class="badge ${badgeClass(dl.status)}">${esc(dl.status)}</span></td><td>${dl.ack==='Yes'?'<span class="check-yes">&#10003;</span>':''}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">None</td></tr>'}</tbody></table></div>
+      <div id="pd-tm" class="subtab-panel"><table><thead><tr><th>Employee</th><th>Role</th><th>Allocation</th><th>Rate</th><th>Status</th></tr></thead><tbody>${d.team.map(t=>`<tr><td style="font-weight:600">${esc(t.employee)}</td><td>${esc(t.role)}</td><td>${esc(t.allocation)}%</td><td>$${esc(t.rate)}/hr</td><td><span class="badge ${badgeClass(t.status)}">${esc(t.status)}</span></td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">None</td></tr>'}</tbody></table></div>
+      <div id="pd-st" class="subtab-panel">${d.statusUpdates.map(st=>`<div class="status-entry" style="margin-bottom:8px"><div class="status-header"><div class="status-week">${healthDot(st.health)} Week of ${esc(st.week)}</div>${st.execAttention==='Yes'?'<span class="badge badge-red">Exec</span>':''}</div><div class="health-row"><div class="health-item">${healthDot(st.schedule)} Sched</div><div class="health-item">${healthDot(st.budget)} Budget</div><div class="health-item">${healthDot(st.scope)} Scope</div></div><div style="font-size:12px;margin-top:4px">${esc(st.accomplishments)}</div>${st.blockers?`<div style="font-size:12px;color:var(--red);margin-top:2px">Blockers: ${esc(st.blockers)}</div>`:''}</div>`).join('')||'<p style="color:var(--gray)">No status updates</p>'}</div>
+
+      <div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+
+function showProjTab(btn,panelId){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(panelId).classList.add('active')}
+
+// ===== CUSTOMER 360 (MODAL) =====
+async function openCustomer360(name){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading customer...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/servicepro/customer/${encodeURIComponent(name)}`);const c=d.customer;const s=d.summary;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${healthDot(v(c,'Health'))} ${esc(v(c,'Company Name'))}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>Industry: <strong>${esc(v(c,'Industry'))}</strong></span>
+        <span>Region: <strong>${esc(v(c,'Region'))}</strong></span>
+        <span>Status: <span class="badge ${badgeClass(v(c,'Status'))}">${esc(v(c,'Status'))}</span></span>
+        <span>Tier: <strong>${esc(v(c,'Revenue Tier'))}</strong></span>
+        <span>Owner: <strong>${esc(v(c,'Account Owner'))}</strong></span>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div style="background:var(--light);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--purple)">${fmt$(s.totalRevenue)}</div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600">Total Revenue</div></div>
+        <div style="background:var(--light);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--orange)">${s.activeProjects}</div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600">Active Projects</div></div>
+        <div style="background:var(--light);border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--green)">${s.avgRating}/5</div><div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600">Avg Satisfaction</div></div>
+      </div>
+      ${v(c,'Strategic Notes')?`<div style="font-size:13px;color:var(--gray);margin-bottom:16px;padding:12px;background:var(--light);border-radius:8px"><strong style="color:var(--blue)">Strategic Notes:</strong> ${esc(v(c,'Strategic Notes'))}</div>`:''}
+
+      <h3 style="font-size:14px;color:var(--blue);margin-bottom:8px">Projects (${s.totalProjects})</h3>
+      <table style="margin-bottom:16px"><thead><tr><th></th><th>Project</th><th>Status</th><th>Phase</th><th>Budget</th><th>PM</th></tr></thead><tbody>${
+        d.projects.map(p=>`<tr><td>${healthDot(p.health)}</td><td style="font-weight:600">${esc(p.name)}</td><td><span class="badge ${badgeClass(p.status)}">${esc(p.status)}</span></td><td><span class="badge ${badgeClass(p.phase)}">${esc(p.phase)}</span></td><td>${fmt$(p.budget)}</td><td>${esc(p.pm)}</td></tr>`).join('')
+      }</tbody></table>
+
+      <h3 style="font-size:14px;color:var(--blue);margin-bottom:8px">Contacts (${d.contacts.length})</h3>
+      <table style="margin-bottom:16px"><thead><tr><th>Name</th><th>Title</th><th>Role</th><th>Email</th><th>Primary</th></tr></thead><tbody>${
+        d.contacts.map(c2=>`<tr><td style="font-weight:600">${esc(c2.name)}</td><td>${esc(c2.title)}</td><td>${esc(c2.role)}</td><td>${esc(c2.email)}</td><td>${c2.primary==='Yes'?'<span class="check-yes">&#10003;</span>':''}</td></tr>`).join('')
+      }</tbody></table>
+
+      ${d.feedback.length>0?`<h3 style="font-size:14px;color:var(--blue);margin-bottom:8px">Feedback (${d.feedback.length})</h3>${d.feedback.map(f=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><div style="display:flex;justify-content:space-between">${esc(f.project)} (${esc(f.type)}) <span>${stars(f.rating)}</span></div><div style="color:var(--gray);margin-top:4px">${esc(f.comments)}</div></div>`).join('')}`:''}
+
+      <div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+
+// ===== GENERIC FORM MODAL =====
+const FORM_DEFS={
+  'projects':{title:'Project',fields:[{r:['Project ID','Project Name']},{r:['Customer','Project Manager']},{r:['Executive Sponsor','Methodology|select:Agile,Waterfall,Hybrid,Discovery']},{r:['Phase|select:Discovery,Planning,Execution,Closed,On Hold','Status|select:Proposed,Approved,Planning,In Progress,At Risk,On Hold,Completed,Closed']},{r:['Health|select:Green,Yellow,Red','Priority|select:High,Medium,Low']},{r:['Schedule Health|select:Green,Yellow,Red','Budget Health|select:Green,Yellow,Red']},{r:['Scope Health|select:Green,Yellow,Red','Team Size|number']},{r:['Start Date|date','Target End Date|date']},{r:['Budget|number','Forecast Cost|number']},{r:['Actual Cost|number','Margin Estimate|number']},{r:['Planned Hours|number','Actual Hours|number']},'Scope Summary|textarea','Notes|textarea',{r:['External Ref','Actual End Date|date']}]},
+  'customers':{title:'Customer',fields:[{r:['Customer ID','Company Name']},{r:['Account Owner','Industry|select:Healthcare,Energy,Financial Services,Defense,Federal Government,Education,Technology,Other']},{r:['Region|select:Northeast,Southeast,Midwest,West,South,Federal','Revenue Tier|select:Enterprise,Mid-Market,SMB']},{r:['Status|select:Active,Prospect,Inactive','Health|select:Green,Yellow,Red']},{r:['Website','']},'Strategic Notes|textarea','Escalation History|textarea']},
+  'status-updates':{title:'Status Update',fields:[{r:['Project','Week|date']},{r:['Overall Health|select:Green,Yellow,Red','Exec Attention|select:Yes,No']},{r:['Schedule Health|select:Green,Yellow,Red','Budget Health|select:Green,Yellow,Red']},{r:['Scope Health|select:Green,Yellow,Red','Resource Health|select:Green,Yellow,Red']},{r:['Customer Sentiment|select:Positive,Neutral,Negative','Submitted By']},'Accomplishments|textarea','Next Steps|textarea','Blockers|textarea']},
+  'time-entries':{title:'Time Entry',fields:[{r:['Project','Employee']},{r:['Date|date','Hours|number']},{r:['Category|select:Development,Configuration,Training,Meeting,Support,Travel','Billable|select:Yes,No']},{r:['Approved|select:Yes,No','']},'Description']},
+  'costs':{title:'Cost',fields:[{r:['Project','Category|select:Travel,Software,Hardware,Subcontractor,Labor,Training,Other']},{r:['Amount|number','Date|date']},{r:['Status|select:Pending,Approved,Rejected','Submitted By']},{r:['Approved By','Receipt Ref']},'Description']},
+  'risks-issues':{title:'Risk / Issue',fields:[{r:['Project','Type|select:Risk,Issue']},{r:['Title','Owner']},{r:['Severity|select:Critical,High,Medium,Low','Status|select:Open,In Progress,Mitigated,Closed']},{r:['Impact|select:Critical,High,Medium,Low','Probability|select:High,Medium,Low']},{r:['Due Date|date','Escalated|select:Yes,No']},'Description|textarea','Mitigation|textarea','Resolution|textarea']},
+  'feedback':{title:'Feedback',fields:[{r:['Project','Customer']},{r:['Type|select:Mid-Project,End of Project,Executive Sponsor','Date|date']},{r:['Overall Rating|select:1,2,3,4,5','NPS|select:0,1,2,3,4,5,6,7,8,9,10']},{r:['Communication|select:1,2,3,4,5','Quality|select:1,2,3,4,5']},{r:['Timeliness|select:1,2,3,4,5','Follow Up Required|select:Yes,No']},{r:['Submitted By','']},'Comments|textarea','Follow Up Notes|textarea']},
+  'checkouts':{title:'Checkout',fields:[{r:['Project','Customer']},{r:['Checkout Date|date','Completed By']},{r:['Deliverables Complete|select:Yes,No','Customer Signoff|select:Yes,No']},{r:['Time Complete|select:Yes,No','Costs Complete|select:Yes,No']},{r:['Invoice Ready|select:Yes,No','Lessons Captured|select:Yes,No']},{r:['Quality Score|select:1,2,3,4,5','Status|select:Pending,Completed']},'Success Summary|textarea','Expansion Opportunities|textarea']},
+  'milestones':{title:'Milestone',fields:[{r:['Project','Milestone Name']},{r:['Planned Date|date','Actual Date|date']},{r:['Status|select:Not Started,In Progress,At Risk,Completed,Overdue','Owner']},'Dependencies','Delay Reason|textarea']},
+  'deliverables':{title:'Deliverable',fields:[{r:['Project','Deliverable Name']},{r:['Due Date|date','Owner']},{r:['Status|select:Not Started,In Progress,At Risk,Completed','Customer Acknowledged|select:Yes,No']},'Notes|textarea']},
+  'lessons-learned':{title:'Lesson Learned',fields:[{r:['Project','Customer']},{r:['Category|select:Scope,Integration,Delivery,Process,Technical,Communication','Impact|select:High,Medium,Low']},{r:['Reusable|select:Yes,No','Tags']},'Title','Description|textarea']},
+  'contacts':{title:'Contact',fields:[{r:['Customer','Full Name']},{r:['Title','Role|select:Executive Sponsor,Technical Lead,Business Owner,End User,Decision Maker']},{r:['Email','Phone']},{r:['Primary|select:Yes,No','']},'Notes']},
+  'notifications':{title:'Notification',fields:[{r:['Project','Type|select:Budget Alert,Health Change,Scope Alert,Status Change,Escalation,Reminder']},{r:['Severity|select:High,Medium,Low','Acknowledged|select:Yes,No']},{r:['Acknowledged By','']},'Message|textarea']},
+  'team-assignments':{title:'Team Assignment',fields:[{r:['Project','Employee']},{r:['Role|select:Project Manager,Lead Developer,Senior Developer,Platform Consultant,Developer','Status|select:Active,Planned,Completed']},{r:['Allocation|number','Hourly Rate|number']},{r:['Start Date|date','End Date|date']}]}
+};
+
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){html+=renderField(field,sub)}
+    else if(field.r){html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'}
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show')
+}
+
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}</select>`}else if(type==='textarea'){input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`}else if(type==='date'){input=`<input id="${id}" type="date" value="${esc(val)}">`}else if(type==='number'){input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`}else{input=`<input id="${id}" type="text" value="${esc(val)}">`}return`<label>${name}</label>${input}`}
+
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();const el=document.getElementById(elId);if(el)vals[name]=el.value}}try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals})});toast('Created')}closeModal();switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+
+async function deleteSub(id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+</script>
+</body>
+</html>
