@@ -8,13 +8,11 @@ Single-page web applications on the Kinetic Platform. Each app is a standalone N
 - **Branding & design:** [branding.md](branding.md)
 - **Session persistence across tabs:** [apps.md](apps.md) — mirror sessionStorage to localStorage so new tabs don't force re-login
 - **Test suites:** [kinetic-test-suite.md](kinetic-test-suite.md)
-- **MCP gaps:** [mcp-gaps.md](mcp-gaps.md)
 
 ## Base Launcher
 
 - `base/server.mjs` on port **3011** — all apps served through here
 - `base/index.html` — **Platform Launcher** (the APPS array grid)
-- `home/index.html` — **Platform Home** (auto-discovers kapps)
 
 Everything runs through :3011. Standalone server ports are for development only.
 
@@ -39,7 +37,7 @@ Everything runs through :3011. Standalone server ports are for development only.
 - **Industry** (custom API, 500+ lines): Server-side aggregation, computed endpoints
 - Industry apps: sec_ops, mining_management, innovation, school-for-good, og_compliance, agent_hub
 
-## Adding a New App — Three Registration Points
+## Adding a New App — Two Registration Points
 
 ### 1. `base/server.mjs` — Backend routing & API
 - **APP_REGISTRY** (~line 16): `"slug": { dir: "dir_name", name: "Display Name", kapp: "kapp-slug" }`
@@ -54,11 +52,6 @@ Everything runs through :3011. Standalone server ports are for development only.
   - `industry: true` = **Industry** section
   - `admin: true` = **Admin Tools** section
 - **svgIcon function**: Add SVG if using a new icon name
-
-### 3. `home/index.html` — Platform Home card (optional)
-- **APP_META** (~line 199): `{ icon, color, bg, desc }`
-- **svgIcon function**: Add SVG if using a new icon name
-- Auto-discovers kapps, but without APP_META gets fallback gray puzzle icon
 
 ## Auth Pattern
 
