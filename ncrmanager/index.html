@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic MedQMS</title>
+<style>
+:root{--navy:#0B3D4F;--navy-l:#12586F;--blue:#1E7FB5;--blue-l:#3FA0D6;--teal:#0E8C86;--teal-l:#16B3AC;--gold:#E0A21A;--green:#1F9D6B;--green-d:#157A52;--red:#D14B3F;--amber:#E08A1E;--purple:#6E4FB0;--gray:#5C6670;--light:#F1F5F7;--border:#DEE6EA;--bg:#E8F1F4;--white:#fff;--shadow:0 1px 3px rgba(11,61,79,.10),0 1px 2px rgba(11,61,79,.06);--shadow-lg:0 14px 36px rgba(11,61,79,.22)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#142028;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:9px 12px;outline:none;transition:border-color .15s;background:var(--white);width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,127,181,.14)}
+textarea{resize:vertical}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#EAF4F8}
+.empty{color:var(--gray);text-align:center;padding:26px;font-size:13px}
+a.link{color:var(--blue);cursor:pointer;text-decoration:none;font-weight:600}a.link:hover{text-decoration:underline}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#06222E 0%,#0B3D4F 55%,#12586F 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--navy);font-size:25px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--teal)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:20px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--teal);border-radius:2px;margin-bottom:22px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{margin-bottom:14px}
+.login-box button{width:100%;padding:12px;background:var(--navy);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--navy-l)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+.topbar{background:var(--navy);color:white;display:flex;align-items:center;padding:0 16px;height:54px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:16px;white-space:nowrap;margin-right:18px;letter-spacing:-.2px}
+.topbar .logo span{color:var(--teal-l)}
+.topbar nav{display:flex;gap:1px;flex:1;overflow-x:auto;scrollbar-width:thin}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.74);padding:7px 10px;font-size:12px;font-weight:500;border-radius:7px;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--teal);color:#fff;font-weight:700}
+.topbar .spacer{flex:1}
+.persona{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;padding:5px 8px;border-radius:7px;max-width:180px;width:auto}
+.persona option{color:#142028}
+.user-info{font-size:12px;color:rgba(255,255,255,.74);display:flex;align-items:center;gap:8px;white-space:nowrap;margin-left:10px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.74);padding:4px 10px;border-radius:6px;font-size:11px}
+.logout-btn:hover{border-color:var(--teal-l);color:white}
+
+.console{display:none;padding:20px;max-width:1560px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:21px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.card{background:white;border-radius:12px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.4px}
+.card h3 .hint{float:right;font-weight:600;color:var(--blue);text-transform:none;letter-spacing:0;font-size:11px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-bottom:16px}
+.kpi{background:var(--white);border-radius:11px;padding:13px;box-shadow:var(--shadow);border-top:3px solid var(--gray);cursor:default}
+.kpi.click{cursor:pointer}.kpi.click:hover{box-shadow:var(--shadow-lg)}
+.kpi .val{font-size:22px;font-weight:700;margin:3px 0;color:var(--navy)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.gold .val{color:var(--gold)}.kpi.gold{border-top-color:var(--gold)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.amber .val{color:var(--amber)}.kpi.amber{border-top-color:var(--amber)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.navy .val{color:var(--navy)}.kpi.navy{border-top-color:var(--navy)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-green,.badge-closed,.badge-approved,.badge-effective,.badge-completed,.badge-active,.badge-accepted,.badge-controlled,.badge-passed,.badge-conforming,.badge-in-service,.badge-signed,.badge-yes,.badge-low{background:#E1F2EA;color:#157A52}
+.b-amber,.badge-open,.badge-triage,.badge-investigation,.badge-in-progress,.badge-in-review,.badge-pending,.badge-pending-approval,.badge-assigned,.badge-draft,.badge-scheduled,.badge-reporting,.badge-supplier-response,.badge-review,.badge-impact-assessment,.badge-approval,.badge-implementation,.badge-verification,.badge-effectiveness,.badge-reportability-review,.badge-pending-closure,.badge-action-planning,.badge-containment,.badge-mrb-review,.badge-disposition,.badge-monitoring,.badge-conditional,.badge-medium,.badge-issued{background:#FBF1DC;color:#9A6710}
+.b-red,.badge-overdue,.badge-rejected,.badge-escalated,.badge-failed,.badge-reopened,.badge-out-of-service,.badge-disqualified,.badge-critical,.badge-major,.badge-high,.badge-findings-major{background:#FBE6E4;color:#A6362D}
+.badge-not-required,.badge-obsolete,.badge-inactive,.badge-none,.badge-no,.badge-minor,.badge-observation,.badge-ofi{background:var(--light);color:var(--gray)}
+.pill{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10px;font-weight:700;background:var(--light);color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:11px 14px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px;width:auto}
+.toolbar select{min-width:130px;width:auto}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 2px}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn-danger{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-small{padding:5px 11px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1000px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.subtabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600}
+.subtab.active{background:var(--navy);color:white;border-color:var(--navy)}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-row .bl{min-width:150px;max-width:150px;text-align:right;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .bt{flex:1;background:var(--light);border-radius:5px;height:18px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:5px;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700}
+.bar-row .bv{min-width:42px;font-weight:700;color:var(--navy);text-align:right}
+svg.viz{width:100%;height:auto;display:block;font-family:inherit}
+
+/* slide-over drawer */
+.drawer-overlay{position:fixed;inset:0;background:rgba(11,30,40,.42);z-index:200;display:none}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(820px,96vw);background:var(--bg);box-shadow:var(--shadow-lg);z-index:201;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto}
+.drawer.show{transform:translateX(0)}
+.drawer-head{position:sticky;top:0;background:var(--navy);color:#fff;padding:16px 20px;display:flex;align-items:flex-start;gap:12px;z-index:5}
+.drawer-head .dh-id{font-size:11px;color:var(--teal-l);font-weight:700;letter-spacing:.4px}
+.drawer-head h2{font-size:18px;margin:2px 0 4px;line-height:1.25}
+.drawer-head .dh-x{margin-left:auto;background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 11px;font-size:16px;line-height:1}
+.drawer-body{padding:18px 20px}
+.dsec{background:#fff;border:1px solid var(--border);border-radius:11px;padding:15px;margin-bottom:14px}
+.dsec h4{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);margin-bottom:11px;font-weight:700}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.fieldgrid.one{grid-template-columns:1fr}
+.fld{font-size:13px}.fld .fl{font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);font-weight:600;margin-bottom:1px}
+.fld .fv{font-weight:500;color:#142028;word-break:break-word}
+.rel-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--border);border-radius:9px;margin-bottom:7px;cursor:pointer;background:#fff}
+.rel-item:hover{border-color:var(--blue);background:#F4FAFD}
+.rel-item .rt{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#fff;background:var(--teal);padding:2px 7px;border-radius:5px;white-space:nowrap}
+.rel-item .ri-id{font-weight:700;color:var(--navy);font-size:12px}
+.rel-item .ri-t{flex:1;color:#3a4750;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rel-item .ri-rel{font-size:10px;color:var(--gray);font-style:italic}
+.tl{position:relative;padding-left:18px}
+.tl::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:13px}
+.tl-item::before{content:'';position:absolute;left:-16px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:0 0 0 1px var(--border)}
+.tl-item .tl-h{font-size:12px;font-weight:700;color:var(--navy)}
+.tl-item .tl-m{font-size:11.5px;color:#445;margin-top:1px}
+.tl-item .tl-d{font-size:10.5px;color:var(--gray);margin-top:1px}
+.sig{border:1px solid var(--border);border-left:3px solid var(--green);border-radius:8px;padding:9px 11px;margin-bottom:8px;background:#FBFDFC}
+.sig .sg-m{font-weight:700;color:var(--green-d);font-size:12.5px}
+.sig .sg-s{font-size:11.5px;color:#445;margin-top:1px}
+.sig .sg-h{font-size:10px;color:var(--gray);font-family:ui-monospace,monospace;margin-top:3px}
+
+/* graph */
+.graph-wrap{overflow:auto;border:1px solid var(--border);border-radius:9px;background:#FBFDFE}
+.gnode{cursor:pointer}.gnode:hover .gn-box{filter:brightness(1.05)}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,30,40,.5);z-index:300;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:min(640px,96vw);box-shadow:var(--shadow-lg)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center}
+.modal-head h3{font-size:16px;color:var(--navy)}
+.modal-head .mx{margin-left:auto;background:var(--light);border-radius:8px;padding:5px 10px}
+.modal-body{padding:18px 20px;max-height:64vh;overflow-y:auto}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end}
+.mfield{margin-bottom:12px}.mfield label{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:560px){.mgrid{grid-template-columns:1fr}.fieldgrid{grid-template-columns:1fr}}
+.note{background:#FCF6E5;border:1px solid #F0DFA8;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#8A6410;margin-bottom:12px}
+.note.part11{background:#EAF4F8;border-color:#BcdDEA;color:#0B3D4F}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:9px;font-size:13px;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .2s;z-index:500}
+#toast.show{opacity:1}
+.spin{text-align:center;padding:40px;color:var(--gray)}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--light);color:var(--gray);margin-right:5px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Kinetic <span>MedQMS</span></h1>
+    <p class="sub">Medical-Device Manufacturing Quality Management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Kinetic <span>MedQMS</span></div>
+    <nav id="main-nav"></nav>
+    <div class="spacer"></div>
+    <select class="persona" id="persona" onchange="setPersona()" title="Role / view-as persona"></select>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <div class="console active" id="tab-home"></div>
+  <div class="console" id="tab-analytics"></div>
+  <div class="console" id="tab-module">
+    <div id="module-subtabs" class="subtabs"></div>
+    <div id="module-host"></div>
+  </div>
+  <div class="console" id="tab-admin"></div>
+</div>
+
+<!-- drawer -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><div id="drawer-content"></div></div>
+
+<!-- modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><div id="modal-content"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+const KAPP='ncrmanager';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+let PERSONA='';
+const PERSONAS=['Maria Okafor','James Reyes','Aisha Kim','Chen Kim','David Schmidt','Priya Patel','Sofia Haddad','Grace Lindqvist','Ivan Petrov','Leila Cohen','Sean Murphy'];
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function badgeClass(val){if(!val)return'badge-none';return'badge-'+String(val).toLowerCase().replace(/\s*[\/(]\s*/g,'-').replace(/\)/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}
+function badge(val){return`<span class="badge ${badgeClass(val)}">${esc(val||'—')}</span>`}
+const TODAY=new Date('2026-06-27T00:00:00Z').getTime();
+function overdue(due){if(!due)return false;const t=new Date(due).getTime();return!isNaN(t)&&t<TODAY}
+function daysOver(due){const t=new Date(due).getTime();return isNaN(t)?0:Math.round((TODAY-t)/86400000)}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path,opts={}){const res=await fetch(path,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});if(!res.ok){let m=res.status;try{const j=await res.json();m=j.error?.message||m}catch(e){}throw new Error(m)}return res.json()}
+
+/* ===================== MODULE CONFIG ===================== */
+const SEL={ // common select option sets
+  yn:['Yes','No'],
+  severity:['Low','Medium','High','Critical'],
+  riskLevel:['Low','Medium','High'],
+  priority:['Low','Medium','High','Critical'],
+};
+const MODULES={
+  'quality-events':{label:'Quality Events',idField:'Event ID',title:'Title',
+    cols:[['Event ID','ID'],['Title','Title'],['Type','Type','badge'],['Severity','Severity','badge'],['Site','Site'],['Owner','Owner'],['Due Date','Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Open','Triage','Investigation','Pending Approval','Closed','Rejected']],['Type',['Deviation','Nonconformance','Complaint','Audit Finding','Supplier Issue','Safety Signal','Observation','Service Finding']],['Severity',SEL.severity]],
+    search:['Event ID','Title','Owner','Product'],
+    edit:[['Title','text',1],['Type','select',['Deviation','Nonconformance','Complaint','Audit Finding','Supplier Issue','Safety Signal','Observation','Service Finding']],['Source','text'],['Severity','select',SEL.severity],['Risk Level','select',SEL.riskLevel],['Site','text'],['Product','text'],['Lot','text'],['Supplier','text'],['Owner','select',PERSONAS],['Status','select',['Open','Triage','Investigation','Pending Approval','Closed','Rejected']],['Priority','select',SEL.priority],['Confidential','select',SEL.yn],['Due Date','date'],['Description','textarea']]},
+  'nonconformances':{label:'Nonconformances',idField:'NC ID',title:'Title',
+    cols:[['NC ID','ID'],['Title','Title'],['Product','Product'],['Site','Site'],['Disposition','Disposition','badge'],['Owner','Owner'],['Due Date','Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Open','Containment','MRB Review','Disposition','Closed','Reopened']],['Disposition',['Use As Is','Rework','Scrap','Return to Supplier','Concession']]],
+    search:['NC ID','Title','Product','Lot'],
+    edit:[['Title','text'],['Source Event','text'],['Product','text'],['Lot','text'],['Serial','text'],['Qty Affected','text'],['Site','text'],['Severity','select',SEL.severity],['Containment','text'],['Segregation','text'],['Disposition','select',['','Use As Is','Rework','Scrap','Return to Supplier','Concession']],['MRB Decision','text'],['MRB Date','date'],['Owner','select',PERSONAS],['Status','select',['Open','Containment','MRB Review','Disposition','Closed','Reopened']],['Due Date','date'],['Linked CAPA','text'],['Description','textarea']]},
+  'capas':{label:'CAPAs',idField:'CAPA ID',title:'Title',
+    cols:[['CAPA ID','ID'],['Title','Title'],['Type','Type','badge'],['Risk Level','Risk','badge'],['Site','Site'],['Owner','Owner'],['Due Date','Due','date'],['Effectiveness Result','Effective','badge'],['Status','Status','badge']],
+    filters:[['Status',['Initiated','Triage','Investigation','Action Planning','Implementation','Verification','Effectiveness','Closed','Reopened']],['Risk Level',SEL.riskLevel],['Type',['Corrective','Preventive']]],
+    search:['CAPA ID','Title','Owner','Source Event'],
+    edit:[['Title','text'],['Type','select',['Corrective','Preventive']],['Source','select',['Complaint','Nonconformance','Audit Finding','Deviation','Supplier Issue','Management Review','Trend']],['Source Event','text'],['Risk Level','select',SEL.riskLevel],['Priority','select',SEL.priority],['Site','text'],['Product','text'],['Owner','select',PERSONAS],['Status','select',['Initiated','Triage','Investigation','Action Planning','Implementation','Verification','Effectiveness','Closed','Reopened']],['Investigation Method','select',['Five Whys','Ishikawa (Fishbone)','Fault Tree Analysis','Is/Is-Not Analysis','Human Factors Analysis','Five Whys + Fault Tree']],['Root Cause Summary','textarea'],['Root Causes','textarea'],['Containment','textarea'],['Effectiveness Criteria','textarea'],['Effectiveness Result','select',['','Passed','Failed']],['Opened Date','date'],['Due Date','date'],['Linked NC','text'],['Linked Complaint','text'],['Linked Risk','text'],['Linked Change','text'],['Description','textarea']],
+    signMeanings:['Investigation Approved','Action Plan Approved','Verification Approved','Effectiveness Approved','CAPA Closure Approved']},
+  'complaints':{label:'Complaints',idField:'Complaint ID',title:'Title',
+    cols:[['Complaint ID','ID'],['Title','Title'],['Product','Product'],['Severity','Severity','badge'],['Reportable','Reportable','badge'],['Regulatory Due Date','Reg Due','date'],['Owner','Owner'],['Status','Status','badge']],
+    filters:[['Status',['Open','Investigation','Reportability Review','Pending Closure','Closed']],['Reportable',['Yes','No','Undetermined']]],
+    search:['Complaint ID','Title','Product','Customer'],
+    edit:[['Title','text'],['Product','text'],['UDI','text'],['Lot','text'],['Customer','text'],['Site','text'],['Severity','select',SEL.severity],['Patient Impact','text'],['Adverse Event','select',SEL.yn],['Reportable','select',['Yes','No','Undetermined']],['Report Type','select',['MDR','MIR','None']],['Regulatory Due Date','date'],['Owner','select',PERSONAS],['Status','select',['Open','Investigation','Reportability Review','Pending Closure','Closed']],['Received Date','date'],['Investigation Summary','textarea'],['Returned Product','select',SEL.yn],['Linked CAPA','text'],['Linked Risk','text'],['Description','textarea']],
+    signMeanings:['Reportability Decision','Investigation Approved','Complaint Closure Approved']},
+  'audits':{label:'Audits',idField:'Audit ID',title:'Title',
+    cols:[['Audit ID','ID'],['Title','Title'],['Type','Type','badge'],['Standard','Standard'],['Lead Auditor','Lead'],['Planned Date','Planned','date'],['Result','Result','badge'],['Status','Status','badge']],
+    filters:[['Status',['Scheduled','In Progress','Reporting','Closed']],['Type',['Internal','Supplier','Regulatory','Certification','Process','Product']]],
+    search:['Audit ID','Title','Lead Auditor','Supplier'],
+    edit:[['Title','text'],['Type','select',['Internal','Supplier','Regulatory','Certification','Process','Product']],['Scope','text'],['Standard','text'],['Site','text'],['Supplier','text'],['Lead Auditor','select',PERSONAS],['Status','select',['Scheduled','In Progress','Reporting','Closed']],['Result','text'],['Planned Date','date'],['Completed Date','date'],['Owner','select',PERSONAS],['Description','textarea']]},
+  'audit-findings':{label:'Audit Findings',idField:'Finding ID',title:'Title',
+    cols:[['Finding ID','ID'],['Audit ID','Audit'],['Title','Title'],['Classification','Class','badge'],['Clause','Clause'],['Owner','Owner'],['Due Date','Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Open','Response Submitted','Remediation','Closed']],['Classification',['Major','Minor','Observation','OFI']]],
+    search:['Finding ID','Title','Audit ID'],
+    edit:[['Audit ID','text'],['Title','text'],['Classification','select',['Major','Minor','Observation','OFI']],['Clause','text'],['Site','text'],['Supplier','text'],['Owner','select',PERSONAS],['Status','select',['Open','Response Submitted','Remediation','Closed']],['Due Date','date'],['Response','textarea'],['Remediation','textarea'],['Linked CAPA','text'],['Description','textarea']]},
+  'documents':{label:'Documents',idField:'Document ID',title:'Title',
+    cols:[['Document ID','ID'],['Title','Title'],['Type','Type','badge'],['Revision','Rev'],['Owner','Owner'],['Review Due Date','Review Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Draft','In Review','Approved','Effective','Obsolete']],['Type',['Policy','SOP','Work Instruction','Specification','Form','Template']]],
+    search:['Document ID','Title'],
+    edit:[['Title','text'],['Type','select',['Policy','SOP','Work Instruction','Specification','Form','Template']],['Revision','text'],['Status','select',['Draft','In Review','Approved','Effective','Obsolete']],['Owner','select',PERSONAS],['Site','text'],['Effective Date','date'],['Review Due Date','date'],['Training Required','select',SEL.yn],['Linked Process','text'],['Linked Product','text'],['Description','textarea']],
+    signMeanings:['Document Reviewed','Document Approved']},
+  'change-requests':{label:'Change Requests',idField:'Change ID',title:'Title',
+    cols:[['Change ID','ID'],['Title','Title'],['Type','Type','badge'],['Risk Level','Risk','badge'],['Owner','Owner'],['Due Date','Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Draft','Impact Assessment','Approval','Implementation','Verification','Closed','Rejected']],['Risk Level',SEL.riskLevel]],
+    search:['Change ID','Title','Document'],
+    edit:[['Title','text'],['Type','select',['Document','Process','Document + Design','Supplier','Material']],['Document','text'],['Risk Level','select',SEL.riskLevel],['Impact Assessment','textarea'],['Validation Required','select',SEL.yn],['Status','select',['Draft','Impact Assessment','Approval','Implementation','Verification','Closed','Rejected']],['Owner','select',PERSONAS],['Site','text'],['Requested Date','date'],['Due Date','date'],['Training Impact','select',SEL.yn],['Linked CAPA','text'],['Linked Product','text'],['Description','textarea']],
+    signMeanings:['Impact Assessment Approved','Change Approved','Implementation Verified']},
+  'training-records':{label:'Training',idField:'Training ID',title:'Curriculum',
+    cols:[['Training ID','ID'],['Employee','Employee'],['Curriculum','Curriculum'],['Source','Source','badge'],['Site','Site'],['Due Date','Due','date'],['Status','Status','badge']],
+    filters:[['Status',['Assigned','In Progress','Completed','Overdue']],['Source',['Document Revision','Role Change','CAPA','Quality Event','Periodic']]],
+    search:['Training ID','Employee','Curriculum'],
+    edit:[['Employee','text'],['Role','text'],['Curriculum','text'],['Document','text'],['Source','select',['Document Revision','Role Change','CAPA','Quality Event','Periodic']],['Status','select',['Assigned','In Progress','Completed','Overdue']],['Site','text'],['Assigned Date','date'],['Due Date','date'],['Completed Date','date'],['Expiration Date','date'],['Score','text'],['Linked CAPA','text']]},
+  'suppliers':{label:'Suppliers',idField:'Supplier ID',title:'Name',
+    cols:[['Supplier ID','ID'],['Name','Name'],['Category','Category'],['Risk Class','Risk','badge'],['Approval Status','Approval','badge'],['Score','Score','num'],['On Time Pct','OTD%','num'],['Open SCARs','SCARs','num']],
+    filters:[['Approval Status',['Approved','Conditional','Disqualified']],['Risk Class',['Critical','Major','Minor']],['Category',['Component','Raw Material','Contract Mfg','Sterilization','Service','Software','Packaging']]],
+    search:['Supplier ID','Name','Contact Name'],
+    edit:[['Name','text'],['Category','select',['Component','Raw Material','Contract Mfg','Sterilization','Service','Software','Packaging']],['Risk Class','select',['Critical','Major','Minor']],['Approval Status','select',['Approved','Conditional','Disqualified']],['Country','text'],['Quality Agreement','select',['Executed','Pending']],['Certification','text'],['Cert Expiry','date'],['Score','text'],['On Time Pct','text'],['PPM Defect','text'],['Last Audit Date','date'],['Next Review Date','date'],['Contact Name','text'],['Contact Email','text'],['Owner','select',PERSONAS],['Status','select',['Active','Inactive']],['Notes','textarea']]},
+  'scars':{label:'SCARs',idField:'SCAR ID',title:'Title',
+    cols:[['SCAR ID','ID'],['Title','Title'],['Supplier','Supplier'],['Issue Type','Issue'],['Severity','Severity','badge'],['Response Due Date','Resp Due','date'],['Escalated','Esc','badge'],['Status','Status','badge']],
+    filters:[['Status',['Issued','Supplier Response','Review','Accepted','Rejected','Closed','Escalated']],['Severity',SEL.severity]],
+    search:['SCAR ID','Title','Supplier'],
+    edit:[['Title','text'],['Supplier','text'],['Source Event','text'],['Issue Type','select',['Dimensional','Documentation','Contamination','Delivery','Functional','Labeling']],['Severity','select',SEL.severity],['Status','select',['Issued','Supplier Response','Review','Accepted','Rejected','Closed','Escalated']],['Owner','select',PERSONAS],['Supplier Contact','text'],['Issued Date','date'],['Response Due Date','date'],['Response Date','date'],['Root Cause','textarea'],['Containment','textarea'],['Effectiveness','text'],['Escalated','select',SEL.yn],['Linked CAPA','text'],['Description','textarea']],
+    signMeanings:['SCAR Response Accepted','SCAR Closure Approved']},
+  'risks':{label:'Risk Register',idField:'Risk ID',title:'Title',
+    cols:[['Risk ID','ID'],['Title','Title'],['Type','Type','badge'],['Hazard','Hazard'],['Risk Level','Initial','badge'],['Residual Level','Residual','badge'],['Status','Status','badge']],
+    filters:[['Risk Level',SEL.riskLevel],['Residual Level',SEL.riskLevel],['Type',['Product','Process']],['Status',['Open','Controlled','Monitoring']]],
+    search:['Risk ID','Title','Product','Harm'],
+    edit:[['Title','text'],['Type','select',['Product','Process']],['Product','text'],['Process','text'],['Site','text'],['Hazard','text'],['Hazardous Situation','textarea'],['Harm','text'],['Cause','text'],['Severity','select',['Negligible','Minor','Serious','Critical']],['Probability','select',['Improbable','Remote','Occasional','Probable']],['Risk Level','select',SEL.riskLevel],['Control','textarea'],['Verification','text'],['Residual Severity','select',['Negligible','Minor','Serious','Critical']],['Residual Probability','select',['Improbable','Remote','Occasional','Probable']],['Residual Level','select',SEL.riskLevel],['Benefit Risk','text'],['Owner','select',PERSONAS],['Status','select',['Open','Controlled','Monitoring']],['Linked CAPA','text'],['Linked Complaint','text'],['Description','textarea']]},
+  'equipment':{label:'Equipment',idField:'Equipment ID',title:'Name',
+    cols:[['Equipment ID','ID'],['Name','Name'],['Type','Type'],['Site','Site'],['Calibration Due','Cal Due','date'],['Out Of Tolerance','OOT','badge'],['Production Restricted','Restricted','badge'],['Status','Status','badge']],
+    filters:[['Status',['In Service','Out of Service']],['Out Of Tolerance',SEL.yn],['Production Restricted',SEL.yn]],
+    search:['Equipment ID','Name','Location'],
+    edit:[['Name','text'],['Type','select',['Gauge','Tool','Machine','Instrument']],['Site','text'],['Location','text'],['Status','select',['In Service','Out of Service']],['Last Calibration','date'],['Calibration Due','date'],['Cal Interval Days','text'],['Tolerance','text'],['Out Of Tolerance','select',SEL.yn],['Maintenance Due','date'],['Production Restricted','select',SEL.yn],['Owner','select',PERSONAS],['Description','textarea']]},
+  'mgmt-reviews':{label:'Management Reviews',idField:'Review ID',title:'Title',
+    cols:[['Review ID','ID'],['Title','Title'],['Period','Period'],['Site','Site'],['Review Date','Date','date'],['Status','Status','badge']],
+    filters:[['Status',['Draft','In Progress','Approved']]],
+    search:['Review ID','Title','Period'],
+    edit:[['Title','text'],['Period','text'],['Site','text'],['Status','select',['Draft','In Progress','Approved']],['Review Date','date'],['Chair','select',PERSONAS],['Complaint Trend','text'],['Supplier Performance','text'],['Audit Results','text'],['Training Compliance','text'],['Inputs Summary','textarea'],['Actions','textarea'],['Owner','select',PERSONAS]],
+    signMeanings:['Management Review Approved']},
+  'sites':{label:'Sites',idField:'Site ID',title:'Name',
+    cols:[['Site ID','ID'],['Name','Name'],['Type','Type'],['Country','Country'],['Region','Region'],['Employees','Employees','num'],['Quality Manager','QM'],['Status','Status','badge']],
+    filters:[['Type',['Manufacturing','Distribution']],['Region',['North America','Latin America','Europe','Asia Pacific']]],
+    search:['Site ID','Name','City'],
+    edit:[['Name','text'],['Type','select',['Manufacturing','Distribution']],['Country','text'],['Region','text'],['City','text'],['Employees','text'],['Mfg License','text'],['Quality Manager','select',PERSONAS],['Status','select',['Active','Inactive']],['Notes','textarea']]},
+  'products':{label:'Products',idField:'Product ID',title:'Name',
+    cols:[['Product ID','ID'],['Name','Name'],['Family','Family'],['Device Class','Class','badge'],['Risk Class','Risk','badge'],['Lifecycle Stage','Lifecycle'],['Site','Site'],['Status','Status','badge']],
+    filters:[['Device Class',['Class I','Class II','Class III']],['Lifecycle Stage',['Production','Sustaining','Phase-Out','Transfer']]],
+    search:['Product ID','Name','Family','UDI DI'],
+    edit:[['Name','text'],['Family','text'],['Device Class','select',['Class I','Class II','Class III']],['UDI DI','text'],['Site','text'],['Lifecycle Stage','select',['Production','Sustaining','Phase-Out','Transfer']],['Risk Class','select',SEL.riskLevel],['Owner','select',PERSONAS],['Status','select',['Active','Inactive']],['Description','textarea']]},
+};
+const REGULATED=new Set(['quality-events','nonconformances','capas','complaints','audit-findings','change-requests','scars','risks']); // require reason-for-change on edit
+
+/* nav groups */
+const GROUPS=[
+  {key:'home',label:'My Work'},
+  {key:'analytics',label:'Analytics'},
+  {key:'g-events',label:'Events',mods:['quality-events']},
+  {key:'g-nc',label:'Nonconformance',mods:['nonconformances']},
+  {key:'g-capa',label:'CAPA',mods:['capas']},
+  {key:'g-complaints',label:'Complaints',mods:['complaints']},
+  {key:'g-audits',label:'Audits',mods:['audits','audit-findings']},
+  {key:'g-docs',label:'Documents',mods:['documents','change-requests']},
+  {key:'g-training',label:'Training',mods:['training-records']},
+  {key:'g-suppliers',label:'Suppliers',mods:['suppliers','scars']},
+  {key:'g-risk',label:'Risk',mods:['risks']},
+  {key:'g-equipment',label:'Equipment',mods:['equipment']},
+  {key:'g-reviews',label:'Mgmt Review',mods:['mgmt-reviews']},
+  {key:'g-master',label:'Master Data',mods:['sites','products']},
+  {key:'admin',label:'Admin'},
+];
+
+/* ===================== AUTH ===================== */
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');buildNav();buildPersona();requestAnimationFrame(()=>switchTab('home'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+function buildNav(){document.getElementById('main-nav').innerHTML=GROUPS.map(g=>`<button data-g="${g.key}" onclick="navClick('${g.key}')">${esc(g.label)}</button>`).join('')}
+function buildPersona(){const sel=document.getElementById('persona');PERSONA=API.displayName;sel.innerHTML=`<option value="${esc(API.displayName)}">View as: me (${esc(API.displayName)})</option>`+PERSONAS.map(p=>`<option value="${esc(p)}">View as: ${esc(p)}</option>`).join('')}
+function setPersona(){PERSONA=document.getElementById('persona').value;if(activeTab==='home')loadHome()}
+let activeTab='home',activeGroup=null;
+function navClick(gk){const g=GROUPS.find(x=>x.key===gk);document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.dataset.g===gk));if(gk==='home')switchTab('home');else if(gk==='analytics')switchTab('analytics');else if(gk==='admin')switchTab('admin');else openGroup(g)}
+function switchTab(t){activeTab=t;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');const map={home:'home',analytics:'analytics',admin:'admin'};document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.dataset.g===map[t]));if(t==='home')loadHome();else if(t==='analytics')loadAnalytics();else if(t==='admin')loadAdmin()}
+
+/* ===================== GENERIC MODULE VIEW ===================== */
+let activeModule=null;
+function openGroup(g){activeTab='module';document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-module').classList.add('active');
+  const st=document.getElementById('module-subtabs');
+  if(g.mods.length>1){st.style.display='flex';st.innerHTML=g.mods.map((m,i)=>`<button class="subtab${i===0?' active':''}" onclick="subSel('${g.key}','${m}',this)">${esc(MODULES[m].label)}</button>`).join('')}
+  else{st.style.display='none';st.innerHTML=''}
+  openModule(g.mods[0]);}
+function subSel(gk,m,btn){document.querySelectorAll('#module-subtabs .subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');openModule(m)}
+function openModule(m){activeModule=m;const cfg=MODULES[m];
+  const host=document.getElementById('module-host');
+  host.innerHTML=`<div class="page-title">${esc(cfg.label)}</div><div class="page-sub">${cfg.count||''}</div>
+    <div class="toolbar">
+      <input type="text" id="m-search" placeholder="Search ${esc(cfg.label.toLowerCase())}…" oninput="debouncedFetch()">
+      ${cfg.filters.map(f=>`<select id="m-f-${esc(f[0])}" onchange="loadModuleTable()"><option value="">All ${esc(f[0])}</option>${f[1].map(o=>`<option>${esc(o)}</option>`).join('')}</select>`).join('')}
+      <button class="btn-teal btn-small" onclick="openEdit('${m}',null)">+ Add New</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr>${cfg.cols.map(c=>`<th class="${c[2]==='num'?'num':''}">${esc(c[1])}</th>`).join('')}</tr></thead><tbody id="m-body"><tr><td colspan="${cfg.cols.length}" class="spin">Loading…</td></tr></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" id="m-prev" onclick="pageModule(-1)" disabled>Prev</button><span class="page-info" id="m-info">Page 1</span><button class="btn-outline" id="m-next" onclick="pageModule(1)" disabled>Next</button></div>`;
+  PG={page:1,keys:{1:null},hasNext:false};loadModuleTable();}
+let PG={page:1,keys:{1:null},hasNext:false},_deb=null;
+function debouncedFetch(){clearTimeout(_deb);_deb=setTimeout(()=>{PG={page:1,keys:{1:null},hasNext:false};fetchModule()},280)}
+function loadModuleTable(){PG={page:1,keys:{1:null},hasNext:false};fetchModule()}
+function pageModule(d){if(d>0&&PG.hasNext)PG.page++;else if(d<0&&PG.page>1)PG.page--;else return;fetchModule()}
+async function fetchModule(){const m=activeModule,cfg=MODULES[m];const body=document.getElementById('m-body');if(!body)return;
+  try{let kql='';cfg.filters.forEach(f=>{const el=document.getElementById('m-f-'+f[0]);if(el&&el.value)kql+=(kql?' AND ':'')+`values[${f[0]}]="${el.value.replace(/"/g,'\\"')}"`});
+    const last=PG.keys[PG.page];if(last)kql=kql?`(${kql}) AND createdAt<"${last}"`:`createdAt<"${last}"`;
+    let path=`/kapps/${KAPP}/forms/${m}/submissions?include=values,details&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];PG.hasNext=!!res.nextPageToken;if(PG.hasNext&&data.length)PG.keys[PG.page+1]=data[data.length-1].createdAt;
+    const term=(document.getElementById('m-search')?.value||'').toLowerCase().trim();
+    if(term)data=data.filter(s=>cfg.search.some(f=>String(v(s,f)).toLowerCase().includes(term)));
+    body.innerHTML=data.length?data.map(s=>`<tr class="clickable-row" onclick="openRecord('${m}','${s.id}')">${cfg.cols.map(c=>cell(s,c)).join('')}</tr>`).join(''):`<tr><td colspan="${cfg.cols.length}" class="empty">No records found</td></tr>`;
+    document.getElementById('m-info').textContent='Page '+PG.page;
+    document.getElementById('m-prev').disabled=PG.page<=1;document.getElementById('m-next').disabled=!PG.hasNext;
+  }catch(e){body.innerHTML=`<tr><td colspan="${cfg.cols.length}" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`}}
+function cell(s,c){const val=v(s,c[0]);if(c[2]==='badge')return`<td>${badge(val)}</td>`;if(c[2]==='num')return`<td class="num">${val?esc(val):'—'}</td>`;
+  if(c[2]==='date'){const od=overdue(val)&&!/closed|complete|effective|approved/i.test(v(s,'Status'));return`<td${od?' style="color:var(--red);font-weight:700"':''}>${val?esc(val):'—'}${od?' ⚠':''}</td>`}
+  if(c[1]==='ID')return`<td style="font-weight:700;color:var(--navy)">${esc(val)}</td>`;
+  if(c[1]==='Title'||c[0]==='Name'||c[0]==='Curriculum')return`<td>${esc(val.length>52?val.slice(0,52)+'…':val)}</td>`;
+  return`<td>${esc(val)}</td>`}
+
+/* ===================== RECORD-360 DRAWER ===================== */
+function closeDrawer(){document.getElementById('drawer').classList.remove('show');document.getElementById('drawer-overlay').classList.remove('show')}
+async function openRecord(form,subId){
+  const d=document.getElementById('drawer'),ov=document.getElementById('drawer-overlay');
+  document.getElementById('drawer-content').innerHTML='<div class="spin" style="color:#fff">Loading record…</div>';
+  d.classList.add('show');ov.classList.add('show');
+  try{const r=await sapi(`/api/ncrmanager/record360/${form}/${subId}`);renderDrawer(form,subId,r)}
+  catch(e){document.getElementById('drawer-content').innerHTML=`<div class="drawer-head"><div><h2>Error</h2></div><button class="dh-x" onclick="closeDrawer()">×</button></div><div class="drawer-body"><div class="dsec">${esc(e.message)}</div></div>`}
+}
+function renderDrawer(form,subId,r){const cfg=MODULES[form];const rec=r.record;const vals=rec.values||{};
+  const order=cfg.edit.map(e=>e[0]).filter(f=>vals[f]!=null&&vals[f]!=='');
+  const fields=order.length?order:Object.keys(vals).filter(k=>vals[k]);
+  const signBtn=cfg.signMeanings?`<button class="btn-gold btn-small" onclick="openSign('${form}','${esc(r.businessId)}','${subId}')">✍ Sign</button>`:'';
+  let html=`<div class="drawer-head"><div><div class="dh-id">${esc(r.label)} · ${esc(r.businessId)}</div><h2>${esc(vals[cfg.title]||vals.Title||vals.Name||r.businessId)}</h2><div>${badge(vals.Status)} ${vals['Risk Level']?badge(vals['Risk Level']):''} ${vals.Severity?badge(vals.Severity):''}</div></div><button class="dh-x" onclick="closeDrawer()">×</button></div><div class="drawer-body">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"><button class="btn-primary btn-small" onclick="openEdit('${form}','${subId}')">✎ Edit</button>${signBtn}<button class="btn-outline btn-small" onclick="closeDrawer()">Close</button></div>`;
+  // fields
+  html+=`<div class="dsec"><h4>Record Details</h4><div class="fieldgrid">`+fields.map(f=>{const long=String(vals[f]).length>60;return`<div class="fld${long?'" style="grid-column:1/-1':''}"><div class="fl">${esc(f)}</div><div class="fv">${esc(vals[f])}</div></div>`}).join('')+`</div></div>`;
+  // CAPA actions
+  if(r.actions&&r.actions.length){html+=`<div class="dsec"><h4>Action Plan (${r.actions.length})</h4><table><thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>`+r.actions.map(a=>`<tr><td>${esc(a.title)}<div class="pill">${esc(a.type)}</div></td><td>${esc(a.owner)}</td><td${overdue(a.due)&&a.status!=='Completed'?' style="color:var(--red);font-weight:700"':''}>${esc(a.due||'—')}</td><td>${badge(a.status)}</td></tr>`).join('')+`</tbody></table></div>`}
+  // relationship graph
+  if(r.graph&&r.graph.nodes.length>1){html+=`<div class="dsec"><h4>Relationship Graph<span class="hint" style="float:right;font-weight:600;color:var(--blue)">click a node</span></h4><div class="graph-wrap">${relGraph(r.graph,r.businessId)}</div></div>`}
+  // related records
+  if(r.related&&r.related.length){html+=`<div class="dsec"><h4>Linked Records (${r.related.length})</h4>`+r.related.map(n=>`<div class="rel-item" ${n.subId?`onclick="openRecord('${n.form}','${n.subId}')"`:''}><span class="rt">${esc(n.type)}</span><span class="ri-id">${esc(n.id)}</span><span class="ri-t">${esc(n.label)}</span>${n.status?badge(n.status):''}</div>`).join('')+`</div>`}
+  // signatures
+  if(r.signatures&&r.signatures.length){html+=`<div class="dsec"><h4>Electronic Signatures · 21 CFR Part 11 (${r.signatures.length})</h4>`+r.signatures.map(s=>`<div class="sig"><div class="sg-m">✓ ${esc(s.meaning)}</div><div class="sg-s">${esc(s.signer)} · ${esc(s.date)} · v${esc(s.version)} · ${esc(s.method)}</div><div class="sg-s" style="color:var(--gray)">${esc(s.reason)}</div><div class="sg-h">${esc(s.hash)}</div></div>`).join('')+`</div>`}
+  // timeline
+  html+=`<div class="dsec"><h4>Audit Trail / Timeline (${r.timeline.length})</h4>`+(r.timeline.length?`<div class="tl">`+r.timeline.map(t=>`<div class="tl-item"><div class="tl-h">${esc(t.action)}${t.field&&t.field!=='—'?' · '+esc(t.field):''}</div><div class="tl-m">${t.oldV||t.newV?`${esc(t.oldV||'∅')} → <strong>${esc(t.newV||'∅')}</strong>`:''}${t.reason?` <span style="color:var(--gray)">— ${esc(t.reason)}</span>`:''}</div><div class="tl-d">${esc(t.actor)} · ${esc(t.ts)} · ${esc(t.state||'')} · ${esc(t.corr)}</div></div>`).join('')+`</div>`:`<p class="empty">No audit-trail entries</p>`)+`</div>`;
+  html+=`</div>`;
+  document.getElementById('drawer-content').innerHTML=html;
+}
+function relGraph(g,centerId){const nodes=g.nodes,edges=g.edges;const center=nodes.find(n=>n.id===centerId)||nodes[0];
+  const others=nodes.filter(n=>n.id!==center.id);const N=others.length;const W=760,cx=W/2,cy=180,R=Math.min(140,60+N*8);const H=cy*2;
+  const col={'CAPA':'#0B3D4F','Quality Event':'#1E7FB5','Nonconformance':'#E08A1E','Complaint':'#D14B3F','Risk':'#6E4FB0','Change':'#0E8C86','SCAR':'#9A6710','Product':'#157A52','Supplier':'#5C6670','Audit':'#12586F','Finding':'#A6362D','Training':'#1F9D6B','Document':'#3FA0D6'};
+  const pos={};pos[center.id]={x:cx,y:cy};
+  others.forEach((n,i)=>{const a=-Math.PI/2+i/Math.max(1,N)*Math.PI*2;pos[n.id]={x:cx+Math.cos(a)*R,y:cy+Math.sin(a)*R}});
+  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" style="min-width:${W}px">`;
+  edges.forEach(e=>{const a=pos[e.from],b=pos[e.to];if(!a||!b)return;svg+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#C5D3DA" stroke-width="1.5"/>`;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;svg+=`<text x="${mx}" y="${my-3}" text-anchor="middle" font-size="8.5" fill="#90A0A8">${esc(e.rel)}</text>`});
+  const drawNode=(n,isC)=>{const p=pos[n.id];const c=col[n.type]||'#5C6670';const w=isC?150:122,h=isC?44:38;const sub=n.subId?`onclick="openRecord('${n.form}','${n.subId}')"`:'';svg+=`<g class="gnode" ${sub}><rect class="gn-box" x="${p.x-w/2}" y="${p.y-h/2}" width="${w}" height="${h}" rx="8" fill="${c}" opacity="${isC?1:.92}"/><text x="${p.x}" y="${p.y-3}" text-anchor="middle" font-size="${isC?11:10}" font-weight="700" fill="#fff">${esc(n.id)}</text><text x="${p.x}" y="${p.y+10}" text-anchor="middle" font-size="8.5" fill="#fff" opacity=".85">${esc((n.type+'').slice(0,18))}</text></g>`};
+  others.forEach(n=>drawNode(n,false));drawNode(center,true);svg+=`</svg>`;return svg}
+
+/* ===================== ADD / EDIT MODAL ===================== */
+function closeModal(){document.getElementById('modal-overlay').classList.remove('show')}
+let _editCtx=null;
+async function openEdit(form,subId){const cfg=MODULES[form];let vals={};let bid='';
+  if(subId){try{const r=await api(`/submissions/${subId}?include=values`);vals=r.submission.values||{};bid=vals[cfg.idField]||''}catch(e){toast('Load failed: '+e.message);return}}
+  _editCtx={form,subId,bid,orig:JSON.parse(JSON.stringify(vals))};
+  const body=cfg.edit.map(([f,type,opts])=>{const val=vals[f]||'';
+    let input;
+    if(type==='textarea')input=`<textarea id="ef-${esc(f)}" rows="2">${esc(val)}</textarea>`;
+    else if(type==='select')input=`<select id="ef-${esc(f)}"><option value=""></option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    else input=`<input type="${type==='date'?'date':'text'}" id="ef-${esc(f)}" value="${esc(val)}">`;
+    return`<div class="mfield" ${type==='textarea'?'style="grid-column:1/-1"':''}><label>${esc(f)}</label>${input}</div>`}).join('');
+  const reasonField=subId&&REGULATED.has(form)?`<div class="mfield" style="grid-column:1/-1"><label>Reason for Change (required — recorded to audit trail)</label><input type="text" id="ef-_reason" placeholder="Why is this regulated record being changed?"></div>`:'';
+  document.getElementById('modal-content').innerHTML=`<div class="modal-head"><h3>${subId?'Edit':'New'} ${esc(cfg.label.replace(/s$/,''))}${bid?' · '+esc(bid):''}</h3><button class="mx" onclick="closeModal()">×</button></div>
+    <div class="modal-body">${subId&&REGULATED.has(form)?'<div class="note">This is a controlled record. Changes are written to the append-only audit trail with actor, timestamp and reason.</div>':''}<div class="mgrid">${body}${reasonField}</div></div>
+    <div class="modal-foot"><button class="btn-outline" onclick="closeModal()">Cancel</button><button class="btn-teal" onclick="saveEdit()">${subId?'Save Changes':'Create'}</button></div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function genId(form){const cfg=MODULES[form];const pref={'quality-events':'QE','nonconformances':'NC','capas':'CAPA','complaints':'CMP','audits':'AUD','audit-findings':'FND','documents':'DOC','change-requests':'CHG','training-records':'TRN','suppliers':'SUP','scars':'SCAR','risks':'RSK','equipment':'EQP','mgmt-reviews':'MR','sites':'SITE','products':'PRD'}[form]||'REC';return pref+'-'+Date.now().toString().slice(-6)}
+async function saveEdit(){const{form,subId,orig}=_editCtx;const cfg=MODULES[form];const vals={};
+  cfg.edit.forEach(([f])=>{const el=document.getElementById('ef-'+f);if(el)vals[f]=el.value});
+  const reason=(document.getElementById('ef-_reason')?.value||'').trim();
+  if(subId&&REGULATED.has(form)&&!reason){toast('Reason for change is required');return}
+  try{let bid;
+    if(subId){bid=orig[cfg.idField];await api(`/submissions/${subId}`,{method:'PUT',body:JSON.stringify({values:vals})});
+      // diff → audit trail
+      const changes=cfg.edit.map(([f])=>f).filter(f=>(orig[f]||'')!==(vals[f]||''));
+      for(const f of changes.slice(0,12))await writeTrail(form,bid,'Update',f,orig[f]||'',vals[f]||'',vals.Status||orig.Status||'',reason);
+      toast('Saved — '+changes.length+' field(s) updated');
+    }else{bid=genId(form);vals[cfg.idField]=bid;const r=await api(`/kapps/${KAPP}/forms/${form}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});await writeTrail(form,bid,'Created','','','',vals.Status||'Open','Record created via MedQMS');toast('Created '+bid)}
+    closeModal();if(activeTab==='module')fetchModule();else if(activeTab==='home')loadHome();
+  }catch(e){toast('Save failed: '+e.message)}}
+
+async function writeTrail(recType,recId,action,field,oldV,newV,state,reason){const corr='COR-'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);
+  const vals={'Entry ID':'AT-'+Date.now().toString().slice(-8)+Math.floor(Math.random()*99),'Record Type':recType,'Record ID':recId,'Actor':API.displayName,'Action':action,'Field':field||'—','Old Value':String(oldV).slice(0,200),'New Value':String(newV).slice(0,200),'Reason':reason||'','Workflow State':state||'','Source':'MedQMS UI','Correlation ID':corr,'Timestamp':new Date().toISOString().slice(0,19).replace('T',' ')};
+  try{await api(`/kapps/${KAPP}/forms/audit-trail/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})})}catch(e){}}
+
+/* ===================== E-SIGNATURE MODAL ===================== */
+function openSign(form,bid,subId){const cfg=MODULES[form];const meanings=cfg.signMeanings||['Approved'];
+  document.getElementById('modal-content').innerHTML=`<div class="modal-head"><h3>Electronic Signature · ${esc(bid)}</h3><button class="mx" onclick="closeModal()">×</button></div>
+  <div class="modal-body"><div class="note part11">By signing you certify, under 21 CFR Part 11 expectations, that this electronic signature is the legally binding equivalent of your handwritten signature. Re-authentication is required. <em>Signature policy and meanings are configurable and subject to customer quality/legal review.</em></div>
+    <div class="mfield"><label>Signing as</label><input type="text" value="${esc(API.displayName)}" disabled></div>
+    <div class="mfield"><label>Signature Meaning</label><select id="sg-meaning">${meanings.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div>
+    <div class="mfield"><label>Reason / Comment</label><input type="text" id="sg-reason" placeholder="Basis for this signature"></div>
+    <div class="mfield"><label>Re-enter Password</label><input type="password" id="sg-pass" placeholder="Re-authenticate"></div></div>
+  <div class="modal-foot"><button class="btn-outline" onclick="closeModal()">Cancel</button><button class="btn-gold" onclick="submitSign('${form}','${esc(bid)}','${subId}')">Apply Signature</button></div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+async function submitSign(form,bid,subId){const meaning=document.getElementById('sg-meaning').value;const reason=document.getElementById('sg-reason').value.trim();const pass=document.getElementById('sg-pass').value;
+  if(!pass){toast('Password required to sign');return}
+  // re-authenticate
+  try{const r=await fetch(`${API.url}/app/api/v1/me`,{headers:{'Authorization':'Basic '+btoa(API.user+':'+pass)}});if(!r.ok){toast('Re-authentication failed');return}}catch(e){toast('Re-authentication failed');return}
+  const corr='COR-'+Date.now().toString(36);const hash='sha256:'+Array.from({length:12},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+  const vals={'Signature ID':'SIG-'+Date.now().toString().slice(-8),'Record Type':form,'Record ID':bid,'Signer':API.user,'Signer Name':API.displayName,'Meaning':meaning,'Reason':reason||meaning,'Record Version':'1','Auth Method':'Password Re-authentication','Signed Date':new Date().toISOString().slice(0,19).replace('T',' '),'Hash':hash,'Correlation ID':corr};
+  try{await api(`/kapps/${KAPP}/forms/esignatures/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});
+    await writeTrail(form,bid,'Electronic Signature','Signature',' ',meaning,'',reason||meaning);
+    toast('Signature applied: '+meaning);closeModal();if(subId&&subId!=='null')openRecord(form,subId);
+  }catch(e){toast('Sign failed: '+e.message)}}
+
+/* ===================== MY WORK HOME ===================== */
+async function loadHome(){const host=document.getElementById('tab-home');
+  host.innerHTML=`<div class="page-title">My Work</div><div class="page-sub">Operational queue for <strong>${esc(PERSONA)}</strong> — assigned items, overdue work and what needs a decision</div><div id="home-body"><div class="spin">Loading your queue…</div></div>`;
+  try{const r=await sapi(`/api/ncrmanager/mywork?user=${encodeURIComponent(PERSONA)}`);
+    const work=r.work||[];const ov=r.overdue||[];
+    const byType=r.byType||[];
+    let html=`<div class="kpi-row">
+      <div class="kpi navy"><div class="label">Open Assigned</div><div class="val">${r.total}</div><div class="sub">across all modules</div></div>
+      <div class="kpi red"><div class="label">Overdue</div><div class="val">${ov.length}</div><div class="sub">past due date</div></div>
+      ${byType.slice(0,5).map(t=>`<div class="kpi teal click" onclick="navClick('${groupForType(t.type)}')"><div class="label">${esc(t.type)}</div><div class="val">${t.count}</div></div>`).join('')}
+    </div>`;
+    html+=`<div class="grid-2"><div class="card"><h3>⚠ Overdue & Escalated<span class="hint">act first</span></h3>${queueTable(ov)}</div>
+      <div class="card"><h3>My Open Items</h3>${queueTable(work.slice(0,18))}</div></div>
+      <div class="card"><h3>Quick Intake</h3><p class="page-sub" style="margin-bottom:10px">Start a new governed record. Intake routes through the configured workflow.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-teal btn-small" onclick="openEdit('quality-events',null)">+ Quality Event</button>
+        <button class="btn-blue btn-small" onclick="openEdit('complaints',null)">+ Complaint</button>
+        <button class="btn-primary btn-small" onclick="openEdit('nonconformances',null)">+ Nonconformance</button>
+        <button class="btn-gold btn-small" onclick="openEdit('capas',null)">+ CAPA</button>
+        <button class="btn-outline btn-small" onclick="openEdit('audit-findings',null)">+ Audit Finding</button>
+      </div></div>`;
+    document.getElementById('home-body').innerHTML=html;
+  }catch(e){document.getElementById('home-body').innerHTML=`<div class="card" style="color:var(--red)">Failed to load queue: ${esc(e.message)}</div>`}}
+function groupForType(t){return{CAPA:'g-capa',Event:'g-events',NC:'g-nc',Complaint:'g-complaints',Finding:'g-audits',Change:'g-docs',SCAR:'g-suppliers'}[t]||'home'}
+function modForType(t){return{CAPA:'capas',Event:'quality-events',NC:'nonconformances',Complaint:'complaints',Finding:'audit-findings',Change:'change-requests',SCAR:'scars'}[t]||'capas'}
+function queueTable(rows){if(!rows.length)return`<p class="empty">Nothing here — you're clear 🎉</p>`;
+  return`<table><thead><tr><th>Type</th><th>ID</th><th>Title</th><th>Due</th><th>Status</th></tr></thead><tbody>`+rows.map(w=>`<tr class="clickable-row" onclick="openRecord('${w.form}','${w.id}')"><td><span class="pill">${esc(w.type)}</span></td><td style="font-weight:700;color:var(--navy)">${esc(w.bid||'')}</td><td>${esc((w.title||'').slice(0,42))}</td><td${w.overdue?' style="color:var(--red);font-weight:700"':''}>${esc(w.due||'—')}${w.overdue?' ⚠':''}</td><td>${badge(w.status)}</td></tr>`).join('')+`</tbody></table>`}
+
+/* ===================== ANALYTICS ===================== */
+function bar(arr,opt){opt=opt||{};if(!arr||!arr.length)return'<p class="empty">No data</p>';const key=opt.key||'count';const max=Math.max(...arr.map(a=>a[key]||0),1);return arr.map(a=>`<div class="bar-row"><span class="bl">${esc(a.name||a.bucket)}</span><div class="bt"><div class="bf" style="width:${Math.max(3,Math.round((a[key]||0)/max*100))}%${opt.color?';background:'+opt.color:''}"></div></div><span class="bv">${a[key]||0}</span></div>`).join('')}
+async function loadAnalytics(){const host=document.getElementById('tab-analytics');
+  host.innerHTML=`<div class="page-title">Quality Analytics</div><div class="page-sub">Live KQL-backed metrics across the QMS — click any metric to drill into governed records</div><div id="an-body"><div class="spin">Computing metrics…</div></div>`;
+  try{const d=await sapi('/api/ncrmanager/dashboard');const k=d.kpis;
+    const kpi=(cls,label,val,sub,grp)=>`<div class="kpi ${cls}${grp?' click':''}" ${grp?`onclick="navClick('${grp}')"`:''}><div class="label">${label}</div><div class="val">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+    let html=`<div class="kpi-row">
+      ${kpi('navy','Open CAPAs',k.openCapas,k.overdueCapas+' overdue','g-capa')}
+      ${kpi('red','Overdue CAPAs',k.overdueCapas,'past due','g-capa')}
+      ${kpi('amber','Open Events',k.openEvents,k.overdueEvents+' overdue','g-events')}
+      ${kpi('blue','Open Complaints',k.openComplaints,k.reportableOpen+' reportable','g-complaints')}
+      ${kpi('red','Reg. Reporting Overdue',k.regOverdue,'MDR/MIR clock','g-complaints')}
+      ${kpi('purple','Open SCARs',k.openScars,k.escalatedScars+' escalated','g-suppliers')}
+    </div>
+    <div class="kpi-row">
+      ${kpi('red','Effectiveness Failed',k.effFailed,'reopened: '+k.reopened,'g-capa')}
+      ${kpi('teal','Avg CAPA Cycle',k.avgCapaCycle+'d','open→closed','g-capa')}
+      ${kpi('amber','Major Findings Open',k.majorFindings,k.openFindings+' total open','g-audits')}
+      ${kpi('green','Training Compliance',k.trainCompliance+'%',k.trainOverdue+' overdue','g-training')}
+      ${kpi('blue','Calibration Compliance',k.calCompliance+'%',k.calOverdue+' overdue / '+k.oot+' OOT','g-equipment')}
+      ${kpi('purple','High Risks Uncontrolled',k.highRisks,'risk register','g-risk')}
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>CAPA Aging (open)</h3>${bar(d.capaAging,{color:'#D14B3F'})}</div>
+      <div class="card"><h3>CAPA by Status (open)</h3>${bar(d.capaByStatus,{color:'#0B3D4F'})}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>Open Events by Type</h3>${bar(d.eventsByType,{color:'#1E7FB5'})}</div>
+      <div class="card"><h3>Open Events by Site</h3>${bar(d.eventsBySite,{color:'#0E8C86'})}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>CAPA by Source (root signal)</h3>${bar(d.capaBySource,{color:'#6E4FB0'})}</div>
+      <div class="card"><h3>Complaints by Product</h3>${bar(d.complaintsByProduct,{color:'#E08A1E'})}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>Audit Findings by Classification</h3>${bar(d.findingsByClass,{color:'#A6362D'})}</div>
+      <div class="card"><h3>Risk Register by Level</h3>${bar(d.risksByLevel,{color:'#157A52'})}</div>
+    </div>
+    <div class="card"><h3>Worst-Performing Suppliers<span class="hint">score ascending · click row</span></h3>
+      <table><thead><tr><th>Supplier</th><th>Risk</th><th>Approval</th><th class="num">Score</th><th class="num">OTD%</th><th class="num">PPM</th><th class="num">Open SCARs</th></tr></thead><tbody>
+      ${d.worstSuppliers.map(s=>`<tr class="clickable-row" onclick="openRecord('suppliers','${s.id}')"><td style="font-weight:600">${esc(s.name)}</td><td>${badge(s.risk)}</td><td>${badge(s.approval)}</td><td class="num" style="font-weight:700;color:${s.score<85?'var(--red)':'var(--navy)'}">${s.score}</td><td class="num">${s.onTime}%</td><td class="num">${s.ppm}</td><td class="num">${s.openScars}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="card"><h3>Overdue Priority Queue<span class="hint">CAPAs + events past due</span></h3>
+      ${d.overdueQueue.length?`<table><thead><tr><th>Type</th><th>ID</th><th>Title</th><th>Owner</th><th>Due</th><th class="num">Days Over</th></tr></thead><tbody>${d.overdueQueue.map(q=>`<tr class="clickable-row" onclick="openRecord('${q.form}','${q.id}')"><td><span class="pill">${esc(q.type)}</span></td><td style="font-weight:700;color:var(--navy)">${esc(q.bid)}</td><td>${esc((q.title||'').slice(0,40))}</td><td>${esc(q.owner)}</td><td style="color:var(--red)">${esc(q.due)}</td><td class="num" style="font-weight:700;color:var(--red)">${q.overdue}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No overdue items</p>'}
+    </div>
+    <div class="page-sub">Generated ${esc(d.generatedAt)} · totals: ${Object.entries(d.counts).map(([k2,v2])=>`${v2} ${k2}`).join(' · ')}</div>`;
+    document.getElementById('an-body').innerHTML=html;
+  }catch(e){document.getElementById('an-body').innerHTML=`<div class="card" style="color:var(--red)">Failed: ${esc(e.message)}</div>`}}
+
+/* ===================== ADMIN ===================== */
+async function loadAdmin(){const host=document.getElementById('tab-admin');
+  host.innerHTML=`<div class="page-title">Administration & Compliance</div><div class="page-sub">Configuration, append-only audit trail and electronic-signature manifest</div>
+    <div class="subtabs"><button class="subtab active" onclick="adminSel('config',this)">Configuration</button><button class="subtab" onclick="adminSel('trail',this)">Audit Trail</button><button class="subtab" onclick="adminSel('sigs',this)">E-Signatures</button><button class="subtab" onclick="adminSel('api',this)">API & Integrations</button></div>
+    <div id="admin-host"></div>`;
+  adminSel('config',document.querySelector('#tab-admin .subtab'));}
+function adminSel(k,btn){document.querySelectorAll('#tab-admin .subtab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');const h=document.getElementById('admin-host');
+  if(k==='config')h.innerHTML=adminConfigHtml();
+  else if(k==='api')h.innerHTML=adminApiHtml();
+  else{h.innerHTML='<div class="card"><div class="spin">Loading…</div></div>';loadAdminTable(k)}}
+function adminConfigHtml(){
+  const rows=[['Event Types & Taxonomies','quality-events Type list','8 types configured'],['Risk Matrix','Severity × Probability → Risk Level','ISO 14971 5×5 (configurable)'],['Numbering Schemes','Per-record prefixes','QE / NC / CAPA / CMP / RSK …'],['Workflow Routing','Risk-based approval levels','High-risk → 2-level + effectiveness'],['Approval Thresholds','Signature meanings per record','Part 11 meanings list'],['Due-Date Rules','Business-calendar SLAs','Severity-driven'],['Escalation Policy','Overdue → escalate to manager','enabled'],['Investigation Methods','5 Whys, Ishikawa, FTA, Is/Is-Not, HF','6 methods'],['Disposition Choices','Use-as-is / Rework / Scrap / Return / Concession','MRB governed'],['Retention Rules','Per record class','configurable; legal review required'],['Regulatory Mappings','ISO 13485 / 820 QMSR / 14971 / Part 11','see traceability matrix'],['Required Fields','Per form','enforced in intake'],['Notification Templates','Email / task','workflow-driven']];
+  return`<div class="note">Configuration is metadata-driven. In production these are managed via Kapp/Form/Team attributes and KSL policies (no code). The table below reflects the shipped defaults — all are <strong>customer-configurable and subject to quality/legal review</strong>; the software does not by itself establish compliance or certification.</div>
+  <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Configurable Area</th><th>What it controls</th><th>Shipped default</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-weight:600">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div>`}
+function adminApiHtml(){const base=`${API.url}/app/api/v1`;const local=location.origin+'/api/ncrmanager';
+  return`<div class="card"><h3>Versioned Web API (v1)</h3><p class="page-sub">Stable external contract. JSON, correlation IDs, pagination, idempotent intake, stable error envelope.</p>
+  <table><thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr></thead><tbody>
+  <tr><td><span class="pill">GET</span></td><td>/api/ncrmanager/v1/quality-events?status=&type=&limit=&pageToken=</td><td>List events (filterable, paginated)</td></tr>
+  <tr><td><span class="pill">POST</span></td><td>/api/ncrmanager/v1/quality-events</td><td>Idempotent intake (Idempotency-Key header)</td></tr>
+  <tr><td><span class="pill">GET</span></td><td>/api/ncrmanager/v1/capas · /complaints · /suppliers</td><td>List governed records</td></tr>
+  <tr><td><span class="pill">GET</span></td><td>/api/ncrmanager/v1/metrics</td><td>QMS metrics contract</td></tr>
+  <tr><td><span class="pill">GET</span></td><td>/api/ncrmanager/record360/:form/:id</td><td>Traceability graph + timeline + signatures</td></tr>
+  </tbody></table></div>
+  <div class="grid-2"><div class="card"><h3>Reference Integrations</h3>
+    <div class="rel-item"><span class="rt">ERP</span><span class="ri-t">Lot / batch / inventory hold sync</span></div>
+    <div class="rel-item"><span class="rt">MES</span><span class="ri-t">Process exceptions → quality events</span></div>
+    <div class="rel-item"><span class="rt">PLM</span><span class="ri-t">Document & design-change linkage</span></div>
+    <div class="rel-item"><span class="rt">HRIS</span><span class="ri-t">Role changes → training assignment</span></div>
+    <div class="rel-item"><span class="rt">LIMS</span><span class="ri-t">Test results → nonconformance</span></div>
+    <div class="rel-item"><span class="rt">CAL</span><span class="ri-t">Calibration system → equipment OOT</span></div>
+    <div class="rel-item"><span class="rt">SUPPLIER</span><span class="ri-t">SCAR response portal</span></div>
+  </div>
+  <div class="card"><h3>Try it</h3><p class="page-sub">Live metrics from this space via the versioned API:</p><button class="btn-teal btn-small" onclick="tryApi()">GET /v1/metrics</button><pre id="api-out" style="background:#0B3D4F;color:#CFE8F0;padding:12px;border-radius:8px;font-size:11px;margin-top:10px;overflow:auto;max-height:240px">—</pre></div></div>`}
+async function tryApi(){const out=document.getElementById('api-out');out.textContent='Loading…';try{const r=await sapi('/api/ncrmanager/v1/metrics');out.textContent=JSON.stringify(r,null,2)}catch(e){out.textContent='Error: '+e.message}}
+async function loadAdminTable(k){const form=k==='trail'?'audit-trail':'esignatures';const h=document.getElementById('admin-host');
+  try{const r=await api(`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`);const rows=r.submissions||[];
+    if(k==='trail')h.innerHTML=`<div class="note">Append-only regulated change log. ${rows.length>=25?'Showing latest 25.':''}</div><div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Timestamp</th><th>Record</th><th>Actor</th><th>Action</th><th>Field</th><th>Change</th><th>Reason</th><th>Correlation</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(v(s,'Timestamp'))}</td><td><span class="pill">${esc(v(s,'Record Type'))}</span> ${esc(v(s,'Record ID'))}</td><td>${esc(v(s,'Actor'))}</td><td>${esc(v(s,'Action'))}</td><td>${esc(v(s,'Field'))}</td><td>${v(s,'Old Value')||v(s,'New Value')?esc((v(s,'Old Value')||'∅')+' → '+(v(s,'New Value')||'∅')):'—'}</td><td>${esc((v(s,'Reason')||'').slice(0,40))}</td><td style="font-size:10px;color:var(--gray)">${esc(v(s,'Correlation ID'))}</td></tr>`).join('')}</tbody></table></div>`;
+    else h.innerHTML=`<div class="note part11">21 CFR Part 11 electronic-signature manifest — tamper-evident, append-only. ${rows.length>=25?'Showing latest 25.':''}</div><div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Signed</th><th>Record</th><th>Signer</th><th>Meaning</th><th>Reason</th><th>Method</th><th>Hash</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(v(s,'Signed Date'))}</td><td><span class="pill">${esc(v(s,'Record Type'))}</span> ${esc(v(s,'Record ID'))}</td><td>${esc(v(s,'Signer Name'))}</td><td style="font-weight:600;color:var(--green-d)">${esc(v(s,'Meaning'))}</td><td>${esc((v(s,'Reason')||'').slice(0,34))}</td><td>${esc(v(s,'Auth Method'))}</td><td style="font-family:ui-monospace,monospace;font-size:10px">${esc(v(s,'Hash'))}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(e){h.innerHTML=`<div class="card" style="color:var(--red)">Failed: ${esc(e.message)}</div>`}}
+</script>
+</body>
+</html>
