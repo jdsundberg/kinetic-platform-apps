@@ -1,0 +1,1130 @@
+{
+  "name": "GRC Command Center",
+  "slug": "grc",
+  "description": "Kinetic GRC Command Center — provider-scale governance, risk & compliance across CMMC, NIST 800-171, NIST CSF, SOC 2, ISO 27001, HIPAA & CIS. Asset-centric scoping, continuous compliance, audit-ready visuals.",
+  "category": "Governance, Risk & Compliance",
+  "icon": "shield",
+  "color": "#3B5BDB",
+  "bg": "#EDF2FF",
+  "forms": [
+    {
+      "slug": "tenant",
+      "name": "Tenant",
+      "description": "Client / tenant — the unit of MSP multi-tenancy.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Industry"
+        },
+        {
+          "name": "Regulatory Drivers"
+        },
+        {
+          "name": "Contract Requirements",
+          "rows": 2
+        },
+        {
+          "name": "Frameworks"
+        },
+        {
+          "name": "Engagement Owner"
+        },
+        {
+          "name": "Primary Contact"
+        },
+        {
+          "name": "Contact Email"
+        },
+        {
+          "name": "Readiness Score"
+        },
+        {
+          "name": "Risk Score"
+        },
+        {
+          "name": "Open Gaps"
+        },
+        {
+          "name": "Overdue Tasks"
+        },
+        {
+          "name": "Evidence Missing"
+        },
+        {
+          "name": "Project Health"
+        },
+        {
+          "name": "Audit Date"
+        },
+        {
+          "name": "Last Review Date"
+        },
+        {
+          "name": "Next Review Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Color"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]",
+          "values[Name]",
+          "values[Engagement Owner]",
+          "values[Project Health]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "framework",
+      "name": "Framework",
+      "description": "Reusable framework catalog (global, not tenant-scoped).",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Framework ID"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "Control Count"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Framework ID]",
+          "values[Category]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "control",
+      "name": "Control",
+      "description": "Reusable control library entry, keyed by framework + control id.",
+      "submissionLabelExpression": "${values('Framework')} ${values('Control ID')}",
+      "fields": [
+        {
+          "name": "Control Key"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Control ID"
+        },
+        {
+          "name": "Control Family"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Requirement Text",
+          "rows": 3
+        },
+        {
+          "name": "Plain English",
+          "rows": 2
+        },
+        {
+          "name": "Implementation Guidance",
+          "rows": 3
+        },
+        {
+          "name": "Evidence Examples",
+          "rows": 2
+        },
+        {
+          "name": "Testing Procedure",
+          "rows": 2
+        },
+        {
+          "name": "Mapped Controls"
+        },
+        {
+          "name": "Default Owner"
+        },
+        {
+          "name": "Review Cadence"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Control Key]",
+          "values[Framework]",
+          "values[Control ID]",
+          "values[Control Family]"
+        ],
+        "compound": [
+          [
+            "values[Framework]",
+            "values[Control Family]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "control-mapping",
+      "name": "Control Mapping",
+      "description": "Cross-framework control mapping — evidence reuse across frameworks.",
+      "submissionLabelExpression": "${values('Source Control')} → ${values('Target Control')}",
+      "fields": [
+        {
+          "name": "Source Framework"
+        },
+        {
+          "name": "Source Control"
+        },
+        {
+          "name": "Target Framework"
+        },
+        {
+          "name": "Target Control"
+        },
+        {
+          "name": "Relationship"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Source Framework]",
+          "values[Source Control]",
+          "values[Target Framework]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "asset",
+      "name": "Asset",
+      "description": "Asset-centric scope — systems, data, people, vendors, processes.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Asset ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Business Purpose",
+          "rows": 2
+        },
+        {
+          "name": "Data Handled"
+        },
+        {
+          "name": "Data Classification"
+        },
+        {
+          "name": "Environment"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Criticality"
+        },
+        {
+          "name": "In Scope"
+        },
+        {
+          "name": "Justification",
+          "rows": 2
+        },
+        {
+          "name": "Related Controls"
+        },
+        {
+          "name": "Related Vendors"
+        },
+        {
+          "name": "Last Validated"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Asset ID]",
+          "values[Tenant]",
+          "values[Type]",
+          "values[Owner]",
+          "values[Data Classification]",
+          "values[Criticality]",
+          "values[In Scope]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "vendor",
+      "name": "Vendor",
+      "description": "Third-party vendors in scope for the compliance program.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Vendor ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Service Provided"
+        },
+        {
+          "name": "Data Shared"
+        },
+        {
+          "name": "Risk Tier"
+        },
+        {
+          "name": "SOC2 Status"
+        },
+        {
+          "name": "Contract End"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Vendor ID]",
+          "values[Tenant]",
+          "values[Risk Tier]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "policy",
+      "name": "Policy",
+      "description": "Policies & procedures referenced by controls and evidence.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Policy ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Version"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Review Date"
+        },
+        {
+          "name": "Linked Controls"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Policy ID]",
+          "values[Tenant]",
+          "values[Type]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "assessment",
+      "name": "Assessment",
+      "description": "Per-tenant control assessment — the engine of readiness scoring.",
+      "submissionLabelExpression": "${values('Tenant')} ${values('Framework')} ${values('Control ID')}",
+      "fields": [
+        {
+          "name": "Assessment ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Control ID"
+        },
+        {
+          "name": "Control Family"
+        },
+        {
+          "name": "Control Title"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Maturity"
+        },
+        {
+          "name": "Confidence"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Reviewer"
+        },
+        {
+          "name": "Evidence Status"
+        },
+        {
+          "name": "Gap Summary",
+          "rows": 2
+        },
+        {
+          "name": "Remediation Required"
+        },
+        {
+          "name": "Risk Rating"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        },
+        {
+          "name": "Last Updated"
+        },
+        {
+          "name": "Next Review"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Assessment ID]",
+          "values[Tenant]",
+          "values[Framework]",
+          "values[Control ID]",
+          "values[Control Family]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Risk Rating]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Framework]"
+          ],
+          [
+            "values[Tenant]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "evidence",
+      "name": "Evidence",
+      "description": "Evidence — request, upload, review, reuse, validate.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Evidence ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "File or Link"
+        },
+        {
+          "name": "Source System"
+        },
+        {
+          "name": "Related Controls"
+        },
+        {
+          "name": "Related Assets"
+        },
+        {
+          "name": "Related Frameworks"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Reviewer"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Collection Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Review Notes",
+          "rows": 2
+        },
+        {
+          "name": "Audit Notes",
+          "rows": 2
+        },
+        {
+          "name": "Reusable"
+        },
+        {
+          "name": "History",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Evidence ID]",
+          "values[Tenant]",
+          "values[Related Frameworks]",
+          "values[Owner]",
+          "values[Status]",
+          "values[Expiration Date]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "gap",
+      "name": "Gap",
+      "description": "Gaps auto-identified from assessment results.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Gap ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Related Control"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Control Family"
+        },
+        {
+          "name": "Related Asset"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Business Impact",
+          "rows": 2
+        },
+        {
+          "name": "Compliance Impact",
+          "rows": 2
+        },
+        {
+          "name": "Risk Rating"
+        },
+        {
+          "name": "Recommended Remediation",
+          "rows": 2
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Percent Complete"
+        },
+        {
+          "name": "Blocking Issue"
+        },
+        {
+          "name": "Related Evidence"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Gap ID]",
+          "values[Tenant]",
+          "values[Framework]",
+          "values[Control Family]",
+          "values[Severity]",
+          "values[Owner]",
+          "values[Due Date]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Severity]"
+          ],
+          [
+            "values[Tenant]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "task",
+      "name": "Remediation Task",
+      "description": "Remediation action items — turns gaps into trackable work.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Task ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "Related Gap"
+        },
+        {
+          "name": "Related Control"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Approver"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Percent Complete"
+        },
+        {
+          "name": "Dependencies"
+        },
+        {
+          "name": "Completion Evidence"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Task ID]",
+          "values[Tenant]",
+          "values[Framework]",
+          "values[Owner]",
+          "values[Priority]",
+          "values[Due Date]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "risk",
+      "name": "Risk",
+      "description": "Practical risk register connected to compliance.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Risk ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Related Asset"
+        },
+        {
+          "name": "Related Control"
+        },
+        {
+          "name": "Related Gap"
+        },
+        {
+          "name": "Likelihood"
+        },
+        {
+          "name": "Impact"
+        },
+        {
+          "name": "Inherent Risk"
+        },
+        {
+          "name": "Current Controls",
+          "rows": 2
+        },
+        {
+          "name": "Residual Risk"
+        },
+        {
+          "name": "Treatment Plan",
+          "rows": 2
+        },
+        {
+          "name": "Treatment Type"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Review Cadence"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Risk ID]",
+          "values[Tenant]",
+          "values[Category]",
+          "values[Residual Risk]",
+          "values[Owner]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audit-packet",
+      "name": "Audit Packet",
+      "description": "Generated audit packets — scope, evidence index, summaries.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Packet ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Readiness Percent"
+        },
+        {
+          "name": "Scope Statement",
+          "rows": 3
+        },
+        {
+          "name": "Executive Summary",
+          "rows": 4
+        },
+        {
+          "name": "Generated By"
+        },
+        {
+          "name": "Generated Date"
+        },
+        {
+          "name": "Auditor"
+        },
+        {
+          "name": "Audit Date"
+        },
+        {
+          "name": "Open Exceptions"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Packet ID]",
+          "values[Tenant]",
+          "values[Framework]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "audit-finding",
+      "name": "Audit Finding",
+      "description": "Findings raised during audit / assessment.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Finding ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Packet"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Control ID"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Due Date"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Finding ID]",
+          "values[Tenant]",
+          "values[Packet]",
+          "values[Severity]",
+          "values[Status]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "ai-recommendation",
+      "name": "AI Recommendation",
+      "description": "Auditable AI guidance — every recommendation requires human approval.",
+      "submissionLabelExpression": "${values('Type')} — ${values('Related Record')}",
+      "fields": [
+        {
+          "name": "Rec ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Context",
+          "rows": 2
+        },
+        {
+          "name": "Recommendation",
+          "rows": 4
+        },
+        {
+          "name": "Related Record"
+        },
+        {
+          "name": "Reviewer"
+        },
+        {
+          "name": "Decision"
+        },
+        {
+          "name": "Decision Date"
+        },
+        {
+          "name": "Created Date"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Rec ID]",
+          "values[Tenant]",
+          "values[Type]",
+          "values[Decision]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "activity",
+      "name": "Activity",
+      "description": "Unified audit trail: comments, approvals, status changes, notifications.",
+      "submissionLabelExpression": "${values('Type')} — ${values('Summary')}",
+      "fields": [
+        {
+          "name": "Activity ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Record Type"
+        },
+        {
+          "name": "Record ID"
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Summary"
+        },
+        {
+          "name": "Detail",
+          "rows": 2
+        },
+        {
+          "name": "Actor"
+        },
+        {
+          "name": "Created Date"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Activity ID]",
+          "values[Tenant]",
+          "values[Record Type]",
+          "values[Record ID]",
+          "values[Type]"
+        ],
+        "compound": [
+          [
+            "values[Record Type]",
+            "values[Record ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "engagement",
+      "name": "Engagement",
+      "description": "Provider engagement / project per tenant.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Engagement ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Frameworks"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "Target Audit Date"
+        },
+        {
+          "name": "Health"
+        },
+        {
+          "name": "Phase"
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Engagement ID]",
+          "values[Tenant]",
+          "values[Owner]",
+          "values[Health]"
+        ],
+        "compound": []
+      }
+    },
+    {
+      "slug": "snapshot",
+      "name": "Snapshot",
+      "description": "Periodic readiness snapshots for trend / audit-readiness trajectory.",
+      "submissionLabelExpression": "${values('Tenant')} ${values('Snapshot Date')}",
+      "fields": [
+        {
+          "name": "Snapshot ID"
+        },
+        {
+          "name": "Tenant"
+        },
+        {
+          "name": "Snapshot Date"
+        },
+        {
+          "name": "Framework"
+        },
+        {
+          "name": "Readiness Percent"
+        },
+        {
+          "name": "Risk Score"
+        },
+        {
+          "name": "Open Gaps"
+        },
+        {
+          "name": "Evidence Complete Percent"
+        },
+        {
+          "name": "Tasks Complete Percent"
+        },
+        {
+          "name": "Controls Implemented"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Snapshot ID]",
+          "values[Tenant]",
+          "values[Snapshot Date]",
+          "values[Framework]"
+        ],
+        "compound": [
+          [
+            "values[Tenant]",
+            "values[Snapshot Date]"
+          ]
+        ]
+      }
+    }
+  ]
+}
