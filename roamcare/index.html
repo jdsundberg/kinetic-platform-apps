@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoamCare Workforce Hub</title>
+<style>
+:root{--teal:#0B5563;--teal-light:#13707F;--accent:#16A0B4;--green:#2E9E6B;--green-d:#1E7E54;--red:#D64545;--amber:#E0972B;--blue:#2D6CDF;--purple:#7A4FC0;--gray:#5F6B70;--light:#F6F9FA;--border:#E2E8EA;--bg:#EEF3F4;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);--shadow-lg:0 8px 24px rgba(0,0,0,.16)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#1A2327;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,160,180,.12)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#F2F8F9}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#06343D 0%,#0B5563 55%,#13707F 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--teal);font-size:25px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--accent)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--accent);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--teal-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+.topbar{background:var(--teal);color:white;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:17px;white-space:nowrap;margin-right:20px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--accent)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.72);padding:8px 11px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--accent);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.72);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.72);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--accent);color:white}
+
+.console{display:none;padding:22px;max-width:1440px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--teal);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:23px;font-weight:700;margin:4px 0;color:var(--teal)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.accent .val{color:var(--accent)}.kpi.accent{border-top-color:var(--accent)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.amber .val{color:var(--amber)}.kpi.amber{border-top-color:var(--amber)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-recommended,.badge-eligible,.badge-verified,.badge-completed,.badge-accepted,.badge-approved,.badge-active,.badge-open,.badge-confirmed,.badge-filled,.badge-sent,.badge-read,.badge-yes,.badge-low,.badge-paid{background:#E4F4EC;color:#1E7E54}
+.badge-in-progress,.badge-checked-in,.badge-matched,.badge-interested{background:#E0F2F4;color:#0B5563}
+.badge-offered,.badge-applied,.badge-scheduled,.badge-routine,.badge-medium,.badge-new,.badge-possible{background:#E6EEFC;color:#1F54C9}
+.badge-needs-review,.badge-awaiting-compliance-review,.badge-awaiting-home-manager-approval,.badge-awaiting-receiving-manager-approval,.badge-pending-approval,.badge-pending-review,.badge-pending,.badge-high,.badge-expiring,.badge-warning,.badge-partial,.badge-partially-filled,.badge-on-call,.badge-draft{background:#FCF1DE;color:#A66A12}
+.badge-blocked,.badge-rejected,.badge-declined,.badge-withdrawn,.badge-cancelled,.badge-expired,.badge-no-show,.badge-critical,.badge-emergency,.badge-suspended-from-roaming,.badge-failed,.badge-not-recommended,.badge-no,.badge-overdue,.badge-unavailable{background:#FBE7E7;color:#B23232}
+.badge-default,.badge-non-union,.badge-closed,.badge-info,.badge-neutral{background:var(--light);color:var(--gray)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:130px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:980px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:20px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--teal);color:white;border-color:var(--teal)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-row .bl{min-width:150px;text-align:right;color:var(--gray)}
+.bar-row .bt{flex:1;background:var(--light);border-radius:5px;height:18px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700}
+.bar-row .bv{min-width:34px;font-weight:700;color:var(--teal)}
+
+.score{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;border-radius:12px;font-weight:700;font-size:12px;padding:0 8px;color:#fff}
+.score.rec{background:var(--green)}.score.rev{background:var(--amber)}.score.not{background:var(--gray)}.score.blk{background:var(--red)}
+
+/* Marketplace cards */
+.mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.mk-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,box-shadow .12s;border-left:4px solid var(--gray)}
+.mk-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.mk-card.rec{border-left-color:var(--green)}.mk-card.rev{border-left-color:var(--amber)}.mk-card.blk{border-left-color:var(--red)}.mk-card.not{border-left-color:var(--gray)}
+.mk-card .mt{font-weight:700;font-size:14px;color:var(--teal);margin-bottom:4px}
+.mk-card .mm{font-size:12px;color:var(--gray);margin-bottom:8px}
+.mk-card .mh{font-size:12px;background:var(--light);border-radius:8px;padding:8px 10px;line-height:1.45;margin-bottom:8px}
+.mk-card .mtags{display:flex;gap:6px;flex-wrap:wrap}
+.mk-tag{font-size:10px;font-weight:600;background:#E0F2F4;color:#0B5563;border-radius:8px;padding:2px 7px}
+.mk-tag.warn{background:#FCF1DE;color:#A66A12}.mk-tag.bad{background:#FBE7E7;color:#B23232}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:26px;max-width:880px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--teal);margin-bottom:14px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap}
+.meta-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:14px}
+.banner{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5}
+.banner.rec{background:#E4F4EC;color:#1E7E54}.banner.rev{background:#FCF1DE;color:#A66A12}.banner.blk{background:#FBE7E7;color:#B23232}.banner.not{background:var(--light);color:var(--gray)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+.chip{font-size:11px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:2px 8px;color:var(--gray)}
+ul.reasons{list-style:none;font-size:12px;line-height:1.7}
+ul.reasons li:before{content:"✓ ";color:var(--green);font-weight:700}
+ul.reasons li.bad:before{content:"✕ ";color:var(--red)}
+ul.reasons li.warn:before{content:"⚠ ";color:var(--amber)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--teal);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+.empty{text-align:center;color:var(--gray);padding:24px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Roam<span>Care</span> Workforce Hub</h1>
+    <p class="sub">Healthcare workforce orchestration &amp; staffing command center</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Roam<span>Care</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('command')">Command Center</button>
+      <button onclick="switchTab('marketplace')">Marketplace</button>
+      <button onclick="switchTab('opportunities')">Opportunities</button>
+      <button onclick="switchTab('employees')">Employees</button>
+      <button onclick="switchTab('applications')">Applications</button>
+      <button onclick="switchTab('assignments')">Assignments</button>
+      <button onclick="switchTab('compliance')">Compliance</button>
+      <button onclick="switchTab('executive')">Executive</button>
+      <button onclick="switchTab('config')">Config</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- COMMAND CENTER -->
+  <div class="console active" id="tab-command">
+    <div class="page-title">Staffing Command Center</div>
+    <div class="page-sub">Real-time view of urgent staffing needs across the health system</div>
+    <div class="kpi-row" id="cc-kpis"></div>
+    <div class="grid-2"><div id="cc-critical"></div><div id="cc-side"></div></div>
+    <div class="grid-2"><div id="cc-flow"></div><div id="cc-risk"></div></div>
+  </div>
+
+  <!-- MARKETPLACE -->
+  <div class="console" id="tab-marketplace">
+    <div class="page-title">Opportunity Marketplace</div>
+    <div class="page-sub">Personalized, eligibility-aware opportunities with explainable match scoring</div>
+    <div class="toolbar">
+      <label style="font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase">Viewing as</label>
+      <select id="mk-emp" onchange="loadMarketplace()" style="min-width:280px"></select>
+      <select id="mk-filter" onchange="renderMarketplace()"><option value="">All matches</option><option value="rec">Recommended</option><option value="rev">Needs review</option><option value="elig">Eligible only (not blocked)</option></select>
+    </div>
+    <div id="mk-emp-banner"></div>
+    <div class="mk-grid" id="mk-grid"></div>
+  </div>
+
+  <!-- OPPORTUNITIES -->
+  <div class="console" id="tab-opportunities">
+    <div class="page-title">Opportunities</div>
+    <div class="page-sub">Roaming, float, surge, gig &amp; emergency staffing needs</div>
+    <div class="toolbar">
+      <input type="text" id="s-opportunities" placeholder="Search title, role, department..." oninput="loadTable('opportunities')">
+      <select id="f-opportunities-Status" onchange="loadTable('opportunities')"><option value="">All Status</option><option>Draft</option><option>Pending Approval</option><option>Open</option><option>Matched</option><option>Offered</option><option>In Progress</option><option>Completed</option><option>Filled</option><option>Cancelled</option><option>Expired</option></select>
+      <select id="f-opportunities-Urgency" onchange="loadTable('opportunities')"><option value="">All Urgency</option><option>Routine</option><option>High</option><option>Critical</option><option>Emergency</option></select>
+      <select id="f-opportunities-Requesting Location" onchange="loadTable('opportunities')"><option value="">All Facilities</option></select>
+      <button class="btn-primary" onclick="showForm('opportunities')">+ New Opportunity</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Title</th><th>Role</th><th>Facility</th><th>Shift</th><th>Urgency</th><th>Need</th><th>Status</th></tr></thead><tbody id="b-opportunities"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('opportunities',-1)" id="p-opportunities-prev" disabled>Prev</button><span class="page-info" id="p-opportunities-info">Page 1</span><button class="btn-outline" onclick="pageTable('opportunities',1)" id="p-opportunities-next" disabled>Next</button></div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="console" id="tab-employees">
+    <div class="page-title">Employees</div>
+    <div class="page-sub">Workforce roster, roaming eligibility &amp; credentials</div>
+    <div class="toolbar">
+      <input type="text" id="s-employees" placeholder="Search name..." oninput="loadTable('employees')">
+      <select id="f-employees-Job Title" onchange="loadTable('employees')"><option value="">All Roles</option></select>
+      <select id="f-employees-Home Location" onchange="loadTable('employees')"><option value="">All Facilities</option></select>
+      <select id="f-employees-Roaming Eligibility Status" onchange="loadTable('employees')"><option value="">All Eligibility</option><option>Eligible</option><option>Pending Review</option><option>Suspended from roaming</option></select>
+      <button class="btn-primary" onclick="showForm('employees')">+ New Employee</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Home Facility</th><th>Type</th><th>Fatigue</th><th>Eligibility</th></tr></thead><tbody id="b-employees"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('employees',-1)" id="p-employees-prev" disabled>Prev</button><span class="page-info" id="p-employees-info">Page 1</span><button class="btn-outline" onclick="pageTable('employees',1)" id="p-employees-next" disabled>Next</button></div>
+  </div>
+
+  <!-- APPLICATIONS -->
+  <div class="console" id="tab-applications">
+    <div class="page-title">Applications</div>
+    <div class="page-sub">Employee interest &amp; approval pipeline</div>
+    <div class="toolbar">
+      <input type="text" id="s-applications" placeholder="Search employee, opportunity..." oninput="loadTable('applications')">
+      <select id="f-applications-Application Status" onchange="loadTable('applications')"><option value="">All Status</option><option>Interested</option><option>Applied</option><option>Awaiting Home Manager Approval</option><option>Awaiting Receiving Manager Approval</option><option>Awaiting Compliance Review</option><option>Approved</option><option>Offered</option><option>Accepted</option><option>Declined</option><option>Withdrawn</option><option>Rejected</option><option>Completed</option></select>
+      <button class="btn-primary" onclick="showForm('applications')">+ New Application</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>App ID</th><th>Employee</th><th>Opportunity</th><th>Score</th><th>Applied</th><th>Status</th></tr></thead><tbody id="b-applications"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('applications',-1)" id="p-applications-prev" disabled>Prev</button><span class="page-info" id="p-applications-info">Page 1</span><button class="btn-outline" onclick="pageTable('applications',1)" id="p-applications-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ASSIGNMENTS -->
+  <div class="console" id="tab-assignments">
+    <div class="page-title">Assignments</div>
+    <div class="page-sub">Confirmed roaming assignments, check-in &amp; completion</div>
+    <div class="toolbar">
+      <input type="text" id="s-assignments" placeholder="Search employee, opportunity..." oninput="loadTable('assignments')">
+      <select id="f-assignments-Assignment Status" onchange="loadTable('assignments')"><option value="">All Status</option><option>Scheduled</option><option>Confirmed</option><option>Checked In</option><option>In Progress</option><option>Completed</option><option>No Show</option><option>Cancelled</option></select>
+      <button class="btn-primary" onclick="showForm('assignments')">+ New Assignment</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Employee</th><th>Opportunity</th><th>Receiving Dept</th><th>Start</th><th>Rating</th><th>Status</th></tr></thead><tbody id="b-assignments"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('assignments',-1)" id="p-assignments-prev" disabled>Prev</button><span class="page-info" id="p-assignments-info">Page 1</span><button class="btn-outline" onclick="pageTable('assignments',1)" id="p-assignments-next" disabled>Next</button></div>
+  </div>
+
+  <!-- COMPLIANCE -->
+  <div class="console" id="tab-compliance">
+    <div class="page-title">Compliance &amp; Credentialing</div>
+    <div class="page-sub">Credential currency, review queue &amp; blocked assignments</div>
+    <div class="kpi-row" id="cm-kpis"></div>
+    <div class="grid-2"><div id="cm-expiring"></div><div id="cm-queue"></div></div>
+    <div id="cm-blocked"></div>
+  </div>
+
+  <!-- EXECUTIVE -->
+  <div class="console" id="tab-executive">
+    <div class="page-title">Executive Dashboard</div>
+    <div class="page-sub">Workforce flexibility, cost avoidance &amp; operational resilience</div>
+    <div class="kpi-row" id="ex-kpis"></div>
+    <div class="grid-2"><div id="ex-c1"></div><div id="ex-c2"></div></div>
+    <div class="grid-2"><div id="ex-c3"></div><div id="ex-c4"></div></div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="console" id="tab-config">
+    <div class="page-title">Configuration</div>
+    <div class="page-sub">Facilities, departments, rules engine, match recommendations &amp; notifications</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showConfig('departments')">Departments</button>
+      <button class="subtab" onclick="showConfig('facilities')">Facilities</button>
+      <button class="subtab" onclick="showConfig('rules')">Rules Engine</button>
+      <button class="subtab" onclick="showConfig('matches')">Match Recs</button>
+      <button class="subtab" onclick="showConfig('availability')">Availability</button>
+      <button class="subtab" onclick="showConfig('alerts')">Alerts</button>
+    </div>
+    <div id="cfg-departments" class="cfg-panel">
+      <div class="toolbar"><input type="text" id="s-departments" placeholder="Search department..." oninput="loadTable('departments')"><select id="f-departments-Location" onchange="loadTable('departments')"><option value="">All Facilities</option></select><button class="btn-primary" onclick="showForm('departments')">+ New Department</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Department</th><th>Type</th><th>Facility</th><th>Manager</th><th>Min</th><th>Current</th><th>Release</th></tr></thead><tbody id="b-departments"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('departments',-1)" id="p-departments-prev" disabled>Prev</button><span class="page-info" id="p-departments-info">Page 1</span><button class="btn-outline" onclick="pageTable('departments',1)" id="p-departments-next" disabled>Next</button></div>
+    </div>
+    <div id="cfg-facilities" class="cfg-panel" style="display:none">
+      <div class="toolbar"><input type="text" id="s-facilities" placeholder="Search facility..." oninput="loadTable('facilities')"><button class="btn-primary" onclick="showForm('facilities')">+ New Facility</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Facility</th><th>Campus</th><th>City</th><th>Region</th><th>Contact</th></tr></thead><tbody id="b-facilities"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('facilities',-1)" id="p-facilities-prev" disabled>Prev</button><span class="page-info" id="p-facilities-info">Page 1</span><button class="btn-outline" onclick="pageTable('facilities',1)" id="p-facilities-next" disabled>Next</button></div>
+    </div>
+    <div id="cfg-rules" class="cfg-panel" style="display:none">
+      <div class="toolbar"><input type="text" id="s-rules" placeholder="Search rule..." oninput="loadTable('rules')"><select id="f-rules-Rule Type" onchange="loadTable('rules')"><option value="">All Types</option><option>Eligibility</option><option>Credentialing</option><option>Scheduling</option><option>Overtime</option><option>Fatigue</option><option>Union</option><option>Location</option><option>Cost Center</option><option>Compliance</option><option>Emergency</option></select><select id="f-rules-Severity" onchange="loadTable('rules')"><option value="">All Severity</option><option>Info</option><option>Warning</option><option>Block</option></select><button class="btn-primary" onclick="showForm('rules')">+ New Rule</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Rule</th><th>Type</th><th>Applies To</th><th>Action</th><th>Severity</th><th>Active</th></tr></thead><tbody id="b-rules"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('rules',-1)" id="p-rules-prev" disabled>Prev</button><span class="page-info" id="p-rules-info">Page 1</span><button class="btn-outline" onclick="pageTable('rules',1)" id="p-rules-next" disabled>Next</button></div>
+    </div>
+    <div id="cfg-matches" class="cfg-panel" style="display:none">
+      <div class="toolbar"><input type="text" id="s-matches" placeholder="Search employee, opportunity..." oninput="loadTable('matches')"><select id="f-matches-Recommendation Status" onchange="loadTable('matches')"><option value="">All</option><option>Recommended</option><option>Needs Review</option><option>Not Recommended</option><option>Blocked</option></select></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Employee</th><th>Opportunity</th><th>Score</th><th>Cert</th><th>Skill</th><th>Location</th><th>Status</th></tr></thead><tbody id="b-matches"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('matches',-1)" id="p-matches-prev" disabled>Prev</button><span class="page-info" id="p-matches-info">Page 1</span><button class="btn-outline" onclick="pageTable('matches',1)" id="p-matches-next" disabled>Next</button></div>
+    </div>
+    <div id="cfg-availability" class="cfg-panel" style="display:none">
+      <div class="toolbar"><input type="text" id="s-availability" placeholder="Search employee..." oninput="loadTable('availability')"><select id="f-availability-Availability Type" onchange="loadTable('availability')"><option value="">All Types</option><option>Available</option><option>Preferred</option><option>Unavailable</option><option>On-call</option><option>PTO</option><option>Already Scheduled</option></select><button class="btn-primary" onclick="showForm('availability')">+ New Window</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Employee</th><th>Date</th><th>Start</th><th>End</th><th>Type</th><th>Source</th></tr></thead><tbody id="b-availability"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('availability',-1)" id="p-availability-prev" disabled>Prev</button><span class="page-info" id="p-availability-info">Page 1</span><button class="btn-outline" onclick="pageTable('availability',1)" id="p-availability-next" disabled>Next</button></div>
+    </div>
+    <div id="cfg-alerts" class="cfg-panel" style="display:none">
+      <div class="toolbar"><input type="text" id="s-alerts" placeholder="Search recipient..." oninput="loadTable('alerts')"><select id="f-alerts-Status" onchange="loadTable('alerts')"><option value="">All Status</option><option>Pending</option><option>Sent</option><option>Read</option><option>Failed</option></select><button class="btn-primary" onclick="showForm('alerts')">+ New Alert</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Recipient</th><th>Type</th><th>Channel</th><th>Message</th><th>Status</th></tr></thead><tbody id="b-alerts"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('alerts',-1)" id="p-alerts-prev" disabled>Prev</button><span class="page-info" id="p-alerts-info">Page 1</span><button class="btn-outline" onclick="pageTable('alerts',1)" id="p-alerts-next" disabled>Next</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='roamcare';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function fmt$(n){const x=parseFloat(n);return isNaN(x)?'$0':'$'+x.toLocaleString('en-US',{maximumFractionDigits:0})}
+function fmtN(n){const x=parseFloat(n);return isNaN(x)?'0':x.toLocaleString('en-US')}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+String(val).toLowerCase().replace(/\s+/g,'-')}
+function badge(val){return`<span class="badge ${badgeClass(val)}">${esc(val||'—')}</span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function dt(s){return s?String(s).replace('T',' ').slice(0,16):''}
+function scoreCls(st){return st==='Recommended'?'rec':st==='Needs Review'?'rev':st==='Blocked'?'blk':'not'}
+function scoreChip(score,st){return`<span class="score ${scoreCls(st)}">${score}</span>`}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('command'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='command';
+const TAB_MAP={command:'Command Center',marketplace:'Marketplace',opportunities:'Opportunities',employees:'Employees',applications:'Applications',assignments:'Assignments',compliance:'Compliance',executive:'Executive',config:'Config'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.textContent===TAB_MAP[tab]));
+  if(tab==='command')loadCommand();
+  else if(tab==='marketplace')initMarketplace();
+  else if(tab==='compliance')loadCompliance();
+  else if(tab==='executive')loadExecutive();
+  else if(tab==='config')showConfig(activeCfg);
+  else if(TABLES[tab]){fillRefSelects();loadTable(tab)}
+}
+
+/* ===== reference selects (facilities, roles) ===== */
+let _facilities=null,_roles=null;
+async function fillRefSelects(){
+  try{
+    if(!_facilities){const r=await api(`/kapps/${KAPP}/forms/facilities/submissions?include=values&limit=25`);_facilities=(r.submissions||[]).map(s=>v(s,'Facility Name')).filter(Boolean).sort()}
+    if(!_roles){const r=await api(`/kapps/${KAPP}/forms/employees/submissions?include=values&limit=25`);_roles=[...new Set((r.submissions||[]).map(s=>v(s,'Job Title')).filter(Boolean))].sort()}
+  }catch(e){}
+  ['f-opportunities-Requesting Location','f-employees-Home Location','f-departments-Location'].forEach(id=>fillSel(id,_facilities));
+  fillSel('f-employees-Job Title',_roles);
+}
+function fillSel(id,vals){const s=document.getElementById(id);if(!s||!vals||s.options.length>1)return;vals.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;s.appendChild(o)})}
+
+/* ===== generic table driver ===== */
+const TABLES={
+  opportunities:{filters:['Status','Urgency','Requesting Location'],search:['Opportunity Title','Needed Role','Requesting Department'],onRow:s=>`openOpportunity('${s.id}')`,row:s=>`<td>${esc(v(s,'Opportunity ID'))}</td><td style="font-weight:600">${esc(v(s,'Opportunity Title'))}</td><td>${esc(v(s,'Needed Role'))}</td><td>${esc(v(s,'Requesting Location'))}</td><td>${esc(v(s,'Shift Type'))}</td><td>${badge(v(s,'Urgency'))}</td><td>${esc(v(s,'Filled Count')||0)}/${esc(v(s,'Number of People Needed'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  employees:{filters:['Job Title','Home Location','Roaming Eligibility Status'],search:['First Name','Last Name'],onRow:s=>`openEmployee('${s.id}')`,row:s=>`<td>${esc(v(s,'Employee ID'))}</td><td style="font-weight:600">${esc(v(s,'First Name')+' '+v(s,'Last Name'))}</td><td>${esc(v(s,'Job Title'))}</td><td>${esc(v(s,'Home Location'))}</td><td>${esc(v(s,'Employment Type'))}</td><td>${fatiguePill(v(s,'Fatigue Risk Score'))}</td><td>${badge(v(s,'Roaming Eligibility Status'))}</td>`},
+  applications:{filters:['Application Status'],search:['Employee Name','Opportunity Title'],onRow:s=>`showEditForm('applications','${s.id}')`,row:s=>`<td>${esc(v(s,'Application ID'))}</td><td style="font-weight:600">${esc(v(s,'Employee Name'))}</td><td>${esc(v(s,'Opportunity Title'))}</td><td>${esc(v(s,'Match Score'))}</td><td>${esc(dt(v(s,'Applied Date')))}</td><td>${badge(v(s,'Application Status'))}</td>`},
+  assignments:{filters:['Assignment Status'],search:['Employee Name','Opportunity Title','Receiving Department'],onRow:s=>`showEditForm('assignments','${s.id}')`,row:s=>`<td>${esc(v(s,'Assignment ID'))}</td><td style="font-weight:600">${esc(v(s,'Employee Name'))}</td><td>${esc(v(s,'Opportunity Title'))}</td><td>${esc(v(s,'Receiving Department'))}</td><td>${esc(dt(v(s,'Start Date')))}</td><td>${esc(v(s,'Performance Rating'))}</td><td>${badge(v(s,'Assignment Status'))}</td>`},
+  departments:{filters:['Location'],search:['Department Name','Department Manager'],onRow:s=>`showEditForm('departments','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Department Name'))}</td><td>${esc(v(s,'Department Type'))}</td><td>${esc(v(s,'Location'))}</td><td>${esc(v(s,'Department Manager'))}</td><td>${esc(v(s,'Staffing Minimum'))}</td><td style="font-weight:600;color:${parseFloat(v(s,'Current Staffing'))<parseFloat(v(s,'Staffing Minimum'))?'var(--red)':'var(--green)'}">${esc(v(s,'Current Staffing'))}</td><td>${badge(v(s,'Can Release Staff'))}</td>`},
+  facilities:{filters:[],search:['Facility Name','City'],onRow:s=>`showEditForm('facilities','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Facility Name'))}</td><td>${esc(v(s,'Campus'))}</td><td>${esc(v(s,'City'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Contact Person'))}</td>`},
+  rules:{filters:['Rule Type','Severity'],search:['Rule Name','Applies To'],onRow:s=>`showEditForm('rules','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Rule Name'))}</td><td>${esc(v(s,'Rule Type'))}</td><td>${esc(v(s,'Applies To'))}</td><td>${esc(v(s,'Action'))}</td><td>${badge(v(s,'Severity'))}</td><td>${badge(v(s,'Active'))}</td>`},
+  matches:{filters:['Recommendation Status'],search:['Employee Name','Opportunity Title'],onRow:s=>`showEditForm('matches','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Employee Name'))}</td><td>${esc(v(s,'Opportunity Title'))}</td><td>${scoreChip(v(s,'Match Score'),v(s,'Recommendation Status'))}</td><td>${esc(v(s,'Certification Match'))}</td><td>${esc(v(s,'Skill Match'))}</td><td>${esc(v(s,'Location Match'))}</td><td>${badge(v(s,'Recommendation Status'))}</td>`},
+  availability:{filters:['Availability Type'],search:['Employee Name'],onRow:s=>`showEditForm('availability','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Employee Name'))}</td><td>${esc(v(s,'Date'))}</td><td>${esc(v(s,'Start Time'))}</td><td>${esc(v(s,'End Time'))}</td><td>${badge(v(s,'Availability Type'))}</td><td>${esc(v(s,'Source'))}</td>`},
+  alerts:{filters:['Status'],search:['Recipient','Message'],onRow:s=>`showEditForm('alerts','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Recipient'))}</td><td>${esc(v(s,'Alert Type'))}</td><td>${esc(v(s,'Channel'))}</td><td style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v(s,'Message'))}</td><td>${badge(v(s,'Status'))}</td>`},
+};
+const PAGERS={};
+function pager(k){if(!PAGERS[k])PAGERS[k]={page:1,keys:{1:null},hasNext:false};return PAGERS[k]}
+function loadTable(k){const p=pager(k);p.page=1;p.keys={1:null};fetchTable(k)}
+function pageTable(k,dir){const p=pager(k);if(dir>0&&p.hasNext)p.page++;else if(dir<0&&p.page>1)p.page--;else return;fetchTable(k)}
+async function fetchTable(k){
+  const cfg=TABLES[k],p=pager(k);
+  const colspan=(document.querySelectorAll('#b-'+k))?12:12;
+  try{
+    let kql='';
+    (cfg.filters||[]).forEach(f=>{const el=document.getElementById('f-'+k+'-'+f);const val=el&&el.value;if(val)kql=kql?`${kql} AND values[${f}]="${val.replace(/"/g,'\\"')}"`:`values[${f}]="${val.replace(/"/g,'\\"')}"`});
+    const last=p.keys[p.page];if(last)kql=kql?`(${kql}) AND createdAt<"${last}"`:`createdAt<"${last}"`;
+    let path=`/kapps/${KAPP}/forms/${k}/submissions?include=details,values&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];p.hasNext=!!res.nextPageToken;
+    if(p.hasNext&&data.length)p.keys[p.page+1]=data[data.length-1].createdAt;
+    const sEl=document.getElementById('s-'+k);const term=sEl?sEl.value.toLowerCase().trim():'';
+    if(term)data=data.filter(s=>(cfg.search||[]).some(f=>v(s,f).toLowerCase().includes(term)));
+    document.getElementById('b-'+k).innerHTML=data.length?data.map(s=>`<tr class="clickable-row" onclick="${cfg.onRow(s)}">${cfg.row(s)}</tr>`).join(''):`<tr><td colspan="12" class="empty">No records found</td></tr>`;
+    document.getElementById('p-'+k+'-info').textContent='Page '+p.page;
+    document.getElementById('p-'+k+'-prev').disabled=p.page<=1;
+    document.getElementById('p-'+k+'-next').disabled=!p.hasNext;
+  }catch(e){document.getElementById('b-'+k).innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`}
+}
+function fatiguePill(s){const n=parseFloat(s)||0;const c=n>=70?'var(--red)':n>=40?'var(--amber)':'var(--green)';return`<span style="font-weight:700;color:${c}">${esc(s)}</span>`}
+
+/* ===== CONFIG subtabs ===== */
+let activeCfg='departments';
+function showConfig(which){activeCfg=which;document.querySelectorAll('#tab-config .subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(which==='matches'?'match':which.slice(0,5))));document.querySelectorAll('.cfg-panel').forEach(p=>p.style.display='none');document.getElementById('cfg-'+which).style.display='block';fillRefSelects();loadTable(which)}
+
+/* ===== COMMAND CENTER ===== */
+async function loadCommand(){
+  document.getElementById('cc-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading command center…</div>';
+  ['cc-critical','cc-side','cc-flow','cc-risk'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{
+    const d=await sapi('/api/roamcare/dashboard');const k=d.kpis;
+    document.getElementById('cc-kpis').innerHTML=`
+      <div class="kpi accent"><div class="val">${k.openNeeds}</div><div class="label">Open Needs</div><div class="sub">${k.peopleNeeded} people needed</div></div>
+      <div class="kpi red"><div class="val">${k.criticalNeeds}</div><div class="label">Critical / Emergency</div></div>
+      <div class="kpi green"><div class="val">${k.fillRate}%</div><div class="label">Fill Rate</div></div>
+      <div class="kpi teal"><div class="val">${k.avgTimeToFill}d</div><div class="label">Avg Time to Fill</div></div>
+      <div class="kpi blue"><div class="val">${fmtN(k.availableQualified)}</div><div class="label">Available Qualified</div></div>
+      <div class="kpi amber"><div class="val">${k.nearDeadline}</div><div class="label">Near Deadline</div><div class="sub">≤3 days</div></div>
+      <div class="kpi red"><div class="val">${k.complianceBlocks}</div><div class="label">Compliance Blocks</div></div>
+      <div class="kpi amber"><div class="val">${k.expiringCreds}</div><div class="label">Expiring Creds</div></div>
+      <div class="kpi purple"><div class="val">${fmt$(k.agencyAvoided)}</div><div class="label">Agency Cost Avoided</div></div>
+      <div class="kpi teal"><div class="val">${k.activeAssignments}</div><div class="label">Active Assignments</div></div>`;
+
+    document.getElementById('cc-critical').innerHTML=`<div class="card"><h3>Critical &amp; Emergency Needs</h3>${d.criticalList.length?`<table><thead><tr><th>Opportunity</th><th>Facility</th><th>Impact</th><th>Need</th><th>Urgency</th></tr></thead><tbody>${d.criticalList.map(o=>`<tr class="clickable-row" onclick="openOpportunity('${o.id}')"><td style="font-weight:600">${esc(o.title)}</td><td>${esc(o.location)}</td><td>${badge(o.impact)}</td><td>${esc(o.filled||0)}/${esc(o.need)}</td><td>${badge(o.urgency)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No critical needs open 🎉</p>'}</div>`;
+
+    document.getElementById('cc-side').innerHTML=`
+      <div class="card"><h3>Closing Soon (apply deadline)</h3>${d.nearDeadline.length?`<table><thead><tr><th>Opportunity</th><th>Facility</th><th>Days Left</th></tr></thead><tbody>${d.nearDeadline.map(o=>`<tr><td style="font-weight:600">${esc(o.title)}</td><td>${esc(o.location)}</td><td style="font-weight:700;color:${o.daysLeft<=1?'var(--red)':'var(--amber)'}">${o.daysLeft}d</td></tr>`).join('')}</tbody></table>`:'<p class="empty">Nothing closing in the next 3 days</p>'}</div>
+      <div class="card"><h3>Top Shortage Roles</h3>${barList(d.shortageRoles.slice(0,6))}</div>`;
+
+    document.getElementById('cc-flow').innerHTML=`
+      <div class="card"><h3>Open Need by Facility</h3>${barList(d.byFacility)}</div>`;
+    document.getElementById('cc-risk').innerHTML=`
+      <div class="card"><h3>Departments Below Minimum Staffing</h3>${d.atRiskDepts.length?`<table><thead><tr><th>Department</th><th>Facility</th><th>Current</th><th>Minimum</th></tr></thead><tbody>${d.atRiskDepts.map(x=>`<tr><td style="font-weight:600">${esc(x.name)}</td><td>${esc(x.location)}</td><td style="color:var(--red);font-weight:700">${x.current}</td><td>${x.min}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">All departments at or above minimum</p>'}
+        <div class="grid-2" style="margin-top:14px"><div><h3>Releasing Most</h3>${barList(d.releasing,'var(--amber)')}</div><div><h3>Receiving Most</h3>${barList(d.receiving,'var(--teal)')}</div></div></div>`;
+  }catch(e){document.getElementById('cc-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+function barList(arr,color){if(!arr||!arr.length)return'<p class="empty">No data</p>';const max=Math.max(...arr.map(a=>a.count),1);return arr.map(a=>`<div class="bar-row"><span class="bl">${esc(a.name)}</span><div class="bt"><div class="bf" style="width:${Math.round(a.count/max*100)}%${color?';background:'+color:''}">${a.count>=max*0.18?a.count:''}</div></div><span class="bv">${a.count>=max*0.18?'':a.count}</span></div>`).join('')}
+
+/* ===== MARKETPLACE ===== */
+let _mkData=null;
+async function initMarketplace(){const sel=document.getElementById('mk-emp');if(sel.options.length===0){await loadMarketplace()}else{renderMarketplace()}}
+async function loadMarketplace(){
+  const sel=document.getElementById('mk-emp');const empId=sel.value||'';
+  document.getElementById('mk-grid').innerHTML='<div class="empty">Scoring opportunities…</div>';
+  try{
+    const d=await sapi('/api/roamcare/marketplace'+(empId?'?employee='+encodeURIComponent(empId):''));
+    if(sel.options.length===0&&d.employees){d.employees.filter(e=>e.eligibility==='Eligible').forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=`${e.name} · ${e.role} · ${e.location}`;sel.appendChild(o)});if(d.employee)sel.value=d.employee.id}
+    _mkData=d;renderMarketplace();
+  }catch(e){document.getElementById('mk-grid').innerHTML=`<p style="color:var(--red)">${esc(e.message)}</p>`}
+}
+function renderMarketplace(){
+  if(!_mkData)return;const d=_mkData;const f=document.getElementById('mk-filter').value;
+  const e=d.employee;
+  document.getElementById('mk-emp-banner').innerHTML=e?`<div class="banner ${e.eligibility==='Eligible'?'rec':'rev'}"><strong>${esc(e.name)}</strong> — ${esc(e.role)} at ${esc(e.location)} · Roaming eligibility: <strong>${esc(e.eligibility)}</strong>. Showing ${d.opportunities.length} open opportunities ranked by fit.</div>`:'';
+  let ops=d.opportunities;
+  if(f==='rec')ops=ops.filter(o=>o.status==='Recommended');
+  else if(f==='rev')ops=ops.filter(o=>o.status==='Needs Review');
+  else if(f==='elig')ops=ops.filter(o=>o.status!=='Blocked');
+  document.getElementById('mk-grid').innerHTML=ops.length?ops.map(o=>`
+    <div class="mk-card ${scoreCls(o.status)}" onclick="openOpportunity('${o.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="mt">${esc(o.title)}</div>${scoreChip(o.score,o.status)}</div>
+      <div class="mm">${esc(o.location)} · ${esc(o.shift)} · ${esc(o.duration)} ${o.premium?'· <strong style="color:var(--green)">'+esc(o.premium)+'</strong>':''}</div>
+      <div class="mh">${esc(o.headline)}</div>
+      <div class="mtags">${badge(o.urgency)}<span class="mk-tag">${esc(o.type)}</span>${o.missing&&o.missing.length?`<span class="mk-tag bad">${o.missing.length} gap${o.missing.length>1?'s':''}</span>`:''}${o.risks&&o.risks.length?`<span class="mk-tag warn">${o.risks.length} risk${o.risks.length>1?'s':''}</span>`:''}</div>
+    </div>`).join(''):'<p class="empty">No opportunities match this filter</p>';
+}
+
+/* ===== OPPORTUNITY 360 ===== */
+async function openOpportunity(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading opportunity…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/roamcare/opportunity/${id}`);const o=d.opportunity;
+    _oppDomId[v(o,'Opportunity ID')]=o.id;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(o,'Opportunity Title'))}</h2>
+      <div class="meta-row"><span>${esc(v(o,'Opportunity ID'))}</span><span>${esc(v(o,'Requesting Department'))} · ${esc(v(o,'Requesting Location'))}</span><span>Mgr: <strong>${esc(v(o,'Requesting Manager'))}</strong></span><span>${badge(v(o,'Status'))}</span><span>${badge(v(o,'Urgency'))}</span></div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--teal)">${esc(v(o,'Needed Role'))}</div><div class="l">Role</div></div>
+        <div class="stat-box"><div class="v">${esc(v(o,'Filled Count')||0)}/${esc(v(o,'Number of People Needed'))}</div><div class="l">Filled</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--amber)">${esc(v(o,'Shift Type'))}</div><div class="l">${esc(v(o,'Duration'))}</div></div>
+      </div>
+      <div class="meta-row"><span>Start: <strong>${esc(dt(v(o,'Start Date')))}</strong></span><span>Deadline: <strong>${esc(v(o,'Application Deadline'))}</strong></span><span>Patient Impact: ${badge(v(o,'Patient Care Impact'))}</span>${v(o,'Premium Pay Offered')?`<span>Premium: <strong style="color:var(--green)">${esc(v(o,'Premium Pay Offered'))}</strong></span>`:''}</div>
+      <div class="chips">${(v(o,'Required Certifications')||'—').split(',').filter(Boolean).map(c=>`<span class="chip">cert: ${esc(c.trim())}</span>`).join('')}${(v(o,'Required Skills')||'').split(',').filter(Boolean).map(c=>`<span class="chip">skill: ${esc(c.trim())}</span>`).join('')}</div>
+      ${v(o,'Description')?`<div class="banner not" style="margin-top:10px">${esc(v(o,'Description'))}</div>`:''}
+      <div class="subtabs" style="margin-top:14px">
+        <button class="subtab active" onclick="oppTab(this,'od-mt')">Match Recs (${d.matches.length})</button>
+        <button class="subtab" onclick="oppTab(this,'od-ap')">Applications (${d.applications.length})</button>
+        <button class="subtab" onclick="oppTab(this,'od-as')">Assignments (${d.assignments.length})</button>
+      </div>
+      <div id="od-mt" class="subtab-panel active">${tbl(d.matches,[['Employee',r=>esc(r.employee)],['Score',r=>scoreChip(r.score,r.status)],['Status',r=>badge(r.status)],['Why',r=>`<span style="font-size:11px;color:var(--gray)">${esc((r.reason||'').slice(0,90))}</span>`]])}</div>
+      <div id="od-ap" class="subtab-panel">${tbl(d.applications,[['App',r=>esc(r.appId)],['Employee',r=>esc(r.employee)],['Score',r=>esc(r.score)],['Applied',r=>esc(dt(r.applied))],['Status',r=>badge(r.status)]])}</div>
+      <div id="od-as" class="subtab-panel">${tbl(d.assignments,[['ID',r=>esc(r.asgId)],['Employee',r=>esc(r.employee)],['Start',r=>esc(dt(r.start))],['Rating',r=>esc(r.rating)],['Status',r=>badge(r.status)]])}</div>
+      <div class="modal-actions"><button class="btn-teal" onclick="openCandidates('${esc(v(o,'Opportunity ID'))}')">⚡ Run Auto-Match</button><button class="btn-outline" onclick="showEditForm('opportunities','${o.id}')">Edit</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+function oppTab(btn,id){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+/* ===== AUTO-MATCH (live scoring) ===== */
+async function openCandidates(oid){
+  document.getElementById('modal-inner').innerHTML='<h2>⚡ Scoring candidates…</h2>';
+  try{
+    const d=await sapi(`/api/roamcare/matches/${encodeURIComponent(oid)}`);const o=d.opportunity;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>⚡ Auto-Match — ${esc(o.title)}</h2>
+      <div class="meta-row"><span>${esc(o.role)} · ${esc(o.dept)} · ${esc(o.location)} · ${esc(o.shift)}</span></div>
+      <div class="chips">${o.requiredCerts.map(c=>`<span class="chip">cert: ${esc(c)}</span>`).join('')}${o.requiredSkills.map(c=>`<span class="chip">skill: ${esc(c)}</span>`).join('')}</div>
+      <p style="font-size:12px;color:var(--gray);margin:10px 0">${d.candidates.length} candidates evaluated. Ranked by explainable match score.</p>
+      ${d.candidates.slice(0,25).map(c=>`
+        <div class="card" style="padding:12px;margin-bottom:8px;border-left:4px solid ${c.status==='Recommended'?'var(--green)':c.status==='Needs Review'?'var(--amber)':c.status==='Blocked'?'var(--red)':'var(--gray)'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>${esc(c.name)}</strong> · <span style="color:var(--gray)">${esc(c.role)}, ${esc(c.home)}</span></div><div style="display:flex;gap:8px;align-items:center">${badge(c.status)} ${scoreChip(c.score,c.status)}</div></div>
+          <div style="font-size:12px;margin-top:6px">${esc(c.headline)}</div>
+          <div class="chips" style="margin-top:6px"><span class="chip">cert ${esc(c.certMatch)}</span><span class="chip">skill ${esc(c.skillMatch)}</span><span class="chip">${esc(c.locationMatch)}</span><span class="chip">fatigue ${esc(c.fatigueRisk)}</span>${c.overtimeRisk!=='None'?`<span class="chip">OT ${esc(c.overtimeRisk)}</span>`:''}</div>
+          ${c.missing&&c.missing.length?`<ul class="reasons" style="margin-top:6px">${c.missing.map(m=>`<li class="bad">${esc(m)}</li>`).join('')}</ul>`:''}
+        </div>`).join('')||'<p class="empty">No candidates found</p>'}
+      <div class="modal-actions"><button class="btn-outline" onclick="openOpportunity('${getOppDomId(oid)}')">← Back</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+let _oppDomId={};function getOppDomId(oid){return _oppDomId[oid]||''}
+
+/* ===== EMPLOYEE HISTORY ===== */
+async function openEmployee(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading employee…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/roamcare/employee/${id}`);const e=d.employee;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(e,'First Name')+' '+v(e,'Last Name'))}</h2>
+      <div class="meta-row"><span>${esc(v(e,'Employee ID'))}</span><span>${esc(v(e,'Job Title'))} · ${esc(v(e,'Job Family'))}</span><span>${esc(v(e,'Home Department'))} · ${esc(v(e,'Home Location'))}</span><span>${badge(v(e,'Employment Type'))}</span><span>${badge(v(e,'Roaming Eligibility Status'))}</span></div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--teal)">${s.totalAssignments}</div><div class="l">Assignments</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${s.avgRating??'—'}</div><div class="l">Avg Rating</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.fatigue>=70?'var(--red)':s.fatigue>=40?'var(--amber)':'var(--green)'}">${s.fatigue}</div><div class="l">Fatigue Risk</div></div>
+      </div>
+      <div class="meta-row"><span>Departments worked: ${s.departmentsWorked.map(x=>`<span class="chip">${esc(x)}</span>`).join(' ')||'—'}</span></div>
+      <div class="chips"><span class="chip">Float: ${esc(v(e,'Willing to Float'))}</span><span class="chip">OT: ${esc(v(e,'Willing to Work Overtime'))}</span><span class="chip">Nights: ${esc(v(e,'Willing to Work Nights'))}</span><span class="chip">Weekends: ${esc(v(e,'Willing to Work Weekends'))}</span><span class="chip">Union: ${esc(v(e,'Union Status'))}</span></div>
+      <div class="subtabs" style="margin-top:14px">
+        <button class="subtab active" onclick="oppTab(this,'ed-as')">Roaming History (${d.assignments.length})</button>
+        <button class="subtab" onclick="oppTab(this,'ed-cr')">Credentials (${d.credentials.length})</button>
+        <button class="subtab" onclick="oppTab(this,'ed-ap')">Applications (${d.applications.length})</button>
+      </div>
+      <div id="ed-as" class="subtab-panel active">${tbl(d.assignments,[['Opportunity',r=>esc(r.title)],['Dept',r=>esc(r.dept)],['Start',r=>esc(dt(r.start))],['Rating',r=>esc(r.rating)],['Status',r=>badge(r.status)]])}</div>
+      <div id="ed-cr" class="subtab-panel">${tbl(d.credentials,[['Credential',r=>esc(r.name)],['Type',r=>esc(r.type)],['Expires',r=>esc(r.expires)+(r.expiresIn!=null&&r.expiresIn<30?` <span style="color:${r.expiresIn<0?'var(--red)':'var(--amber)'};font-weight:700">(${r.expiresIn<0?'expired':r.expiresIn+'d'})</span>`:'')],['Status',r=>badge(r.status)]])}</div>
+      <div id="ed-ap" class="subtab-panel">${tbl(d.applications,[['Opportunity',r=>esc(r.title)],['Score',r=>esc(r.score)],['Applied',r=>esc(dt(r.applied))],['Status',r=>badge(r.status)]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('employees','${e.id}')">Edit Profile</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+/* ===== COMPLIANCE ===== */
+async function loadCompliance(){
+  document.getElementById('cm-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  ['cm-expiring','cm-queue','cm-blocked'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{
+    const d=await sapi('/api/roamcare/compliance');const k=d.kpis;
+    document.getElementById('cm-kpis').innerHTML=`
+      <div class="kpi red"><div class="val">${k.expired}</div><div class="label">Expired Credentials</div></div>
+      <div class="kpi amber"><div class="val">${k.expiring}</div><div class="label">Expiring ≤45d</div></div>
+      <div class="kpi blue"><div class="val">${k.pendingReview}</div><div class="label">Pending Review</div></div>
+      <div class="kpi red"><div class="val">${k.blocked}</div><div class="label">Blocked Matches</div></div>`;
+    document.getElementById('cm-expiring').innerHTML=`<div class="card"><h3>Credential Expirations</h3>${d.expiring.length?`<table><thead><tr><th>Employee</th><th>Credential</th><th>Expires</th><th>Status</th></tr></thead><tbody>${d.expiring.slice(0,30).map(x=>`<tr><td style="font-weight:600">${esc(x.employee)}</td><td>${esc(x.credential)}</td><td style="color:${x.daysLeft<0?'var(--red)':x.daysLeft<=14?'var(--amber)':'inherit'};font-weight:600">${esc(x.expires)} ${x.daysLeft!=null?`(${x.daysLeft<0?'expired':x.daysLeft+'d'})`:''}</td><td>${badge(x.status)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No expiring credentials</p>'}</div>`;
+    document.getElementById('cm-queue').innerHTML=`<div class="card"><h3>Compliance Review Queue</h3>${d.queue.length?`<table><thead><tr><th>Employee</th><th>Opportunity</th><th>Status</th></tr></thead><tbody>${d.queue.map(q=>`<tr><td style="font-weight:600">${esc(q.employee)}</td><td>${esc(q.opportunity)}</td><td>${badge(q.status)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">Queue clear</p>'}</div>`;
+    document.getElementById('cm-blocked').innerHTML=`<div class="card"><h3>Blocked Assignments — Missing Requirements</h3>${d.blocked.length?`<table><thead><tr><th>Employee</th><th>Opportunity</th><th>Blocking Requirement</th></tr></thead><tbody>${d.blocked.slice(0,40).map(b=>`<tr><td style="font-weight:600">${esc(b.employee)}</td><td>${esc(b.opportunity)}</td><td style="color:var(--red)">${esc(b.missing)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No blocked assignments</p>'}</div>`;
+  }catch(e){document.getElementById('cm-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+
+/* ===== EXECUTIVE ===== */
+async function loadExecutive(){
+  document.getElementById('ex-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  ['ex-c1','ex-c2','ex-c3','ex-c4'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{
+    const d=await sapi('/api/roamcare/executive');const k=d.kpis;
+    document.getElementById('ex-kpis').innerHTML=`
+      <div class="kpi accent"><div class="val">${k.totalOpportunities}</div><div class="label">Opportunities</div><div class="sub">${k.filled} filled</div></div>
+      <div class="kpi green"><div class="val">${k.fillRate}%</div><div class="label">Fill Rate</div></div>
+      <div class="kpi teal"><div class="val">${k.criticalFillRate}%</div><div class="label">Critical Fill Rate</div></div>
+      <div class="kpi purple"><div class="val">${fmt$(k.agencyAvoided)}</div><div class="label">Agency Labor Avoided</div></div>
+      <div class="kpi green"><div class="val">${fmt$(k.estimatedSavings)}</div><div class="label">Est. Net Savings</div></div>
+      <div class="kpi blue"><div class="val">${k.participationRate}%</div><div class="label">Participation</div></div>
+      <div class="kpi amber"><div class="val">${k.overtimeHours}</div><div class="label">Overtime Hours</div></div>
+      <div class="kpi red"><div class="val">${k.highFatigue}</div><div class="label">High Burnout Risk</div></div>
+      <div class="kpi teal"><div class="val">${k.crossTrained}</div><div class="label">Cross-Trained Staff</div></div>
+      <div class="kpi accent"><div class="val">${fmtN(k.coveredHours)}</div><div class="label">Internal Hours Covered</div></div>`;
+    document.getElementById('ex-c1').innerHTML=`<div class="card"><h3>Fill Rate Trend (weeks ago → now)</h3>${d.fillTrend.length?d.fillTrend.slice().reverse().map(t=>`<div class="bar-row"><span class="bl">${esc(t.label)}</span><div class="bt"><div class="bf" style="width:${t.rate}%;background:${t.rate>=70?'var(--green)':t.rate>=40?'var(--amber)':'var(--red)'}">${t.rate}%</div></div></div>`).join(''):'<p class="empty">No data</p>'}</div>`;
+    document.getElementById('ex-c2').innerHTML=`<div class="card"><h3>Demand by Facility</h3>${barList(d.demandByFacility)}</div>`;
+    document.getElementById('ex-c3').innerHTML=`<div class="card"><h3>Top Shortage Roles (demand)</h3>${barList(d.demandByRole.slice(0,8))}</div>`;
+    document.getElementById('ex-c4').innerHTML=`<div class="card"><h3>Participation by Employment Type</h3><table><thead><tr><th>Type</th><th>Staff</th><th>Participating</th><th>Rate</th></tr></thead><tbody>${d.participationByType.map(t=>`<tr><td style="font-weight:600">${esc(t.type)}</td><td>${t.total}</td><td>${t.participating}</td><td style="font-weight:700;color:var(--teal)">${t.rate}%</td></tr>`).join('')}</tbody></table>${d.blockReasons.length?`<h3 style="margin-top:16px">Compliance Block Reasons</h3>${barList(d.blockReasons,'var(--red)')}`:''}</div>`;
+  }catch(e){document.getElementById('ex-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+
+/* ===== GENERIC FORM MODAL ===== */
+const FAC="Riverside Medical Center,Lakeshore Children's Hospital,Summit Heart & Vascular Institute,Northgate Community Hospital,Westview Behavioral Health";
+const ROLEOPTS='Registered Nurse,CNA,Respiratory Therapist,Radiology Tech,Pharmacist,Pharmacy Tech,Patient Access Representative,Transport Aide,Environmental Services Tech,Security Officer,Unit Coordinator,Medical Assistant';
+const SHIFT='Day,Evening,Night,Weekend,Holiday,On-call';
+const FORM_DEFS={
+  opportunities:{title:'Opportunity',fields:[{r:['Opportunity ID','Opportunity Title']},{r:['Opportunity Type|select:Open shift,Urgent coverage,Surge staffing,Float assignment,Internal gig,Training opportunity,Development rotation,Special project,Emergency response,Cross-campus support','Status|select:Draft,Pending Approval,Open,Matched,Offered,In Progress,Completed,Filled,Cancelled,Expired']},{r:['Needed Role|select:'+ROLEOPTS,'Job Family']},{r:['Requesting Department','Requesting Location|select:'+FAC]},{r:['Requesting Manager','Number of People Needed|number']},{r:['Required Skills','Preferred Skills']},{r:['Required Certifications','Required Licenses']},{r:['Start Date|datetime','End Date|datetime']},{r:['Duration','Shift Type|select:'+SHIFT]},{r:['Urgency|select:Routine,High,Critical,Emergency','Patient Care Impact|select:Low,Medium,High,Critical']},{r:['Premium Pay Offered','Overtime Allowed|select:Yes,No']},{r:['Orientation Required|select:Yes,No','Badge Access Required|select:Yes,No']},{r:['Budget Approval Required|select:Yes,No','Compliance Review Required|select:Yes,No']},{r:['Application Deadline|date','Auto-Match Enabled|select:Yes,No']},{r:['Filled Count|number','Cost Center']},{r:['Created By','Created Date|date']},'Description|textarea','Instructions|textarea','Notes|textarea']},
+  employees:{title:'Employee',fields:[{r:['Employee ID','Job Title|select:'+ROLEOPTS]},{r:['First Name','Last Name']},{r:['Preferred Name','Job Family']},{r:['Email','Phone']},{r:['Home Department','Home Location|select:'+FAC]},{r:['Primary Manager','Employment Type|select:Full-time,Part-time,Per-diem,Contractor,Temporary,Retired pool']},{r:['FTE','Status|select:Active,Leave,Suspended from roaming,Terminated']},{r:['Union Status|select:Union,Non-union','Bargaining Unit']},{r:['Seniority Date|date','Hire Date|date']},{r:['Primary Skills','Secondary Skills']},{r:['Certifications','Licenses']},{r:['Languages','Preferred Locations']},{r:['Travel Radius','Roaming Eligibility Status|select:Eligible,Pending Review,Suspended from roaming']},{r:['Willing to Float|select:Yes,No','Willing to Work Overtime|select:Yes,No']},{r:['Willing to Work Weekends|select:Yes,No','Willing to Work Nights|select:Yes,No']},{r:['Development Interests','Fatigue Risk Score|number']},{r:['Last Roaming Assignment Date|date','']},'Notes|textarea']},
+  applications:{title:'Application',fields:[{r:['Application ID','Application Status|select:Interested,Applied,Awaiting Home Manager Approval,Awaiting Receiving Manager Approval,Awaiting Compliance Review,Approved,Offered,Accepted,Declined,Withdrawn,Rejected,Completed']},{r:['Employee','Employee Name']},{r:['Opportunity','Opportunity Title']},{r:['Match Score|number','Applied Date|date']},{r:['Approval Date|date','Offer Date|date']},{r:['Acceptance Date|date','Decline Reason']},'Employee Message|textarea','Manager Comments|textarea','Compliance Comments|textarea']},
+  assignments:{title:'Assignment',fields:[{r:['Assignment ID','Assignment Status|select:Scheduled,Confirmed,Checked In,In Progress,Completed,No Show,Cancelled']},{r:['Employee','Employee Name']},{r:['Opportunity','Opportunity Title']},{r:['Home Department','Receiving Department']},{r:['Receiving Location|select:'+FAC,'Cost Center']},{r:['Start Date|datetime','End Date|datetime']},{r:['Actual Start Time|datetime','Actual End Time|datetime']},{r:['Pay Code|select:STANDARD,PREMIUM','Premium Pay']},{r:['Hours Worked|number','Overtime Hours|number']},{r:['Manager Confirmation|select:Confirmed,Pending','Employee Confirmation|select:Confirmed,Pending']},{r:['Performance Rating|select:5 - Excellent,4 - Strong,3 - Met expectations,2 - Below,1 - Poor','Issue Reported|select:Yes,No']},{r:['Follow-up Required|select:Yes,No','']},'Completion Notes|textarea']},
+  departments:{title:'Department',fields:[{r:['Department Name','Department Type|select:Clinical,Administrative,Support Services,Emergency,Specialty']},{r:['Cost Center','Location|select:'+FAC]},{r:['Department Manager','Backup Manager']},{r:['Required Skills','Required Certifications']},{r:['Allowed Floating Roles','']},{r:['Can Release Staff|select:Yes,No','Can Receive Staff|select:Yes,No']},{r:['Staffing Minimum|number','Current Staffing|number']},'Notes|textarea']},
+  facilities:{title:'Facility',fields:[{r:['Facility Name','Campus']},'Address',{r:['City','State']},{r:['Region','Time Zone']},'Contact Person','Parking Instructions|textarea','Badge Access Requirements|textarea','Orientation Requirements|textarea','Notes|textarea']},
+  rules:{title:'Rule',fields:[{r:['Rule Name','Rule Type|select:Eligibility,Credentialing,Scheduling,Overtime,Fatigue,Union,Manager Approval,Location,Cost Center,Compliance,Emergency']},{r:['Applies To','Action|select:Allow,Warn,Require approval,Block']},{r:['Severity|select:Info,Warning,Block','Active|select:Yes,No']},{r:['Effective Date|date','Expiration Date|date']},'Owner','Condition|textarea','Description|textarea','Notes|textarea']},
+  matches:{title:'Match Recommendation',fields:[{r:['Employee','Employee Name']},{r:['Opportunity','Opportunity Title']},{r:['Match Score|number','Recommendation Status|select:Recommended,Needs Review,Not Recommended,Blocked']},{r:['Certification Match','Skill Match']},{r:['Location Match','Schedule Match']},{r:['Overtime Risk','Fatigue Risk']},{r:['Generated Date|date','']},'Match Reason|textarea','Missing Requirements|textarea','Risk Flags|textarea']},
+  availability:{title:'Availability',fields:[{r:['Employee','Employee Name']},{r:['Date|date','Availability Type|select:Available,Preferred,Unavailable,On-call,Already Scheduled,PTO,Leave']},{r:['Start Time','End Time']},{r:['Source|select:Employee entered,HR system,Scheduling system,Manager entered','']},'Notes|textarea']},
+  alerts:{title:'Alert',fields:[{r:['Recipient','Alert Type|select:Opportunity Available,Approval Needed,Offer Made,Assignment Reminder,Credential Expiring,Urgent Staffing Need,Compliance Block,Manager Escalation']},{r:['Channel|select:Email,SMS,In-app,Microsoft Teams','Status|select:Pending,Sent,Read,Failed']},{r:['Related Opportunity','Related Assignment']},{r:['Created Date|date','Sent Date|date']},'Message|textarea']},
+};
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string')html+=renderField(field,sub);
+    else if(field.r)html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>';
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${formSlug}','${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show');
+}
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;
+  if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea')input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`;
+  else if(type==='date')input=`<input id="${id}" type="date" value="${esc(val)}">`;
+  else if(type==='datetime')input=`<input id="${id}" type="text" placeholder="YYYY-MM-DD HH:MM" value="${esc(val)}">`;
+  else if(type==='number')input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`;
+  else input=`<input id="${id}" type="text" value="${esc(val)}">`;
+  return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const el=document.getElementById('m-'+name.replace(/\s+/g,'-').toLowerCase());if(el)vals[name]=el.value}}
+  try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_facilities=null;_roles=null;_mkData=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(formSlug,id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_mkData=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+function refreshActive(formSlug){if(TABLES[formSlug]&&document.getElementById('tab-'+formSlug)?.classList.contains('active'))loadTable(formSlug);else if(document.getElementById('tab-config').classList.contains('active')&&['departments','facilities','rules','matches','availability','alerts'].includes(formSlug))loadTable(formSlug);else switchTab(activeTab)}
+</script>
+</body>
+</html>
