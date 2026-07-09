@@ -1,0 +1,589 @@
+{
+  "name": "ServiceNow",
+  "slug": "servicenow",
+  "description": "ServiceNow-equivalent data model on the Kinetic Platform: ITSM, CSM, HRSD, CMDB, GRC, SecOps, Catalog, SPM, Procurement, Knowledge, Legal, EA and ITOM business records. Backs the Kinetic-rewritten Happy Platform Skills.",
+  "category": "Enterprise",
+  "icon": "server",
+  "color": "#1B5E7C",
+  "bg": "#E1F0F5",
+  "forms": [
+    {
+      "slug": "incident",
+      "name": "Incident",
+      "description": "ITSM incident records (table: incident)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Priority" }, { "name": "Impact" }, { "name": "Urgency" }, { "name": "Category" },
+        { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Caller" }, { "name": "CMDB CI" },
+        { "name": "Opened At" }, { "name": "Resolved At" }, { "name": "Resolution Code" }, { "name": "Close Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Priority]", "values[Category]", "values[Assignment Group]", "values[Assigned To]"],
+        "compound": [["values[State]", "values[Assignment Group]"], ["values[State]", "values[Priority]"]]
+      }
+    },
+    {
+      "slug": "problem",
+      "name": "Problem",
+      "description": "ITSM problem records (table: problem)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Priority" }, { "name": "Category" }, { "name": "Assignment Group" }, { "name": "Assigned To" },
+        { "name": "CMDB CI" }, { "name": "Cause Notes", "rows": 2 }, { "name": "Fix Notes", "rows": 2 }, { "name": "Workaround", "rows": 2 },
+        { "name": "Known Error" }, { "name": "Opened At" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Priority]", "values[Category]", "values[Assignment Group]"],
+        "compound": [["values[State]", "values[Assignment Group]"]]
+      }
+    },
+    {
+      "slug": "change-request",
+      "name": "Change Request",
+      "description": "ITSM change management records (table: change_request)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "Type" }, { "name": "State" }, { "name": "Phase" }, { "name": "Priority" }, { "name": "Risk" },
+        { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "CMDB CI" },
+        { "name": "Implementation Plan", "rows": 2 }, { "name": "Backout Plan", "rows": 2 }, { "name": "Test Plan", "rows": 2 },
+        { "name": "Planned Start" }, { "name": "Planned End" }, { "name": "Approval" }, { "name": "Close Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Type]", "values[Priority]", "values[Risk]", "values[Assignment Group]"],
+        "compound": [["values[State]", "values[Type]"], ["values[State]", "values[Risk]"]]
+      }
+    },
+    {
+      "slug": "change-task",
+      "name": "Change Task",
+      "description": "Tasks within a change request (table: change_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Parent" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "known-error",
+      "name": "Known Error",
+      "description": "Known error catalog (table: known_error)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "CMDB CI" }, { "name": "Workaround", "rows": 2 }, { "name": "Symptoms And Cause", "rows": 2 }, { "name": "State" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[CMDB CI]"] }
+    },
+    {
+      "slug": "incident-task",
+      "name": "Incident Task",
+      "description": "Tasks within an incident (table: incident_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Parent" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "task-sla",
+      "name": "Task SLA",
+      "description": "SLA tracking attached to tasks (table: task_sla)",
+      "submissionLabelExpression": "${values('Task')} - ${values('SLA')}",
+      "fields": [
+        { "name": "Task" }, { "name": "SLA" }, { "name": "Stage" }, { "name": "State" }, { "name": "Has Breached" },
+        { "name": "Percentage" }, { "name": "Business Percentage" }, { "name": "Start Time" }, { "name": "Planned End Time" }
+      ],
+      "indexes": { "single": ["values[Task]", "values[Stage]", "values[Has Breached]", "values[State]"] }
+    },
+    {
+      "slug": "case",
+      "name": "Case",
+      "description": "CSM customer service cases (table: sn_customerservice_case)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Priority" }, { "name": "Urgency" }, { "name": "Impact" }, { "name": "Category" },
+        { "name": "Contact" }, { "name": "Account" }, { "name": "Product" }, { "name": "Asset" },
+        { "name": "Assigned To" }, { "name": "Assignment Group" }, { "name": "Opened At" }, { "name": "Resolved At" },
+        { "name": "Resolution Code" }, { "name": "Escalation" }, { "name": "Severity" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Priority]", "values[Account]", "values[Assignment Group]", "values[Escalation]"],
+        "compound": [["values[State]", "values[Account]"], ["values[State]", "values[Priority]"]]
+      }
+    },
+    {
+      "slug": "case-task",
+      "name": "Case Task",
+      "description": "Tasks within a CSM case (table: sn_customerservice_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Parent" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "interaction",
+      "name": "Interaction",
+      "description": "Customer interactions across channels (table: interaction)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Type" }, { "name": "Channel" }, { "name": "State" }, { "name": "Direction" },
+        { "name": "Duration" }, { "name": "Parent" }, { "name": "Assigned To" }, { "name": "Opened At" }, { "name": "Closed At" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Channel]", "values[Parent]"] }
+    },
+    {
+      "slug": "customer-account",
+      "name": "Customer Account",
+      "description": "Customer account master (table: customer_account)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Number" }, { "name": "Account Code" }, { "name": "Industry" },
+        { "name": "Customer Tier" }, { "name": "Phone" }, { "name": "City" }, { "name": "State" }, { "name": "Country" }, { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Account Code]", "values[Customer Tier]", "values[Industry]"] }
+    },
+    {
+      "slug": "customer-contact",
+      "name": "Customer Contact",
+      "description": "Customer contacts (table: customer_contact)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Email" }, { "name": "Phone" }, { "name": "Title" },
+        { "name": "Account" }, { "name": "Timezone" }, { "name": "Preferred Contact Method" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Email]", "values[Account]"] }
+    },
+    {
+      "slug": "hr-case",
+      "name": "HR Case",
+      "description": "HRSD HR cases (table: sn_hr_core_case)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Priority" }, { "name": "HR Service" }, { "name": "Category" },
+        { "name": "Assigned To" }, { "name": "Assignment Group" }, { "name": "Subject Person" },
+        { "name": "Opened At" }, { "name": "Opened By" }, { "name": "Closed At" }, { "name": "Contact Type" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Priority]", "values[HR Service]", "values[Assignment Group]"],
+        "compound": [["values[State]", "values[Assignment Group]"]]
+      }
+    },
+    {
+      "slug": "hr-task",
+      "name": "HR Task",
+      "description": "Tasks within an HR case (table: sn_hr_core_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Parent" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "hr-profile",
+      "name": "HR Profile",
+      "description": "Employee HR profile (table: sn_hr_core_profile)",
+      "submissionLabelExpression": "${values('User')}",
+      "fields": [
+        { "name": "User", "required": true }, { "name": "Department" }, { "name": "Location" }, { "name": "Employment Type" },
+        { "name": "Hire Date" }, { "name": "Manager" }, { "name": "Job Title" }, { "name": "Cost Center" }
+      ],
+      "indexes": { "single": ["values[User]", "values[Department]", "values[Manager]"] }
+    },
+    {
+      "slug": "hr-service",
+      "name": "HR Service",
+      "description": "HR service type configuration (table: sn_hr_le_case_type)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Description", "rows": 2 }, { "name": "HR Service Center" },
+        { "name": "Fulfillment Group" }, { "name": "SLA" }, { "name": "Active" }, { "name": "Category" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Category]", "values[Active]"] }
+    },
+    {
+      "slug": "ci",
+      "name": "Configuration Item",
+      "description": "Base CMDB configuration item (table: cmdb_ci)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Class" }, { "name": "Operational Status" }, { "name": "Install Status" },
+        { "name": "Environment" }, { "name": "Location" }, { "name": "Department" }, { "name": "Support Group" },
+        { "name": "Managed By" }, { "name": "Serial Number" }, { "name": "Asset Tag" }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[Class]", "values[Operational Status]", "values[Environment]", "values[Support Group]"],
+        "compound": [["values[Class]", "values[Operational Status]"]]
+      }
+    },
+    {
+      "slug": "ci-server",
+      "name": "Server CI",
+      "description": "Server configuration items (table: cmdb_ci_server)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "IP Address" }, { "name": "FQDN" }, { "name": "OS" }, { "name": "OS Version" },
+        { "name": "CPU Count" }, { "name": "RAM" }, { "name": "Disk Space" }, { "name": "Serial Number" }, { "name": "Asset Tag" },
+        { "name": "Operational Status" }, { "name": "Environment" }, { "name": "Support Group" }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[OS]", "values[Operational Status]", "values[Environment]", "values[Support Group]"],
+        "compound": [["values[Environment]", "values[Operational Status]"]]
+      }
+    },
+    {
+      "slug": "ci-service",
+      "name": "Business Service CI",
+      "description": "Business/technical service CIs (table: cmdb_ci_service)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Operational Status" }, { "name": "Environment" },
+        { "name": "Business Criticality" }, { "name": "Owned By" }, { "name": "Support Group" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Operational Status]", "values[Business Criticality]", "values[Support Group]"] }
+    },
+    {
+      "slug": "ci-relationship",
+      "name": "CI Relationship",
+      "description": "Relationships between configuration items (table: cmdb_rel_ci)",
+      "submissionLabelExpression": "${values('Parent')} ${values('Type')} ${values('Child')}",
+      "fields": [
+        { "name": "Parent", "required": true }, { "name": "Child", "required": true }, { "name": "Type" }
+      ],
+      "indexes": {
+        "single": ["values[Parent]", "values[Child]", "values[Type]"],
+        "compound": [["values[Parent]", "values[Type]"]]
+      }
+    },
+    {
+      "slug": "risk",
+      "name": "Risk",
+      "description": "GRC risk register (table: sn_grc_risk)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Risk Score" }, { "name": "Inherent Risk" }, { "name": "Residual Risk" },
+        { "name": "Likelihood" }, { "name": "Impact" }, { "name": "Treatment" }, { "name": "Category" }, { "name": "Owner" }, { "name": "Profile" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Category]", "values[Residual Risk]", "values[Owner]"],
+        "compound": [["values[State]", "values[Category]"]]
+      }
+    },
+    {
+      "slug": "grc-issue",
+      "name": "GRC Issue",
+      "description": "GRC issues (table: sn_grc_issue)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Category" }, { "name": "Priority" }, { "name": "Owner" }, { "name": "Source" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Category]", "values[Priority]", "values[Owner]"] }
+    },
+    {
+      "slug": "compliance-control",
+      "name": "Compliance Control",
+      "description": "Compliance controls (table: sn_compliance_control)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Description", "rows": 2 }, { "name": "State" }, { "name": "Profile" },
+        { "name": "Control Type" }, { "name": "Control Owner" }, { "name": "Test Method" }, { "name": "Risk" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[State]", "values[Control Type]", "values[Control Owner]"] }
+    },
+    {
+      "slug": "risk-event",
+      "name": "Risk Event",
+      "description": "Realized risk events (table: sn_risk_event)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Event Date" },
+        { "name": "Impact Amount" }, { "name": "Risk" }, { "name": "Category" }, { "name": "State" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Category]", "values[Risk]"] }
+    },
+    {
+      "slug": "security-incident",
+      "name": "Security Incident",
+      "description": "SecOps security incidents (table: sn_si_incident)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "Category" }, { "name": "Subcategory" }, { "name": "Priority" }, { "name": "State" }, { "name": "Severity" },
+        { "name": "Risk Score" }, { "name": "Attack Vector" }, { "name": "Kill Chain Phase" }, { "name": "Business Criticality" },
+        { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Opened At" }, { "name": "Resolved At" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Priority]", "values[Severity]", "values[Category]", "values[Assignment Group]"],
+        "compound": [["values[State]", "values[Priority]"]]
+      }
+    },
+    {
+      "slug": "security-task",
+      "name": "Security Task",
+      "description": "Security incident response tasks (table: sn_si_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Security Incident" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }, { "name": "Task Type" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Security Incident]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "observable",
+      "name": "Observable",
+      "description": "Threat intelligence observables / IOCs (table: sn_ti_observable)",
+      "submissionLabelExpression": "${values('Type')}: ${values('Value')}",
+      "fields": [
+        { "name": "Type" }, { "name": "Value", "required": true }, { "name": "Source" }, { "name": "Confidence" },
+        { "name": "Threat Score" }, { "name": "First Seen" }, { "name": "Last Seen" }
+      ],
+      "indexes": { "single": ["values[Type]", "values[Value]", "values[Source]"] }
+    },
+    {
+      "slug": "vulnerable-item",
+      "name": "Vulnerable Item",
+      "description": "Vulnerable items (table: sn_vul_vulnerable_item)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Vulnerability" }, { "name": "CMDB CI" }, { "name": "State" }, { "name": "Risk Score" },
+        { "name": "CVSS Score" }, { "name": "First Found" }, { "name": "Assignment Group" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[CMDB CI]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "catalog-item",
+      "name": "Catalog Item",
+      "description": "Service catalog item definitions (table: sc_cat_item)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Short Description" }, { "name": "Description", "rows": 2 },
+        { "name": "Category" }, { "name": "Price" }, { "name": "Workflow" }, { "name": "Active" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Category]", "values[Active]"] }
+    },
+    {
+      "slug": "catalog-request",
+      "name": "Catalog Request",
+      "description": "Service catalog requests (table: sc_request)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Requested For" }, { "name": "Stage" }, { "name": "Approval" },
+        { "name": "Request State" }, { "name": "Opened At" }, { "name": "Closed At" }, { "name": "Total" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[Request State]", "values[Stage]", "values[Approval]", "values[Requested For]"] }
+    },
+    {
+      "slug": "requested-item",
+      "name": "Requested Item",
+      "description": "Requested catalog items / RITM (table: sc_req_item)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Request" }, { "name": "Catalog Item" }, { "name": "Stage" }, { "name": "State" },
+        { "name": "Requested For" }, { "name": "Opened By" }, { "name": "Quantity" }, { "name": "Price" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Request]", "values[Catalog Item]", "values[Stage]"] }
+    },
+    {
+      "slug": "catalog-task",
+      "name": "Catalog Task",
+      "description": "Catalog fulfillment tasks (table: sc_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Request Item" }, { "name": "Assignment Group" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Request Item]", "values[Assignment Group]"] }
+    },
+    {
+      "slug": "project",
+      "name": "Project",
+      "description": "SPM/PPM projects (table: pm_project)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" }, { "name": "Phase" },
+        { "name": "Percent Complete" }, { "name": "Start Date" }, { "name": "End Date" }, { "name": "Budget Cost" },
+        { "name": "Actual Cost" }, { "name": "Project Manager" }, { "name": "Health" }, { "name": "Risk" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[State]", "values[Phase]", "values[Health]", "values[Project Manager]"],
+        "compound": [["values[State]", "values[Health]"]]
+      }
+    },
+    {
+      "slug": "project-task",
+      "name": "Project Task",
+      "description": "Project tasks (table: pm_project_task)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" }, { "name": "Percent Complete" },
+        { "name": "Start Date" }, { "name": "End Date" }, { "name": "Assigned To" }, { "name": "Priority" }, { "name": "Milestone" }, { "name": "Parent" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]", "values[Assigned To]", "values[Milestone]"] }
+    },
+    {
+      "slug": "story",
+      "name": "Story",
+      "description": "Agile user stories (table: rm_story)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Story Points" }, { "name": "State" },
+        { "name": "Sprint" }, { "name": "Assigned To" }, { "name": "Acceptance Criteria", "rows": 2 }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Sprint]", "values[Assigned To]"] }
+    },
+    {
+      "slug": "sprint",
+      "name": "Sprint",
+      "description": "Agile sprints (table: rm_sprint)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Start Date" },
+        { "name": "End Date" }, { "name": "State" }, { "name": "Story Points" }, { "name": "Capacity" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]"] }
+    },
+    {
+      "slug": "purchase-order",
+      "name": "Purchase Order",
+      "description": "Procurement purchase orders (table: proc_po)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Vendor" }, { "name": "Order Date" }, { "name": "Total Amount" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Vendor]"] }
+    },
+    {
+      "slug": "po-line-item",
+      "name": "PO Line Item",
+      "description": "Purchase order line items (table: proc_po_item)",
+      "submissionLabelExpression": "${values('Purchase Order')} - ${values('Item')}",
+      "fields": [
+        { "name": "Purchase Order" }, { "name": "Item" }, { "name": "Quantity" }, { "name": "Unit Price" }, { "name": "State" }
+      ],
+      "indexes": { "single": ["values[Purchase Order]", "values[State]"] }
+    },
+    {
+      "slug": "kb-article",
+      "name": "Knowledge Article",
+      "description": "Knowledge articles (table: kb_knowledge)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Text", "rows": 4 },
+        { "name": "Category" }, { "name": "Knowledge Base" }, { "name": "Workflow State" }, { "name": "Rating" },
+        { "name": "View Count" }, { "name": "Valid To" }, { "name": "Active" }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[Category]", "values[Knowledge Base]", "values[Workflow State]", "values[Active]"],
+        "compound": [["values[Knowledge Base]", "values[Workflow State]"]]
+      }
+    },
+    {
+      "slug": "kb-category",
+      "name": "Knowledge Category",
+      "description": "Knowledge categories (table: kb_category)",
+      "submissionLabelExpression": "${values('Label')}",
+      "fields": [
+        { "name": "Label", "required": true }, { "name": "Parent" }, { "name": "Knowledge Base" }, { "name": "Full Category" }
+      ],
+      "indexes": { "single": ["values[Label]", "values[Knowledge Base]", "values[Parent]"] }
+    },
+    {
+      "slug": "legal-matter",
+      "name": "Legal Matter",
+      "description": "Legal matters (table: sn_legal_matter)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Description", "rows": 3 },
+        { "name": "State" }, { "name": "Priority" }, { "name": "Legal Team" }, { "name": "Category" }, { "name": "Opened At" }, { "name": "Closed At" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Legal Team]", "values[Category]"] }
+    },
+    {
+      "slug": "legal-task",
+      "name": "Legal Task",
+      "description": "Legal tasks (table: sn_legal_task)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "State" },
+        { "name": "Parent" }, { "name": "Assigned To" }, { "name": "Priority" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[State]", "values[Parent]"] }
+    },
+    {
+      "slug": "architecture-decision",
+      "name": "Architecture Decision Record",
+      "description": "EA architecture decision records (table: sn_ea_architecture_decision_record)",
+      "submissionLabelExpression": "${values('Number')} - ${values('Short Description')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Short Description", "required": true }, { "name": "Decision", "rows": 2 },
+        { "name": "Rationale", "rows": 2 }, { "name": "Status" }, { "name": "Owner" }, { "name": "State" }
+      ],
+      "indexes": { "single": ["values[Number]", "values[Status]", "values[Owner]"] }
+    },
+    {
+      "slug": "alert",
+      "name": "Alert",
+      "description": "ITOM monitoring alerts (table: em_alert)",
+      "submissionLabelExpression": "${values('Number')}",
+      "fields": [
+        { "name": "Number" }, { "name": "Source" }, { "name": "Severity" }, { "name": "State" }, { "name": "Resource" },
+        { "name": "CMDB CI" }, { "name": "Opened At" }, { "name": "Closed At" }, { "name": "Description", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Number]", "values[Severity]", "values[State]", "values[Source]", "values[CMDB CI]"],
+        "compound": [["values[State]", "values[Severity]"]]
+      }
+    },
+    {
+      "slug": "agent",
+      "name": "User",
+      "description": "Platform users / agents (table: sys_user)",
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')}",
+      "fields": [
+        { "name": "User Name", "required": true }, { "name": "First Name" }, { "name": "Last Name" }, { "name": "Email" },
+        { "name": "Active" }, { "name": "Manager" }, { "name": "Department" }, { "name": "Title" }, { "name": "Phone" }
+      ],
+      "indexes": {
+        "single": ["values[User Name]", "values[Email]", "values[Active]", "values[Department]", "values[Manager]"],
+        "compound": [["values[Department]", "values[Active]"]]
+      }
+    },
+    {
+      "slug": "assignment-group",
+      "name": "Assignment Group",
+      "description": "Assignment groups / teams (table: sys_user_group)",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        { "name": "Name", "required": true }, { "name": "Description", "rows": 2 }, { "name": "Active" },
+        { "name": "Manager" }, { "name": "Email" }, { "name": "Type" }
+      ],
+      "indexes": { "single": ["values[Name]", "values[Active]", "values[Type]"] }
+    },
+    {
+      "slug": "activity-log",
+      "name": "Activity Log",
+      "description": "Work notes, comments and activity entries for any record (table: sys_journal_field). The shared sink for SN-Add-Work-Notes / SN-Add-Comment.",
+      "submissionLabelExpression": "${values('Table')} ${values('Record')} - ${values('Type')}",
+      "fields": [
+        { "name": "Record", "required": true }, { "name": "Table" }, { "name": "Type" }, { "name": "Note", "rows": 3 },
+        { "name": "Author" }, { "name": "Created At" }
+      ],
+      "indexes": {
+        "single": ["values[Record]", "values[Table]", "values[Type]", "values[Author]"],
+        "compound": [["values[Table]", "values[Record]"]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceNow · Kinetic</title>
+<style>
+:root {
+  --primary: #1B5E7C; --primary-dark: #134B65; --primary-light: #4A8FA8;
+  --accent: #62D84E; --accent-bg: #E8F8E4;
+  --bg: #F4F6F8; --white: #fff; --border: #E1E4E8; --light: #FAFBFC;
+  --gray: #586069; --gray-dark: #24292E;
+  --green: #2DA44E; --green-bg: #DCFCE7;
+  --red: #CF222E; --red-bg: #FFEBE9;
+  --yellow: #BF8700; --yellow-bg: #FFF8C5;
+  --blue: #0969DA; --blue-bg: #DDF4FF;
+  --purple: #8250DF; --purple-bg: #F4EAFC;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--gray-dark); }
+
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1B5E7C 0%, #4A8FA8 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--primary); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--accent); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,94,124,.18); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--primary-dark); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: var(--red-bg); color: var(--red); border-radius: 6px; font-size: 13px; }
+
+#app { display: none; }
+.topbar { background: var(--primary); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--accent); }
+.nav-tabs { display: flex; gap: 2px; margin-left: 20px; flex-wrap: wrap; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.78); padding: 7px 13px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.12); color: white; }
+.nav-tabs button.active { background: var(--accent); color: var(--gray-dark); }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--gray-dark); }
+
+.console { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); box-shadow: var(--shadow); border-left: 4px solid var(--primary); }
+.kpi .val { font-size: 26px; font-weight: 700; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .3px; }
+.kpi.green { border-left-color: var(--green); } .kpi.yellow { border-left-color: var(--yellow); }
+.kpi.red { border-left-color: var(--red); } .kpi.blue { border-left-color: var(--blue); }
+.kpi.purple { border-left-color: var(--purple); } .kpi.accent { border-left-color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); background: var(--light); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tbody tr { cursor: pointer; }
+tr:hover td { background: var(--light); }
+td.mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; font-weight: 600; color: var(--primary); }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.b-green { background: var(--green-bg); color: var(--green); }
+.b-blue { background: var(--blue-bg); color: var(--blue); }
+.b-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.b-red { background: var(--red-bg); color: var(--red); }
+.b-gray { background: #F0F0F0; color: var(--gray); }
+.b-purple { background: var(--purple-bg); color: var(--purple); }
+
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--light); color: var(--primary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+
+.pills { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.pill { background: var(--white); border: 1px solid var(--border); color: var(--gray-dark); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; cursor: pointer; }
+.pill:hover { border-color: var(--primary-light); }
+.pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.filter-bar input[type=text] { min-width: 220px; }
+
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 620px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; }
+.modal-header h2 { font-size: 16px; color: var(--primary); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 56px; }
+.modal-body .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: white; }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+.detail-grid .dl { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: .3px; }
+.detail-grid .dv { font-size: 13px; color: var(--gray-dark); margin-bottom: 8px; word-break: break-word; }
+.detail-grid .full { grid-column: 1 / -1; }
+.section-h { font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; margin: 18px 0 8px; border-top: 1px solid var(--border); padding-top: 14px; }
+.log-item { padding: 8px 0; border-bottom: 1px dashed var(--border); }
+.log-item:last-child { border-bottom: none; }
+.log-item .l1 { display: flex; justify-content: space-between; font-size: 12px; }
+.log-item .l1 b { color: var(--gray-dark); }
+.log-item .l1 .when { color: var(--gray); font-size: 11px; }
+.log-item .l2 { font-size: 13px; margin-top: 2px; }
+.note-box { display: flex; gap: 8px; margin-top: 10px; }
+.note-box input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+.row-bar { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.row-bar:last-child { border-bottom: none; }
+.row-bar .lbl { font-size: 13px; flex: 1; }
+.row-bar .ct { font-size: 12px; color: var(--gray); min-width: 28px; text-align: right; }
+.row-bar .bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; width: 160px; }
+.row-bar .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+.muted { color: var(--gray); font-size: 13px; }
+
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+#toast.error { background: var(--red); } #toast.success { background: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>ServiceNow <span style="color:#62D84E">·</span> Kinetic</h1>
+    <div class="sub">ITSM · CSM · HRSD · CMDB · SecOps · GRC and more</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="https://snow.kinetics.com" placeholder="https://snow.kinetics.com">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Service<span>Now</span></div>
+    <div class="nav-tabs" id="nav-tabs"></div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Operations Dashboard</h2>
+    <div class="page-sub">Live rollup across the ServiceNow data model on Kinetic</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Incidents by Priority</h3><div id="d-incpri"></div></div>
+      <div class="card"><h3>Incidents by State</h3><div id="d-incstate"></div></div>
+      <div class="card"><h3>Incidents by Category</h3><div id="d-inccat"></div></div>
+      <div class="card"><h3>Open Incidents by Assignment Group</h3><div id="d-groups"></div></div>
+      <div class="card"><h3>Changes by Risk</h3><div id="d-chrisk"></div></div>
+      <div class="card"><h3>Security Incidents by Severity</h3><div id="d-secsev"></div></div>
+      <div class="card"><h3>Risks by Residual Rating</h3><div id="d-risk"></div></div>
+      <div class="card"><h3>Configuration Items by Status</h3><div id="d-cistat"></div></div>
+    </div>
+  </div>
+
+  <!-- Generic records console (reused for every domain) -->
+  <div id="console-records" class="console">
+    <h2 class="page-title" id="rec-title">Records</h2>
+    <div class="page-sub" id="rec-sub"></div>
+    <div class="pills" id="rec-pills"></div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEdit(null)">+ New</button>
+      <div class="filter-bar">
+        <input type="text" id="rec-search" placeholder="Search…" oninput="debouncedSearch()">
+        <select id="rec-facet" onchange="reloadRecords()" style="display:none"></select>
+      </div>
+    </div>
+    <div class="card" style="padding:0"><table>
+      <thead><tr id="rec-head"></tr></thead>
+      <tbody id="rec-body"></tbody>
+    </table></div>
+    <div class="pagination" id="rec-pagination"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal"><div class="modal-box">
+  <div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div>
+  <div class="modal-footer" id="modal-footer"></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+/* ─────────── Config ─────────── */
+const KAPP = 'servicenow';
+const LONG = new Set(['Description','Close Notes','Note','Notes','Text','Acceptance Criteria','Decision','Rationale','Implementation Plan','Backout Plan','Test Plan','Cause Notes','Fix Notes','Workaround','Symptoms And Cause']);
+
+// title = the field shown first / used as record key (for activity-log Record)
+const FORMS = {
+  incident:        { label:'Incidents', title:'Number', cols:['Short Description','Priority','State','Category','Assignment Group','Assigned To'], facet:{field:'State'} },
+  problem:         { label:'Problems', title:'Number', cols:['Short Description','Priority','State','Assignment Group'], facet:{field:'State'} },
+  'change-request':{ label:'Changes', title:'Number', cols:['Short Description','Type','Risk','State','Assignment Group'], facet:{field:'Risk',opts:['High','Moderate','Low']} },
+  'change-task':   { label:'Change Tasks', title:'Number', cols:['Short Description','State','Parent','Assignment Group'], facet:{field:'State'} },
+  'incident-task': { label:'Incident Tasks', title:'Number', cols:['Short Description','State','Parent','Assignment Group'], facet:{field:'State'} },
+  'known-error':   { label:'Known Errors', title:'Number', cols:['Short Description','State','CMDB CI'] },
+  'task-sla':      { label:'SLAs', title:'Task', cols:['SLA','Stage','Has Breached','State'] },
+
+  case:            { label:'Cases', title:'Number', cols:['Short Description','Priority','State','Account','Assignment Group'], facet:{field:'State'} },
+  'case-task':     { label:'Case Tasks', title:'Number', cols:['Short Description','State','Parent','Assignment Group'], facet:{field:'State'} },
+  interaction:     { label:'Interactions', title:'Number', cols:['Channel','Type','State','Parent'] },
+  'customer-account':{ label:'Accounts', title:'Name', cols:['Account Code','Industry','Customer Tier','City'] },
+  'customer-contact':{ label:'Contacts', title:'Name', cols:['Email','Phone','Title','Account'] },
+
+  'hr-case':       { label:'HR Cases', title:'Number', cols:['Short Description','Priority','State','HR Service','Assignment Group'], facet:{field:'State'} },
+  'hr-task':       { label:'HR Tasks', title:'Number', cols:['Short Description','State','Parent','Assignment Group'], facet:{field:'State'} },
+  'hr-profile':    { label:'HR Profiles', title:'User', cols:['Department','Job Title','Manager','Location'] },
+  'hr-service':    { label:'HR Services', title:'Name', cols:['Category','Fulfillment Group','SLA','Active'] },
+
+  ci:              { label:'Configuration Items', title:'Name', cols:['Class','Operational Status','Environment','Support Group'], facet:{field:'Operational Status',opts:['Operational','Non-Operational','Repair In Progress']} },
+  'ci-server':     { label:'Servers', title:'Name', cols:['IP Address','OS','Operational Status','Environment','Support Group'], facet:{field:'Operational Status',opts:['Operational','Non-Operational','Repair In Progress']} },
+  'ci-service':    { label:'Business Services', title:'Name', cols:['Operational Status','Business Criticality','Support Group'] },
+  'ci-relationship':{ label:'CI Relationships', title:'Parent', cols:['Type','Child'] },
+
+  'security-incident':{ label:'Security Incidents', title:'Number', cols:['Short Description','Priority','Severity','State','Assignment Group'], facet:{field:'State'} },
+  'security-task': { label:'Security Tasks', title:'Number', cols:['Short Description','State','Security Incident','Assignment Group'], facet:{field:'State'} },
+  observable:      { label:'Observables (IOC)', title:'Value', cols:['Type','Source','Confidence','Threat Score'] },
+  'vulnerable-item':{ label:'Vulnerable Items', title:'Number', cols:['Vulnerability','CMDB CI','State','Risk Score'], facet:{field:'State'} },
+
+  risk:            { label:'Risks', title:'Number', cols:['Short Description','Residual Risk','State','Category','Owner'], facet:{field:'State'} },
+  'grc-issue':     { label:'GRC Issues', title:'Number', cols:['Short Description','Priority','State','Category','Owner'], facet:{field:'State'} },
+  'compliance-control':{ label:'Controls', title:'Name', cols:['Control Type','State','Control Owner','Risk'] },
+  'risk-event':    { label:'Risk Events', title:'Number', cols:['Short Description','Event Date','Category','State'] },
+
+  'catalog-request':{ label:'Requests', title:'Number', cols:['Requested For','Stage','Approval','Request State'] },
+  'requested-item':{ label:'Requested Items', title:'Number', cols:['Catalog Item','State','Requested For','Stage'], facet:{field:'State'} },
+  'catalog-task':  { label:'Catalog Tasks', title:'Number', cols:['Short Description','State','Request Item','Assignment Group'], facet:{field:'State'} },
+  'catalog-item':  { label:'Catalog Items', title:'Name', cols:['Category','Price','Active'] },
+
+  project:         { label:'Projects', title:'Number', cols:['Short Description','State','Phase','Health','Project Manager'], facet:{field:'Health',opts:['Green','Yellow','Red']} },
+  'project-task':  { label:'Project Tasks', title:'Number', cols:['Short Description','State','Assigned To','Milestone'], facet:{field:'State'} },
+  story:           { label:'Stories', title:'Number', cols:['Short Description','Story Points','State','Sprint'], facet:{field:'State'} },
+  sprint:          { label:'Sprints', title:'Number', cols:['Short Description','State','Story Points','Capacity'] },
+
+  'kb-article':    { label:'Articles', title:'Number', cols:['Short Description','Category','Workflow State','Rating','Active'] },
+  'kb-category':   { label:'Categories', title:'Label', cols:['Parent','Knowledge Base'] },
+
+  'purchase-order':{ label:'Purchase Orders', title:'Number', cols:['Short Description','State','Vendor','Total Amount'] },
+  'po-line-item':  { label:'PO Lines', title:'Purchase Order', cols:['Item','Quantity','Unit Price','State'] },
+  'legal-matter':  { label:'Legal Matters', title:'Number', cols:['Short Description','State','Legal Team','Category'], facet:{field:'State'} },
+  'legal-task':    { label:'Legal Tasks', title:'Number', cols:['Short Description','State','Parent'] },
+  'architecture-decision':{ label:'ADRs', title:'Number', cols:['Short Description','Status','Owner'] },
+  alert:           { label:'Alerts', title:'Number', cols:['Source','Severity','State','CMDB CI'], facet:{field:'Severity',opts:['1 - High','2 - Medium','3 - Low']} },
+  agent:           { label:'Users', title:'User Name', cols:['First Name','Last Name','Email','Department','Active'] },
+  'assignment-group':{ label:'Assignment Groups', title:'Name', cols:['Description','Manager','Type','Active'] },
+  'activity-log':  { label:'Activity Log', title:'Record', cols:['Table','Type','Note','Author','Created At'] },
+};
+
+const GROUPS = [
+  { id:'dash',  label:'Dashboard' },
+  { id:'itsm',  label:'ITSM',    forms:['incident','problem','change-request','change-task','incident-task','known-error','task-sla'] },
+  { id:'csm',   label:'CSM',     forms:['case','case-task','interaction','customer-account','customer-contact'] },
+  { id:'hrsd',  label:'HRSD',    forms:['hr-case','hr-task','hr-profile','hr-service'] },
+  { id:'cmdb',  label:'CMDB',    forms:['ci','ci-server','ci-service','ci-relationship'] },
+  { id:'secops',label:'SecOps',  forms:['security-incident','security-task','observable','vulnerable-item'] },
+  { id:'grc',   label:'GRC',     forms:['risk','grc-issue','compliance-control','risk-event'] },
+  { id:'cat',   label:'Catalog', forms:['catalog-request','requested-item','catalog-task','catalog-item'] },
+  { id:'spm',   label:'Projects',forms:['project','project-task','story','sprint'] },
+  { id:'kb',    label:'Knowledge',forms:['kb-article','kb-category'] },
+  { id:'admin', label:'Admin',   forms:['purchase-order','po-line-item','legal-matter','legal-task','architecture-decision','alert','agent','assignment-group','activity-log'] },
+];
+
+const VOCAB = {
+  State:['New','In Progress','On Hold','Resolved','Closed','Assess','Authorize','Scheduled','Implement','Review'],
+};
+
+/* ─────────── State ─────────── */
+let API = { url:'', auth:'', user:'', displayName:'' };
+let CUR = { group:null, slug:null, pageToken:null, page:1, history:[] };
+const FIELD_CACHE = {};
+
+/* ─────────── Helpers ─────────── */
+function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function v(sub,f){ return sub.values?.[f] || ''; }
+function toast(m,t){ const e=document.getElementById('toast'); e.textContent=m; e.className=t||''; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),3200); }
+function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+const debouncedSearch = debounce(()=>{ resetPage(); loadRecords(); }, 300);
+function resetPage(){ CUR.pageToken=null; CUR.page=1; CUR.history=[]; }
+
+function badge(val){
+  if(val==null||val==='') return '';
+  const s=String(val), low=s.toLowerCase(); let c='b-gray';
+  if(/closed|resolved|operational|completed|^active$|^yes$|green|5 -|4 -|low\b|standard/.test(low)) c='b-green';
+  if(/new|in progress|scheduled|implement|assess|open|2 - high|moderate|medium|pending|normal/.test(low)) c='b-blue';
+  if(/on hold|review|authorize|3 - moderate|yellow|repair|warning/.test(low)) c='b-yellow';
+  if(/critical|1 -|^high$|high\b|non-operational|breach|emergency|failed|overdue|^no$|red|^true$/.test(low)) c='b-red';
+  return `<span class="badge ${c}">${esc(s)}</span>`;
+}
+const BADGE_FIELDS = new Set(['State','Priority','Severity','Risk','Risk Score','Residual Risk','Operational Status','Health','Active','Has Breached','Approval','Workflow State','Stage','Request State','Confidence']);
+function cell(val, field){ return BADGE_FIELDS.has(field) ? badge(val) : esc(val); }
+
+/* ─────────── Auth ─────────── */
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,'');
+  const user=document.getElementById('login-user').value, pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error'); err.style.display='none';
+  if(!user||!pass){ err.textContent='Username and password required.'; err.style.display='block'; return; }
+  try {
+    const auth='Basic '+btoa(user+':'+pass);
+    const resp=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});
+    if(!resp.ok) throw new Error('Invalid credentials');
+    const data=await resp.json();
+    API={ url, auth:btoa(user+':'+pass), user:data.username, displayName:data.displayName||data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url:'', auth:API.auth, user:API.user, displayName:API.displayName }));
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-display').textContent=API.displayName;
+    enterApp();
+  } catch(e){ err.textContent='Login failed: '+e.message; err.style.display='block'; }
+}
+function doLogout(){ API={url:'',auth:'',user:'',displayName:''}; sessionStorage.clear(); document.getElementById('login-screen').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('login-pass').value=''; }
+
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s) return;
+  try {
+    const sess=JSON.parse(s);
+    API={ url:sess.url||'', auth:sess.auth, user:sess.user, displayName:sess.displayName||sess.user };
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-display').textContent=API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+/* ─────────── API ─────────── */
+async function api(path,opts={}){
+  const res=await fetch(`${API.url}/app/api/v1${path}`,{ ...opts, headers:{ Authorization:'Basic '+API.auth, 'Content-Type':'application/json', ...opts.headers } });
+  if(!res.ok){ const t=await res.text(); throw new Error(`${res.status}: ${t.slice(0,200)}`); }
+  const text=await res.text(); return text?JSON.parse(text):{};
+}
+async function customApi(path){
+  const res=await fetch(path,{ headers:{ Authorization:'Basic '+API.auth } });
+  const text=await res.text(); let b; try{ b=text?JSON.parse(text):{}; }catch{ b=text; }
+  if(!res.ok) throw new Error(b?.error||`${res.status}`); return b;
+}
+
+/* ─────────── Nav ─────────── */
+function buildNav(){
+  document.getElementById('nav-tabs').innerHTML = GROUPS.map(g =>
+    `<button data-g="${g.id}" class="${g.id==='dash'?'active':''}" onclick="switchGroup('${g.id}')">${esc(g.label)}</button>`).join('');
+}
+function switchGroup(id){
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.g===id));
+  if(id==='dash'){ showConsole('dash'); loadDashboard(); return; }
+  const grp=GROUPS.find(g=>g.id===id); CUR.group=id;
+  showConsole('records');
+  document.getElementById('rec-pills').innerHTML = grp.forms.map((s,i)=>
+    `<div class="pill ${i===0?'active':''}" data-s="${s}" onclick="selectForm('${s}')">${esc(FORMS[s].label)}</div>`).join('');
+  selectForm(grp.forms[0]);
+}
+function showConsole(which){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.getElementById(`console-${which}`).classList.add('active');
+}
+function selectForm(slug){
+  CUR.slug=slug; resetPage();
+  document.querySelectorAll('#rec-pills .pill').forEach(p=>p.classList.toggle('active', p.dataset.s===slug));
+  const cfg=FORMS[slug];
+  document.getElementById('rec-title').textContent=cfg.label;
+  document.getElementById('rec-sub').textContent=`servicenow / ${slug}`;
+  document.getElementById('rec-search').value='';
+  // facet
+  const fsel=document.getElementById('rec-facet');
+  if(cfg.facet){ const opts=cfg.facet.opts||VOCAB[cfg.facet.field]||[];
+    fsel.innerHTML=`<option value="">All ${esc(cfg.facet.field)}</option>`+opts.map(o=>`<option>${esc(o)}</option>`).join('');
+    fsel.style.display=''; } else { fsel.style.display='none'; fsel.innerHTML=''; }
+  // head
+  document.getElementById('rec-head').innerHTML = `<th>${esc(cfg.title)}</th>`+cfg.cols.map(c=>`<th>${esc(c)}</th>`).join('');
+  loadRecords();
+}
+
+/* ─────────── Records list (25/page, pageToken) ─────────── */
+function buildKQL(){
+  const cfg=FORMS[CUR.slug]; const parts=[];
+  const search=document.getElementById('rec-search').value.trim();
+  if(search) parts.push(`values[${cfg.title}] *=* "${search.replace(/"/g,'')}"`);
+  const facet=document.getElementById('rec-facet');
+  if(cfg.facet && facet.value) parts.push(`values[${cfg.facet.field}] = "${facet.value}"`);
+  return parts.join(' AND ');
+}
+async function loadRecords(){
+  const cfg=FORMS[CUR.slug], body=document.getElementById('rec-body');
+  body.innerHTML=`<tr><td colspan="${cfg.cols.length+1}" class="muted" style="padding:18px">Loading…</td></tr>`;
+  try {
+    const kql=buildKQL();
+    let path=`/kapps/${KAPP}/forms/${CUR.slug}/submissions?include=values&limit=25`;
+    if(kql) path+=`&q=${encodeURIComponent(kql)}`;
+    if(CUR.pageToken) path+=`&pageToken=${encodeURIComponent(CUR.pageToken)}`;
+    const r=await api(path);
+    const subs=r.submissions||[];
+    CUR.nextToken=r.nextPageToken||null;
+    if(!subs.length){ body.innerHTML=`<tr><td colspan="${cfg.cols.length+1}" class="muted" style="padding:18px">No records.</td></tr>`; }
+    else body.innerHTML=subs.map(s=>{
+      const tds=cfg.cols.map(c=>`<td>${cell(v(s,c),c)}</td>`).join('');
+      return `<tr onclick='openDetail(${JSON.stringify(s.id)})'><td class="mono">${esc(v(s,cfg.title))||'—'}</td>${tds}</tr>`;
+    }).join('');
+    renderPagination();
+  } catch(e){ body.innerHTML=`<tr><td colspan="${cfg.cols.length+1}" style="padding:18px;color:#CF222E">Error: ${esc(e.message)}</td></tr>`; }
+}
+function renderPagination(){
+  const p=document.getElementById('rec-pagination');
+  p.innerHTML=`<button class="btn-secondary btn-sm" ${CUR.page<=1?'disabled':''} onclick="prevPage()">‹ Prev</button>
+    <span>Page ${CUR.page}</span>
+    <button class="btn-secondary btn-sm" ${!CUR.nextToken?'disabled':''} onclick="nextPage()">Next ›</button>`;
+}
+function nextPage(){ if(!CUR.nextToken) return; CUR.history.push(CUR.pageToken); CUR.pageToken=CUR.nextToken; CUR.page++; loadRecords(); }
+function prevPage(){ if(CUR.page<=1) return; CUR.pageToken=CUR.history.pop()||null; CUR.page--; loadRecords(); }
+function reloadRecords(){ resetPage(); loadRecords(); }
+
+/* ─────────── Form fields (for add/edit) ─────────── */
+async function getFields(slug){
+  if(FIELD_CACHE[slug]) return FIELD_CACHE[slug];
+  const r=await api(`/kapps/${KAPP}/forms/${slug}?include=fields`);
+  const names=(r.form?.fields||[]).map(f=>f.name).filter(Boolean);
+  FIELD_CACHE[slug]=names; return names;
+}
+
+/* ─────────── Detail drawer ─────────── */
+async function openDetail(id){
+  const cfg=FORMS[CUR.slug];
+  openModalShell('Loading…');
+  try {
+    const r=await api(`/submissions/${id}?include=values`);
+    const sub=r.submission; const vals=sub.values||{};
+    const titleVal=vals[cfg.title]||'(record)';
+    document.getElementById('modal-title').textContent=`${cfg.label.replace(/s$/,'')} · ${titleVal}`;
+    const fields=await getFields(CUR.slug);
+    const grid=fields.map(f=>`<div class="${LONG.has(f)?'full':''}"><div class="dl">${esc(f)}</div><div class="dv">${BADGE_FIELDS.has(f)?badge(vals[f]):(esc(vals[f])||'—')}</div></div>`).join('');
+    document.getElementById('modal-body').innerHTML=`
+      <div class="detail-grid">${grid}</div>
+      <div class="section-h">Activity Log</div>
+      <div id="detail-log" class="muted">Loading…</div>
+      <div class="note-box">
+        <input id="note-input" placeholder="Add a work note…" onkeydown="if(event.key==='Enter')addNote()">
+        <button class="btn-primary btn-sm" onclick="addNote()">Add</button>
+      </div>`;
+    document.getElementById('modal-footer').innerHTML=`
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick='openEdit(${JSON.stringify(id)})'>Edit</button>`;
+    CUR.detail={ id, titleVal };
+    loadActivity(titleVal);
+  } catch(e){ document.getElementById('modal-body').innerHTML=`<div style="color:#CF222E">Error: ${esc(e.message)}</div>`; }
+}
+async function loadActivity(recordNum){
+  const el=document.getElementById('detail-log'); if(!el) return;
+  try {
+    const kql=`values[Table] = "${CUR.slug}" AND values[Record] = "${String(recordNum).replace(/"/g,'')}"`;
+    const r=await api(`/kapps/${KAPP}/forms/activity-log/submissions?include=values&limit=25&q=${encodeURIComponent(kql)}`);
+    const rows=(r.submissions||[]).sort((a,b)=>(v(b,'Created At')||'').localeCompare(v(a,'Created At')||''));
+    if(!rows.length){ el.innerHTML=`<span class="muted">No activity yet.</span>`; return; }
+    el.innerHTML=rows.map(s=>`<div class="log-item"><div class="l1"><b>${esc(v(s,'Author')||'—')} · ${esc(v(s,'Type')||'note')}</b><span class="when">${esc((v(s,'Created At')||'').slice(0,16).replace('T',' '))}</span></div><div class="l2">${esc(v(s,'Note'))}</div></div>`).join('');
+  } catch(e){ el.innerHTML=`<span class="muted">Could not load activity (${esc(e.message)})</span>`; }
+}
+async function addNote(){
+  const inp=document.getElementById('note-input'); const note=inp.value.trim(); if(!note) return;
+  inp.disabled=true;
+  try {
+    await api(`/kapps/${KAPP}/forms/activity-log/submissions`, { method:'POST', body:JSON.stringify({
+      values:{ Record:String(CUR.detail.titleVal), Table:CUR.slug, Type:'work_note', Note:note, Author:API.displayName||API.user||'system', 'Created At':new Date().toISOString() }, coreState:'Submitted' }) });
+    inp.value=''; toast('Work note added','success'); loadActivity(CUR.detail.titleVal);
+  } catch(e){ toast('Failed: '+e.message,'error'); } finally { inp.disabled=false; }
+}
+
+/* ─────────── Add / Edit ─────────── */
+async function openEdit(id){
+  const cfg=FORMS[CUR.slug];
+  openModalShell(id?'Edit':'New '+cfg.label.replace(/s$/,''));
+  document.getElementById('modal-title').textContent=(id?'Edit ':'New ')+cfg.label.replace(/s$/,'');
+  try {
+    const fields=await getFields(CUR.slug);
+    let vals={};
+    if(id){ const r=await api(`/submissions/${id}?include=values`); vals=r.submission.values||{}; }
+    document.getElementById('modal-body').innerHTML=`<div class="grid2">`+fields.map((f,i)=>{
+      const long=LONG.has(f); const val=esc(vals[f]||'');
+      const input = long
+        ? `<textarea data-f="${esc(f)}">${val}</textarea>`
+        : `<input data-f="${esc(f)}" value="${val}">`;
+      return `<div class="${long?'':''}" style="${long?'grid-column:1/-1':''}"><label>${esc(f)}</label>${input}</div>`;
+    }).join('')+`</div>`;
+    document.getElementById('modal-footer').innerHTML=`
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick='saveRecord(${JSON.stringify(id)})'>${id?'Save':'Create'}</button>`;
+  } catch(e){ document.getElementById('modal-body').innerHTML=`<div style="color:#CF222E">Error: ${esc(e.message)}</div>`; }
+}
+async function saveRecord(id){
+  const inputs=document.querySelectorAll('#modal-body [data-f]');
+  const values={}; inputs.forEach(el=>{ const f=el.getAttribute('data-f'); if(el.value!=='') values[f]=el.value; });
+  try {
+    if(id){ await api(`/submissions/${id}`, { method:'PATCH', body:JSON.stringify({ values }) }); toast('Saved','success'); }
+    else { await api(`/kapps/${KAPP}/forms/${CUR.slug}/submissions`, { method:'POST', body:JSON.stringify({ values, coreState:'Submitted' }) }); toast('Created','success'); }
+    closeModal(); reloadRecords();
+  } catch(e){ toast('Save failed: '+e.message,'error'); }
+}
+
+/* ─────────── Modal shell ─────────── */
+function openModalShell(t){ document.getElementById('modal-title').textContent=t; document.getElementById('modal-body').innerHTML='<div class="muted">Loading…</div>'; document.getElementById('modal-footer').innerHTML=''; document.getElementById('modal').classList.add('open'); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+/* ─────────── Dashboard ─────────── */
+function bars(map, el, max){
+  const entries=Object.entries(map||{}).sort((a,b)=>b[1]-a[1]);
+  const mx=max||Math.max(1,...entries.map(e=>e[1]));
+  document.getElementById(el).innerHTML = entries.length ? entries.map(([k,n])=>
+    `<div class="row-bar"><span class="lbl">${esc(k)}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.round(n/mx*100)}%"></span></span><span class="ct">${n}</span></div>`).join('') : '<span class="muted">No data</span>';
+}
+function groupBars(arr, el){
+  document.getElementById(el).innerHTML = (arr&&arr.length) ? arr.map(g=>{
+    const mx=Math.max(1,...arr.map(x=>x.count));
+    return `<div class="row-bar"><span class="lbl">${esc(g.name)}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.round(g.count/mx*100)}%"></span></span><span class="ct">${g.count}</span></div>`;
+  }).join('') : '<span class="muted">No data</span>';
+}
+async function loadDashboard(){
+  try {
+    const d=await customApi('/api/servicenow/dashboard'); const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi blue"><div class="val">${k.incidentsOpen}</div><div class="label">Open Incidents</div></div>
+      <div class="kpi red"><div class="val">${k.incidentsUnassigned}</div><div class="label">Unassigned</div></div>
+      <div class="kpi"><div class="val">${k.changesOpen}</div><div class="label">Open Changes</div></div>
+      <div class="kpi yellow"><div class="val">${k.problemsOpen}</div><div class="label">Open Problems</div></div>
+      <div class="kpi accent"><div class="val">${k.casesOpen}</div><div class="label">Open Cases</div></div>
+      <div class="kpi purple"><div class="val">${k.hrOpen}</div><div class="label">Open HR Cases</div></div>
+      <div class="kpi red"><div class="val">${k.secOpen}</div><div class="label">Security Incidents</div></div>
+      <div class="kpi yellow"><div class="val">${k.vulnsOpen}</div><div class="label">Open Vulns</div></div>
+      <div class="kpi"><div class="val">${k.cisTotal}</div><div class="label">Config Items</div></div>
+      <div class="kpi red"><div class="val">${k.cisDown}</div><div class="label">CIs Not Operational</div></div>
+      <div class="kpi green"><div class="val">${k.kbActive}</div><div class="label">KB Articles</div></div>
+      <div class="kpi blue"><div class="val">${k.requestsOpen}</div><div class="label">Open Requests</div></div>`;
+    bars(d.incidentsByPriority,'d-incpri'); bars(d.incidentsByState,'d-incstate');
+    bars(d.incidentsByCategory,'d-inccat'); groupBars(d.topGroups,'d-groups');
+    bars(d.changesByRisk,'d-chrisk'); bars(d.secBySeverity,'d-secsev');
+    bars(d.risksByResidual,'d-risk'); bars(d.cisByStatus,'d-cistat');
+  } catch(e){ document.getElementById('dash-kpis').innerHTML=`<div class="muted">Dashboard error: ${esc(e.message)}</div>`; }
+}
+
+/* ─────────── Boot ─────────── */
+function enterApp(){ buildNav(); loadDashboard(); }
+</script>
+</body>
+</html>
