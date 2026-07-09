@@ -61,6 +61,7 @@ async function discoverApps() {
       dir, name, kapp: kappSlug,
       description: appDef?.description || '',
       category: appDef?.category || '',
+      tags: appDef?.tags || (appDef?.category ? [appDef.category] : []),
       icon: appDef?.icon || '',
       color: appDef?.color || '',
       bg: appDef?.bg || '',
@@ -194,17 +195,21 @@ function taskRequest(method, apiPath, authHeader) {
 
 function collectByQuery(kapp, formSlug, kql, auth, maxPages = 8) {
   const all = [];
+  const seen = new Set();
   let lastCreatedAt = null;
   return (async () => {
     for (let i = 0; i < maxPages; i++) {
       let url = `/kapps/${kapp}/forms/${formSlug}/submissions?include=values,details&limit=25`;
       let q = kql || '';
-      if (lastCreatedAt) q = (q ? '(' + q + ') AND ' : '') + 'createdAt < "' + lastCreatedAt + '"';
+      // <= (not <) so records sharing the boundary createdAt aren't skipped; seen-set dedupes the overlap.
+      if (lastCreatedAt) q = (q ? '(' + q + ') AND ' : '') + 'createdAt <= "' + lastCreatedAt + '"';
       if (q) url += `&q=${encodeURIComponent(q)}`;
       const r = await kineticRequest("GET", url, null, auth);
       const subs = r.data?.submissions || [];
-      all.push(...subs);
+      let added = 0;
+      for (const s of subs) { if (!seen.has(s.id)) { seen.add(s.id); all.push(s); added++; } }
       if (subs.length > 0) lastCreatedAt = subs[subs.length - 1].createdAt;
+      if (added === 0 && i > 0) break; // entire page was overlap — timestamp plateau, stop
       if (!r.data?.nextPageToken || subs.length < 25) break;
     }
     return all;
@@ -708,7 +713,7 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/base/apps" && req.method === "GET") {
     const apps = Object.entries(APP_REGISTRY).map(([slug, reg]) => ({
       slug, name: reg.name, kapp: reg.kapp,
-      description: reg.description || '', category: reg.category || '',
+      description: reg.description || '', category: reg.category || '', tags: reg.tags || [],
       icon: reg.icon || '', color: reg.color || '', bg: reg.bg || '', created: reg.created || '',
     })).sort((a, b) => a.name.localeCompare(b.name));
     jsonResp(res, 200, { apps });
@@ -730,7 +735,7 @@ const server = http.createServer((req, res) => {
     const added = Object.keys(APP_REGISTRY).filter(s => !beforeSlugs.has(s));
     const apps = Object.entries(APP_REGISTRY).map(([slug, reg]) => ({
       slug, name: reg.name, kapp: reg.kapp,
-      description: reg.description || '', category: reg.category || '',
+      description: reg.description || '', category: reg.category || '', tags: reg.tags || [],
       icon: reg.icon || '', color: reg.color || '', bg: reg.bg || '', created: reg.created || '',
     })).sort((a, b) => a.name.localeCompare(b.name));
     jsonResp(res, 200, { apps, total: apps.length, before, added });

@@ -199,7 +199,7 @@ if (sessionStorage.getItem('base_session') || localStorage.getItem('base_session
         <input id="library-search" class="library-search" type="text" placeholder="Search applications&hellip;" oninput="renderLibrary(this.value)">
         <select id="library-sort" class="library-sort" onchange="setLibrarySort(this.value)" title="Sort applications">
           <option value="category">Group by category</option>
-          <option value="newest">Newest first</option>
+          <option value="newest" selected>Newest first</option>
           <option value="oldest">Oldest first</option>
           <option value="name">Name (A&ndash;Z)</option>
         </select>
@@ -487,13 +487,8 @@ restoreSession();
 
 /* ── Grid Rendering ───────────────────────────────────────────── */
 
-// Display order for category sections; categories not listed here are
-// appended alphabetically after these. Category comes from each app.json.
-const CATEGORY_ORDER = [
-  'Operations', 'Business', 'Security', 'Data & Analytics', 'AI & Automation', 'Foundation',
-  'Compliance', 'Finance', 'Legal', 'Professional Services',
-  'Healthcare', 'Education', 'Hospitality', 'Industry', 'Retail', 'Food & Beverage', 'Government',
-];
+// Category sections render alphabetically (see render below). Category comes
+// from each app.json.
 const DEFAULT_COLORS = ['#5F6368','#1565C0','#2E7D32','#E65100','#7B1FA2','#00695C','#C62828','#F36C24','#283593','#795548'];
 
 // Apps shown on the clean landing page (in this order). Everything else lives in
@@ -508,6 +503,7 @@ function appFromDiscovery(app) {
     name: app.name,
     desc: app.description || app.name,
     category: app.category || 'Other',
+    tags: (app.tags && app.tags.length) ? app.tags : [app.category || 'Other'],
     icon: app.icon || 'package',
     color: app.color || DEFAULT_COLORS[app.name.length % DEFAULT_COLORS.length],
     bg: app.bg || '#F5F5F5',
@@ -575,7 +571,7 @@ function renderFeatured() {
 }
 
 // Current library sort mode: 'category' (grouped) | 'newest' | 'oldest' | 'name'
-let librarySort = 'category';
+let librarySort = 'newest';
 function setLibrarySort(v) {
   librarySort = v;
   const s = document.getElementById('library-search');
@@ -607,18 +603,17 @@ function renderLibrary(filter) {
     return;
   }
 
-  // Default: group by category
+  // Default: group by category. An app appears under each of its tags, so apps
+  // with more than one category (e.g. Healthcare + Compliance) show in both.
   const groups = {};
   for (const app of apps) {
-    const cat = app.category || 'Other';
-    (groups[cat] = groups[cat] || []).push(app);
+    const cats = (app.tags && app.tags.length) ? app.tags : [app.category || 'Other'];
+    for (const cat of cats) (groups[cat] = groups[cat] || []).push(app);
   }
-  // Known categories in CATEGORY_ORDER first, then any others alphabetically
+  // Categories sorted alphabetically; the 'Other' catch-all always sorts last.
   const cats = Object.keys(groups).sort((a, b) => {
-    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
-    if (ia !== -1 && ib !== -1) return ia - ib;
-    if (ia !== -1) return -1;
-    if (ib !== -1) return 1;
+    if (a === 'Other') return 1;
+    if (b === 'Other') return -1;
     return a.localeCompare(b);
   });
   let html = '', first = true;
