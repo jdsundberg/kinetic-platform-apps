@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Classes</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E;
+  --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04;
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593;
+  --gray: #5F6368; --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #242F4D 0%, #2E3B5E 50%, #F36C24 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--orange); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.15); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--orange-light); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: #FFEBEE; color: var(--red); border-radius: 6px; font-size: 13px; }
+
+#app { display: none; }
+.topbar { background: var(--blue); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--orange); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.7); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.1); color: white; }
+.nav-tabs button.active { background: var(--orange); color: white; }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--orange); border-color: var(--orange); color: white; }
+
+.console { display: none; padding: 24px; max-width: 1300px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.kpi .val { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); background: var(--white); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr.clickable:hover td { background: var(--light); cursor: pointer; }
+td.mono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; color: var(--gray); }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-yellow { background: #FFF8E1; color: #F9A825; }
+.badge-red { background: #FDECEA; color: #C62828; }
+.badge-gray { background: #F1F3F4; color: #5F6368; }
+.badge-purple { background: #F3E5F5; color: #7B1FA2; }
+.badge-teal { background: #E0F2F1; color: #00695C; }
+.stars { color: var(--orange); font-size: 13px; letter-spacing: 1px; }
+.stars .off { color: var(--border); }
+
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 640px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; }
+.modal-header h2 { font-size: 16px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 60px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: white; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.row2 > div > label:first-child, .row3 > div > label:first-child { margin-top: 0; }
+.section-divider { margin: 20px 0 4px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; }
+
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.bar-row .bar-label { width: 120px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .bar-track { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.bar-row .bar-fill { height: 100%; border-radius: 5px; }
+.bar-row .bar-count { width: 28px; text-align: right; color: var(--gray); }
+.mini-list { font-size: 13px; }
+.mini-list .mi { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mini-list .mi:last-child { border-bottom: none; }
+.muted { color: var(--gray); }
+
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>AI Classes</h1>
+    <div class="sub">Teachers, sessions, attendance, lunch &amp; feedback</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">AI<span>Classes</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Overview</button>
+      <button onclick="switchTab('classes')">Classes</button>
+      <button onclick="switchTab('teachers')">Teachers</button>
+      <button onclick="switchTab('students')">Students</button>
+      <button onclick="switchTab('attendance')">Attendance</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Overview ── -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Program Overview</h2>
+    <div class="page-sub">AI classes across the United States — attendance, lunch &amp; satisfaction</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Classes by State</h3><div id="chart-state"></div></div>
+      <div class="card"><h3>Classes by Status</h3><div id="chart-status"></div></div>
+      <div class="card"><h3>Lunch Preferences</h3><div id="chart-lunch"></div></div>
+      <div class="card"><h3>Attendance Breakdown</h3><div id="chart-att"></div></div>
+    </div>
+    <div class="card">
+      <h3>Teacher Leaderboard — Avg Instructor Rating</h3>
+      <table>
+        <thead><tr><th>Teacher</th><th>Specialty</th><th>State</th><th>Classes</th><th>Reviews</th><th>Rating</th></tr></thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Recent Feedback</h3>
+      <div id="recent-feedback" class="mini-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Classes ── -->
+  <div id="console-classes" class="console">
+    <h2 class="page-title">Classes</h2>
+    <div class="page-sub">Scheduled AI class sessions — click a class for its roster &amp; feedback</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openClassModal()">+ New Class</button>
+      <div class="filter-bar">
+        <select id="cf-status" onchange="loadClasses()">
+          <option value="">All Status</option>
+          <option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option>
+        </select>
+        <select id="cf-state" onchange="loadClasses()">
+          <option value="">All States</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Code</th><th>Class</th><th>Topic</th><th>Date</th><th>Location</th><th>Teacher</th><th>Status</th></tr></thead>
+      <tbody id="classes-body"></tbody>
+    </table></div>
+    <div class="pagination" id="classes-pagination"></div>
+  </div>
+
+  <!-- ── Teachers ── -->
+  <div id="console-teachers" class="console">
+    <h2 class="page-title">Teachers</h2>
+    <div class="page-sub">The stable of AI instructors</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openTeacherModal()">+ New Teacher</button>
+      <div class="filter-bar">
+        <select id="tf-status" onchange="loadTeachers()">
+          <option value="">All Status</option><option>Active</option><option>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Specialty</th><th>Location</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
+      <tbody id="teachers-body"></tbody>
+    </table></div>
+    <div class="pagination" id="teachers-pagination"></div>
+  </div>
+
+  <!-- ── Students ── -->
+  <div id="console-students" class="console">
+    <h2 class="page-title">Students</h2>
+    <div class="page-sub">People enrolled in AI classes</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openStudentModal()">+ New Student</button>
+      <div class="filter-bar">
+        <input id="sf-search" placeholder="Search name…" onkeydown="if(event.key==='Enter')loadStudents()">
+        <button class="btn-secondary btn-sm" onclick="loadStudents()">Search</button>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Name</th><th>Company</th><th>Title</th><th>Location</th><th>Email</th><th>Status</th></tr></thead>
+      <tbody id="students-body"></tbody>
+    </table></div>
+    <div class="pagination" id="students-pagination"></div>
+  </div>
+
+  <!-- ── Attendance ── -->
+  <div id="console-attendance" class="console">
+    <h2 class="page-title">Attendance</h2>
+    <div class="page-sub">Per-student attendance and lunch preference for each class</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openAttendanceModal()">+ Record Attendance</button>
+      <div class="filter-bar">
+        <select id="af-class" onchange="loadAttendance()">
+          <option value="">All Classes</option>
+        </select>
+        <select id="af-status" onchange="loadAttendance()">
+          <option value="">All Status</option>
+          <option>Present</option><option>Late</option><option>Absent</option><option>Excused</option>
+        </select>
+        <select id="af-lunch" onchange="loadAttendance()">
+          <option value="">All Lunch</option>
+          <option>Standard</option><option>Vegetarian</option><option>Vegan</option><option>Gluten-Free</option><option>Halal</option><option>Kosher</option><option>None</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Class</th><th>Code</th><th>Student</th><th>Status</th><th>Lunch</th><th>Date</th></tr></thead>
+      <tbody id="attendance-body"></tbody>
+    </table></div>
+    <div class="pagination" id="attendance-pagination"></div>
+  </div>
+
+  <!-- ── Feedback ── -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Feedback</h2>
+    <div class="page-sub">Student ratings and comments per class session</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openFeedbackModal()">+ Add Feedback</button>
+      <div class="filter-bar">
+        <select id="ff-class" onchange="loadFeedback()">
+          <option value="">All Classes</option>
+        </select>
+        <select id="ff-recommend" onchange="loadFeedback()">
+          <option value="">All</option><option>Yes</option><option>No</option>
+        </select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Class</th><th>Student</th><th>Overall</th><th>Content</th><th>Instructor</th><th>Recommend</th><th>Comments</th></tr></thead>
+      <tbody id="feedback-body"></tbody>
+    </table></div>
+    <div class="pagination" id="feedback-pagination"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'ai-classes';
+let OPTIONS = { teachers: [], students: [], classes: [] };
+const PAGE_STATE = {
+  classes: { pageToken: null, page: 1, history: [] },
+  teachers: { pageToken: null, page: 1, history: [] },
+  students: { pageToken: null, page: 1, history: [] },
+  attendance: { pageToken: null, page: 1, history: [] },
+  feedback: { pageToken: null, page: 1, history: [] },
+};
+const LUNCH_OPTIONS = ['Standard','Vegetarian','Vegan','Gluten-Free','Halal','Kosher','None'];
+const ATT_OPTIONS = ['Present','Late','Absent','Excused'];
+const CLASS_STATUS = ['Scheduled','In Progress','Completed','Cancelled'];
+const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function optList(arr, sel) { return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
+function stars(n) { n = Math.round(parseFloat(n) || 0); let s = ''; for (let i=1;i<=5;i++) s += i<=n ? '★' : '<span class="off">★</span>'; return `<span class="stars">${s}</span>`; }
+
+function classStatusBadge(s) {
+  const map = { 'Scheduled':'badge-blue', 'In Progress':'badge-teal', 'Completed':'badge-green', 'Cancelled':'badge-gray' };
+  return s ? `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>` : '';
+}
+function attStatusBadge(s) {
+  const map = { 'Present':'badge-green', 'Late':'badge-orange', 'Absent':'badge-red', 'Excused':'badge-gray' };
+  return s ? `<span class="badge ${map[s]||'badge-gray'}">${esc(s)}</span>` : '';
+}
+function recBadge(s) { return s ? `<span class="badge ${s==='Yes'?'badge-green':'badge-red'}">${esc(s)}</span>` : ''; }
+function teacherStatusBadge(s) { return s ? `<span class="badge ${s==='Active'?'badge-green':'badge-gray'}">${esc(s)}</span>` : ''; }
+
+/* ── Auth ── */
+async function doLogin() {
+  let url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  if (!url) url = window.location.origin;
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, {
+    ...opts,
+    headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+async function appApi(path) {
+  const res = await fetch(path, { headers: { Authorization: 'Basic ' + API.auth } });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+const TABS = ['dash','classes','teachers','students','attendance','feedback'];
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if (tab === 'dash') loadDashboard();
+  else if (tab === 'classes') loadClasses();
+  else if (tab === 'teachers') loadTeachers();
+  else if (tab === 'students') loadStudents();
+  else if (tab === 'attendance') loadAttendance();
+  else if (tab === 'feedback') loadFeedback();
+}
+
+async function enterApp() {
+  await loadOptions();
+  loadDashboard();
+}
+
+async function loadOptions() {
+  try {
+    OPTIONS = await appApi('/api/ai-classes/options');
+  } catch (e) { OPTIONS = { teachers: [], students: [], classes: [] }; }
+  // populate state filter from US states
+  const cfState = document.getElementById('cf-state');
+  if (cfState && cfState.options.length <= 1) cfState.innerHTML = '<option value="">All States</option>' + US_STATES.map(s => `<option>${s}</option>`).join('');
+  // populate class filters (attendance + feedback)
+  const classOpts = '<option value="">All Classes</option>' + OPTIONS.classes.map(c => `<option value="${esc(c.code)}">${esc(c.code)} — ${esc(c.title)}</option>`).join('');
+  ['af-class','ff-class'].forEach(id => { const el = document.getElementById(id); if (el) { const cur = el.value; el.innerHTML = classOpts; el.value = cur; } });
+}
+
+/* ── Dashboard ── */
+async function loadDashboard() {
+  try {
+    const d = await appApi('/api/ai-classes/dashboard');
+    const k = d.kpis;
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val" style="color:var(--blue)">${k.totalClasses}</div><div class="label">Total Classes</div><div class="sub">${k.completed} completed</div></div>
+      <div class="kpi"><div class="val" style="color:var(--orange)">${k.upcoming}</div><div class="label">Upcoming</div></div>
+      <div class="kpi"><div class="val" style="color:var(--teal)">${k.activeTeachers}</div><div class="label">Active Teachers</div><div class="sub">of ${k.totalTeachers}</div></div>
+      <div class="kpi"><div class="val" style="color:var(--indigo)">${k.totalStudents}</div><div class="label">Students</div></div>
+      <div class="kpi"><div class="val" style="color:var(--green)">${k.attendanceRate}%</div><div class="label">Attendance Rate</div><div class="sub">${k.attendanceRecords} records</div></div>
+      <div class="kpi"><div class="val" style="color:var(--orange)">${k.avgOverall || '—'}</div><div class="label">Avg Rating</div><div class="sub">${stars(k.avgOverall)}</div></div>
+      <div class="kpi"><div class="val" style="color:var(--purple)">${k.recommendPct}%</div><div class="label">Would Recommend</div></div>`;
+
+    renderBars('chart-state', d.classesByState, null);
+    renderBars('chart-status', d.classesByStatus, { 'Scheduled':'#1565C0', 'In Progress':'#00695C', 'Completed':'var(--green)', 'Cancelled':'#9AA0A6' }, CLASS_STATUS);
+    renderBars('chart-lunch', d.lunchBreakdown, { 'Standard':'#5F6368','Vegetarian':'var(--green)','Vegan':'#2E7D32','Gluten-Free':'var(--yellow)','Halal':'var(--teal)','Kosher':'var(--indigo)','None':'#BDC1C6' }, LUNCH_OPTIONS);
+    renderBars('chart-att', d.attByStatus, { 'Present':'var(--green)','Late':'var(--orange)','Absent':'var(--red)','Excused':'#9AA0A6' }, ATT_OPTIONS);
+
+    document.getElementById('leaderboard-body').innerHTML = (d.leaderboard||[]).length ? d.leaderboard.map(t => `<tr>
+      <td><strong>${esc(t.name)}</strong></td>
+      <td>${esc(t.specialty)}</td>
+      <td>${esc(t.state)}</td>
+      <td>${t.classes}</td>
+      <td>${t.reviews}</td>
+      <td>${t.avgRating ? stars(t.avgRating) + ' ' + t.avgRating : '<span class="muted">—</span>'}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center">No teachers yet</td></tr>';
+
+    document.getElementById('recent-feedback').innerHTML = (d.recentFeedback||[]).length ? d.recentFeedback.map(f => `
+      <div class="mi">
+        <div><strong>${esc(f.student)}</strong> · <span class="muted">${esc(f.classTitle)}</span><br><span class="muted">${esc(f.comments)}</span></div>
+        <div style="text-align:right;white-space:nowrap">${stars(f.overall)}<br>${recBadge(f.recommend)}</div>
+      </div>`).join('') : '<div class="muted">No feedback yet</div>';
+  } catch (e) { toast('Dashboard error: ' + e.message); }
+}
+
+function renderBars(elId, obj, colorMap, order) {
+  const entries = Object.entries(obj || {});
+  if (order) entries.sort((a, b) => { const ia=order.indexOf(a[0]), ib=order.indexOf(b[0]); return (ia<0?99:ia)-(ib<0?99:ib); });
+  else entries.sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  document.getElementById(elId).innerHTML = entries.length ? entries.map(([k, n]) => {
+    const color = colorMap?.[k] || 'var(--blue-light)';
+    return `<div class="bar-row">
+      <div class="bar-label">${esc(k)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(n/max)*100}%;background:${color}"></div></div>
+      <div class="bar-count">${n}</div>
+    </div>`;
+  }).join('') : '<div class="muted" style="font-size:13px">No data</div>';
+}
+
+/* ── generic paginated loader ── */
+async function fetchPage(form, ps, kqlParts, orderBy) {
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`;
+  if (kqlParts && kqlParts.length) path += '&q=' + encodeURIComponent(kqlParts.join(' AND '));
+  if (orderBy) path += '&orderBy=' + encodeURIComponent(orderBy);
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  const data = await api(path);
+  ps.pageToken = data.nextPageToken || null;
+  return data.submissions || [];
+}
+function pageStep(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+function pager(elId, ps, fnName) {
+  document.getElementById(elId).innerHTML = `
+    <button class="btn-secondary btn-sm" onclick="${fnName}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fnName}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ── Classes ── */
+async function loadClasses(direction) {
+  const ps = PAGE_STATE.classes; pageStep(ps, direction);
+  const st = document.getElementById('cf-status').value;
+  const state = document.getElementById('cf-state').value;
+  const q = [];
+  if (st) q.push(`values[Status]="${st}"`);
+  if (state) q.push(`values[State]="${state}"`);
+  try {
+    const subs = await fetchPage('classes', ps, q);
+    document.getElementById('classes-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="viewClass('${s.id}')">
+      <td class="mono">${esc(v(s,'Class Code'))}</td>
+      <td><strong>${esc(v(s,'Class Title'))}</strong></td>
+      <td>${esc(v(s,'Topic'))}</td>
+      <td>${esc(v(s,'Date'))}</td>
+      <td>${esc(v(s,'City'))}, ${esc(v(s,'State'))}</td>
+      <td>${esc(v(s,'Teacher'))}</td>
+      <td>${classStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="muted" style="text-align:center">No classes</td></tr>';
+    pager('classes-pagination', ps, 'loadClasses');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function viewClass(id) {
+  try {
+    const data = await api(`/submissions/${id}?include=values`);
+    openClassModal(data.submission || data);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function genClassCode() { return 'AIC-' + String(Math.floor(100 + Math.random() * 900)); }
+
+function openClassModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const code = vals['Class Code'] || genClassCode();
+  document.getElementById('modal-title').textContent = isNew ? 'New Class' : ('Class ' + code);
+  const teacherOpts = OPTIONS.teachers.map(t => `<option ${vals.Teacher===t.name?'selected':''}>${esc(t.name)}</option>`).join('');
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Class Code</label><input id="c-code" value="${esc(code)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Status</label><select id="c-status">${optList(CLASS_STATUS, vals.Status || 'Scheduled')}</select></div>
+    </div>
+    <label>Class Title</label><input id="c-title" value="${esc(vals['Class Title']||'')}">
+    <label>Topic</label><input id="c-topic" value="${esc(vals.Topic||'')}">
+    <label>Description</label><textarea id="c-desc">${esc(vals.Description||'')}</textarea>
+    <div class="row3">
+      <div><label>Date</label><input id="c-date" type="date" value="${esc(vals.Date||'')}"></div>
+      <div><label>City</label><input id="c-city" value="${esc(vals.City||'')}"></div>
+      <div><label>State</label><select id="c-state"><option value=""></option>${US_STATES.map(x=>`<option ${vals.State===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <div class="row3">
+      <div><label>Venue</label><input id="c-venue" value="${esc(vals.Venue||'')}"></div>
+      <div><label>Capacity</label><input id="c-capacity" type="number" value="${esc(vals.Capacity||'')}"></div>
+      <div><label>Teacher</label><select id="c-teacher"><option value=""></option>${teacherOpts}</select></div>
+    </div>
+    ${isNew ? '' : `<div id="class-detail-section"><div class="section-divider">Roster &amp; Feedback</div><div class="muted" style="font-size:13px">Loading…</div></div>`}
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','classes',loadClasses)">Delete</button>`}
+    <button class="btn-primary" onclick="saveClass('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+  if (!isNew && code) loadClassDetail(code);
+}
+
+async function loadClassDetail(code) {
+  const sec = document.getElementById('class-detail-section');
+  if (!sec) return;
+  try {
+    const d = await appApi('/api/ai-classes/class-detail?code=' + encodeURIComponent(code));
+    const lunch = Object.entries(d.lunchCounts||{}).map(([k,n]) => `${esc(k)}: <strong>${n}</strong>`).join(' · ') || '<span class="muted">none</span>';
+    const status = Object.entries(d.statusCounts||{}).map(([k,n]) => `${attStatusBadge(k)} ${n}`).join(' ') || '<span class="muted">none</span>';
+    sec.innerHTML = `
+      <div class="section-divider">Roster &amp; Feedback</div>
+      <div style="font-size:13px;margin-bottom:8px">Enrolled: <strong>${d.enrolled}</strong> &nbsp;·&nbsp; Avg rating: ${d.avgOverall ? stars(d.avgOverall)+' '+d.avgOverall : '<span class="muted">—</span>'} &nbsp;·&nbsp; ${d.feedbackCount} reviews</div>
+      <div style="font-size:13px;margin-bottom:6px">Attendance: ${status}</div>
+      <div style="font-size:13px;margin-bottom:12px">Lunch: ${lunch}</div>
+      <div class="mini-list">
+        ${d.roster.length ? d.roster.map(r => `<div class="mi"><div>${esc(r.student)} <span class="muted">${esc(r.email)}</span></div><div>${attStatusBadge(r.status)} <span class="badge badge-gray">${esc(r.lunch)||'—'}</span></div></div>`).join('') : '<div class="muted">No attendance recorded</div>'}
+      </div>
+      ${d.feedback.length ? '<div class="section-divider">Comments</div><div class="mini-list">' + d.feedback.map(f => `<div class="mi"><div>${esc(f.student)}<br><span class="muted">${esc(f.comments)}</span></div><div style="text-align:right">${stars(f.overall)}<br>${recBadge(f.recommend)}</div></div>`).join('') + '</div>' : ''}
+    `;
+  } catch (e) { sec.innerHTML = '<div class="section-divider">Roster &amp; Feedback</div><div class="muted">Could not load detail</div>'; }
+}
+
+async function saveClass(id, isNew) {
+  const values = {
+    'Class Code': document.getElementById('c-code').value,
+    'Class Title': document.getElementById('c-title').value,
+    Topic: document.getElementById('c-topic').value,
+    Description: document.getElementById('c-desc').value,
+    Date: document.getElementById('c-date').value,
+    City: document.getElementById('c-city').value,
+    State: document.getElementById('c-state').value,
+    Venue: document.getElementById('c-venue').value,
+    Capacity: document.getElementById('c-capacity').value,
+    Teacher: document.getElementById('c-teacher').value,
+    Status: document.getElementById('c-status').value,
+  };
+  if (!values['Class Title']) { toast('Class Title required'); return; }
+  try {
+    await saveSub(id, 'classes', values, isNew);
+    closeModal(); toast(isNew ? 'Class created' : 'Class updated');
+    await loadOptions(); loadClasses();
+  } catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Teachers ── */
+async function loadTeachers(direction) {
+  const ps = PAGE_STATE.teachers; pageStep(ps, direction);
+  const st = document.getElementById('tf-status').value;
+  const q = []; if (st) q.push(`values[Status]="${st}"`);
+  try {
+    const subs = await fetchPage('teachers', ps, q);
+    document.getElementById('teachers-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','teachers',openTeacherModal)">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Specialty'))}</td>
+      <td>${esc(v(s,'City'))}, ${esc(v(s,'State'))}</td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td>${teacherStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center">No teachers</td></tr>';
+    pager('teachers-pagination', ps, 'loadTeachers');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openTeacherModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  document.getElementById('modal-title').textContent = isNew ? 'New Teacher' : 'Edit Teacher';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Name</label><input id="t-name" value="${esc(vals.Name||'')}"></div>
+      <div><label>Status</label><select id="t-status">${optList(['Active','Inactive'], vals.Status || 'Active')}</select></div>
+    </div>
+    <label>Specialty</label><input id="t-specialty" value="${esc(vals.Specialty||'')}">
+    <div class="row2">
+      <div><label>Email</label><input id="t-email" value="${esc(vals.Email||'')}"></div>
+      <div><label>Phone</label><input id="t-phone" value="${esc(vals.Phone||'')}"></div>
+    </div>
+    <div class="row2">
+      <div><label>City</label><input id="t-city" value="${esc(vals.City||'')}"></div>
+      <div><label>State</label><select id="t-state"><option value=""></option>${US_STATES.map(x=>`<option ${vals.State===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Bio</label><textarea id="t-bio">${esc(vals.Bio||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','teachers',loadTeachers)">Delete</button>`}
+    <button class="btn-primary" onclick="saveTeacher('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function saveTeacher(id, isNew) {
+  const values = {
+    Name: document.getElementById('t-name').value,
+    Specialty: document.getElementById('t-specialty').value,
+    Email: document.getElementById('t-email').value,
+    Phone: document.getElementById('t-phone').value,
+    City: document.getElementById('t-city').value,
+    State: document.getElementById('t-state').value,
+    Status: document.getElementById('t-status').value,
+    Bio: document.getElementById('t-bio').value,
+  };
+  if (!values.Name) { toast('Name required'); return; }
+  try { await saveSub(id, 'teachers', values, isNew); closeModal(); toast('Saved'); await loadOptions(); loadTeachers(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Students ── */
+async function loadStudents(direction) {
+  const ps = PAGE_STATE.students; pageStep(ps, direction);
+  const search = (document.getElementById('sf-search').value || '').trim();
+  // =* range query requires a matching orderBy on the same field
+  const q = [], orderBy = search ? 'values[Name]' : null;
+  if (search) q.push(`values[Name] =* "${search}"`);
+  try {
+    const subs = await fetchPage('students', ps, q, orderBy);
+    document.getElementById('students-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','students',openStudentModal)">
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'Company'))}</td>
+      <td>${esc(v(s,'Title'))}</td>
+      <td>${esc(v(s,'City'))}, ${esc(v(s,'State'))}</td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${teacherStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center">No students</td></tr>';
+    pager('students-pagination', ps, 'loadStudents');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openStudentModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  document.getElementById('modal-title').textContent = isNew ? 'New Student' : 'Edit Student';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Name</label><input id="st-name" value="${esc(vals.Name||'')}"></div>
+      <div><label>Status</label><select id="st-status">${optList(['Active','Inactive'], vals.Status || 'Active')}</select></div>
+    </div>
+    <div class="row2">
+      <div><label>Company</label><input id="st-company" value="${esc(vals.Company||'')}"></div>
+      <div><label>Title</label><input id="st-title" value="${esc(vals.Title||'')}"></div>
+    </div>
+    <label>Email</label><input id="st-email" value="${esc(vals.Email||'')}">
+    <div class="row2">
+      <div><label>City</label><input id="st-city" value="${esc(vals.City||'')}"></div>
+      <div><label>State</label><select id="st-state"><option value=""></option>${US_STATES.map(x=>`<option ${vals.State===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','students',loadStudents)">Delete</button>`}
+    <button class="btn-primary" onclick="saveStudent('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function saveStudent(id, isNew) {
+  const values = {
+    Name: document.getElementById('st-name').value,
+    Company: document.getElementById('st-company').value,
+    Title: document.getElementById('st-title').value,
+    Email: document.getElementById('st-email').value,
+    City: document.getElementById('st-city').value,
+    State: document.getElementById('st-state').value,
+    Status: document.getElementById('st-status').value,
+  };
+  if (!values.Name) { toast('Name required'); return; }
+  try { await saveSub(id, 'students', values, isNew); closeModal(); toast('Saved'); await loadOptions(); loadStudents(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Attendance ── */
+async function loadAttendance(direction) {
+  const ps = PAGE_STATE.attendance; pageStep(ps, direction);
+  const code = document.getElementById('af-class').value;
+  const st = document.getElementById('af-status').value;
+  const lunch = document.getElementById('af-lunch').value;
+  const q = [];
+  if (code) q.push(`values[Class Code]="${code}"`);
+  if (st) q.push(`values[Status]="${st}"`);
+  if (lunch) q.push(`values[Lunch Preference]="${lunch}"`);
+  try {
+    const subs = await fetchPage('attendance', ps, q);
+    document.getElementById('attendance-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','attendance',openAttendanceModal)">
+      <td><strong>${esc(v(s,'Class Title'))}</strong></td>
+      <td class="mono">${esc(v(s,'Class Code'))}</td>
+      <td>${esc(v(s,'Student'))}</td>
+      <td>${attStatusBadge(v(s,'Status'))}</td>
+      <td><span class="badge badge-gray">${esc(v(s,'Lunch Preference'))||'—'}</span></td>
+      <td>${esc(v(s,'Date'))}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center">No attendance records</td></tr>';
+    pager('attendance-pagination', ps, 'loadAttendance');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function classSelect(id, selectedCode, onchange) {
+  return `<select id="${id}" ${onchange?`onchange="${onchange}"`:''}><option value="">— Select class —</option>${OPTIONS.classes.map(c => `<option value="${esc(c.code)}" ${selectedCode===c.code?'selected':''}>${esc(c.code)} — ${esc(c.title)}</option>`).join('')}</select>`;
+}
+function studentSelect(id, selectedName) {
+  return `<select id="${id}"><option value="">— Select student —</option>${OPTIONS.students.map(st => `<option value="${esc(st.name)}" ${selectedName===st.name?'selected':''}>${esc(st.name)}</option>`).join('')}</select>`;
+}
+function openAttendanceModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  document.getElementById('modal-title').textContent = isNew ? 'Record Attendance' : 'Edit Attendance';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Class</label>${classSelect('a-class', vals['Class Code'], 'onAttClassChange()')}
+    <label>Student</label>${studentSelect('a-student', vals.Student)}
+    <div class="row2">
+      <div><label>Status</label><select id="a-status">${optList(ATT_OPTIONS, vals.Status || 'Present')}</select></div>
+      <div><label>Lunch Preference</label><select id="a-lunch">${optList(LUNCH_OPTIONS, vals['Lunch Preference'] || 'Standard')}</select></div>
+    </div>
+    <label>Date</label><input id="a-date" type="date" value="${esc(vals.Date||'')}">`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','attendance',loadAttendance)">Delete</button>`}
+    <button class="btn-primary" onclick="saveAttendance('${s.id||''}', ${isNew})">${isNew ? 'Save' : 'Update'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function onAttClassChange() {
+  const code = document.getElementById('a-class').value;
+  const cls = OPTIONS.classes.find(c => c.code === code);
+  if (cls && document.getElementById('a-date') && !document.getElementById('a-date').value) document.getElementById('a-date').value = cls.date || '';
+}
+async function saveAttendance(id, isNew) {
+  const code = document.getElementById('a-class').value;
+  const cls = OPTIONS.classes.find(c => c.code === code);
+  const studentName = document.getElementById('a-student').value;
+  const student = OPTIONS.students.find(s => s.name === studentName);
+  const values = {
+    'Class Code': code,
+    'Class Title': cls ? cls.title : '',
+    Student: studentName,
+    'Student Email': student ? student.email : '',
+    Status: document.getElementById('a-status').value,
+    'Lunch Preference': document.getElementById('a-lunch').value,
+    Date: document.getElementById('a-date').value,
+  };
+  if (!code) { toast('Select a class'); return; }
+  if (!studentName) { toast('Select a student'); return; }
+  try { await saveSub(id, 'attendance', values, isNew); closeModal(); toast('Saved'); loadAttendance(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Feedback ── */
+async function loadFeedback(direction) {
+  const ps = PAGE_STATE.feedback; pageStep(ps, direction);
+  const code = document.getElementById('ff-class').value;
+  const rec = document.getElementById('ff-recommend').value;
+  const q = [];
+  if (code) q.push(`values[Class Code]="${code}"`);
+  if (rec) q.push(`values[Recommend]="${rec}"`);
+  try {
+    const subs = await fetchPage('feedback', ps, q);
+    document.getElementById('feedback-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','feedback',openFeedbackModal)">
+      <td><strong>${esc(v(s,'Class Title'))}</strong></td>
+      <td>${esc(v(s,'Student'))}</td>
+      <td>${stars(v(s,'Overall Rating'))}</td>
+      <td>${stars(v(s,'Content Rating'))}</td>
+      <td>${stars(v(s,'Instructor Rating'))}</td>
+      <td>${recBadge(v(s,'Recommend'))}</td>
+      <td class="muted">${esc(v(s,'Comments'))}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="muted" style="text-align:center">No feedback</td></tr>';
+    pager('feedback-pagination', ps, 'loadFeedback');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function ratingSelect(id, sel) { return `<select id="${id}">${[5,4,3,2,1].map(n=>`<option value="${n}" ${String(sel)===String(n)?'selected':''}>${n} ★</option>`).join('')}</select>`; }
+function openFeedbackModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  document.getElementById('modal-title').textContent = isNew ? 'Add Feedback' : 'Edit Feedback';
+  document.getElementById('modal-body').innerHTML = `
+    <label>Class</label>${classSelect('fb-class', vals['Class Code'])}
+    <label>Student</label>${studentSelect('fb-student', vals.Student)}
+    <div class="row3">
+      <div><label>Overall</label>${ratingSelect('fb-overall', vals['Overall Rating'] || 5)}</div>
+      <div><label>Content</label>${ratingSelect('fb-content', vals['Content Rating'] || 5)}</div>
+      <div><label>Instructor</label>${ratingSelect('fb-instructor', vals['Instructor Rating'] || 5)}</div>
+    </div>
+    <label>Would Recommend</label><select id="fb-recommend">${optList(['Yes','No'], vals.Recommend || 'Yes')}</select>
+    <label>Comments</label><textarea id="fb-comments">${esc(vals.Comments||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','feedback',loadFeedback)">Delete</button>`}
+    <button class="btn-primary" onclick="saveFeedback('${s.id||''}', ${isNew})">${isNew ? 'Save' : 'Update'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function saveFeedback(id, isNew) {
+  const code = document.getElementById('fb-class').value;
+  const cls = OPTIONS.classes.find(c => c.code === code);
+  const values = {
+    'Class Code': code,
+    'Class Title': cls ? cls.title : '',
+    Student: document.getElementById('fb-student').value,
+    'Overall Rating': document.getElementById('fb-overall').value,
+    'Content Rating': document.getElementById('fb-content').value,
+    'Instructor Rating': document.getElementById('fb-instructor').value,
+    Recommend: document.getElementById('fb-recommend').value,
+    Comments: document.getElementById('fb-comments').value,
+  };
+  if (!code) { toast('Select a class'); return; }
+  if (!values.Student) { toast('Select a student'); return; }
+  try { await saveSub(id, 'feedback', values, isNew); closeModal(); toast('Saved'); loadFeedback(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── shared submission helpers ── */
+async function saveSub(id, form, values, isNew) {
+  if (id && !isNew) return api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+  return api(`/kapps/${KAPP}/forms/${form}/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+}
+async function editSub(id, form, opener) {
+  try { const data = await api(`/submissions/${id}?include=values`); opener(data.submission || data); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+async function deleteSub(id, form, reload) {
+  if (!confirm('Delete this record?')) return;
+  try { await api(`/submissions/${id}`, { method: 'DELETE' }); closeModal(); toast('Deleted'); await loadOptions(); reload(); }
+  catch (e) { toast('Delete failed: ' + e.message); }
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

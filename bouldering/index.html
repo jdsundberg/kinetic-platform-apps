@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crux Bouldering - Kinetic Platform</title>
+<style>
+:root{--primary:#6D28D9;--primary-dark:#571FB0;--primary-light:#8B5CF6;--accent:#F97316;--accent-light:#FB923C;--green:#16A34A;--blue:#2563EB;--red:#DC2626;--yellow:#F59E0B;--purple:#7C3AED;--teal:#0D9488;--gray:#64748B;--light:#F8FAFC;--border:#E5E7EB;--bg:#F1F0F7;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#1E293B;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(109,40,217,.12)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#4C1D95 0%,#6D28D9 55%,#8B5CF6 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--primary);font-size:26px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--accent)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--primary);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--primary-dark)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--primary);color:white;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:24px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--accent)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.78);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.topbar nav button.active{background:var(--accent);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.78);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.78);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--accent);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.3px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:24px;font-weight:700;margin:4px 0;color:var(--primary)}
+.kpi .label{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.accent .val{color:var(--accent)}.kpi.accent{border-top-color:var(--accent)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-open,.badge-active,.badge-confirmed,.badge-paid,.badge-cleared,.badge-yes,.badge-completed{background:#DCFCE7;color:#166534}
+.badge-pending,.badge-provisional{background:#FEF9C3;color:#854D0E}
+.badge-scheduled,.badge-reserved{background:#DBEAFE;color:#1E40AF}
+.badge-closed,.badge-stripped,.badge-cancelled,.badge-no-show,.badge-no,.badge-inactive,.badge-refunded{background:#FEE2E2;color:#991B1B}
+.badge-default{background:var(--light);color:var(--gray)}
+
+.stars{color:var(--accent);letter-spacing:1px;font-size:14px;white-space:nowrap}
+.stars .off{color:var(--border)}
+.grade-pill{display:inline-block;background:#EDE9FE;color:var(--primary-dark);border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700}
+.hold-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
+.style-tag{display:inline-block;background:var(--light);color:var(--gray);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:20px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.bar-row .bl{min-width:120px;color:var(--gray)}
+.bar-track{flex:1;height:14px;background:var(--light);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:var(--primary);border-radius:7px}
+.bar-fill.acc{background:var(--accent)}
+.bar-row .bv{min-width:48px;text-align:right;font-weight:600}
+.review{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.review .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.review .rc{font-size:13px;color:#334155;line-height:1.5}
+.review .rm{font-size:11px;color:var(--gray);margin-top:6px}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--primary);color:white;border-color:var(--primary)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+/* Boulder board grid */
+.board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.boulder-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.boulder-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.boulder-card .bc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.boulder-card .bc-name{font-weight:700;font-size:15px;color:#1E293B}
+.boulder-card .bc-meta{font-size:12px;color:var(--gray);margin-bottom:10px}
+.boulder-card .bc-foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray);border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
+
+/* Training fund */
+.fund-hero{background:linear-gradient(135deg,#6D28D9,#8B5CF6);color:white;border-radius:16px;padding:28px;margin-bottom:16px}
+.fund-hero h2{font-size:20px;margin-bottom:6px}
+.fund-hero .fh-sub{opacity:.85;font-size:13px;margin-bottom:16px}
+.fund-bar{height:22px;background:rgba(255,255,255,.25);border-radius:11px;overflow:hidden;margin-bottom:8px}
+.fund-bar-fill{height:100%;background:var(--accent);border-radius:11px;transition:width .4s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:white;font-size:11px;font-weight:700}
+.fund-nums{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.donate-tiers{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.tier-btn{flex:1;min-width:120px;background:white;border:2px solid var(--primary);color:var(--primary);border-radius:12px;padding:18px;text-align:center;font-weight:700;font-size:22px;cursor:pointer;transition:all .15s}
+.tier-btn:hover{background:var(--primary);color:white}
+.tier-btn small{display:block;font-size:11px;font-weight:500;margin-top:4px;opacity:.8}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:820px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.rate-pick{display:flex;gap:6px;font-size:26px;color:var(--border);cursor:pointer}
+.rate-pick span{transition:color .1s}
+.rate-pick span.on{color:var(--accent)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Crux <span>Bouldering</span></h1>
+    <p class="sub">Locations · boulder board · reservations · training fund</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://first.kinetics.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Crux <span>Bouldering</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('board')">Boulder Board</button>
+      <button onclick="switchTab('locations')">Locations</button>
+      <button onclick="switchTab('boulders')">Boulders</button>
+      <button onclick="switchTab('reservations')">Reservations</button>
+      <button onclick="switchTab('fund')">Training Fund</button>
+      <button onclick="switchTab('leaderboard')">Leaderboard</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Bouldering Overview</div>
+    <div class="page-sub">Locations, problems, reservations, community ratings and the training fund</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2" id="dash-grid1"></div>
+    <div class="grid-2" id="dash-grid2"></div>
+  </div>
+
+  <!-- BOULDER BOARD -->
+  <div class="console" id="tab-board">
+    <div class="page-title">Boulder Board</div>
+    <div class="page-sub">Rate problems, drop a comment, log your sends. Click a boulder to open the board.</div>
+    <div class="toolbar">
+      <input type="text" id="bd-search" placeholder="Search boulder name, setter..." oninput="bdLoad()">
+      <select id="bd-location" onchange="bdLoad()"><option value="">All Locations</option></select>
+      <select id="bd-grade" onchange="bdLoad()"><option value="">All Grades</option></select>
+      <select id="bd-style" onchange="bdLoad()"><option value="">All Styles</option></select>
+      <button class="btn-primary" onclick="showForm('boulders')">+ New Boulder</button>
+    </div>
+    <div id="board-grid" class="board-grid"></div>
+    <div class="pagination"><button class="btn-outline" onclick="bdPrev()" id="bd-prev" disabled>Prev</button><span class="page-info" id="bd-page-info">Page 1</span><button class="btn-outline" onclick="bdNext()" id="bd-next" disabled>Next</button></div>
+  </div>
+
+  <!-- LOCATIONS -->
+  <div class="console" id="tab-locations">
+    <div class="page-title">Locations</div>
+    <div class="page-sub">Bouldering gyms and outdoor crags</div>
+    <div class="toolbar">
+      <input type="text" id="lo-search" placeholder="Search locations, city..." oninput="loLoad()">
+      <select id="lo-type" onchange="loLoad()"><option value="">All Types</option><option>Indoor Gym</option><option>Outdoor Crag</option><option>Climbing Co-op</option><option>University Wall</option></select>
+      <select id="lo-status" onchange="loLoad()"><option value="">All Status</option><option>Open</option><option>Seasonal</option><option>Closed</option></select>
+      <button class="btn-primary" onclick="showForm('locations')">+ New Location</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Type</th><th>City</th><th>State</th><th>Boulders</th><th>Capacity</th><th>Hours</th><th>Status</th></tr></thead><tbody id="lo-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="loPrev()" id="lo-prev" disabled>Prev</button><span class="page-info" id="lo-page-info">Page 1</span><button class="btn-outline" onclick="loNext()" id="lo-next" disabled>Next</button></div>
+  </div>
+
+  <!-- BOULDERS -->
+  <div class="console" id="tab-boulders">
+    <div class="page-title">Boulders</div>
+    <div class="page-sub">Every problem, grade, style and set detail</div>
+    <div class="toolbar">
+      <input type="text" id="bo-search" placeholder="Search boulders, setter..." oninput="boLoad()">
+      <select id="bo-location" onchange="boLoad()"><option value="">All Locations</option></select>
+      <select id="bo-grade" onchange="boLoad()"><option value="">All Grades</option></select>
+      <select id="bo-status" onchange="boLoad()"><option value="">All Status</option><option>Open</option><option>Project</option><option>Closed</option><option>Stripped</option></select>
+      <button class="btn-primary" onclick="showForm('boulders')">+ New Boulder</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Grade</th><th>Location</th><th>Color</th><th>Style</th><th>Setter</th><th>Rating</th><th>Sends</th><th>Status</th></tr></thead><tbody id="bo-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="boPrev()" id="bo-prev" disabled>Prev</button><span class="page-info" id="bo-page-info">Page 1</span><button class="btn-outline" onclick="boNext()" id="bo-next" disabled>Next</button></div>
+  </div>
+
+  <!-- RESERVATIONS -->
+  <div class="console" id="tab-reservations">
+    <div class="page-title">Reservations</div>
+    <div class="page-sub">Reserve a boulder for a time slot</div>
+    <div class="toolbar">
+      <input type="text" id="rs-search" placeholder="Search by climber, boulder..." oninput="rsLoad()">
+      <select id="rs-location" onchange="rsLoad()"><option value="">All Locations</option></select>
+      <select id="rs-status" onchange="rsLoad()"><option value="">All Status</option><option>Pending</option><option>Confirmed</option><option>Completed</option><option>Cancelled</option><option>No-Show</option></select>
+      <button class="btn-accent" onclick="showForm('reservations')">+ Reserve a Boulder</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Time</th><th>Boulder</th><th>Location</th><th>Reserved By</th><th>Party</th><th>Status</th></tr></thead><tbody id="rs-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="rsPrev()" id="rs-prev" disabled>Prev</button><span class="page-info" id="rs-page-info">Page 1</span><button class="btn-outline" onclick="rsNext()" id="rs-next" disabled>Next</button></div>
+  </div>
+
+  <!-- TRAINING FUND -->
+  <div class="console" id="tab-fund">
+    <div class="page-title">Boulder Training Fund</div>
+    <div class="page-sub">Support new problem setting, youth clinics and training gear</div>
+    <div id="fund-hero-wrap"></div>
+    <div class="grid-3" id="fund-stats"></div>
+    <div class="grid-2">
+      <div class="card"><h3>Fund Allocation by Location</h3><div id="fund-byloc"></div></div>
+      <div class="card"><h3>Recent Donations</h3><div id="fund-recent"></div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">All Donations</h3><button class="btn-outline btn-small" onclick="showForm('donations')">+ Record Donation</button></div>
+      <table><thead><tr><th>Date</th><th>Donor</th><th>Amount</th><th>Tier</th><th>Location</th><th>Message</th><th>Status</th></tr></thead><tbody id="dn-body"></tbody></table>
+    </div>
+    <div class="pagination"><button class="btn-outline" onclick="dnPrev()" id="dn-prev" disabled>Prev</button><span class="page-info" id="dn-page-info">Page 1</span><button class="btn-outline" onclick="dnNext()" id="dn-next" disabled>Next</button></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="console" id="tab-leaderboard">
+    <div class="page-title">Leaderboard</div>
+    <div class="page-sub">Community favorites, most-sent problems and the hardest lines</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showBoard('topRated')">Top Rated</button>
+      <button class="subtab" onclick="showBoard('mostSent')">Most Sent</button>
+      <button class="subtab" onclick="showBoard('hardest')">Hardest</button>
+    </div>
+    <div id="lb-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='bouldering';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+const GRADES=['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12'];
+const HOLD_COLORS={Red:'#DC2626',Blue:'#2563EB',Green:'#16A34A',Yellow:'#F59E0B',Purple:'#7C3AED',Orange:'#F97316',Black:'#1E293B',White:'#F1F5F9',Pink:'#EC4899',Teal:'#0D9488'};
+const STYLES='Overhang,Slab,Vertical,Roof,Arete,Dihedral,Compression,Slopers,Crimps,Dyno,Mantle,Traverse';
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function fmt$(n){const num=parseFloat(n);return isNaN(num)?'$0':'$'+num.toLocaleString('en-US',{maximumFractionDigits:0})}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/[\s]+/g,'-')}
+function stars(n){const r=Math.max(0,Math.min(5,Math.round(parseFloat(n)||0)));return`<span class="stars">${'★'.repeat(r)}<span class="off">${'★'.repeat(5-r)}</span></span>`}
+function holdDot(c){const col=HOLD_COLORS[c]||'#94A3B8';return`<span class="hold-dot" style="background:${col}"></span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');fillGradeSelects();requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+function fillGradeSelects(){['bd-grade','bo-grade'].forEach(id=>{const sel=document.getElementById(id);if(sel&&sel.options.length<=1)GRADES.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;sel.appendChild(o)})});const st=document.getElementById('bd-style');if(st&&st.options.length<=1)STYLES.split(',').forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;st.appendChild(o)})}
+
+let activeTab='dashboard';
+const TAB_MAP={'dashboard':'Dashboard','board':'Boulder Board','locations':'Locations','boulders':'Boulders','reservations':'Reservations','fund':'Training Fund','leaderboard':'Leaderboard'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>{b.classList.toggle('active',b.textContent===TAB_MAP[tab])});
+if(tab==='dashboard')loadDashboard();
+else if(tab==='board'){fillLocationSelect('bd-location');bdLoad()}
+else if(tab==='locations')loLoad();
+else if(tab==='boulders'){fillLocationSelect('bo-location');boLoad()}
+else if(tab==='reservations'){fillLocationSelect('rs-location');rsLoad()}
+else if(tab==='fund'){loadFund();dnLoad()}
+else if(tab==='leaderboard')showBoard('topRated')}
+
+// ===== shared reference lists =====
+let _locationNames=null,_boulderNames=null;
+async function ensureLocationNames(){if(_locationNames)return _locationNames;try{const r=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25`);_locationNames=(r.submissions||[]).map(s=>v(s,'Name')).filter(Boolean).sort()}catch(e){_locationNames=[]}return _locationNames}
+async function fillLocationSelect(id){const sel=document.getElementById(id);if(!sel||sel.options.length>1)return;const names=await ensureLocationNames();names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)})}
+async function ensureBoulderNames(){if(_boulderNames)return _boulderNames;try{const r=await api(`/kapps/${KAPP}/forms/boulders/submissions?include=values&limit=25`);_boulderNames=(r.submissions||[]).map(s=>v(s,'Name')).filter(Boolean).sort()}catch(e){_boulderNames=[]}return _boulderNames}
+
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px;grid-column:1/-1">Loading dashboard...</div>';
+  document.getElementById('dash-grid1').innerHTML='';document.getElementById('dash-grid2').innerHTML='';
+  try{
+    const d=await sapi('/api/bouldering/dashboard');const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi purple"><div class="val">${k.locations}</div><div class="label">Open Locations</div><div class="sub">${k.totalLocations} total</div></div>
+      <div class="kpi blue"><div class="val">${k.boulders}</div><div class="label">Open Boulders</div><div class="sub">${k.totalBoulders} set</div></div>
+      <div class="kpi accent"><div class="val">${k.upcomingReservations}</div><div class="label">Upcoming Reservations</div></div>
+      <div class="kpi yellow"><div class="val">${k.avgRating||'—'}★</div><div class="label">Avg Board Rating</div><div class="sub">${k.boardPosts} posts</div></div>
+      <div class="kpi green"><div class="val">${k.totalSends}</div><div class="label">Logged Sends</div></div>
+      <div class="kpi teal"><div class="val">${fmt$(k.fundRaised)}</div><div class="label">Training Fund</div><div class="sub">${k.fundPct}% of ${fmt$(k.fundGoal)}</div></div>
+      <div class="kpi"><div class="val">${k.donationCount}</div><div class="label">Donations</div><div class="sub">$5:${k.tierCount['5']} $10:${k.tierCount['10']} $20:${k.tierCount['20']}</div></div>`;
+
+    const maxG=Math.max(1,...Object.values(d.gradeDist));
+    document.getElementById('dash-grid1').innerHTML=`
+      <div class="card"><h3>Top Rated Boulders</h3><table><thead><tr><th>Boulder</th><th>Grade</th><th>Location</th><th>Rating</th><th>Sends</th></tr></thead><tbody>${
+        d.topRated.map(b=>`<tr class="clickable-row" onclick="openBoulderDetail('${b.id}')"><td style="font-weight:600">${holdDot(b.color)}${esc(b.name)}</td><td><span class="grade-pill">${esc(b.grade)}</span></td><td style="font-size:12px">${esc(b.location)}</td><td>${stars(b.avg)} <span style="font-size:11px;color:var(--gray)">${b.avg}</span></td><td>${b.sends}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">Not enough ratings yet</td></tr>'
+      }</tbody></table></div>
+      <div class="card"><h3>Open Problems by Grade</h3>${Object.keys(d.gradeDist).length===0?'<p style="color:var(--gray);font-size:13px">No open boulders</p>':GRADES.filter(g=>d.gradeDist[g]).map(g=>`<div class="bar-row"><span class="bl"><span class="grade-pill">${g}</span></span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.gradeDist[g]/maxG*100)}%"></div></div><span class="bv">${d.gradeDist[g]}</span></div>`).join('')}</div>`;
+
+    document.getElementById('dash-grid2').innerHTML=`
+      <div class="card"><h3>Upcoming Reservations</h3>${d.upcoming.length===0?'<p style="color:var(--gray);font-size:13px">No upcoming reservations</p>':`<table><thead><tr><th>Date</th><th>Time</th><th>Boulder</th><th>By</th><th>Status</th></tr></thead><tbody>${d.upcoming.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.start)}</td><td style="font-weight:600">${esc(r.boulder)}</td><td>${esc(r.by)}</td><td><span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span></td></tr>`).join('')}</tbody></table>`}</div>
+      <div class="card"><h3>Recent Board Activity</h3>${d.recentPosts.length===0?'<p style="color:var(--gray);font-size:13px">No posts yet</p>':d.recentPosts.map(p=>`<div class="review"><div class="rh"><strong>${esc(p.author)} <span style="font-weight:400;color:var(--gray);font-size:12px">→ ${esc(p.boulder)}</span></strong>${stars(p.rating)}</div><div class="rc">${esc(p.comment)}</div><div class="rm">${p.sent==='Yes'?'✅ Sent':'💪 Project'} · ${esc(p.attempts)} attempts · ${esc(p.date)}</div></div>`).join('')}</div>`;
+  }catch(e){document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}}
+
+// ===== GENERIC PAGER =====
+function makePager(){return{page:1,pageKeys:{1:null},hasNext:false}}
+async function loadPaged(pager,form,bodyId,renderRow,pageId,prevId,nextId,kqlFn,filterFn,colspan){
+  try{
+    const lastCA=pager.pageKeys[pager.page];let kql=kqlFn?kqlFn():'';
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);const data=res.submissions||[];pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&data.length)pager.pageKeys[pager.page+1]=data[data.length-1].createdAt;
+    const filtered=filterFn?data.filter(filterFn):data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0?`<tr><td colspan="${colspan||10}" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>`:filtered.map(renderRow).join('');
+    document.getElementById(pageId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){document.getElementById(bodyId).innerHTML=`<tr><td colspan="${colspan||10}" style="color:var(--red)">${esc(e.message)}</td></tr>`}}
+
+// ===== BOULDER BOARD (card grid) =====
+const bdP=makePager();
+function bdLoad(){bdP.page=1;bdP.pageKeys={1:null};loadBoard()}
+function bdNext(){if(bdP.hasNext){bdP.page++;loadBoard()}}
+function bdPrev(){if(bdP.page>1){bdP.page--;loadBoard()}}
+async function loadBoard(){
+  const search=document.getElementById('bd-search').value.toLowerCase();
+  const loc=document.getElementById('bd-location').value,gr=document.getElementById('bd-grade').value,st=document.getElementById('bd-style').value;
+  try{
+    const lastCA=bdP.pageKeys[bdP.page];
+    let kql='';if(loc)kql=`values[Location]="${loc}"`;if(gr)kql=kql?`${kql} AND values[Grade]="${gr}"`:`values[Grade]="${gr}"`;if(st)kql=kql?`${kql} AND values[Style]="${st}"`:`values[Style]="${st}"`;
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/boulders/submissions?include=details,values&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];bdP.hasNext=!!res.nextPageToken;
+    if(bdP.hasNext&&data.length)bdP.pageKeys[bdP.page+1]=data[data.length-1].createdAt;
+    if(search)data=data.filter(s=>v(s,'Name').toLowerCase().includes(search)||v(s,'Setter').toLowerCase().includes(search));
+    document.getElementById('board-grid').innerHTML=data.length===0?'<p style="color:var(--gray);padding:24px">No boulders found</p>':data.map(s=>`
+      <div class="boulder-card" onclick="openBoulderDetail('${s.id}')">
+        <div class="bc-top"><span class="bc-name">${holdDot(v(s,'Hold Color'))}${esc(v(s,'Name'))}</span><span class="grade-pill">${esc(v(s,'Grade'))}</span></div>
+        <div class="bc-meta">${esc(v(s,'Location'))} · <span class="style-tag">${esc(v(s,'Style'))}</span></div>
+        <div class="bc-foot"><span>${stars(v(s,'Avg Rating'))} <span style="font-size:11px">${v(s,'Avg Rating')||'—'}</span></span><span>${esc(v(s,'Send Count')||0)} sends · <span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></span></div>
+      </div>`).join('');
+    document.getElementById('bd-page-info').textContent='Page '+bdP.page;
+    document.getElementById('bd-prev').disabled=bdP.page<=1;document.getElementById('bd-next').disabled=!bdP.hasNext;
+  }catch(e){document.getElementById('board-grid').innerHTML=`<p style="color:var(--red);padding:24px">${esc(e.message)}</p>`}}
+
+// ===== LOCATIONS =====
+const loP=makePager();
+function loLoad(){loP.page=1;loP.pageKeys={1:null};loadLocations()}
+function loNext(){if(loP.hasNext){loP.page++;loadLocations()}}
+function loPrev(){if(loP.page>1){loP.page--;loadLocations()}}
+function loadLocations(){const search=document.getElementById('lo-search').value.toLowerCase();const ty=document.getElementById('lo-type').value,st=document.getElementById('lo-status').value;loadPaged(loP,'locations','lo-body',s=>`<tr class="clickable-row" onclick="showEditForm('locations','${s.id}')"><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Type'))}</td><td>${esc(v(s,'City'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'Boulder Count'))}</td><td>${esc(v(s,'Capacity'))}</td><td style="font-size:12px">${esc(v(s,'Hours'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'lo-page-info','lo-prev','lo-next',()=>{let kql='';if(ty)kql=`values[Type]="${ty}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search)||v(s,'City').toLowerCase().includes(search):null,8)}
+
+// ===== BOULDERS (table) =====
+const boP=makePager();
+function boLoad(){boP.page=1;boP.pageKeys={1:null};loadBoulders()}
+function boNext(){if(boP.hasNext){boP.page++;loadBoulders()}}
+function boPrev(){if(boP.page>1){boP.page--;loadBoulders()}}
+function loadBoulders(){const search=document.getElementById('bo-search').value.toLowerCase();const loc=document.getElementById('bo-location').value,gr=document.getElementById('bo-grade').value,st=document.getElementById('bo-status').value;loadPaged(boP,'boulders','bo-body',s=>`<tr class="clickable-row" onclick="openBoulderDetail('${s.id}')"><td style="font-weight:600">${holdDot(v(s,'Hold Color'))}${esc(v(s,'Name'))}</td><td><span class="grade-pill">${esc(v(s,'Grade'))}</span></td><td>${esc(v(s,'Location'))}</td><td>${esc(v(s,'Hold Color'))}</td><td><span class="style-tag">${esc(v(s,'Style'))}</span></td><td>${esc(v(s,'Setter'))}</td><td>${stars(v(s,'Avg Rating'))}</td><td>${esc(v(s,'Send Count')||0)}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'bo-page-info','bo-prev','bo-next',()=>{let kql='';if(loc)kql=`values[Location]="${loc}"`;if(gr)kql=kql?`${kql} AND values[Grade]="${gr}"`:`values[Grade]="${gr}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search)||v(s,'Setter').toLowerCase().includes(search):null,9)}
+
+// ===== RESERVATIONS =====
+const rsP=makePager();
+function rsLoad(){rsP.page=1;rsP.pageKeys={1:null};loadReservations()}
+function rsNext(){if(rsP.hasNext){rsP.page++;loadReservations()}}
+function rsPrev(){if(rsP.page>1){rsP.page--;loadReservations()}}
+function loadReservations(){const search=document.getElementById('rs-search').value.toLowerCase();const loc=document.getElementById('rs-location').value,st=document.getElementById('rs-status').value;loadPaged(rsP,'reservations','rs-body',s=>`<tr class="clickable-row" onclick="showEditForm('reservations','${s.id}')"><td>${esc(v(s,'Reserve Date'))}</td><td>${esc(v(s,'Start Time'))}${v(s,'End Time')?'–'+esc(v(s,'End Time')):''}</td><td style="font-weight:600">${esc(v(s,'Boulder'))}</td><td style="font-size:12px">${esc(v(s,'Location'))}</td><td>${esc(v(s,'Reserved By'))}</td><td>${esc(v(s,'Party Size'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'rs-page-info','rs-prev','rs-next',()=>{let kql='';if(loc)kql=`values[Location]="${loc}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Reserved By').toLowerCase().includes(search)||v(s,'Boulder').toLowerCase().includes(search):null,7)}
+
+// ===== TRAINING FUND =====
+async function loadFund(){
+  document.getElementById('fund-hero-wrap').innerHTML='<div class="card"><p style="color:var(--gray)">Loading fund...</p></div>';
+  try{
+    const f=await sapi('/api/bouldering/fund');
+    document.getElementById('fund-hero-wrap').innerHTML=`
+      <div class="fund-hero">
+        <h2>🧗 Boulder Training Fund</h2>
+        <div class="fh-sub">Fuel new problem setting, youth clinics, and shared training gear across all locations.</div>
+        <div class="fund-bar"><div class="fund-bar-fill" style="width:${Math.max(6,f.pct)}%">${f.pct}%</div></div>
+        <div class="fund-nums"><span>${fmt$(f.raised)} raised</span><span>Goal ${fmt$(f.goal)}</span></div>
+        <div class="donate-tiers">
+          <div class="tier-btn" onclick="openDonate(5)">$5<small>Chalk Up</small></div>
+          <div class="tier-btn" onclick="openDonate(10)">$10<small>Send Supporter</small></div>
+          <div class="tier-btn" onclick="openDonate(20)">$20<small>Crux Crusher</small></div>
+        </div>
+      </div>`;
+    document.getElementById('fund-stats').innerHTML=`
+      <div class="stat-box"><div class="v" style="color:var(--teal)">${f.count}</div><div class="l">Donations</div></div>
+      <div class="stat-box"><div class="v" style="color:var(--primary)">${fmt$(f.avgGift)}</div><div class="l">Avg Gift</div></div>
+      <div class="stat-box"><div class="v" style="color:var(--yellow)">${fmt$(f.pending)}</div><div class="l">Pending</div></div>`;
+    const maxL=Math.max(1,...f.byLocation.map(l=>l.amount));
+    document.getElementById('fund-byloc').innerHTML=f.byLocation.length===0?'<p style="color:var(--gray);font-size:13px">No donations yet</p>':f.byLocation.map(l=>`<div class="bar-row"><span class="bl">${esc(l.location)}</span><div class="bar-track"><div class="bar-fill acc" style="width:${Math.round(l.amount/maxL*100)}%"></div></div><span class="bv">${fmt$(l.amount)}</span></div>`).join('');
+    document.getElementById('fund-recent').innerHTML=f.recent.length===0?'<p style="color:var(--gray);font-size:13px">No donations yet</p>':f.recent.map(d=>`<div class="review"><div class="rh"><strong>${esc(d.name)}</strong><span style="font-weight:700;color:var(--teal)">${fmt$(d.amount)}</span></div>${d.message?`<div class="rc">${esc(d.message)}</div>`:''}<div class="rm">${esc(d.location||'General Fund')} · ${esc(d.date)}</div></div>`).join('');
+  }catch(e){document.getElementById('fund-hero-wrap').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+const dnP=makePager();
+function dnLoad(){dnP.page=1;dnP.pageKeys={1:null};loadDonations()}
+function dnNext(){if(dnP.hasNext){dnP.page++;loadDonations()}}
+function dnPrev(){if(dnP.page>1){dnP.page--;loadDonations()}}
+function loadDonations(){loadPaged(dnP,'donations','dn-body',s=>`<tr class="clickable-row" onclick="showEditForm('donations','${s.id}')"><td>${esc(v(s,'Date'))}</td><td style="font-weight:600">${v(s,'Anonymous')==='Yes'?'<em style="color:var(--gray)">Anonymous</em>':esc(v(s,'Donor Name'))}</td><td style="font-weight:700;color:var(--teal)">${fmt$(v(s,'Amount'))}</td><td>${esc(v(s,'Tier'))}</td><td style="font-size:12px">${esc(v(s,'Location'))}</td><td style="font-size:12px">${esc(v(s,'Message'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'dn-page-info','dn-prev','dn-next',()=>'',null,7)}
+
+// quick-donate modal from the tier buttons
+async function openDonate(amount){
+  await ensureLocationNames();
+  const opts=(_locationNames||[]).map(n=>`<option>${esc(n)}</option>`).join('');
+  document.getElementById('modal-inner').innerHTML=`
+    <h2>Donate ${fmt$(amount)} to the Training Fund</h2>
+    <p style="color:var(--gray);font-size:13px;margin-bottom:8px">Records a pledge to the Boulder Training Fund. No live payment is processed here.</p>
+    <label>Your Name</label><input id="dn-name" type="text" placeholder="Name (or leave blank + check anonymous)">
+    <div class="field-row"><div><label>Email</label><input id="dn-email" type="text" placeholder="you@example.com"></div><div><label>Location to support</label><select id="dn-loc"><option value="">General Fund</option>${opts}</select></div></div>
+    <label>Message (optional)</label><textarea id="dn-msg" rows="2" placeholder="Send it! 🧗"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:500;margin-top:12px"><input type="checkbox" id="dn-anon" style="width:auto"> Donate anonymously</label>
+    <div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button><button class="btn-accent" onclick="submitDonation(${amount})">Give ${fmt$(amount)}</button></div>`;
+  document.getElementById('modal').classList.add('show');
+}
+async function submitDonation(amount){
+  const anon=document.getElementById('dn-anon').checked;
+  const name=document.getElementById('dn-name').value.trim();
+  const tierMap={5:'Chalk Up',10:'Send Supporter',20:'Crux Crusher'};
+  const vals={
+    'Donation ID':'DN-'+Date.now().toString(36).toUpperCase(),
+    'Donor Name':anon?'Anonymous':(name||'Anonymous'),
+    'Email':document.getElementById('dn-email').value.trim(),
+    'Amount':String(amount),'Tier':tierMap[amount]||('$'+amount),'Fund':'Boulder Training Fund',
+    'Location':document.getElementById('dn-loc').value,'Message':document.getElementById('dn-msg').value.trim(),
+    'Anonymous':anon?'Yes':'No','Date':new Date().toISOString().slice(0,10),'Status':'Paid',
+  };
+  try{await api(`/kapps/${KAPP}/forms/donations/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Thank you for your '+fmt$(amount)+' donation! 🧗');closeModal();if(activeTab==='fund'){loadFund();dnLoad()}}catch(e){alert('Error: '+e.message)}}
+
+// ===== LEADERBOARD =====
+async function showBoard(type){
+  document.querySelectorAll('#tab-leaderboard .subtab').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(type)));
+  document.getElementById('lb-content').innerHTML='<div class="card"><p style="color:var(--gray)">Loading...</p></div>';
+  try{
+    const d=await sapi('/api/bouldering/reports/leaderboard');
+    const rows=d[type]||[];
+    const cols=type==='mostSent'?['Sends','sends']:type==='hardest'?['Grade','grade']:['Rating','avg'];
+    document.getElementById('lb-content').innerHTML=`<div class="card"><h3>${type==='topRated'?'Top Rated (min 2 ratings)':type==='mostSent'?'Most Sent Problems':'Hardest Problems'}</h3><table><thead><tr><th>#</th><th>Boulder</th><th>Grade</th><th>Location</th><th>Style</th><th>Setter</th><th>Rating</th><th>Sends</th><th>Comments</th></tr></thead><tbody>${
+      rows.map((r,i)=>`<tr><td>${i+1}</td><td style="font-weight:600">${holdDot(r.color)}${esc(r.name)}</td><td><span class="grade-pill">${esc(r.grade)}</span></td><td style="font-size:12px">${esc(r.location)}</td><td><span class="style-tag">${esc(r.style)}</span></td><td>${esc(r.setter)}</td><td>${stars(r.avg)} <span style="font-size:11px;color:var(--gray)">${r.avg||'—'}</span></td><td style="font-weight:600">${r.sends}</td><td>${r.comments}</td></tr>`).join('')||'<tr><td colspan="9" style="color:var(--gray)">No data yet</td></tr>'
+    }</tbody></table></div>`;
+  }catch(e){document.getElementById('lb-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== BOULDER DETAIL (MODAL) — board + reserve + rate =====
+let _detailBoulder=null;
+async function openBoulderDetail(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading boulder...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/bouldering/boulder/${id}`);const b=d.boulder;const s=d.summary;_detailBoulder={id:b.id,name:v(b,'Name'),location:v(b,'Location')};
+    const distMax=Math.max(1,...Object.values(s.dist));
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${holdDot(v(b,'Hold Color'))}${esc(v(b,'Name'))} <span class="grade-pill" style="font-size:14px">${esc(v(b,'Grade'))}</span></h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>${esc(v(b,'Location'))}</span><span><span class="style-tag">${esc(v(b,'Style'))}</span></span>
+        <span>Wall: <strong>${esc(v(b,'Wall Section'))}</strong></span><span>Setter: <strong>${esc(v(b,'Setter'))}</strong></span>
+        <span>Set: ${esc(v(b,'Set Date'))}</span><span>Status: <span class="badge ${badgeClass(v(b,'Status'))}">${esc(v(b,'Status'))}</span></span>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-box"><div class="v" style="color:var(--accent)">${s.avg||'—'}★</div><div class="l">Avg (${s.ratings})</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${s.sends}</div><div class="l">Sends</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${s.upcoming}</div><div class="l">Upcoming Res.</div></div>
+      </div>
+      ${v(b,'Description')?`<div style="font-size:13px;color:var(--gray);margin-bottom:16px;padding:12px;background:var(--light);border-radius:8px">${esc(v(b,'Description'))}</div>`:''}
+      <div style="display:flex;gap:8px;margin-bottom:16px"><button class="btn-primary btn-small" onclick="openRate()">★ Rate & Comment</button><button class="btn-accent btn-small" onclick="reserveThis()">Reserve this Boulder</button><button class="btn-outline btn-small" onclick="showEditForm('boulders','${b.id}')">Edit</button></div>
+      <div class="subtabs">
+        <button class="subtab active" onclick="showBTab(this,'bd-comments')">Board (${d.comments.length})</button>
+        <button class="subtab" onclick="showBTab(this,'bd-res')">Reservations (${d.reservations.length})</button>
+        <button class="subtab" onclick="showBTab(this,'bd-dist')">Ratings</button>
+      </div>
+      <div id="bd-comments" class="subtab-panel active">${d.comments.length?d.comments.map(c=>`<div class="review"><div class="rh"><strong>${esc(c.author)}</strong>${stars(c.rating)}</div><div class="rc">${esc(c.comment)}</div><div class="rm">${c.sent==='Yes'?'✅ Sent':'💪 Project'} · ${esc(c.attempts||'?')} attempts${c.suggested?' · suggested '+esc(c.suggested):''} · ${esc(c.date)}</div></div>`).join(''):'<p style="color:var(--gray);font-size:13px;padding:8px">No comments yet — be the first to rate it!</p>'}</div>
+      <div id="bd-res" class="subtab-panel">${d.reservations.length?`<table><thead><tr><th>Date</th><th>Time</th><th>By</th><th>Party</th><th>Status</th></tr></thead><tbody>${d.reservations.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.start)}${r.end?'–'+esc(r.end):''}</td><td>${esc(r.by)}</td><td>${esc(r.party)}</td><td><span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span></td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--gray);font-size:13px;padding:8px">No reservations</p>'}</div>
+      <div id="bd-dist" class="subtab-panel">${[5,4,3,2,1].map(n=>`<div class="bar-row"><span class="bl">${stars(n)}</span><div class="bar-track"><div class="bar-fill acc" style="width:${Math.round((s.dist[n]||0)/distMax*100)}%"></div></div><span class="bv">${s.dist[n]||0}</span></div>`).join('')}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+function showBTab(btn,panelId){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(panelId).classList.add('active')}
+function reserveThis(){const pre={'Boulder':_detailBoulder.name,'Location':_detailBoulder.location};closeModal();showForm('reservations',null,pre)}
+
+// rate & comment modal
+let _rateVal=0;
+function openRate(){
+  _rateVal=0;
+  document.getElementById('modal-inner').innerHTML=`
+    <h2>Rate ${esc(_detailBoulder.name)}</h2>
+    <label>Your Rating</label>
+    <div class="rate-pick" id="rate-pick">${[1,2,3,4,5].map(n=>`<span data-n="${n}" onclick="setRate(${n})">★</span>`).join('')}</div>
+    <div class="field-row"><div><label>Your Name</label><input id="rt-author" type="text"></div><div><label>Attempts</label><input id="rt-attempts" type="number" min="1" value="1"></div></div>
+    <div class="field-row"><div><label>Did you send it?</label><select id="rt-sent"><option>Yes</option><option>No</option></select></div><div><label>Suggested Grade</label><select id="rt-grade"><option value=""></option>${GRADES.map(g=>`<option>${g}</option>`).join('')}</select></div></div>
+    <label>Comment</label><textarea id="rt-comment" rows="3" placeholder="Beta, thoughts, stoke..."></textarea>
+    <div class="modal-actions"><button class="btn-outline" onclick="openBoulderDetail('${_detailBoulder.id}')">Back</button><button class="btn-primary" onclick="submitRate()">Post to Board</button></div>`;
+}
+function setRate(n){_rateVal=n;document.querySelectorAll('#rate-pick span').forEach(s=>s.classList.toggle('on',Number(s.dataset.n)<=n))}
+async function submitRate(){
+  if(!_rateVal){alert('Please pick a star rating');return}
+  const vals={
+    'Comment ID':'CM-'+Date.now().toString(36).toUpperCase(),
+    'Boulder':_detailBoulder.name,'Location':_detailBoulder.location,
+    'Author':document.getElementById('rt-author').value.trim()||API.displayName||'Anonymous',
+    'Rating':String(_rateVal),'Suggested Grade':document.getElementById('rt-grade').value,
+    'Attempts':document.getElementById('rt-attempts').value,'Sent':document.getElementById('rt-sent').value,
+    'Comment':document.getElementById('rt-comment').value.trim(),'Date':new Date().toISOString().slice(0,10),
+  };
+  try{
+    await api(`/kapps/${KAPP}/forms/comments/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});
+    await recomputeBoulder(_detailBoulder.id,_detailBoulder.name);
+    toast('Posted to the board!');openBoulderDetail(_detailBoulder.id);_boulderNames=null;
+  }catch(e){alert('Error: '+e.message)}}
+// recompute Avg Rating / Rating Count / Send Count on the boulder record after a new post
+async function recomputeBoulder(id,name){
+  try{
+    const r=await api(`/kapps/${KAPP}/forms/comments/submissions?include=values&limit=25&q=`+encodeURIComponent(`values[Boulder]="${name}"`));
+    const cs=r.submissions||[];const rated=cs.filter(c=>parseFloat(v(c,'Rating'))>0);
+    const avg=rated.length?(rated.reduce((a,c)=>a+parseFloat(v(c,'Rating')),0)/rated.length):0;
+    const sends=cs.filter(c=>v(c,'Sent')==='Yes').length;
+    await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:{'Avg Rating':avg?avg.toFixed(1):'','Rating Count':String(rated.length),'Send Count':String(sends)}})});
+  }catch(e){/* non-fatal */}}
+
+// ===== GENERIC FORM MODAL =====
+const HOLD_COLOR_LIST='Red,Blue,Green,Yellow,Purple,Orange,Black,White,Pink,Teal';
+const STATES='CA,CO,UT,WA,OR,NV,AZ,TX,NY,MA,NC,GA,IL,MN,VT';
+const YN='Yes,No';
+const TIMES='7:00 AM,8:00 AM,9:00 AM,10:00 AM,11:00 AM,12:00 PM,1:00 PM,2:00 PM,3:00 PM,4:00 PM,5:00 PM,6:00 PM,7:00 PM,8:00 PM,9:00 PM';
+const FORM_DEFS={
+  'locations':{title:'Location',fields:[{r:['Location ID','Name']},{r:['Type|select:Indoor Gym,Outdoor Crag,Climbing Co-op,University Wall','Status|select:Open,Seasonal,Closed']},'Address',{r:['City','State|select:'+STATES]},{r:['Phone','Hours']},{r:['Capacity|number','Boulder Count|number']},'Description|textarea']},
+  'boulders':{title:'Boulder',fields:[{r:['Boulder ID','Name']},{r:['Location|locations','Grade|select:'+GRADES.join(',')]},{r:['Hold Color|select:'+HOLD_COLOR_LIST,'Style|select:'+STYLES]},{r:['Wall Section','Setter']},{r:['Set Date|date','Status|select:Open,Project,Closed,Stripped']},{r:['Avg Rating','Send Count|number']},'Description|textarea']},
+  'reservations':{title:'Reservation',fields:[{r:['Reservation ID','Status|select:Pending,Confirmed,Completed,Cancelled,No-Show']},{r:['Boulder|boulders','Location|locations']},{r:['Reserved By','Email']},{r:['Reserve Date|date','Party Size|number']},{r:['Start Time|select:'+TIMES,'End Time|select:'+TIMES]},'Notes|textarea']},
+  'comments':{title:'Board Post',fields:[{r:['Comment ID','Date|date']},{r:['Boulder|boulders','Location|locations']},{r:['Author','Rating|select:5,4,3,2,1']},{r:['Sent|select:'+YN,'Attempts|number']},{r:['Suggested Grade|select:'+GRADES.join(','),'']},'Comment|textarea']},
+  'donations':{title:'Donation',fields:[{r:['Donation ID','Date|date']},{r:['Donor Name','Email']},{r:['Amount|number','Tier|select:Chalk Up,Send Supporter,Crux Crusher']},{r:['Fund','Location|locations']},{r:['Anonymous|select:'+YN,'Status|select:Paid,Pending,Refunded']},'Message|textarea']},
+};
+
+async function showForm(formSlug,sub,prefill){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){html+=await renderField(field,sub,prefill)}
+    else if(field.r){const parts=await Promise.all(field.r.map(async f=>f?'<div>'+await renderField(f,sub,prefill)+'</div>':'<div></div>'));html+='<div class="field-row">'+parts.join('')+'</div>'}
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show')
+}
+async function renderField(spec,sub,prefill){
+  const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();
+  let val=sub?v(sub,name):'';if(!sub&&prefill&&prefill[name]!=null)val=prefill[name];
+  let input;
+  if(type==='locations'){const opts=await ensureLocationNames();input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='boulders'){const opts=await ensureBoulderNames();input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea'){input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`}
+  else if(type==='date'){input=`<input id="${id}" type="date" value="${esc(val)}">`}
+  else if(type==='number'){input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`}
+  else{input=`<input id="${id}" type="text" value="${esc(val)}">`}
+  return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();const el=document.getElementById(elId);if(el)vals[name]=el.value}}try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_locationNames=null;_boulderNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_locationNames=null;_boulderNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+</script>
+</body>
+</html>

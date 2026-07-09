@@ -1,0 +1,44 @@
+<tree schema_version="1.0">
+  <sourceName>Kinetic Request CE</sourceName>
+  <sourceGroup>5e969426-af5d-440e-aa5a-1ed84e90a866</sourceGroup>
+  <type>Tree</type>
+  <status>Active</status>
+  <taskTree builder_version="" schema_version="1.0" version="1">
+    <name>Order Invoice Generation</name>
+    <author></author>
+    <notes></notes>
+    <lastID>2</lastID>
+    <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="240" y="40">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="shipped, not invoiced" type="Complete" value="(@values['Status'] == 'Shipped' || @values['Status'] == 'Delivered') &amp;&amp; @values['Invoiced Amount'].to_f == 0">kinetic_core_api_connection_v1_1</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Create Invoice" x="240" y="180">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">POST</parameter><parameter id="path">/app/api/v1/kapps/cpq/forms/invoices/submissions</parameter><parameter id="body">{"values":{"Invoice Number":"INV-WF-&lt;%= @run['Id'] %&gt;","Order Number":"&lt;%= @values['Order Number'] %&gt;","Quote Number":"&lt;%= @values['Quote Number'] %&gt;","Customer ID":"&lt;%= @values['Customer ID'] %&gt;","Customer Name":"&lt;%= @values['Customer Name'] %&gt;","Status":"Sent","Invoice Date":"&lt;%= Time.now.strftime('%Y-%m-%d') %&gt;","Due Date":"&lt;%= (Time.now + 2592000).strftime('%Y-%m-%d') %&gt;","Terms":"Net 30","Amount":"&lt;%= @values['Order Total'] %&gt;","Amount Paid":"0","Balance":"&lt;%= @values['Order Total'] %&gt;","Days Outstanding":"0"},"coreState":"Submitted"}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="" type="Complete" value="">kinetic_core_api_connection_v1_2</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Mark Order Invoiced" x="240" y="320">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter><parameter id="body">{"values":{"Invoiced Amount":"&lt;%= @values['Order Total'] %&gt;"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    </request>
+  </taskTree>
+</tree>

@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pool Management</title>
+<style>
+:root {
+  --blue: #242F4D; --blue-light: #2E3B5E;
+  --orange: #F36C24; --orange-light: #FF8A4C;
+  --green: #34A853; --red: #EA4335; --yellow: #FBBC04;
+  --purple: #7B1FA2; --teal: #00695C; --indigo: #283593; --aqua: #0277BD;
+  --gray: #5F6368; --light: #F8F9FA; --border: #E8EAED; --bg: #F1F3F4;
+  --white: #fff; --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.15);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; }
+
+#login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #242F4D 0%, #2E3B5E 50%, #0277BD 100%); }
+.login-box { background: var(--white); padding: 40px; border-radius: 16px; width: 400px; box-shadow: var(--shadow-lg); }
+.login-box h1 { font-size: 24px; color: var(--blue); margin-bottom: 4px; }
+.login-box .sub { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+.login-box .bar { height: 3px; background: var(--orange); border-radius: 2px; margin-bottom: 24px; }
+.login-box label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.login-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,108,36,.15); }
+.login-box button { width: 100%; padding: 12px; margin-top: 20px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: var(--orange-light); }
+.login-box .error { display: none; margin-top: 12px; padding: 10px; background: #FFEBEE; color: var(--red); border-radius: 6px; font-size: 13px; }
+
+#app { display: none; }
+.topbar { background: var(--blue); color: white; height: 56px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+.topbar .logo { font-size: 18px; font-weight: 700; } .topbar .logo span { color: var(--orange); }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tabs button { background: transparent; border: none; color: rgba(255,255,255,.7); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.nav-tabs button:hover { background: rgba(255,255,255,.1); color: white; }
+.nav-tabs button.active { background: var(--orange); color: white; }
+.spacer { flex: 1; }
+.user-info { font-size: 12px; color: rgba(255,255,255,.7); display: flex; align-items: center; gap: 8px; }
+.user-info strong { color: white; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,.3); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.logout-btn:hover { background: var(--orange); border-color: var(--orange); color: white; }
+
+.console { display: none; padding: 24px; max-width: 1300px; margin: 0 auto; }
+.console.active { display: block; }
+.page-title { font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+.card { background: var(--white); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--white); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.kpi .val { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.kpi .label { font-size: 11px; color: var(--gray); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; }
+.kpi .sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); background: var(--white); }
+td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr.clickable:hover td { background: var(--light); cursor: pointer; }
+td.mono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; color: var(--gray); }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-blue { background: #E3F2FD; color: #1565C0; }
+.badge-green { background: #E8F5E9; color: #2E7D32; }
+.badge-orange { background: #FFF3E0; color: #E65100; }
+.badge-yellow { background: #FFF8E1; color: #F9A825; }
+.badge-red { background: #FDECEA; color: #C62828; }
+.badge-gray { background: #F1F3F4; color: #5F6368; }
+.badge-purple { background: #F3E5F5; color: #7B1FA2; }
+.badge-teal { background: #E0F2F1; color: #00695C; }
+.badge-aqua { background: #E1F5FE; color: #0277BD; }
+
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: var(--light); color: var(--blue); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--gray); }
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+#modal.open { display: flex; }
+.modal-box { background: white; border-radius: 12px; width: 660px; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; z-index: 2; }
+.modal-header h2 { font-size: 16px; color: var(--blue); }
+.modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+.modal-body { padding: 20px; }
+.modal-body label { display: block; font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 4px; margin-top: 12px; }
+.modal-body label:first-child { margin-top: 0; }
+.modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+.modal-body textarea { resize: vertical; min-height: 50px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); position: sticky; bottom: 0; background: white; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.row2 > div > label:first-child, .row3 > div > label:first-child { margin-top: 0; }
+.section-divider { margin: 20px 0 4px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .5px; }
+
+.search-wrap { position: relative; }
+.search-results { position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); z-index: 5; max-height: 200px; overflow-y: auto; display: none; }
+.sr-item { padding: 8px 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--light); }
+.sr-item:hover { background: var(--light); }
+.sr-empty { padding: 8px 10px; font-size: 13px; color: var(--gray); }
+
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.bar-row .bar-label { width: 120px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .bar-track { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.bar-row .bar-fill { height: 100%; border-radius: 5px; }
+.bar-row .bar-count { width: 36px; text-align: right; color: var(--gray); }
+.mini-list { font-size: 13px; }
+.mini-list .mi { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mini-list .mi:last-child { border-bottom: none; }
+.muted { color: var(--gray); }
+
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 300; display: none; box-shadow: var(--shadow-lg); }
+#toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Pool Management</h1>
+    <div class="sub">Minnesota pool cleaning, repair &amp; water care</div>
+    <div class="bar"></div>
+    <label>Server URL</label>
+    <input id="login-url" value="" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label>
+    <input id="login-user" placeholder="username">
+    <label>Password</label>
+    <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">North<span>Star</span> Pools</div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Overview</button>
+      <button onclick="switchTab('pools')">Pools</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('employees')">Employees</button>
+      <button onclick="switchTab('visits')">Service Visits</button>
+      <button onclick="switchTab('tests')">Water Tests</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- ── Overview ── -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Fleet Overview</h2>
+    <div class="page-sub">Pools, water chemistry, heating &amp; skimmer coverage across Minnesota</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>Pools by City</h3><div id="chart-city"></div></div>
+      <div class="card"><h3>Pools by Status</h3><div id="chart-status"></div></div>
+      <div class="card"><h3>Skimmers by Location</h3><div id="chart-skimmers"></div></div>
+      <div class="card"><h3>Heating System Manufacturers</h3><div id="chart-heating"></div></div>
+      <div class="card"><h3>Water Balance</h3><div id="chart-balance"></div></div>
+      <div class="card"><h3>Service Visit Types</h3><div id="chart-svc"></div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="card">
+        <h3>Pools Needing Repair</h3>
+        <table><thead><tr><th>Pool</th><th>Customer</th><th>City</th><th>Heating</th><th>Tech</th></tr></thead><tbody id="repair-body"></tbody></table>
+      </div>
+      <div class="card">
+        <h3>Technician Workload (visits)</h3>
+        <div id="chart-workload"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Recent Water Tests</h3>
+      <table><thead><tr><th>Pool</th><th>Customer</th><th>Date</th><th>pH</th><th>Chlorine</th><th>Result</th><th>Chemicals Added</th></tr></thead><tbody id="recent-tests-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ── Pools ── -->
+  <div id="console-pools" class="console">
+    <h2 class="page-title">Pools</h2>
+    <div class="page-sub">Click a pool for its service &amp; chemistry history</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openPoolModal()">+ New Pool</button>
+      <div class="filter-bar">
+        <select id="pf-status" onchange="loadPools()"><option value="">All Status</option><option>Active</option><option>Winterized</option><option>Needs Repair</option><option>Inactive</option></select>
+        <select id="pf-city" onchange="loadPools()"><option value="">All Cities</option></select>
+        <select id="pf-heating" onchange="loadPools()"><option value="">All Heating</option></select>
+        <input id="pf-poolid" placeholder="Pool Id…" onkeydown="if(event.key==='Enter')loadPools()">
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Pool Id</th><th>Customer</th><th>City</th><th>Type</th><th>Heating</th><th>Skimmers</th><th>Status</th></tr></thead>
+      <tbody id="pools-body"></tbody>
+    </table></div>
+    <div class="pagination" id="pools-pagination"></div>
+  </div>
+
+  <!-- ── Customers ── -->
+  <div id="console-customers" class="console">
+    <h2 class="page-title">Customers</h2>
+    <div class="page-sub">Pool owners served across Minnesota</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openCustomerModal()">+ New Customer</button>
+      <div class="filter-bar">
+        <input id="cf-search" placeholder="Search name…" onkeydown="if(event.key==='Enter')loadCustomers()">
+        <select id="cf-city" onchange="loadCustomers()"><option value="">All Cities</option></select>
+        <select id="cf-status" onchange="loadCustomers()"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+        <button class="btn-secondary btn-sm" onclick="loadCustomers()">Search</button>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Customer Id</th><th>Name</th><th>City</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead>
+      <tbody id="customers-body"></tbody>
+    </table></div>
+    <div class="pagination" id="customers-pagination"></div>
+  </div>
+
+  <!-- ── Employees ── -->
+  <div id="console-employees" class="console">
+    <h2 class="page-title">Employees</h2>
+    <div class="page-sub">Field technicians and service staff</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openEmployeeModal()">+ New Employee</button>
+      <div class="filter-bar">
+        <select id="ef-role" onchange="loadEmployees()"><option value="">All Roles</option><option>Cleaning Tech</option><option>Repair Tech</option><option>Chemical Tech</option><option>Service Manager</option></select>
+        <select id="ef-status" onchange="loadEmployees()"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Employee Id</th><th>Name</th><th>Role</th><th>City</th><th>Phone</th><th>Certifications</th><th>Status</th></tr></thead>
+      <tbody id="employees-body"></tbody>
+    </table></div>
+    <div class="pagination" id="employees-pagination"></div>
+  </div>
+
+  <!-- ── Service Visits ── -->
+  <div id="console-visits" class="console">
+    <h2 class="page-title">Service Visits</h2>
+    <div class="page-sub">Cleaning and repair visits per pool</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openVisitModal()">+ New Visit</button>
+      <div class="filter-bar">
+        <select id="vf-status" onchange="loadVisits()"><option value="">All Status</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="vf-type" onchange="loadVisits()"><option value="">All Types</option><option>Cleaning</option><option>Repair</option><option>Opening</option><option>Closing</option><option>Chemical Treatment</option><option>Inspection</option></select>
+        <input id="vf-poolid" placeholder="Pool Id…" onkeydown="if(event.key==='Enter')loadVisits()">
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Visit Id</th><th>Pool Id</th><th>Customer</th><th>City</th><th>Date</th><th>Type</th><th>Tech</th><th>Status</th></tr></thead>
+      <tbody id="visits-body"></tbody>
+    </table></div>
+    <div class="pagination" id="visits-pagination"></div>
+  </div>
+
+  <!-- ── Water Tests ── -->
+  <div id="console-tests" class="console">
+    <h2 class="page-title">Water Tests</h2>
+    <div class="page-sub">Chemical readings and treatments per pool</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openTestModal()">+ New Test</button>
+      <div class="filter-bar">
+        <select id="tf-result" onchange="loadTests()"><option value="">All Results</option><option>Balanced</option><option>Needs Treatment</option></select>
+        <input id="tf-poolid" placeholder="Pool Id…" onkeydown="if(event.key==='Enter')loadTests()">
+      </div>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Test Id</th><th>Pool Id</th><th>Customer</th><th>Date</th><th>pH</th><th>Chlorine</th><th>Alkalinity</th><th>Result</th><th>Chemicals</th></tr></thead>
+      <tbody id="tests-body"></tbody>
+    </table></div>
+    <div class="pagination" id="tests-pagination"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let API = { url: '', auth: '', user: '', displayName: '' };
+const KAPP = 'pool-management';
+let OPTIONS = { employees: [] };
+const SEARCH_CACHE = {};
+const PAGE_STATE = {
+  pools: { pageToken: null, page: 1, history: [] },
+  customers: { pageToken: null, page: 1, history: [] },
+  employees: { pageToken: null, page: 1, history: [] },
+  visits: { pageToken: null, page: 1, history: [] },
+  tests: { pageToken: null, page: 1, history: [] },
+};
+const CITIES = ["Minneapolis","St. Paul","Bloomington","Rochester","Duluth","Edina","Plymouth","Maple Grove","Woodbury","Eagan","Eden Prairie","Minnetonka","Burnsville","Lakeville","Apple Valley","Wayzata","Stillwater","Chanhassen","Shakopee","Roseville"];
+const HEATERS = ["Hayward","Pentair","Raypak","Jandy","Sta-Rite","None"];
+const POOL_STATUS = ["Active","Winterized","Needs Repair","Inactive"];
+const POOL_TYPES = ["In-Ground","Above-Ground"];
+const SURFACES = ["Vinyl","Gunite/Concrete","Fiberglass"];
+const ROLES = ["Cleaning Tech","Repair Tech","Chemical Tech","Service Manager"];
+const SVC_TYPES = ["Cleaning","Repair","Opening","Closing","Chemical Treatment","Inspection"];
+const SVC_STATUS = ["Scheduled","In Progress","Completed","Cancelled"];
+
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function v(sub, field) { return sub.values?.[field] || ''; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function optList(arr, sel) { return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
+function citySelect(id, sel, cls) { return `<select id="${id}" class="${cls||''}"><option value=""></option>${CITIES.map(c=>`<option ${sel===c?'selected':''}>${esc(c)}</option>`).join('')}</select>`; }
+
+function poolStatusBadge(s) { const m={'Active':'badge-green','Winterized':'badge-blue','Needs Repair':'badge-red','Inactive':'badge-gray'}; return s?`<span class="badge ${m[s]||'badge-gray'}">${esc(s)}</span>`:''; }
+function custStatusBadge(s) { return s?`<span class="badge ${s==='Active'?'badge-green':'badge-gray'}">${esc(s)}</span>`:''; }
+function visitStatusBadge(s) { const m={'Completed':'badge-green','Scheduled':'badge-blue','In Progress':'badge-teal','Cancelled':'badge-gray'}; return s?`<span class="badge ${m[s]||'badge-gray'}">${esc(s)}</span>`:''; }
+function resultBadge(s) { return s?`<span class="badge ${s==='Balanced'?'badge-green':'badge-orange'}">${esc(s)}</span>`:''; }
+function heatBadge(s) { return s && s!=='None' ? `<span class="badge badge-aqua">${esc(s)}</span>` : '<span class="muted">None</span>'; }
+
+/* ── Auth ── */
+async function doLogin() {
+  let url = document.getElementById('login-url').value.replace(/\/+$/, '');
+  if (!url) url = window.location.origin;
+  const user = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error'); err.style.display = 'none';
+  if (!user || !pass) { err.textContent = 'Username and password required.'; err.style.display = 'block'; return; }
+  try {
+    const auth = 'Basic ' + btoa(user + ':' + pass);
+    const resp = await fetch(`${url}/app/api/v1/me`, { headers: { Authorization: auth } });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const data = await resp.json();
+    API = { url, auth: btoa(user + ':' + pass), user: data.username, displayName: data.displayName || data.username };
+    sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: API.auth, user: API.user, displayName: API.displayName }));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch (e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
+}
+function doLogout() {
+  API = { url: '', auth: '', user: '', displayName: '' };
+  sessionStorage.clear();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+}
+(function() {
+  const s = sessionStorage.getItem('kinetic_session') || sessionStorage.getItem('base_session');
+  if (!s) return;
+  try {
+    const sess = JSON.parse(s);
+    API = { url: sess.url || '', auth: sess.auth, user: sess.user, displayName: sess.displayName || sess.user };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-display').textContent = API.displayName;
+    enterApp();
+  } catch {}
+})();
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API.url}/app/api/v1${path}`, { ...opts, headers: { Authorization: 'Basic ' + API.auth, 'Content-Type': 'application/json', ...opts.headers } });
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t.slice(0, 200)}`); }
+  const text = await res.text(); return text ? JSON.parse(text) : {};
+}
+async function appApi(path) {
+  const res = await fetch(path, { headers: { Authorization: 'Basic ' + API.auth } });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+const TABS = ['dash','pools','customers','employees','visits','tests'];
+function switchTab(tab) {
+  document.querySelectorAll('.console').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('console-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  ({ dash: loadDashboard, pools: loadPools, customers: loadCustomers, employees: loadEmployees, visits: loadVisits, tests: loadTests })[tab]();
+}
+async function enterApp() {
+  // populate static city/heating filters
+  ['pf-city','cf-city'].forEach(id => { const el=document.getElementById(id); if(el&&el.options.length<=1) el.innerHTML='<option value="">All Cities</option>'+CITIES.map(c=>`<option>${c}</option>`).join(''); });
+  const ph=document.getElementById('pf-heating'); if(ph&&ph.options.length<=1) ph.innerHTML='<option value="">All Heating</option>'+HEATERS.map(h=>`<option>${h}</option>`).join('');
+  try { OPTIONS = await appApi('/api/pools/options'); } catch { OPTIONS = { employees: [] }; }
+  loadDashboard();
+}
+function empSelect(id, sel) { return `<select id="${id}"><option value=""></option>${OPTIONS.employees.map(e=>`<option ${sel===e.name?'selected':''}>${esc(e.name)}</option>`).join('')}</select>`; }
+
+/* ── Dashboard ── */
+async function loadDashboard() {
+  try {
+    const d = await appApi('/api/pools/dashboard');
+    const k = d.kpis;
+    document.getElementById('dash-kpis').innerHTML = `
+      <div class="kpi"><div class="val" style="color:var(--blue)">${k.customers}</div><div class="label">Customers</div><div class="sub">${k.activeCustomers} active</div></div>
+      <div class="kpi"><div class="val" style="color:var(--aqua)">${k.pools}</div><div class="label">Pools</div><div class="sub">${k.activePools} active</div></div>
+      <div class="kpi"><div class="val" style="color:var(--red)">${k.needsRepair}</div><div class="label">Needs Repair</div></div>
+      <div class="kpi"><div class="val" style="color:var(--teal)">${k.employees}</div><div class="label">Employees</div></div>
+      <div class="kpi"><div class="val" style="color:var(--indigo)">${k.totalSkimmers}</div><div class="label">Total Skimmers</div></div>
+      <div class="kpi"><div class="val" style="color:var(--orange)">${k.scheduled}</div><div class="label">Visits Scheduled</div><div class="sub">${k.completed} completed</div></div>
+      <div class="kpi"><div class="val" style="color:var(--green)">${k.balancedPct}%</div><div class="label">Water Balanced</div><div class="sub">${k.tests} tests</div></div>
+      <div class="kpi"><div class="val" style="color:var(--blue-light)">${k.avgPh||'—'}</div><div class="label">Avg pH</div></div>`;
+
+    renderBars('chart-city', d.poolsByCity, null);
+    renderBars('chart-status', d.poolsByStatus, { 'Active':'var(--green)','Winterized':'#1565C0','Needs Repair':'var(--red)','Inactive':'#9AA0A6' }, POOL_STATUS);
+    renderBars('chart-skimmers', d.skimmersByCity, null);
+    renderBars('chart-heating', d.heating, { 'Hayward':'var(--aqua)','Pentair':'var(--teal)','Raypak':'var(--orange)','Jandy':'var(--indigo)','Sta-Rite':'var(--purple)','None':'#9AA0A6' }, HEATERS);
+    renderBars('chart-balance', d.balance, { 'Balanced':'var(--green)','Needs Treatment':'var(--orange)' });
+    renderBars('chart-svc', d.svcType, null, SVC_TYPES);
+    renderBars('chart-workload', d.empWork, null);
+
+    document.getElementById('repair-body').innerHTML = (d.needsRepairList||[]).length ? d.needsRepairList.map(p => `<tr class="clickable" onclick="viewPool('${p.id}')">
+      <td class="mono">${esc(p.poolId)}</td><td>${esc(p.customer)}</td><td>${esc(p.city)}</td><td>${heatBadge(p.heating)}</td><td>${esc(p.assigned)}</td></tr>`).join('') : '<tr><td colspan="5" class="muted" style="text-align:center">None 🎉</td></tr>';
+
+    document.getElementById('recent-tests-body').innerHTML = (d.recentTests||[]).length ? d.recentTests.map(t => `<tr>
+      <td class="mono">${esc(t.poolId)}</td><td>${esc(t.customer)}</td><td>${esc(t.date)}</td><td>${esc(t.ph)}</td><td>${esc(t.chlorine)}</td><td>${resultBadge(t.result)}</td><td class="muted">${esc(t.chemicals)}</td></tr>`).join('') : '<tr><td colspan="7" class="muted" style="text-align:center">No tests</td></tr>';
+  } catch (e) { toast('Dashboard error: ' + e.message); }
+}
+function renderBars(elId, obj, colorMap, order) {
+  const entries = Object.entries(obj || {});
+  if (order) entries.sort((a, b) => { const ia=order.indexOf(a[0]),ib=order.indexOf(b[0]); return (ia<0?99:ia)-(ib<0?99:ib); });
+  else entries.sort((a, b) => b[1] - a[1]);
+  const top = entries.slice(0, 20);
+  const max = Math.max(...top.map(e => e[1]), 1);
+  document.getElementById(elId).innerHTML = top.length ? top.map(([k, n]) => {
+    const color = colorMap?.[k] || 'var(--aqua)';
+    return `<div class="bar-row"><div class="bar-label">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${(n/max)*100}%;background:${color}"></div></div><div class="bar-count">${n}</div></div>`;
+  }).join('') : '<div class="muted" style="font-size:13px">No data</div>';
+}
+
+/* ── generic paginated loader ── */
+async function fetchPage(form, ps, kqlParts, orderBy) {
+  let path = `/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`;
+  if (kqlParts && kqlParts.length) path += '&q=' + encodeURIComponent(kqlParts.join(' AND '));
+  if (orderBy) path += '&orderBy=' + encodeURIComponent(orderBy); // required when KQL uses a =* range expression
+  if (ps.history.length) path += '&pageToken=' + ps.history[ps.history.length - 1];
+  const data = await api(path);
+  ps.pageToken = data.nextPageToken || null;
+  return data.submissions || [];
+}
+function pageStep(ps, direction) {
+  if (direction === 'next' && ps.pageToken) { ps.history.push(ps.pageToken); ps.page++; }
+  else if (direction === 'prev' && ps.history.length) { ps.history.pop(); ps.page--; }
+  else if (!direction) { ps.history = []; ps.page = 1; ps.pageToken = null; }
+}
+function pager(elId, ps, fnName) {
+  document.getElementById(elId).innerHTML = `
+    <button class="btn-secondary btn-sm" onclick="${fnName}('prev')" ${ps.page <= 1 ? 'disabled' : ''}>Prev</button>
+    <span>Page ${ps.page}</span>
+    <button class="btn-secondary btn-sm" onclick="${fnName}('next')" ${!ps.pageToken ? 'disabled' : ''}>Next</button>`;
+}
+
+/* ── searchable picker (for >25-row reference fields) ── */
+function searchBox(id, placeholder, displayVal) {
+  return `<div class="search-wrap"><input id="${id}-input" autocomplete="off" placeholder="${esc(placeholder)}" value="${esc(displayVal||'')}"><div id="${id}-results" class="search-results"></div></div>`;
+}
+function bindSearch(id, form, field, fmt, onPick) {
+  const inp = document.getElementById(id + '-input');
+  const box = document.getElementById(id + '-results');
+  if (!inp) return;
+  let t;
+  inp.addEventListener('input', () => {
+    clearTimeout(t);
+    const term = inp.value.trim();
+    if (term.length < 1) { box.style.display = 'none'; return; }
+    t = setTimeout(async () => {
+      try {
+        const data = await api(`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=8&orderBy=` + encodeURIComponent(`values[${field}]`) + `&q=` + encodeURIComponent(`values[${field}] =* "${term}"`));
+        const subs = data.submissions || [];
+        SEARCH_CACHE[id] = subs;
+        box.innerHTML = subs.length ? subs.map((s, i) => `<div class="sr-item" data-i="${i}">${esc(fmt(s.values))}</div>`).join('') : '<div class="sr-empty">No matches</div>';
+        box.style.display = 'block';
+        box.querySelectorAll('.sr-item').forEach(el => el.onclick = () => {
+          const s = SEARCH_CACHE[id][+el.dataset.i];
+          inp.value = fmt(s.values);
+          onPick(s.values);
+          box.style.display = 'none';
+        });
+      } catch (e) { /* ignore */ }
+    }, 250);
+  });
+}
+
+/* ── Pools ── */
+async function loadPools(direction) {
+  const ps = PAGE_STATE.pools; pageStep(ps, direction);
+  let q = [], orderBy = null;
+  const pid = (document.getElementById('pf-poolid').value || '').trim();
+  if (pid) { q = [`values[Pool Id] =* "${pid}"`]; orderBy = 'values[Pool Id]'; } // exclusive: range query needs matching orderBy
+  else {
+    const st = document.getElementById('pf-status').value;
+    const city = document.getElementById('pf-city').value;
+    const heat = document.getElementById('pf-heating').value;
+    if (st) q.push(`values[Status]="${st}"`);
+    if (city) q.push(`values[City]="${city}"`);
+    if (heat) q.push(`values[Heating Manufacturer]="${heat}"`);
+  }
+  try {
+    const subs = await fetchPage('pools', ps, q, orderBy);
+    document.getElementById('pools-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="viewPool('${s.id}')">
+      <td class="mono">${esc(v(s,'Pool Id'))}</td>
+      <td><strong>${esc(v(s,'Customer Name'))}</strong></td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'Pool Type'))}</td>
+      <td>${heatBadge(v(s,'Heating Manufacturer'))}</td>
+      <td>${esc(v(s,'Skimmer Count'))}</td>
+      <td>${poolStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="muted" style="text-align:center">No pools</td></tr>';
+    pager('pools-pagination', ps, 'loadPools');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+async function viewPool(id) {
+  try { const data = await api(`/submissions/${id}?include=values`); openPoolModal(data.submission || data); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+function openPoolModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const pid = vals['Pool Id'] || ('P-' + String(Math.floor(10000 + Math.random()*89999)));
+  document.getElementById('modal-title').textContent = isNew ? 'New Pool' : ('Pool ' + pid);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Pool Id</label><input id="p-poolid" value="${esc(pid)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Status</label><select id="p-status">${optList(POOL_STATUS, vals.Status || 'Active')}</select></div>
+    </div>
+    <label>Customer</label>${searchBox('p-cust', 'Search customer by name…', vals['Customer Name'] ? (vals['Customer Name'] + (vals.City?' — '+vals.City:'')) : '')}
+    <input type="hidden" id="p-customerId" value="${esc(vals['Customer Id']||'')}">
+    <input type="hidden" id="p-customerName" value="${esc(vals['Customer Name']||'')}">
+    <div class="row2">
+      <div><label>Address</label><input id="p-address" value="${esc(vals.Address||'')}"></div>
+      <div><label>City</label>${citySelect('p-city', vals.City)}</div>
+    </div>
+    <div class="row3">
+      <div><label>Pool Type</label><select id="p-type">${optList(POOL_TYPES, vals['Pool Type']||'In-Ground')}</select></div>
+      <div><label>Surface</label><select id="p-surface">${optList(SURFACES, vals.Surface||'Vinyl')}</select></div>
+      <div><label>Volume (gal)</label><input id="p-volume" type="number" value="${esc(vals.Volume||'')}"></div>
+    </div>
+    <div class="row3">
+      <div><label>Heating Manufacturer</label><select id="p-heatmfr">${optList(HEATERS, vals['Heating Manufacturer']||'None')}</select></div>
+      <div><label>Heating Model</label><input id="p-heatmodel" value="${esc(vals['Heating Model']||'')}"></div>
+      <div><label>Skimmer Count</label><input id="p-skimmers" type="number" min="0" value="${esc(vals['Skimmer Count']||'1')}"></div>
+    </div>
+    <label>Assigned Employee</label>${empSelect('p-emp', vals['Assigned Employee'])}
+    <label>Notes</label><textarea id="p-notes">${esc(vals.Notes||'')}</textarea>
+    ${isNew ? '' : `<div id="pool-detail-section"><div class="section-divider">Service &amp; Chemistry History</div><div class="muted" style="font-size:13px">Loading…</div></div>`}`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','pools',loadPools)">Delete</button>`}
+    <button class="btn-primary" onclick="savePool('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+  bindSearch('p-cust', 'customers', 'Name', vx => `${vx['Name']} — ${vx['City']||''}`, vx => { document.getElementById('p-customerId').value = vx['Customer Id']||''; document.getElementById('p-customerName').value = vx['Name']||''; if (vx['City'] && document.getElementById('p-city')) document.getElementById('p-city').value = vx['City']; if (vx['Address']) document.getElementById('p-address').value = vx['Address']; });
+  if (!isNew && pid) loadPoolDetail(pid);
+}
+async function loadPoolDetail(poolId) {
+  const sec = document.getElementById('pool-detail-section'); if (!sec) return;
+  try {
+    const d = await appApi('/api/pools/pool-detail?poolId=' + encodeURIComponent(poolId));
+    sec.innerHTML = `
+      <div class="section-divider">Service &amp; Chemistry History</div>
+      <div style="font-size:13px;margin-bottom:10px">Visits: <strong>${d.visitCount}</strong> &nbsp;·&nbsp; Water tests: <strong>${d.testCount}</strong> &nbsp;·&nbsp; Balanced: <strong>${d.balanced}</strong></div>
+      <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:4px">RECENT VISITS</div>
+      <div class="mini-list">${d.visits.length ? d.visits.slice(0,5).map(x=>`<div class="mi"><div>${esc(x.date)} · ${esc(x.type)} <span class="muted">${esc(x.employee)}</span><br><span class="muted">${esc(x.notes)}</span></div><div>${visitStatusBadge(x.status)}</div></div>`).join('') : '<div class="muted">No visits</div>'}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gray);margin:12px 0 4px">RECENT TESTS</div>
+      <div class="mini-list">${d.tests.length ? d.tests.slice(0,5).map(x=>`<div class="mi"><div>${esc(x.date)} · pH ${esc(x.ph)} · Cl ${esc(x.chlorine)} · Alk ${esc(x.alkalinity)}<br><span class="muted">${esc(x.chemicals)}</span></div><div>${resultBadge(x.result)}</div></div>`).join('') : '<div class="muted">No tests</div>'}</div>`;
+  } catch (e) { sec.innerHTML = '<div class="section-divider">Service &amp; Chemistry History</div><div class="muted">Could not load history</div>'; }
+}
+async function savePool(id, isNew) {
+  const values = {
+    'Pool Id': document.getElementById('p-poolid').value,
+    'Customer Id': document.getElementById('p-customerId').value,
+    'Customer Name': document.getElementById('p-customerName').value,
+    Address: document.getElementById('p-address').value,
+    City: document.getElementById('p-city').value,
+    'Pool Type': document.getElementById('p-type').value,
+    Surface: document.getElementById('p-surface').value,
+    Volume: document.getElementById('p-volume').value,
+    'Heating Manufacturer': document.getElementById('p-heatmfr').value,
+    'Heating Model': document.getElementById('p-heatmodel').value,
+    'Skimmer Count': document.getElementById('p-skimmers').value,
+    Status: document.getElementById('p-status').value,
+    'Assigned Employee': document.getElementById('p-emp').value,
+    Notes: document.getElementById('p-notes').value,
+  };
+  if (!values['Customer Name']) { toast('Select a customer'); return; }
+  try { await saveSub(id, 'pools', values, isNew); closeModal(); toast(isNew?'Pool created':'Pool updated'); loadPools(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Customers ── */
+async function loadCustomers(direction) {
+  const ps = PAGE_STATE.customers; pageStep(ps, direction);
+  let q = [], orderBy = null;
+  const search = (document.getElementById('cf-search').value || '').trim();
+  if (search) { q = [`values[Name] =* "${search}"`]; orderBy = 'values[Name]'; } // exclusive: range query needs matching orderBy
+  else {
+    const city = document.getElementById('cf-city').value;
+    const st = document.getElementById('cf-status').value;
+    if (city) q.push(`values[City]="${city}"`);
+    if (st) q.push(`values[Status]="${st}"`);
+  }
+  try {
+    const subs = await fetchPage('customers', ps, q, orderBy);
+    document.getElementById('customers-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','customers',openCustomerModal)">
+      <td class="mono">${esc(v(s,'Customer Id'))}</td>
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td>${esc(v(s,'Email'))}</td>
+      <td>${custStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="muted" style="text-align:center">No customers</td></tr>';
+    pager('customers-pagination', ps, 'loadCustomers');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openCustomerModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const cid = vals['Customer Id'] || ('C-' + String(Math.floor(10000 + Math.random()*89999)));
+  document.getElementById('modal-title').textContent = isNew ? 'New Customer' : ('Customer ' + cid);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Customer Id</label><input id="c-id" value="${esc(cid)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Status</label><select id="c-status">${optList(['Active','Inactive'], vals.Status||'Active')}</select></div>
+    </div>
+    <label>Name</label><input id="c-name" value="${esc(vals.Name||'')}">
+    <div class="row2">
+      <div><label>Email</label><input id="c-email" value="${esc(vals.Email||'')}"></div>
+      <div><label>Phone</label><input id="c-phone" value="${esc(vals.Phone||'')}"></div>
+    </div>
+    <label>Address</label><input id="c-address" value="${esc(vals.Address||'')}">
+    <div class="row3">
+      <div><label>City</label>${citySelect('c-city', vals.City)}</div>
+      <div><label>State</label><input id="c-state" value="${esc(vals.State||'MN')}"></div>
+      <div><label>Zip</label><input id="c-zip" value="${esc(vals.Zip||'')}"></div>
+    </div>
+    <label>Customer Since</label><input id="c-since" type="date" value="${esc(vals['Customer Since']||'')}">`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','customers',loadCustomers)">Delete</button>`}
+    <button class="btn-primary" onclick="saveCustomer('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function saveCustomer(id, isNew) {
+  const values = {
+    'Customer Id': document.getElementById('c-id').value, Name: document.getElementById('c-name').value,
+    Email: document.getElementById('c-email').value, Phone: document.getElementById('c-phone').value,
+    Address: document.getElementById('c-address').value, City: document.getElementById('c-city').value,
+    State: document.getElementById('c-state').value, Zip: document.getElementById('c-zip').value,
+    Status: document.getElementById('c-status').value, 'Customer Since': document.getElementById('c-since').value,
+  };
+  if (!values.Name) { toast('Name required'); return; }
+  try { await saveSub(id, 'customers', values, isNew); closeModal(); toast('Saved'); loadCustomers(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Employees ── */
+async function loadEmployees(direction) {
+  const ps = PAGE_STATE.employees; pageStep(ps, direction);
+  const q = [];
+  const role = document.getElementById('ef-role').value;
+  const st = document.getElementById('ef-status').value;
+  if (role) q.push(`values[Role]="${role}"`);
+  if (st) q.push(`values[Status]="${st}"`);
+  try {
+    const subs = await fetchPage('employees', ps, q);
+    document.getElementById('employees-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','employees',openEmployeeModal)">
+      <td class="mono">${esc(v(s,'Employee Id'))}</td>
+      <td><strong>${esc(v(s,'Name'))}</strong></td>
+      <td><span class="badge badge-aqua">${esc(v(s,'Role'))}</span></td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'Phone'))}</td>
+      <td class="muted">${esc(v(s,'Certifications'))}</td>
+      <td>${custStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="muted" style="text-align:center">No employees</td></tr>';
+    pager('employees-pagination', ps, 'loadEmployees');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openEmployeeModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const eid = vals['Employee Id'] || ('E-' + String(Math.floor(100 + Math.random()*899)));
+  document.getElementById('modal-title').textContent = isNew ? 'New Employee' : ('Employee ' + eid);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Employee Id</label><input id="e-id" value="${esc(eid)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Status</label><select id="e-status">${optList(['Active','Inactive'], vals.Status||'Active')}</select></div>
+    </div>
+    <label>Name</label><input id="e-name" value="${esc(vals.Name||'')}">
+    <div class="row2">
+      <div><label>Role</label><select id="e-role">${optList(ROLES, vals.Role||'Cleaning Tech')}</select></div>
+      <div><label>City</label>${citySelect('e-city', vals.City)}</div>
+    </div>
+    <div class="row2">
+      <div><label>Email</label><input id="e-email" value="${esc(vals.Email||'')}"></div>
+      <div><label>Phone</label><input id="e-phone" value="${esc(vals.Phone||'')}"></div>
+    </div>
+    <div class="row2">
+      <div><label>Hire Date</label><input id="e-hire" type="date" value="${esc(vals['Hire Date']||'')}"></div>
+      <div><label>Certifications</label><input id="e-cert" value="${esc(vals.Certifications||'')}"></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','employees',loadEmployees)">Delete</button>`}
+    <button class="btn-primary" onclick="saveEmployee('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function saveEmployee(id, isNew) {
+  const values = {
+    'Employee Id': document.getElementById('e-id').value, Name: document.getElementById('e-name').value,
+    Role: document.getElementById('e-role').value, City: document.getElementById('e-city').value,
+    Email: document.getElementById('e-email').value, Phone: document.getElementById('e-phone').value,
+    'Hire Date': document.getElementById('e-hire').value, Certifications: document.getElementById('e-cert').value,
+    Status: document.getElementById('e-status').value,
+  };
+  if (!values.Name) { toast('Name required'); return; }
+  try { await saveSub(id, 'employees', values, isNew); closeModal(); toast('Saved'); await refreshOptions(); loadEmployees(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+async function refreshOptions() { try { OPTIONS = await appApi('/api/pools/options'); } catch {} }
+
+/* ── Service Visits ── */
+async function loadVisits(direction) {
+  const ps = PAGE_STATE.visits; pageStep(ps, direction);
+  let q = [], orderBy = null;
+  const pid = (document.getElementById('vf-poolid').value || '').trim();
+  if (pid) { q = [`values[Pool Id] =* "${pid}"`]; orderBy = 'values[Pool Id]'; } // exclusive: range query needs matching orderBy
+  else {
+    const st = document.getElementById('vf-status').value;
+    const ty = document.getElementById('vf-type').value;
+    if (st) q.push(`values[Status]="${st}"`);
+    if (ty) q.push(`values[Service Type]="${ty}"`);
+  }
+  try {
+    const subs = await fetchPage('service-visits', ps, q, orderBy);
+    document.getElementById('visits-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','service-visits',openVisitModal)">
+      <td class="mono">${esc(v(s,'Visit Id'))}</td>
+      <td class="mono">${esc(v(s,'Pool Id'))}</td>
+      <td>${esc(v(s,'Customer Name'))}</td>
+      <td>${esc(v(s,'City'))}</td>
+      <td>${esc(v(s,'Date'))}</td>
+      <td>${esc(v(s,'Service Type'))}</td>
+      <td>${esc(v(s,'Employee'))}</td>
+      <td>${visitStatusBadge(v(s,'Status'))}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="muted" style="text-align:center">No visits</td></tr>';
+    pager('visits-pagination', ps, 'loadVisits');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openVisitModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const vid = vals['Visit Id'] || ('V-' + String(Math.floor(10000 + Math.random()*89999)));
+  document.getElementById('modal-title').textContent = isNew ? 'New Service Visit' : ('Visit ' + vid);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Visit Id</label><input id="vi-id" value="${esc(vid)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Status</label><select id="vi-status">${optList(SVC_STATUS, vals.Status||'Scheduled')}</select></div>
+    </div>
+    <label>Pool</label>${searchBox('vi-pool', 'Search by Pool Id (e.g. P-00012)…', vals['Pool Id'] ? (vals['Pool Id']+' — '+(vals['Customer Name']||'')) : '')}
+    <input type="hidden" id="vi-poolid" value="${esc(vals['Pool Id']||'')}">
+    <input type="hidden" id="vi-custname" value="${esc(vals['Customer Name']||'')}">
+    <input type="hidden" id="vi-city" value="${esc(vals.City||'')}">
+    <div class="row2">
+      <div><label>Service Type</label><select id="vi-type">${optList(SVC_TYPES, vals['Service Type']||'Cleaning')}</select></div>
+      <div><label>Date</label><input id="vi-date" type="date" value="${esc(vals.Date||'')}"></div>
+    </div>
+    <div class="row2">
+      <div><label>Technician</label>${empSelect('vi-emp', vals.Employee)}</div>
+      <div><label>Duration (min)</label><input id="vi-dur" type="number" value="${esc(vals.Duration||'')}"></div>
+    </div>
+    <label>Notes</label><textarea id="vi-notes">${esc(vals.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','service-visits',loadVisits)">Delete</button>`}
+    <button class="btn-primary" onclick="saveVisit('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+  bindSearch('vi-pool', 'pools', 'Pool Id', vx => `${vx['Pool Id']} — ${vx['Customer Name']||''}`, vx => { document.getElementById('vi-poolid').value=vx['Pool Id']||''; document.getElementById('vi-custname').value=vx['Customer Name']||''; document.getElementById('vi-city').value=vx['City']||''; });
+}
+async function saveVisit(id, isNew) {
+  const values = {
+    'Visit Id': document.getElementById('vi-id').value, 'Pool Id': document.getElementById('vi-poolid').value,
+    'Customer Name': document.getElementById('vi-custname').value, City: document.getElementById('vi-city').value,
+    Date: document.getElementById('vi-date').value, 'Service Type': document.getElementById('vi-type').value,
+    Employee: document.getElementById('vi-emp').value, Status: document.getElementById('vi-status').value,
+    Duration: document.getElementById('vi-dur').value, Notes: document.getElementById('vi-notes').value,
+  };
+  if (!values['Pool Id']) { toast('Select a pool'); return; }
+  try { await saveSub(id, 'service-visits', values, isNew); closeModal(); toast('Saved'); loadVisits(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── Water Tests ── */
+async function loadTests(direction) {
+  const ps = PAGE_STATE.tests; pageStep(ps, direction);
+  let q = [], orderBy = null;
+  const pid = (document.getElementById('tf-poolid').value || '').trim();
+  if (pid) { q = [`values[Pool Id] =* "${pid}"`]; orderBy = 'values[Pool Id]'; } // exclusive: range query needs matching orderBy
+  else {
+    const r = document.getElementById('tf-result').value;
+    if (r) q.push(`values[Result]="${r}"`);
+  }
+  try {
+    const subs = await fetchPage('water-tests', ps, q, orderBy);
+    document.getElementById('tests-body').innerHTML = subs.length ? subs.map(s => `<tr class="clickable" onclick="editSub('${s.id}','water-tests',openTestModal)">
+      <td class="mono">${esc(v(s,'Test Id'))}</td>
+      <td class="mono">${esc(v(s,'Pool Id'))}</td>
+      <td>${esc(v(s,'Customer Name'))}</td>
+      <td>${esc(v(s,'Date'))}</td>
+      <td>${esc(v(s,'pH'))}</td>
+      <td>${esc(v(s,'Free Chlorine'))}</td>
+      <td>${esc(v(s,'Total Alkalinity'))}</td>
+      <td>${resultBadge(v(s,'Result'))}</td>
+      <td class="muted">${esc(v(s,'Chemicals Added'))}</td>
+    </tr>`).join('') : '<tr><td colspan="9" class="muted" style="text-align:center">No tests</td></tr>';
+    pager('tests-pagination', ps, 'loadTests');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+function openTestModal(existing) {
+  const s = existing || {}; const vals = s.values || {}; const isNew = !existing;
+  const tid = vals['Test Id'] || ('T-' + String(Math.floor(10000 + Math.random()*89999)));
+  document.getElementById('modal-title').textContent = isNew ? 'New Water Test' : ('Test ' + tid);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="row2">
+      <div><label>Test Id</label><input id="t-id" value="${esc(tid)}" ${isNew?'':'readonly style="background:var(--light);color:var(--gray)"'}></div>
+      <div><label>Result</label><select id="t-result">${optList(['Balanced','Needs Treatment'], vals.Result||'Balanced')}</select></div>
+    </div>
+    <label>Pool</label>${searchBox('t-pool', 'Search by Pool Id (e.g. P-00012)…', vals['Pool Id'] ? (vals['Pool Id']+' — '+(vals['Customer Name']||'')) : '')}
+    <input type="hidden" id="t-poolid" value="${esc(vals['Pool Id']||'')}">
+    <input type="hidden" id="t-custname" value="${esc(vals['Customer Name']||'')}">
+    <div class="row2">
+      <div><label>Date</label><input id="t-date" type="date" value="${esc(vals.Date||'')}"></div>
+      <div><label>Technician</label>${empSelect('t-emp', vals.Employee)}</div>
+    </div>
+    <div class="row3">
+      <div><label>pH</label><input id="t-ph" type="number" step="0.1" value="${esc(vals.pH||'')}"></div>
+      <div><label>Free Chlorine</label><input id="t-cl" type="number" step="0.1" value="${esc(vals['Free Chlorine']||'')}"></div>
+      <div><label>Total Alkalinity</label><input id="t-alk" type="number" value="${esc(vals['Total Alkalinity']||'')}"></div>
+    </div>
+    <div class="row3">
+      <div><label>Calcium Hardness</label><input id="t-cal" type="number" value="${esc(vals['Calcium Hardness']||'')}"></div>
+      <div><label>Cyanuric Acid</label><input id="t-cya" type="number" value="${esc(vals['Cyanuric Acid']||'')}"></div>
+      <div><label>Temp (°F)</label><input id="t-temp" type="number" value="${esc(vals.Temperature||'')}"></div>
+    </div>
+    <label>Chemicals Added</label><input id="t-chem" value="${esc(vals['Chemicals Added']||'')}" placeholder="e.g. Chlorine, pH Down">
+    <label>Notes</label><textarea id="t-notes">${esc(vals.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    ${isNew ? '' : `<button class="btn-danger btn-sm" onclick="deleteSub('${s.id}','water-tests',loadTests)">Delete</button>`}
+    <button class="btn-primary" onclick="saveTest('${s.id||''}', ${isNew})">${isNew ? 'Create' : 'Save'}</button>`;
+  document.getElementById('modal').classList.add('open');
+  bindSearch('t-pool', 'pools', 'Pool Id', vx => `${vx['Pool Id']} — ${vx['Customer Name']||''}`, vx => { document.getElementById('t-poolid').value=vx['Pool Id']||''; document.getElementById('t-custname').value=vx['Customer Name']||''; });
+}
+async function saveTest(id, isNew) {
+  const values = {
+    'Test Id': document.getElementById('t-id').value, 'Pool Id': document.getElementById('t-poolid').value,
+    'Customer Name': document.getElementById('t-custname').value, Date: document.getElementById('t-date').value,
+    Employee: document.getElementById('t-emp').value, pH: document.getElementById('t-ph').value,
+    'Free Chlorine': document.getElementById('t-cl').value, 'Total Alkalinity': document.getElementById('t-alk').value,
+    'Calcium Hardness': document.getElementById('t-cal').value, 'Cyanuric Acid': document.getElementById('t-cya').value,
+    Temperature: document.getElementById('t-temp').value, Result: document.getElementById('t-result').value,
+    'Chemicals Added': document.getElementById('t-chem').value, Notes: document.getElementById('t-notes').value,
+  };
+  if (!values['Pool Id']) { toast('Select a pool'); return; }
+  try { await saveSub(id, 'water-tests', values, isNew); closeModal(); toast('Saved'); loadTests(); }
+  catch (e) { toast('Save failed: ' + e.message); }
+}
+
+/* ── shared submission helpers ── */
+async function saveSub(id, form, values, isNew) {
+  if (id && !isNew) return api(`/submissions/${id}`, { method: 'PUT', body: JSON.stringify({ values }) });
+  return api(`/kapps/${KAPP}/forms/${form}/submissions?completed=true`, { method: 'POST', body: JSON.stringify({ values, coreState: 'Submitted' }) });
+}
+async function editSub(id, form, opener) {
+  try { const data = await api(`/submissions/${id}?include=values`); opener(data.submission || data); }
+  catch (e) { toast('Error: ' + e.message); }
+}
+async function deleteSub(id, form, reload) {
+  if (!confirm('Delete this record?')) return;
+  try { await api(`/submissions/${id}`, { method: 'DELETE' }); closeModal(); toast('Deleted'); reload(); }
+  catch (e) { toast('Delete failed: ' + e.message); }
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>

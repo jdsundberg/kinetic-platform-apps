@@ -1,0 +1,44 @@
+<tree schema_version="1.0">
+  <sourceName>Kinetic Request CE</sourceName>
+  <sourceGroup>b192cfff-b131-4cb3-91fc-7fe32aa67529</sourceGroup>
+  <type>Tree</type>
+  <status>Active</status>
+  <taskTree builder_version="" schema_version="1.0" version="1">
+    <name>Won to Order Conversion</name>
+    <author></author>
+    <notes></notes>
+    <lastID>2</lastID>
+    <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="240" y="40">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="won, not yet converted" type="Complete" value="@values['Status'] == 'Won' &amp;&amp; @values['Order Number'].to_s.empty?">kinetic_core_api_connection_v1_1</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Create Order" x="240" y="180">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">POST</parameter><parameter id="path">/app/api/v1/kapps/cpq/forms/orders/submissions</parameter><parameter id="body">{"values":{"Order Number":"SO-&lt;%= @values['Quote Number'].sub('Q-','') %&gt;","Quote Number":"&lt;%= @values['Quote Number'] %&gt;","Customer ID":"&lt;%= @values['Customer ID'] %&gt;","Customer Name":"&lt;%= @values['Customer Name'] %&gt;","Owner":"&lt;%= @values['Owner'] %&gt;","Status":"Open","Order Date":"&lt;%= Time.now.strftime('%Y-%m-%d') %&gt;","Order Total":"&lt;%= @values['Net Total'] %&gt;","Cost Total":"&lt;%= @values['Cost Total'] %&gt;","Margin Amount":"&lt;%= @values['Margin Amount'] %&gt;","Margin Pct":"&lt;%= @values['Margin Pct'] %&gt;","Fulfillment Status":"Pending"},"coreState":"Submitted"}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="" type="Complete" value="">kinetic_core_api_connection_v1_2</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Link Order To Quote" x="240" y="320">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter><parameter id="body">{"values":{"Order Number":"SO-&lt;%= @values['Quote Number'].sub('Q-','') %&gt;"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    </request>
+  </taskTree>
+</tree>

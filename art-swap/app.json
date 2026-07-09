@@ -1,0 +1,122 @@
+{
+  "name": "Art Swap",
+  "slug": "art-swap",
+  "description": "Corporate art exchange for Minnesota companies — swap paintings & sculptures, track value, insurance, and shipping",
+  "category": "Industry",
+  "icon": "palette",
+  "color": "#283593",
+  "bg": "#E8EAF6",
+  "kapp": "art-swap",
+  "forms": [
+    {
+      "slug": "companies",
+      "name": "Companies",
+      "description": "Minnesota companies participating in the art exchange.",
+      "submissionLabelExpression": "${values('Company Name')} — ${values('City')}",
+      "fields": [
+        { "name": "Company Name", "required": true },
+        { "name": "City" },
+        { "name": "Address" },
+        { "name": "Contact Name" },
+        { "name": "Contact Email" },
+        { "name": "Phone" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Company Name]", "values[City]", "values[Status]"]
+      }
+    },
+    {
+      "slug": "artworks",
+      "name": "Artworks",
+      "description": "Paintings and sculptures in corporate collections — value and insurance per piece.",
+      "submissionLabelExpression": "${values('Title')} by ${values('Artist')} (${values('Type')})",
+      "fields": [
+        { "name": "Title", "required": true },
+        { "name": "Artist" },
+        { "name": "Type" },
+        { "name": "Medium" },
+        { "name": "Year" },
+        { "name": "Dimensions" },
+        { "name": "Description", "rows": 2 },
+        { "name": "Owner Company", "required": true },
+        { "name": "Location" },
+        { "name": "Appraised Value" },
+        { "name": "Appraisal Date" },
+        { "name": "Insurer" },
+        { "name": "Policy Number" },
+        { "name": "Insured Value" },
+        { "name": "Insurance Expires" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Title]",
+          "values[Type]",
+          "values[Status]",
+          "values[Owner Company]",
+          "values[Policy Number]",
+          "values[Insurance Expires]"
+        ],
+        "compound": [
+          ["values[Status]", "values[Type]"],
+          ["values[Owner Company]", "values[Status]"],
+          ["values[Owner Company]", "values[Type]"],
+          ["values[Owner Company]", "values[Status]", "values[Type]"]
+        ]
+      }
+    },
+    {
+      "slug": "swaps",
+      "name": "Swaps",
+      "description": "Swap agreements between two companies — lifecycle: Proposed → Approved → In Transit → Completed.",
+      "submissionLabelExpression": "${values('Swap Number')} — ${values('From Company')} ⇄ ${values('To Company')} (${values('Status')})",
+      "fields": [
+        { "name": "Swap Number", "required": true },
+        { "name": "From Company", "required": true },
+        { "name": "To Company", "required": true },
+        { "name": "From Artwork", "required": true },
+        { "name": "To Artwork" },
+        { "name": "Status" },
+        { "name": "Proposed Date" },
+        { "name": "Completed Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Swap Number]", "values[Status]", "values[From Company]", "values[To Company]"]
+      }
+    },
+    {
+      "slug": "shipments",
+      "name": "Shipments",
+      "description": "Fine-art transit legs — carrier, tracking, declared value, condition on arrival.",
+      "submissionLabelExpression": "${values('Shipment Number')} — ${values('Artwork Title')} (${values('Status')})",
+      "fields": [
+        { "name": "Shipment Number", "required": true },
+        { "name": "Swap Number" },
+        { "name": "Artwork Title", "required": true },
+        { "name": "From Company" },
+        { "name": "To Company" },
+        { "name": "Carrier" },
+        { "name": "Tracking Number" },
+        { "name": "Declared Value" },
+        { "name": "Ship Date" },
+        { "name": "Expected Delivery" },
+        { "name": "Delivered Date" },
+        { "name": "Condition Notes", "rows": 2 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": [
+          "values[Shipment Number]",
+          "values[Swap Number]",
+          "values[Status]",
+          "values[Carrier]",
+          "values[Tracking Number]"
+        ],
+        "compound": [["values[Status]", "values[Carrier]"]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Summit Ridge Roofing - Kinetic Platform</title>
+<style>
+:root{--blue:#2F3E4E;--blue-light:#3C4F63;--orange:#E2682B;--orange-light:#F0834A;--green:#34A853;--red:#EA4335;--yellow:#FBBC04;--gray:#5F6368;--light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15);--purple:#7B1FA2;--teal:#00695C;--indigo:#283593}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(226,104,43,.12)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a232e 0%,#22303d 50%,#2F3E4E 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--blue);font-size:26px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--orange-light)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--blue);color:white;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:24px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.7);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.3px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:24px;font-weight:700;margin:4px 0;color:var(--blue)}
+.kpi .label{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active,.badge-completed,.badge-approved,.badge-yes,.badge-paid,.badge-issued,.badge-delivered,.badge-installed,.badge-won,.badge-resolved{background:#E8F5E9;color:#2E7D32}
+.badge-in-progress,.badge-working,.badge-warranty,.badge-responded{background:#E0F2F1;color:#00695C}
+.badge-lead,.badge-sold,.badge-pending,.badge-new,.badge-sent,.badge-ordered,.badge-contacted,.badge-reviewed{background:#E3F2FD;color:#1565C0}
+.badge-scheduled,.badge-inspection-scheduled,.badge-estimate-sent,.badge-estimating,.badge-planned{background:#E8EAF6;color:#283593}
+.badge-on-hold,.badge-medium,.badge-at-risk,.badge-yellow,.badge-partial,.badge-backordered,.badge-paused,.badge-follow-up-needed,.badge-supplement{background:#FFF8E1;color:#F9A825}
+.badge-cancelled,.badge-rejected,.badge-inactive,.badge-high,.badge-red,.badge-overdue,.badge-expired,.badge-lost,.badge-no{background:#FDECEA;color:#C62828}
+.badge-low,.badge-green,.badge-seasonal{background:#E8F5E9;color:#2E7D32}
+.badge-default,.badge-closed,.badge-draft,.badge-needed,.badge-not-started{background:var(--light);color:var(--gray)}
+
+.health-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.health-dot.green{background:var(--green)}.health-dot.yellow{background:var(--yellow)}.health-dot.red{background:var(--red)}
+.stars{color:var(--orange);letter-spacing:1px;font-size:13px;white-space:nowrap}
+.stars .off{color:var(--border)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:20px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.bar-row .bl{min-width:120px;color:var(--gray)}
+.bar-track{flex:1;height:14px;background:var(--light);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:var(--orange);border-radius:7px}
+.bar-row .bv{min-width:40px;text-align:right;font-weight:600}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--blue);color:white;border-color:var(--blue)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+.review{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.review .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.review .rc{font-size:13px;color:#3c4043;line-height:1.5}
+.review .rm{font-size:11px;color:var(--gray);margin-top:6px}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:820px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Summit<span>Ridge</span> Roofing</h1>
+    <p class="sub">Twin Cities roof-replacement management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Summit<span>Ridge</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('jobs')">Jobs</button>
+      <button onclick="switchTab('materials')">Materials</button>
+      <button onclick="switchTab('invoices')">Invoices</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('leads')">Leads</button>
+      <button onclick="switchTab('campaigns')">Marketing</button>
+      <button onclick="switchTab('crew')">Crew</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Operations Dashboard</div>
+    <div class="page-sub">Jobs, cash position, pipeline and customer satisfaction</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2" id="dash-grid1"></div>
+    <div class="grid-2" id="dash-grid2"></div>
+  </div>
+
+  <!-- JOBS -->
+  <div class="console" id="tab-jobs">
+    <div class="page-title">Jobs</div>
+    <div class="page-sub">Roof-replacement jobs across the metro</div>
+    <div class="toolbar">
+      <input type="text" id="prj-search" placeholder="Search jobs, customers, city..." oninput="prjLoad()">
+      <select id="prj-status" onchange="prjLoad()"><option value="">All Status</option><option>Lead</option><option>Estimating</option><option>Sold</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Warranty</option><option>Cancelled</option></select>
+      <select id="prj-type" onchange="prjLoad()"><option value="">All Roof Types</option><option>Architectural Shingle</option><option>3-Tab Shingle</option><option>Designer Shingle</option><option>Standing Seam Metal</option><option>Cedar Shake</option><option>Flat / EPDM</option></select>
+      <button class="btn-primary" onclick="showForm('projects')">+ New Job</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th></th><th>Job</th><th>Customer</th><th>City</th><th>Roof</th><th>Sq</th><th>Crew Lead</th><th>Status</th><th>Contract</th></tr></thead><tbody id="prj-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="prjPrev()" id="prj-prev" disabled>Prev</button><span class="page-info" id="prj-page-info">Page 1</span><button class="btn-outline" onclick="prjNext()" id="prj-next" disabled>Next</button></div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="console" id="tab-materials">
+    <div class="page-title">Materials</div>
+    <div class="page-sub">Shingles, underlayment, flashing &amp; disposal ordering</div>
+    <div class="toolbar">
+      <select id="mt-project" onchange="mtLoad()"><option value="">All Jobs</option></select>
+      <select id="mt-category" onchange="mtLoad()"><option value="">All Categories</option><option>Shingles</option><option>Underlayment</option><option>Ventilation</option><option>Flashing</option><option>Fasteners</option><option>Decking</option><option>Disposal</option></select>
+      <select id="mt-status" onchange="mtLoad()"><option value="">All Status</option><option>Needed</option><option>Ordered</option><option>Delivered</option><option>Backordered</option><option>Installed</option></select>
+      <button class="btn-primary" onclick="showForm('materials')">+ New Material</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Item</th><th>Job</th><th>Category</th><th>Supplier</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead><tbody id="mt-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="mtPrev()" id="mt-prev" disabled>Prev</button><span class="page-info" id="mt-page-info">Page 1</span><button class="btn-outline" onclick="mtNext()" id="mt-next" disabled>Next</button></div>
+  </div>
+
+  <!-- INVOICES -->
+  <div class="console" id="tab-invoices">
+    <div class="page-title">Invoices</div>
+    <div class="page-sub">Customer billing, deposits &amp; insurance supplements</div>
+    <div class="toolbar">
+      <select id="iv-project" onchange="ivLoad()"><option value="">All Jobs</option></select>
+      <select id="iv-type" onchange="ivLoad()"><option value="">All Types</option><option>Deposit</option><option>Progress</option><option>Supplement</option><option>Final</option></select>
+      <select id="iv-status" onchange="ivLoad()"><option value="">All Status</option><option>Draft</option><option>Sent</option><option>Partial</option><option>Paid</option><option>Overdue</option></select>
+      <button class="btn-primary" onclick="showForm('invoices')">+ New Invoice</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Invoice #</th><th>Job</th><th>Customer</th><th>Type</th><th>Amount</th><th>Issued</th><th>Due</th><th>Status</th></tr></thead><tbody id="iv-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="ivPrev()" id="iv-prev" disabled>Prev</button><span class="page-info" id="iv-page-info">Page 1</span><button class="btn-outline" onclick="ivNext()" id="iv-next" disabled>Next</button></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Customer Feedback</div>
+    <div class="page-sub">Post-job reviews, ratings &amp; referral follow-up</div>
+    <div class="toolbar">
+      <select id="fb-rating" onchange="fbLoad()"><option value="">All Ratings</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+      <select id="fb-source" onchange="fbLoad()"><option value="">All Sources</option><option>Google</option><option>Facebook</option><option>Angi</option><option>Direct</option><option>Nextdoor</option><option>BBB</option></select>
+      <select id="fb-status" onchange="fbLoad()"><option value="">All Status</option><option>New</option><option>Reviewed</option><option>Responded</option><option>Follow Up Needed</option><option>Resolved</option></select>
+      <button class="btn-primary" onclick="showForm('feedback')">+ New Feedback</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Customer</th><th>Job</th><th>Rating</th><th>Source</th><th>Recommend</th><th>Date</th><th>Status</th></tr></thead><tbody id="fb-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="fbPrev()" id="fb-prev" disabled>Prev</button><span class="page-info" id="fb-page-info">Page 1</span><button class="btn-outline" onclick="fbNext()" id="fb-next" disabled>Next</button></div>
+  </div>
+
+  <!-- LEADS -->
+  <div class="console" id="tab-leads">
+    <div class="page-title">Leads</div>
+    <div class="page-sub">Sales pipeline — inbound &amp; canvassed roofing leads</div>
+    <div class="toolbar">
+      <input type="text" id="ld-search" placeholder="Search leads, city..." oninput="ldLoad()">
+      <select id="ld-status" onchange="ldLoad()"><option value="">All Status</option><option>New</option><option>Contacted</option><option>Inspection Scheduled</option><option>Estimate Sent</option><option>Won</option><option>Lost</option></select>
+      <select id="ld-source" onchange="ldLoad()"><option value="">All Sources</option><option>Storm Canvass</option><option>Referral</option><option>Door Knock</option><option>Google Ads</option><option>Facebook</option><option>Yard Sign</option><option>Home Show</option><option>Website</option><option>Nextdoor</option></select>
+      <button class="btn-primary" onclick="showForm('leads')">+ New Lead</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Lead ID</th><th>Name</th><th>City</th><th>Source</th><th>Roof</th><th>Est. Value</th><th>Assigned</th><th>Status</th></tr></thead><tbody id="ld-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="ldPrev()" id="ld-prev" disabled>Prev</button><span class="page-info" id="ld-page-info">Page 1</span><button class="btn-outline" onclick="ldNext()" id="ld-next" disabled>Next</button></div>
+  </div>
+
+  <!-- CAMPAIGNS / MARKETING -->
+  <div class="console" id="tab-campaigns">
+    <div class="page-title">Marketing</div>
+    <div class="page-sub">Campaigns, channel spend &amp; ROI</div>
+    <div class="kpi-row" id="cp-kpis"></div>
+    <div class="toolbar">
+      <select id="cp-channel" onchange="cpLoad()"><option value="">All Channels</option><option>Storm Canvass</option><option>Google Ads</option><option>Facebook</option><option>Yard Signs</option><option>Home Show</option><option>Referral Program</option><option>Direct Mail</option><option>Nextdoor</option></select>
+      <select id="cp-status" onchange="cpLoad()"><option value="">All Status</option><option>Planned</option><option>Active</option><option>Paused</option><option>Completed</option></select>
+      <button class="btn-primary" onclick="showForm('campaigns')">+ New Campaign</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Campaign</th><th>Channel</th><th>Budget</th><th>Spend</th><th>Leads</th><th>Jobs</th><th>Revenue</th><th>ROAS</th><th>Status</th></tr></thead><tbody id="cp-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="cpPrev()" id="cp-prev" disabled>Prev</button><span class="page-info" id="cp-page-info">Page 1</span><button class="btn-outline" onclick="cpNext()" id="cp-next" disabled>Next</button></div>
+  </div>
+
+  <!-- CREW -->
+  <div class="console" id="tab-crew">
+    <div class="page-title">Crew</div>
+    <div class="page-sub">Seasonal &amp; temporary roofers, sales reps and estimators</div>
+    <div class="toolbar">
+      <input type="text" id="cw-search" placeholder="Search crew..." oninput="cwLoad()">
+      <select id="cw-role" onchange="cwLoad()"><option value="">All Roles</option><option>Project Manager</option><option>Crew Lead</option><option>Roofer</option><option>Laborer</option><option>Sales Rep</option><option>Estimator</option><option>Office</option></select>
+      <select id="cw-status" onchange="cwLoad()"><option value="">All Status</option><option>Active</option><option>Seasonal</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('crew')">+ New Crew Member</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Role</th><th>Type</th><th>Phone</th><th>Rate</th><th>Certifications</th><th>Status</th></tr></thead><tbody id="cw-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="cwPrev()" id="cw-prev" disabled>Prev</button><span class="page-info" id="cw-page-info">Page 1</span><button class="btn-outline" onclick="cwNext()" id="cw-next" disabled>Next</button></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Job profitability and marketing performance</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('financials')">Job Profitability</button>
+      <button class="subtab" onclick="showReport('marketing')">Marketing</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='roofing';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function fmt$(n){const num=parseFloat(n);return isNaN(num)?'$0':'$'+num.toLocaleString('en-US',{maximumFractionDigits:0})}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/\s+/g,'-')}
+function healthDot(h){return`<span class="health-dot ${(h||'').toLowerCase()}"></span>`}
+function stars(n){const r=Math.max(0,Math.min(5,Math.round(parseFloat(n)||0)));return`<span class="stars">${'★'.repeat(r)}<span class="off">${'★'.repeat(5-r)}</span></span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={'dashboard':'Dashboard','jobs':'Jobs','materials':'Materials','invoices':'Invoices','feedback':'Feedback','leads':'Leads','campaigns':'Marketing','crew':'Crew','reports':'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>{b.classList.toggle('active',b.textContent===TAB_MAP[tab])});
+if(tab==='dashboard')loadDashboard();
+else if(tab==='jobs')prjLoad();
+else if(tab==='materials'){fillProjectSelect('mt-project');mtLoad()}
+else if(tab==='invoices'){fillProjectSelect('iv-project');ivLoad()}
+else if(tab==='feedback')fbLoad();
+else if(tab==='leads')ldLoad();
+else if(tab==='campaigns')cpLoad();
+else if(tab==='crew')cwLoad();
+else if(tab==='reports')showReport('financials')}
+
+let _projectNames=null;
+async function fillProjectSelect(id){const sel=document.getElementById(id);if(!sel||sel.options.length>1)return;try{if(!_projectNames){const r=await api(`/kapps/${KAPP}/forms/projects/submissions?include=values&limit=25`);_projectNames=(r.submissions||[]).map(s=>v(s,'Project Name')).filter(Boolean).sort()}_projectNames.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)})}catch(e){}}
+
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px;grid-column:1/-1">Loading dashboard...</div>';
+  document.getElementById('dash-grid1').innerHTML='';document.getElementById('dash-grid2').innerHTML='';
+  try{
+    const d=await sapi('/api/roofing/dashboard');const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi orange"><div class="val">${k.activeJobs}</div><div class="label">Active Jobs</div><div class="sub">${k.inProgress} on roofs now</div></div>
+      <div class="kpi green"><div class="val">${k.completed}</div><div class="label">Completed</div><div class="sub">${k.sqInstalled} squares</div></div>
+      <div class="kpi red"><div class="val">${k.atRisk}</div><div class="label">At Risk</div></div>
+      <div class="kpi purple"><div class="val">${fmt$(k.activeValue)}</div><div class="label">Active Contract Value</div></div>
+      <div class="kpi blue"><div class="val">${k.openLeads}</div><div class="label">Open Leads</div><div class="sub">${fmt$(k.leadPipeline)} pipeline</div></div>
+      <div class="kpi teal"><div class="val">${k.winRate}%</div><div class="label">Lead Win Rate</div><div class="sub">${k.won}W / ${k.lost}L</div></div>
+      <div class="kpi green"><div class="val">${fmt$(k.paid)}</div><div class="label">Collected</div></div>
+      <div class="kpi yellow"><div class="val">${fmt$(k.outstanding)}</div><div class="label">Outstanding AR</div></div>
+      <div class="kpi red"><div class="val">${fmt$(k.overdue)}</div><div class="label">Overdue AR</div></div>
+      <div class="kpi orange"><div class="val">${k.avgRating||'—'}★</div><div class="label">Avg Rating</div><div class="sub">${k.recPct}% recommend</div></div>
+      <div class="kpi"><div class="val">${k.activeCrew}</div><div class="label">Active Crew</div></div>
+      <div class="kpi yellow"><div class="val">${k.backordered}</div><div class="label">Backordered Mat.</div><div class="sub">${k.toOrder} to order</div></div>`;
+
+    document.getElementById('dash-grid1').innerHTML=`
+      <div class="card"><h3>Active Jobs (by value)</h3><table><thead><tr><th></th><th>Job</th><th>City</th><th>Roof</th><th>Status</th><th>Contract</th></tr></thead><tbody>${
+        d.activeJobs.map(p=>`<tr class="clickable-row" onclick="openProjectDetail('${p.id}')"><td>${healthDot(p.health)}</td><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.city)}</td><td>${esc(p.roof)}</td><td><span class="badge ${badgeClass(p.status)}">${esc(p.status)}</span></td><td>${fmt$(p.value)}</td></tr>`).join('')||'<tr><td colspan="6" style="color:var(--gray)">No active jobs</td></tr>'
+      }</tbody></table></div>
+      <div class="card"><h3>Cash & Marketing</h3>
+        <div class="grid-3" style="margin-bottom:16px">
+          <div class="stat-box"><div class="v" style="color:var(--purple)">${fmt$(k.invoiced)}</div><div class="l">Invoiced</div></div>
+          <div class="stat-box"><div class="v" style="color:var(--green)">${fmt$(k.paid)}</div><div class="l">Collected</div></div>
+          <div class="stat-box"><div class="v" style="color:var(--red)">${fmt$(k.overdue)}</div><div class="l">Overdue</div></div>
+        </div>
+        <div class="grid-3" style="margin-bottom:16px">
+          <div class="stat-box"><div class="v" style="color:var(--orange)">${fmt$(k.mktSpend)}</div><div class="l">Mktg Spend</div></div>
+          <div class="stat-box"><div class="v">${fmt$(k.cpl)}</div><div class="l">Cost / Lead</div></div>
+          <div class="stat-box"><div class="v" style="color:var(--teal)">${k.roas}x</div><div class="l">ROAS</div></div>
+        </div>
+        <h3>Job Health</h3>
+        <div style="display:flex;gap:16px">${['Green','Yellow','Red'].map(h=>`<div style="text-align:center;flex:1;padding:14px;background:var(--light);border-radius:8px"><div style="font-size:26px;font-weight:700;color:var(--${h.toLowerCase()})">${d.healthDist[h]||0}</div><div style="font-size:11px;color:var(--gray);text-transform:uppercase;font-weight:600">${h}</div></div>`).join('')}</div>
+      </div>`;
+
+    const maxSrc=Math.max(1,...Object.values(d.leadsBySource));
+    document.getElementById('dash-grid2').innerHTML=`
+      <div class="card"><h3>Recent Customer Feedback</h3>${d.recentFeedback.length===0?'<p style="color:var(--gray);font-size:13px">No feedback yet</p>':d.recentFeedback.slice(0,5).map(f=>`<div class="review"><div class="rh"><strong>${esc(f.customer)}</strong>${stars(f.rating)}</div><div class="rc">${esc(f.comments)}</div><div class="rm">${esc(f.project)} · ${esc(f.source)} · ${esc(f.date)}</div></div>`).join('')}</div>
+      <div class="card"><h3>Lead Sources</h3>${Object.entries(d.leadsBySource).sort((a,b)=>b[1]-a[1]).map(([s,n])=>`<div class="bar-row"><span class="bl">${esc(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxSrc*100)}%"></div></div><span class="bv">${n}</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No leads</p>'}
+        <h3 style="margin-top:16px">Overdue Invoices</h3>${d.overdueInvoices.length===0?'<p style="color:var(--gray);font-size:13px">No overdue invoices &#127881;</p>':`<table><thead><tr><th>Invoice</th><th>Job</th><th>Amount</th><th>Due</th></tr></thead><tbody>${
+        d.overdueInvoices.map(i=>`<tr><td style="font-weight:600">${esc(i.number)}</td><td>${esc(i.project)}</td><td style="color:var(--red);font-weight:600">${fmt$(i.amount)}</td><td>${esc(i.due)}</td></tr>`).join('')
+      }</tbody></table>`}</div>`;
+  }catch(e){document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}}
+
+// ===== GENERIC PAGER =====
+function makePager(){return{page:1,pageKeys:{1:null},hasNext:false}}
+async function loadPaged(pager,form,bodyId,renderRow,pageId,prevId,nextId,kqlFn,filterFn,colspan){
+  try{
+    const lastCA=pager.pageKeys[pager.page];let kql=kqlFn?kqlFn():'';
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);const data=res.submissions||[];pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&data.length)pager.pageKeys[pager.page+1]=data[data.length-1].createdAt;
+    const filtered=filterFn?data.filter(filterFn):data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0?`<tr><td colspan="${colspan||10}" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>`:filtered.map(renderRow).join('');
+    document.getElementById(pageId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){document.getElementById(bodyId).innerHTML=`<tr><td colspan="${colspan||10}" style="color:var(--red)">${esc(e.message)}</td></tr>`}}
+
+// ===== JOBS =====
+const prjP=makePager();
+function prjLoad(){prjP.page=1;prjP.pageKeys={1:null};loadJobs()}
+function prjNext(){if(prjP.hasNext){prjP.page++;loadJobs()}}
+function prjPrev(){if(prjP.page>1){prjP.page--;loadJobs()}}
+function loadJobs(){const search=document.getElementById('prj-search').value.toLowerCase();loadPaged(prjP,'projects','prj-body',s=>`<tr class="clickable-row" onclick="openProjectDetail('${s.id}')"><td>${healthDot(v(s,'Health'))}</td><td style="font-weight:600">${esc(v(s,'Project Name'))}</td><td>${esc(v(s,'Customer Name'))}</td><td>${esc(v(s,'City'))}</td><td>${esc(v(s,'Roof Type'))}</td><td>${esc(v(s,'Roof Squares'))}</td><td>${esc(v(s,'Crew Lead'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td><td style="font-weight:600">${fmt$(v(s,'Contract Value'))}</td></tr>`,'prj-page-info','prj-prev','prj-next',()=>{let kql='';const st=document.getElementById('prj-status').value;const t=document.getElementById('prj-type').value;if(st)kql=`values[Status]="${st}"`;if(t)kql=kql?`${kql} AND values[Roof Type]="${t}"`:`values[Roof Type]="${t}"`;return kql},search?s=>v(s,'Project Name').toLowerCase().includes(search)||v(s,'Customer Name').toLowerCase().includes(search)||v(s,'City').toLowerCase().includes(search):null,9)}
+
+// ===== MATERIALS =====
+const mtP=makePager();
+function mtLoad(){mtP.page=1;mtP.pageKeys={1:null};loadMaterials()}
+function mtNext(){if(mtP.hasNext){mtP.page++;loadMaterials()}}
+function mtPrev(){if(mtP.page>1){mtP.page--;loadMaterials()}}
+function loadMaterials(){const proj=document.getElementById('mt-project').value,cat=document.getElementById('mt-category').value,st=document.getElementById('mt-status').value;loadPaged(mtP,'materials','mt-body',s=>`<tr class="clickable-row" onclick="showEditForm('materials','${s.id}')"><td style="font-weight:600">${esc(v(s,'Item'))}</td><td>${esc(v(s,'Project'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Supplier'))}</td><td>${esc(v(s,'Quantity'))} ${esc(v(s,'Unit'))}</td><td style="font-weight:600">${fmt$(v(s,'Total Cost'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'mt-page-info','mt-prev','mt-next',()=>{let kql='';if(proj)kql=`values[Project]="${proj}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;if(cat)kql=kql?`${kql} AND values[Category]="${cat}"`:`values[Category]="${cat}"`;return kql},null,7)}
+
+// ===== INVOICES =====
+const ivP=makePager();
+function ivLoad(){ivP.page=1;ivP.pageKeys={1:null};loadInvoices()}
+function ivNext(){if(ivP.hasNext){ivP.page++;loadInvoices()}}
+function ivPrev(){if(ivP.page>1){ivP.page--;loadInvoices()}}
+function loadInvoices(){const proj=document.getElementById('iv-project').value,ty=document.getElementById('iv-type').value,st=document.getElementById('iv-status').value;loadPaged(ivP,'invoices','iv-body',s=>`<tr class="clickable-row" onclick="showEditForm('invoices','${s.id}')"><td style="font-weight:600">${esc(v(s,'Invoice Number'))}</td><td>${esc(v(s,'Project'))}</td><td>${esc(v(s,'Customer Name'))}</td><td><span class="badge ${badgeClass(v(s,'Type'))}">${esc(v(s,'Type'))}</span></td><td style="font-weight:600">${fmt$(v(s,'Amount'))}</td><td>${esc(v(s,'Issue Date'))}</td><td>${esc(v(s,'Due Date'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'iv-page-info','iv-prev','iv-next',()=>{let kql='';if(proj)kql=`values[Project]="${proj}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;if(ty)kql=kql?`${kql} AND values[Type]="${ty}"`:`values[Type]="${ty}"`;return kql},null,8)}
+
+// ===== FEEDBACK =====
+const fbP=makePager();
+function fbLoad(){fbP.page=1;fbP.pageKeys={1:null};loadFeedback()}
+function fbNext(){if(fbP.hasNext){fbP.page++;loadFeedback()}}
+function fbPrev(){if(fbP.page>1){fbP.page--;loadFeedback()}}
+function loadFeedback(){const rt=document.getElementById('fb-rating').value,src=document.getElementById('fb-source').value,st=document.getElementById('fb-status').value;loadPaged(fbP,'feedback','fb-body',s=>`<tr class="clickable-row" onclick="showEditForm('feedback','${s.id}')"><td style="font-weight:600">${esc(v(s,'Customer Name'))}</td><td>${esc(v(s,'Project'))}</td><td>${stars(v(s,'Rating'))}</td><td>${esc(v(s,'Review Source'))}</td><td><span class="badge ${badgeClass(v(s,'Would Recommend'))}">${esc(v(s,'Would Recommend'))}</span></td><td>${esc(v(s,'Date'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'fb-page-info','fb-prev','fb-next',()=>{let kql='';if(rt)kql=`values[Rating]="${rt}"`;if(src)kql=kql?`${kql} AND values[Review Source]="${src}"`:`values[Review Source]="${src}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},null,7)}
+
+// ===== LEADS =====
+const ldP=makePager();
+function ldLoad(){ldP.page=1;ldP.pageKeys={1:null};loadLeads()}
+function ldNext(){if(ldP.hasNext){ldP.page++;loadLeads()}}
+function ldPrev(){if(ldP.page>1){ldP.page--;loadLeads()}}
+function loadLeads(){const search=document.getElementById('ld-search').value.toLowerCase();const st=document.getElementById('ld-status').value,src=document.getElementById('ld-source').value;loadPaged(ldP,'leads','ld-body',s=>`<tr class="clickable-row" onclick="showEditForm('leads','${s.id}')"><td style="font-weight:600">${esc(v(s,'Lead ID'))}</td><td>${esc(v(s,'Name'))}</td><td>${esc(v(s,'City'))}</td><td>${esc(v(s,'Source'))}${v(s,'Storm Related')==='Yes'?' ⛈':''}</td><td>${esc(v(s,'Roof Type'))}</td><td style="font-weight:600">${fmt$(v(s,'Estimated Value'))}</td><td>${esc(v(s,'Assigned To'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'ld-page-info','ld-prev','ld-next',()=>{let kql='';if(st)kql=`values[Status]="${st}"`;if(src)kql=kql?`${kql} AND values[Source]="${src}"`:`values[Source]="${src}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search)||v(s,'City').toLowerCase().includes(search):null,8)}
+
+// ===== CAMPAIGNS / MARKETING =====
+const cpP=makePager();
+function cpLoad(){cpP.page=1;cpP.pageKeys={1:null};loadCampaignKpis();loadCampaigns()}
+function cpNext(){if(cpP.hasNext){cpP.page++;loadCampaigns()}}
+function cpPrev(){if(cpP.page>1){cpP.page--;loadCampaigns()}}
+async function loadCampaignKpis(){try{const d=await sapi('/api/roofing/reports/marketing');const t=d.totals;document.getElementById('cp-kpis').innerHTML=`
+  <div class="kpi orange"><div class="val">${fmt$(t.spend)}</div><div class="label">Total Spend</div><div class="sub">of ${fmt$(t.budget)} budget</div></div>
+  <div class="kpi blue"><div class="val">${t.leads}</div><div class="label">Leads Generated</div></div>
+  <div class="kpi"><div class="val">${fmt$(t.cpl)}</div><div class="label">Cost / Lead</div></div>
+  <div class="kpi green"><div class="val">${t.jobs}</div><div class="label">Jobs Won</div></div>
+  <div class="kpi purple"><div class="val">${fmt$(t.revenue)}</div><div class="label">Attributed Revenue</div></div>
+  <div class="kpi teal"><div class="val">${t.roas}x</div><div class="label">Blended ROAS</div></div>`}catch(e){document.getElementById('cp-kpis').innerHTML=''}}
+function loadCampaigns(){const ch=document.getElementById('cp-channel').value,st=document.getElementById('cp-status').value;loadPaged(cpP,'campaigns','cp-body',s=>{const sp=parseFloat(v(s,'Spend'))||0,rev=parseFloat(v(s,'Revenue'))||0,roas=sp?Math.round(rev/sp*10)/10:0;return`<tr class="clickable-row" onclick="showEditForm('campaigns','${s.id}')"><td style="font-weight:600">${esc(v(s,'Campaign Name'))}</td><td>${esc(v(s,'Channel'))}</td><td>${fmt$(v(s,'Budget'))}</td><td>${fmt$(v(s,'Spend'))}</td><td>${esc(v(s,'Leads Generated'))}</td><td>${esc(v(s,'Jobs Won'))}</td><td style="font-weight:600">${fmt$(v(s,'Revenue'))}</td><td style="font-weight:700;color:${roas>=4?'var(--green)':roas>=1?'var(--yellow)':'var(--red)'}">${roas}x</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`},'cp-page-info','cp-prev','cp-next',()=>{let kql='';if(st)kql=`values[Status]="${st}"`;if(ch)kql=kql?`${kql} AND values[Channel]="${ch}"`:`values[Channel]="${ch}"`;return kql},null,9)}
+
+// ===== CREW =====
+const cwP=makePager();
+function cwLoad(){cwP.page=1;cwP.pageKeys={1:null};loadCrew()}
+function cwNext(){if(cwP.hasNext){cwP.page++;loadCrew()}}
+function cwPrev(){if(cwP.page>1){cwP.page--;loadCrew()}}
+function loadCrew(){const search=document.getElementById('cw-search').value.toLowerCase();const role=document.getElementById('cw-role').value,st=document.getElementById('cw-status').value;loadPaged(cwP,'crew','cw-body',s=>`<tr class="clickable-row" onclick="showEditForm('crew','${s.id}')"><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Role'))}</td><td>${esc(v(s,'Employment Type'))}</td><td>${esc(v(s,'Phone'))}</td><td>$${esc(v(s,'Hourly Rate'))}/hr</td><td style="font-size:12px;color:var(--gray)">${esc(v(s,'Certifications'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'cw-page-info','cw-prev','cw-next',()=>{let kql='';if(st)kql=`values[Status]="${st}"`;if(role)kql=kql?`${kql} AND values[Role]="${role}"`:`values[Role]="${role}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search):null,7)}
+
+// ===== REPORTS =====
+async function showReport(type){
+  document.querySelectorAll('#tab-reports .subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(type==='financials'?'profitability':'marketing')));
+  document.getElementById('report-content').innerHTML='<div class="card"><p style="color:var(--gray)">Loading report...</p></div>';
+  try{
+    if(type==='financials'){
+      const r=await sapi('/api/roofing/reports/financials');
+      document.getElementById('report-content').innerHTML=`<div class="card"><h3>Job Profitability (lowest margin first)</h3><table><thead><tr><th>Job</th><th>Customer</th><th>Roof</th><th>Status</th><th>Sq</th><th>Contract</th><th>Material Cost</th><th>Margin</th><th>Invoiced</th><th>Paid</th><th>Outstanding</th></tr></thead><tbody>${
+        r.projects.map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.customer)}</td><td>${esc(p.roof)}</td><td><span class="badge ${badgeClass(p.status)}">${esc(p.status)}</span></td><td>${esc(p.squares)}</td><td>${fmt$(p.contract)}</td><td>${fmt$(p.cost)}</td><td style="font-weight:700;color:${p.margin<25?'var(--red)':p.margin<45?'var(--yellow)':'var(--green)'}">${p.margin}%</td><td>${fmt$(p.invoiced)}</td><td>${fmt$(p.paid)}</td><td style="color:${p.outstanding>0?'var(--orange)':'inherit'}">${fmt$(p.outstanding)}</td></tr>`).join('')||'<tr><td colspan="11" style="color:var(--gray)">No data</td></tr>'
+      }</tbody></table></div>`;
+    }else if(type==='marketing'){
+      const r=await sapi('/api/roofing/reports/marketing');const t=r.totals;
+      document.getElementById('report-content').innerHTML=`
+        <div class="kpi-row">
+          <div class="kpi orange"><div class="val">${fmt$(t.spend)}</div><div class="label">Spend</div></div>
+          <div class="kpi blue"><div class="val">${t.leads}</div><div class="label">Leads</div></div>
+          <div class="kpi"><div class="val">${fmt$(t.cpl)}</div><div class="label">Cost / Lead</div></div>
+          <div class="kpi green"><div class="val">${t.jobs}</div><div class="label">Jobs Won</div></div>
+          <div class="kpi purple"><div class="val">${fmt$(t.revenue)}</div><div class="label">Revenue</div></div>
+          <div class="kpi teal"><div class="val">${t.roas}x</div><div class="label">ROAS</div></div>
+          <div class="kpi orange"><div class="val">${r.avgRating||'—'}★</div><div class="label">Avg Rating</div><div class="sub">${r.ratedCount} reviews</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><h3>Lead Pipeline by Source</h3><table><thead><tr><th>Source</th><th>Total</th><th>Won</th><th>Lost</th><th>Open</th><th>Conv.</th><th>Pipeline $</th></tr></thead><tbody>${
+            r.sources.map(s=>`<tr><td style="font-weight:600">${esc(s.source)}</td><td>${s.total}</td><td style="color:var(--green)">${s.won}</td><td style="color:var(--red)">${s.lost}</td><td>${s.open}</td><td style="font-weight:700">${s.conversion}%</td><td>${fmt$(s.value)}</td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--gray)">No data</td></tr>'
+          }</tbody></table></div>
+          <div class="card"><h3>Reviews by Channel</h3><table><thead><tr><th>Source</th><th>Reviews</th><th>Avg</th><th>Recommend</th></tr></thead><tbody>${
+            r.fbSources.map(s=>`<tr><td style="font-weight:600">${esc(s.source)}</td><td>${s.count}</td><td>${stars(s.avg)} ${s.avg}</td><td>${s.recPct}%</td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--gray)">No data</td></tr>'
+          }</tbody></table></div>
+        </div>
+        <div class="card"><h3>Campaign ROI (best ROAS first)</h3><table><thead><tr><th>Campaign</th><th>Channel</th><th>Status</th><th>Budget</th><th>Spend</th><th>Leads</th><th>CPL</th><th>Jobs</th><th>Revenue</th><th>ROAS</th></tr></thead><tbody>${
+          r.campaigns.map(c=>`<tr><td style="font-weight:600">${esc(c.name)}</td><td>${esc(c.channel)}</td><td><span class="badge ${badgeClass(c.status)}">${esc(c.status)}</span></td><td>${fmt$(c.budget)}</td><td>${fmt$(c.spend)}</td><td>${c.leads}</td><td>${fmt$(c.cpl)}</td><td>${c.jobs}</td><td>${fmt$(c.revenue)}</td><td style="font-weight:700;color:${c.roas>=4?'var(--green)':c.roas>=1?'var(--yellow)':'var(--red)'}">${c.roas}x</td></tr>`).join('')||'<tr><td colspan="10" style="color:var(--gray)">No data</td></tr>'
+        }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== JOB DETAIL (MODAL) =====
+async function openProjectDetail(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading job...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/roofing/project/${id}`);const p=d.project;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p style="color:var(--gray);font-size:13px;padding:8px">None</p>';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${healthDot(v(p,'Health'))} ${esc(v(p,'Project Name'))}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>Customer: <strong>${esc(v(p,'Customer Name'))}</strong></span>
+        <span>${esc(v(p,'Address'))}, ${esc(v(p,'City'))}</span>
+        <span>Crew Lead: <strong>${esc(v(p,'Crew Lead'))}</strong></span>
+        <span>${esc(v(p,'Roof Type'))} · ${esc(v(p,'Roof Squares'))} sq · ${esc(v(p,'Stories'))}-story</span>
+        <span>Status: <span class="badge ${badgeClass(v(p,'Status'))}">${esc(v(p,'Status'))}</span></span>
+        ${v(p,'Insurance Claim')==='Yes'?'<span class="badge badge-supplement">Insurance Claim</span>':''}
+      </div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${fmt$(s.contract)}</div><div class="l">Contract</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--orange)">${fmt$(s.matCost)}</div><div class="l">Material Cost</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.grossMargin<25?'var(--red)':s.grossMargin<45?'var(--yellow)':'var(--green)'}">${s.grossMargin}%</div><div class="l">Gross Margin</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-box"><div class="v" style="color:var(--purple)">${fmt$(s.invoiced)}</div><div class="l">Invoiced</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${fmt$(s.paid)}</div><div class="l">Collected (${s.collectedPct}%)</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.outstanding>0?'var(--orange)':'inherit'}">${fmt$(s.outstanding)}</div><div class="l">Outstanding</div></div>
+      </div>
+      ${v(p,'Scope Summary')?`<div style="font-size:13px;color:var(--gray);margin-bottom:16px;padding:12px;background:var(--light);border-radius:8px">${esc(v(p,'Scope Summary'))}</div>`:''}
+      <div class="subtabs">
+        <button class="subtab active" onclick="showProjTab(this,'pd-mt')">Materials (${d.materials.length})</button>
+        <button class="subtab" onclick="showProjTab(this,'pd-iv')">Invoices (${d.invoices.length})</button>
+        <button class="subtab" onclick="showProjTab(this,'pd-fb')">Feedback (${d.feedback.length})</button>
+      </div>
+      <div id="pd-mt" class="subtab-panel active">${tbl(d.materials,[['Item',r=>esc(r.item)],['Category',r=>esc(r.category)],['Supplier',r=>esc(r.supplier)],['Qty',r=>esc(r.qty)+' '+esc(r.unit)],['Total',r=>fmt$(r.total)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]])}</div>
+      <div id="pd-iv" class="subtab-panel">${tbl(d.invoices,[['Invoice #',r=>esc(r.number)],['Type',r=>esc(r.type)],['Amount',r=>fmt$(r.amount)],['Issued',r=>esc(r.issue)],['Due',r=>esc(r.due)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]])}</div>
+      <div id="pd-fb" class="subtab-panel">${d.feedback.length?d.feedback.map(f=>`<div class="review"><div class="rh"><strong>${esc(f.customer)}</strong>${stars(f.rating)}</div><div class="rc">${esc(f.comments)}</div><div class="rm">${esc(f.source)} · ${esc(f.date)} · Recommend: ${esc(f.recommend)}</div></div>`).join(''):'<p style="color:var(--gray);font-size:13px;padding:8px">No feedback yet</p>'}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('projects','${p.id}')">Edit Job</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+function showProjTab(btn,panelId){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(panelId).classList.add('active')}
+
+// ===== GENERIC FORM MODAL =====
+const CITIES='Minneapolis,St. Paul,Bloomington,Edina,Plymouth,Maple Grove,Minnetonka,Eden Prairie,Woodbury,Roseville,St. Louis Park,Maplewood,Blaine,Apple Valley,Shakopee';
+const ROOFS='Architectural Shingle,3-Tab Shingle,Designer Shingle,Standing Seam Metal,Cedar Shake,Flat / EPDM';
+const SOURCES='Storm Canvass,Referral,Door Knock,Google Ads,Facebook,Yard Sign,Home Show,Website,Nextdoor';
+const FORM_DEFS={
+  'projects':{title:'Job',fields:[{r:['Project ID','Project Name']},{r:['Customer Name','Crew Lead']},{r:['Customer Email','Customer Phone']},'Address',{r:['City|select:'+CITIES,'Roof Type|select:'+ROOFS]},{r:['Roof Squares|number','Stories|select:1,2,3']},{r:['Tear Off|select:Yes,No','Insurance Claim|select:Yes,No']},{r:['Status|select:Lead,Estimating,Sold,Scheduled,In Progress,Completed,Warranty,Cancelled','Health|select:Green,Yellow,Red']},{r:['Contract Value|number','Lead Source|select:'+SOURCES]},{r:['Sold Date|date','Start Date|date']},{r:['Target End Date|date','Actual End Date|date']},'Scope Summary|textarea','Notes|textarea']},
+  'materials':{title:'Material',fields:[{r:['Project','Item']},{r:['Category|select:Shingles,Underlayment,Ventilation,Flashing,Fasteners,Decking,Disposal,Accessories','Supplier|select:ABC Supply,SRS Distribution,Beacon Building Products,Menards,Home Depot Pro,Spec Building Materials']},{r:['Quantity|number','Unit|select:square,roll,ea,box,sheet,bundle']},{r:['Unit Cost|number','Total Cost|number']},{r:['Status|select:Needed,Ordered,Delivered,Backordered,Installed','']},{r:['Order Date|date','Delivery Date|date']},'Notes|textarea']},
+  'invoices':{title:'Invoice',fields:[{r:['Invoice Number','Project']},{r:['Customer Name','Amount|number']},{r:['Type|select:Deposit,Progress,Supplement,Final','Status|select:Draft,Sent,Partial,Paid,Overdue']},{r:['Payment Method|select:Check,ACH Transfer,Credit Card,Insurance Check,Financing,Cash','Insurance Claim|select:Yes,No']},{r:['Issue Date|date','Due Date|date']},{r:['Paid Date|date','']},'Notes|textarea']},
+  'feedback':{title:'Feedback',fields:[{r:['Project','Customer Name']},{r:['Rating|select:5,4,3,2,1','Would Recommend|select:Yes,No']},{r:['Review Source|select:Google,Facebook,Angi,Direct,Nextdoor,BBB','Crew Lead']},{r:['Status|select:New,Reviewed,Responded,Follow Up Needed,Resolved','Date|date']},'Comments|textarea','Response|textarea','Notes|textarea']},
+  'leads':{title:'Lead',fields:[{r:['Lead ID','Name']},{r:['Email','Phone']},'Address',{r:['City|select:'+CITIES,'Source|select:'+SOURCES]},{r:['Status|select:New,Contacted,Inspection Scheduled,Estimate Sent,Won,Lost','Roof Type|select:'+ROOFS]},{r:['Estimated Value|number','Assigned To']},{r:['Storm Related|select:Yes,No','Campaign']},{r:['Lead Date|date','Last Contact|date']},'Notes|textarea']},
+  'campaigns':{title:'Campaign',fields:[{r:['Campaign Name','Channel|select:Storm Canvass,Google Ads,Facebook,Yard Signs,Home Show,Referral Program,Direct Mail,Nextdoor']},{r:['Status|select:Planned,Active,Paused,Completed','Owner']},{r:['Start Date|date','End Date|date']},{r:['Budget|number','Spend|number']},{r:['Leads Generated|number','Jobs Won|number']},{r:['Revenue|number','']},'Notes|textarea']},
+  'crew':{title:'Crew Member',fields:[{r:['Employee ID','Name']},{r:['Role|select:Project Manager,Crew Lead,Roofer,Laborer,Sales Rep,Estimator,Office','Employment Type|select:Full-Time,Seasonal,Temporary,Subcontractor']},{r:['Email','Phone']},{r:['Hourly Rate|number','Status|select:Active,Seasonal,Inactive']},{r:['Hire Date|date','Certifications']},'Notes|textarea']},
+};
+
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){html+=renderField(field,sub)}
+    else if(field.r){html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'}
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show')
+}
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}else if(type==='textarea'){input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`}else if(type==='date'){input=`<input id="${id}" type="date" value="${esc(val)}">`}else if(type==='number'){input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`}else{input=`<input id="${id}" type="text" value="${esc(val)}">`}return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();const el=document.getElementById(elId);if(el)vals[name]=el.value}}try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_projectNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_projectNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+</script>
+</body>
+</html>

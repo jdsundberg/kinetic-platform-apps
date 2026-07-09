@@ -1,0 +1,112 @@
+{
+  "description": "KISS Army HQ — tracks the band KISS and its lineup, full concert/tour history, the merchandise catalog, the 8-room KISS Hotel (rooms + bookings), and the KISS Army fan club with a monthly newsletter system",
+  "tools": [
+    {
+      "name": "get_dashboard",
+      "description": "Get the KISS empire dashboard — band size, concert counts and ticket sell-through, merch inventory value, hotel occupancy and revenue, KISS Army size and subscriber count, newsletters sent, plus upcoming concerts, room grid, fan tiers, and top countries",
+      "params": {}
+    },
+    {
+      "name": "book_room",
+      "description": "Reserve a KISS Hotel room. Validates the room is bookable, computes nights and total from the nightly rate, generates a KH-#### confirmation number, creates the booking (Reserved), and marks the room Occupied.",
+      "params": {
+        "guestName": { "type": "string", "required": true, "description": "Name of the guest" },
+        "guestEmail": { "type": "string", "required": false, "description": "Guest email address" },
+        "roomNumber": { "type": "string", "required": true, "description": "Room number to book (1-8). Room must be Available." },
+        "checkIn": { "type": "string", "required": true, "description": "Check-in date (ISO YYYY-MM-DD)" },
+        "checkOut": { "type": "string", "required": true, "description": "Check-out date (ISO YYYY-MM-DD), must be after check-in" },
+        "notes": { "type": "string", "required": false, "description": "Booking notes / special requests" }
+      }
+    },
+    {
+      "name": "checkout_booking",
+      "description": "Close out a hotel booking. Sets the booking to Checked Out (or Cancelled) and frees the room back to Available.",
+      "params": {
+        "confirmationNumber": { "type": "string", "required": true, "description": "Booking confirmation number, e.g. KH-20003" },
+        "action": { "type": "string", "required": false, "description": "Whether to check out or cancel (defaults to checkout)", "values": ["checkout", "cancel"] }
+      }
+    },
+    {
+      "name": "send_newsletter",
+      "description": "Send the monthly newsletter to every subscribed, active KISS Army member. Creates one newsletter record per recipient, skips anyone already sent the same campaign (idempotent), and marks each Sent. Supports {{firstName}} / {{name}} placeholders in the body.",
+      "params": {
+        "campaign": { "type": "string", "required": true, "description": "Campaign name, e.g. 'June 2026 Newsletter' — used to dedupe recipients" },
+        "subject": { "type": "string", "required": true, "description": "Email subject line" },
+        "body": { "type": "string", "required": false, "description": "Email body; use {{firstName}} for personalization" }
+      }
+    }
+  ],
+  "forms": {
+    "members": {
+      "description": "The KISS lineup — every musician who has worn a persona, current and former",
+      "fields": {
+        "Persona": { "hint": "Stage character, e.g. The Demon, The Starchild, The Spaceman, The Catman, The Fox" },
+        "Instrument": { "hint": "Instrument and vocal role, e.g. 'Bass / Vocals'" },
+        "Years Active": { "hint": "Tenure span, e.g. '1973–present'" },
+        "Status": { "values": ["Current", "Former"] }
+      }
+    },
+    "concerts": {
+      "description": "Concert and tour history with venue, location, and ticket sales",
+      "fields": {
+        "Concert Date": { "hint": "ISO date YYYY-MM-DD" },
+        "Tour": { "hint": "Tour name, e.g. 'End of the Road World Tour'" },
+        "Capacity": { "hint": "Venue capacity (numeric)" },
+        "Tickets Sold": { "hint": "Tickets sold (numeric, <= Capacity)" },
+        "Status": { "values": ["Scheduled", "Completed", "Cancelled"] }
+      }
+    },
+    "merchandise": {
+      "description": "The KISS merch catalog — apparel, music, accessories, and collectibles",
+      "fields": {
+        "Category": { "values": ["Apparel", "Music", "Accessories", "Collectibles", "Other"] },
+        "SKU": { "hint": "Stock keeping unit, e.g. APP-DEST-001" },
+        "Price": { "hint": "Unit price in dollars" },
+        "Stock": { "hint": "Units on hand (numeric)" },
+        "Status": { "values": ["Available", "Out of Stock", "Discontinued"] }
+      }
+    },
+    "rooms": {
+      "description": "The 8 themed suites of the KISS Hotel — one per persona and anthem",
+      "fields": {
+        "Room Number": { "hint": "1 through 8" },
+        "Room Name": { "hint": "Themed suite name, e.g. 'The Demon Suite'" },
+        "Room Type": { "values": ["Suite", "Loft", "Standard"] },
+        "Nightly Rate": { "hint": "Per-night rate in dollars" },
+        "Max Occupancy": { "hint": "Maximum guests (numeric)" },
+        "Status": { "values": ["Available", "Occupied", "Maintenance"] }
+      }
+    },
+    "bookings": {
+      "description": "Guest reservations for the KISS Hotel — lifecycle: Reserved → Checked In → Checked Out",
+      "fields": {
+        "Confirmation Number": { "hint": "Auto-generated, e.g. KH-20001" },
+        "Room Number": { "hint": "1 through 8" },
+        "Check In": { "hint": "ISO date YYYY-MM-DD" },
+        "Check Out": { "hint": "ISO date YYYY-MM-DD" },
+        "Nights": { "hint": "Number of nights (computed)" },
+        "Total": { "hint": "Total charge in dollars (nights × nightly rate, computed)" },
+        "Status": { "values": ["Reserved", "Checked In", "Checked Out", "Cancelled"] }
+      }
+    },
+    "fans": {
+      "description": "The KISS Army fan club roster — customer signups who can opt in to the monthly newsletter",
+      "fields": {
+        "Email": { "hint": "Unique fan email address" },
+        "Fan Level": { "values": ["General", "Gold", "KISS Army Elite"] },
+        "Member Since": { "hint": "ISO date the fan joined" },
+        "Newsletter": { "values": ["Subscribed", "Unsubscribed"], "hint": "Monthly newsletter opt-in" },
+        "Status": { "values": ["Active", "Inactive"] }
+      }
+    },
+    "newsletters": {
+      "description": "Monthly newsletter send log — one record per recipient; Submitted records can trigger the SMTP send workflow",
+      "fields": {
+        "Campaign": { "hint": "Campaign name, e.g. 'June 2026 Newsletter'" },
+        "Email Type": { "values": ["Monthly Newsletter"] },
+        "Status": { "values": ["Queued", "Sent", "Failed"] },
+        "Sent At": { "hint": "ISO timestamp the email was sent" }
+      }
+    }
+  }
+}

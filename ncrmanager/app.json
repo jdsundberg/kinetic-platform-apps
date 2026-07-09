@@ -1,0 +1,1574 @@
+{
+  "name": "Kinetic MedQMS",
+  "slug": "ncrmanager",
+  "description": "Medical-device manufacturing Quality Management System — universal quality-event intake, nonconformance & material review, CAPA, complaints & vigilance, audits, document & change control, training, supplier quality & SCARs, ISO 14971 risk register, equipment calibration, management review, with append-only audit trail and Part 11 e-signatures. Every regulated record cross-links into an end-to-end traceability graph. Built for ISO 13485:2016, FDA 21 CFR Part 820 QMSR, ISO 14971 and 21 CFR Part 11 expectations (mappings are configurable and subject to customer quality/legal review).",
+  "category": "Healthcare",
+  "icon": "shield-heart",
+  "color": "#0B3D4F",
+  "bg": "#E8F1F4",
+  "forms": [
+    {
+      "slug": "sites",
+      "name": "Sites",
+      "description": "Manufacturing and distribution sites in scope of the quality system",
+      "submissionLabelExpression": "${values('Site ID')} - ${values('Name')}",
+      "fields": [
+        {
+          "name": "Site ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Region"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "Employees"
+        },
+        {
+          "name": "Mfg License"
+        },
+        {
+          "name": "Quality Manager"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Site ID]",
+          "values[Type]",
+          "values[Region]",
+          "values[Country]",
+          "values[Status]"
+        ]
+      }
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Device master records — family, device-risk class and UDI",
+      "submissionLabelExpression": "${values('Product ID')} - ${values('Name')}",
+      "fields": [
+        {
+          "name": "Product ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Family"
+        },
+        {
+          "name": "Device Class"
+        },
+        {
+          "name": "UDI DI"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Lifecycle Stage"
+        },
+        {
+          "name": "Risk Class"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Product ID]",
+          "values[Family]",
+          "values[Device Class]",
+          "values[Site]",
+          "values[Lifecycle Stage]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Device Class]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "suppliers",
+      "name": "Suppliers",
+      "description": "Approved supplier list — qualification, risk class, scorecard and approval status",
+      "submissionLabelExpression": "${values('Supplier ID')} - ${values('Name')}",
+      "fields": [
+        {
+          "name": "Supplier ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Risk Class"
+        },
+        {
+          "name": "Approval Status"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Quality Agreement"
+        },
+        {
+          "name": "Certification"
+        },
+        {
+          "name": "Cert Expiry"
+        },
+        {
+          "name": "Score"
+        },
+        {
+          "name": "On Time Pct"
+        },
+        {
+          "name": "PPM Defect"
+        },
+        {
+          "name": "Open SCARs"
+        },
+        {
+          "name": "Last Audit Date"
+        },
+        {
+          "name": "Next Review Date"
+        },
+        {
+          "name": "Contact Name"
+        },
+        {
+          "name": "Contact Email"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Supplier ID]",
+          "values[Category]",
+          "values[Risk Class]",
+          "values[Approval Status]",
+          "values[Country]",
+          "values[Status]",
+          "values[Owner]"
+        ],
+        "compound": [
+          [
+            "values[Approval Status]",
+            "values[Risk Class]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "quality-events",
+      "name": "Quality Events",
+      "description": "Universal intake for deviations, nonconformances, complaints, audit findings, supplier issues, safety signals and observations",
+      "submissionLabelExpression": "${values('Event ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Event ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "Lot"
+        },
+        {
+          "name": "Supplier"
+        },
+        {
+          "name": "Reported By"
+        },
+        {
+          "name": "Confidential"
+        },
+        {
+          "name": "Anonymous"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Disposition"
+        },
+        {
+          "name": "Reported Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked NC"
+        },
+        {
+          "name": "Linked Complaint"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Event ID]",
+          "values[Type]",
+          "values[Severity]",
+          "values[Site]",
+          "values[Status]",
+          "values[Priority]",
+          "values[Owner]",
+          "values[Confidential]",
+          "values[Due Date]",
+          "values[Product]",
+          "values[Supplier]",
+          "values[Linked CAPA]",
+          "values[Linked NC]",
+          "values[Linked Complaint]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Owner]"
+          ],
+          [
+            "values[Status]",
+            "values[Type]"
+          ],
+          [
+            "values[Status]",
+            "values[Site]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "nonconformances",
+      "name": "Nonconformances",
+      "description": "Material review — affected product/lot/serial, containment, disposition and MRB decisions",
+      "submissionLabelExpression": "${values('NC ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "NC ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Source Event"
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "Lot"
+        },
+        {
+          "name": "Serial"
+        },
+        {
+          "name": "Qty Affected"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Containment"
+        },
+        {
+          "name": "Segregation"
+        },
+        {
+          "name": "Disposition"
+        },
+        {
+          "name": "MRB Decision"
+        },
+        {
+          "name": "MRB Date"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Detected Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked Complaint"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[NC ID]",
+          "values[Product]",
+          "values[Site]",
+          "values[Disposition]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Due Date]",
+          "values[Source Event]",
+          "values[Severity]",
+          "values[Linked CAPA]",
+          "values[Linked Complaint]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Site]"
+          ],
+          [
+            "values[Status]",
+            "values[Disposition]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "capas",
+      "name": "CAPAs",
+      "description": "Corrective and preventive actions — triage, investigation, root cause, implementation, verification and effectiveness",
+      "submissionLabelExpression": "${values('CAPA ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "CAPA ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Source Event"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Priority"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "Supplier"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Investigation Method"
+        },
+        {
+          "name": "Root Cause Summary",
+          "rows": 2
+        },
+        {
+          "name": "Root Causes",
+          "rows": 2
+        },
+        {
+          "name": "Containment",
+          "rows": 2
+        },
+        {
+          "name": "Effectiveness Criteria",
+          "rows": 2
+        },
+        {
+          "name": "Effectiveness Result"
+        },
+        {
+          "name": "Opened Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Reopened"
+        },
+        {
+          "name": "Signature Status"
+        },
+        {
+          "name": "Linked NC"
+        },
+        {
+          "name": "Linked Complaint"
+        },
+        {
+          "name": "Linked Risk"
+        },
+        {
+          "name": "Linked Change"
+        },
+        {
+          "name": "Linked SCAR"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[CAPA ID]",
+          "values[Type]",
+          "values[Source]",
+          "values[Risk Level]",
+          "values[Site]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Priority]",
+          "values[Due Date]",
+          "values[Effectiveness Result]",
+          "values[Product]",
+          "values[Supplier]",
+          "values[Source Event]",
+          "values[Linked NC]",
+          "values[Linked Complaint]",
+          "values[Linked Risk]",
+          "values[Linked Change]",
+          "values[Linked SCAR]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Owner]"
+          ],
+          [
+            "values[Status]",
+            "values[Risk Level]"
+          ],
+          [
+            "values[Status]",
+            "values[Site]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "capa-actions",
+      "name": "CAPA Actions",
+      "description": "Action-plan items belonging to a CAPA — owner, due date, verification and evidence",
+      "submissionLabelExpression": "${values('Action ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Action ID",
+          "required": true
+        },
+        {
+          "name": "CAPA ID"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Verification"
+        },
+        {
+          "name": "Evidence"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Action ID]",
+          "values[CAPA ID]",
+          "values[Owner]",
+          "values[Status]",
+          "values[Due Date]"
+        ]
+      }
+    },
+    {
+      "slug": "complaints",
+      "name": "Complaints",
+      "description": "Product complaints and vigilance — UDI, patient impact, reportability decisions and regulatory deadlines",
+      "submissionLabelExpression": "${values('Complaint ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Complaint ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "UDI"
+        },
+        {
+          "name": "Lot"
+        },
+        {
+          "name": "Customer"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Patient Impact"
+        },
+        {
+          "name": "Adverse Event"
+        },
+        {
+          "name": "Reportable"
+        },
+        {
+          "name": "Report Type"
+        },
+        {
+          "name": "Regulatory Due Date"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Received Date"
+        },
+        {
+          "name": "Closed Date"
+        },
+        {
+          "name": "Investigation Summary",
+          "rows": 2
+        },
+        {
+          "name": "Returned Product"
+        },
+        {
+          "name": "Duplicate Of"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked Risk"
+        },
+        {
+          "name": "Linked Event"
+        },
+        {
+          "name": "Description",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Complaint ID]",
+          "values[Product]",
+          "values[Site]",
+          "values[Reportable]",
+          "values[Report Type]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Severity]",
+          "values[Regulatory Due Date]",
+          "values[Adverse Event]",
+          "values[Linked CAPA]",
+          "values[Linked Risk]",
+          "values[Linked Event]",
+          "values[Duplicate Of]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Reportable]"
+          ],
+          [
+            "values[Status]",
+            "values[Product]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audits",
+      "name": "Audits",
+      "description": "Internal, supplier, regulatory, certification, process and product audits with programs and schedules",
+      "submissionLabelExpression": "${values('Audit ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Audit ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Scope"
+        },
+        {
+          "name": "Standard"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Supplier"
+        },
+        {
+          "name": "Lead Auditor"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Result"
+        },
+        {
+          "name": "Planned Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Findings Count"
+        },
+        {
+          "name": "Major Count"
+        },
+        {
+          "name": "Minor Count"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Audit ID]",
+          "values[Type]",
+          "values[Site]",
+          "values[Supplier]",
+          "values[Status]",
+          "values[Lead Auditor]",
+          "values[Planned Date]",
+          "values[Result]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audit-findings",
+      "name": "Audit Findings",
+      "description": "Findings and observations raised during audits — classification, response and remediation",
+      "submissionLabelExpression": "${values('Finding ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Finding ID",
+          "required": true
+        },
+        {
+          "name": "Audit ID"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Classification"
+        },
+        {
+          "name": "Clause"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Supplier"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Response",
+          "rows": 2
+        },
+        {
+          "name": "Remediation",
+          "rows": 2
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Finding ID]",
+          "values[Audit ID]",
+          "values[Classification]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Due Date]",
+          "values[Site]",
+          "values[Supplier]",
+          "values[Linked CAPA]"
+        ]
+      }
+    },
+    {
+      "slug": "documents",
+      "name": "Documents",
+      "description": "Controlled documents — policies, SOPs, work instructions, specs, with revisions and periodic review",
+      "submissionLabelExpression": "${values('Document ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Document ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Revision"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Effective Date"
+        },
+        {
+          "name": "Review Due Date"
+        },
+        {
+          "name": "Training Required"
+        },
+        {
+          "name": "Linked Process"
+        },
+        {
+          "name": "Linked Product"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Document ID]",
+          "values[Type]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Site]",
+          "values[Review Due Date]",
+          "values[Training Required]",
+          "values[Linked Product]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Type]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "change-requests",
+      "name": "Change Requests",
+      "description": "Document and process change control — impact assessment, validation, approvals and training impact",
+      "submissionLabelExpression": "${values('Change ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Change ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Document"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Impact Assessment",
+          "rows": 2
+        },
+        {
+          "name": "Validation Required"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Requested Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Approved Date"
+        },
+        {
+          "name": "Training Impact"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked Product"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Change ID]",
+          "values[Type]",
+          "values[Risk Level]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Site]",
+          "values[Due Date]",
+          "values[Document]",
+          "values[Validation Required]",
+          "values[Linked CAPA]",
+          "values[Linked Product]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Risk Level]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "training-records",
+      "name": "Training Records",
+      "description": "Training assignments and competency — auto-assigned from document revisions, role changes, CAPAs and quality events",
+      "submissionLabelExpression": "${values('Training ID')} - ${values('Employee')}",
+      "fields": [
+        {
+          "name": "Training ID",
+          "required": true
+        },
+        {
+          "name": "Employee"
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Curriculum"
+        },
+        {
+          "name": "Document"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Assigned Date"
+        },
+        {
+          "name": "Due Date"
+        },
+        {
+          "name": "Completed Date"
+        },
+        {
+          "name": "Expiration Date"
+        },
+        {
+          "name": "Score"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked Change"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Training ID]",
+          "values[Employee]",
+          "values[Document]",
+          "values[Source]",
+          "values[Status]",
+          "values[Site]",
+          "values[Due Date]",
+          "values[Role]",
+          "values[Linked CAPA]",
+          "values[Linked Change]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Site]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "scars",
+      "name": "SCARs",
+      "description": "Supplier corrective action requests — response portal, acceptance cycles, effectiveness and score impact",
+      "submissionLabelExpression": "${values('SCAR ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "SCAR ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Supplier"
+        },
+        {
+          "name": "Source Event"
+        },
+        {
+          "name": "Issue Type"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Supplier Contact"
+        },
+        {
+          "name": "Issued Date"
+        },
+        {
+          "name": "Response Due Date"
+        },
+        {
+          "name": "Response Date"
+        },
+        {
+          "name": "Root Cause",
+          "rows": 2
+        },
+        {
+          "name": "Containment",
+          "rows": 2
+        },
+        {
+          "name": "Effectiveness"
+        },
+        {
+          "name": "Score Impact"
+        },
+        {
+          "name": "Escalated"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[SCAR ID]",
+          "values[Supplier]",
+          "values[Issue Type]",
+          "values[Severity]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Response Due Date]",
+          "values[Escalated]",
+          "values[Source Event]",
+          "values[Linked CAPA]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Supplier]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "risks",
+      "name": "Risk Register",
+      "description": "ISO 14971 product/process risks — hazard, harm, controls, residual risk and post-production signals",
+      "submissionLabelExpression": "${values('Risk ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Risk ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Product"
+        },
+        {
+          "name": "Process"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Hazard"
+        },
+        {
+          "name": "Hazardous Situation",
+          "rows": 2
+        },
+        {
+          "name": "Harm"
+        },
+        {
+          "name": "Cause"
+        },
+        {
+          "name": "Severity"
+        },
+        {
+          "name": "Probability"
+        },
+        {
+          "name": "Risk Level"
+        },
+        {
+          "name": "Control",
+          "rows": 2
+        },
+        {
+          "name": "Verification"
+        },
+        {
+          "name": "Residual Severity"
+        },
+        {
+          "name": "Residual Probability"
+        },
+        {
+          "name": "Residual Level"
+        },
+        {
+          "name": "Benefit Risk"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Linked CAPA"
+        },
+        {
+          "name": "Linked Complaint"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Risk ID]",
+          "values[Type]",
+          "values[Product]",
+          "values[Site]",
+          "values[Risk Level]",
+          "values[Residual Level]",
+          "values[Status]",
+          "values[Owner]",
+          "values[Severity]",
+          "values[Linked CAPA]",
+          "values[Linked Complaint]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Risk Level]"
+          ],
+          [
+            "values[Product]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "equipment",
+      "name": "Equipment",
+      "description": "Equipment, tools and gauges — calibration schedules, tolerances, out-of-tolerance events and production restrictions",
+      "submissionLabelExpression": "${values('Equipment ID')} - ${values('Name')}",
+      "fields": [
+        {
+          "name": "Equipment ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Type"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Last Calibration"
+        },
+        {
+          "name": "Calibration Due"
+        },
+        {
+          "name": "Cal Interval Days"
+        },
+        {
+          "name": "Tolerance"
+        },
+        {
+          "name": "Out Of Tolerance"
+        },
+        {
+          "name": "Maintenance Due"
+        },
+        {
+          "name": "Production Restricted"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Description",
+          "rows": 2
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Equipment ID]",
+          "values[Type]",
+          "values[Site]",
+          "values[Status]",
+          "values[Calibration Due]",
+          "values[Out Of Tolerance]",
+          "values[Production Restricted]",
+          "values[Owner]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Site]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "mgmt-reviews",
+      "name": "Management Reviews",
+      "description": "Governed management-review packages — QMS inputs, metrics, actions and improvement opportunities",
+      "submissionLabelExpression": "${values('Review ID')} - ${values('Title')}",
+      "fields": [
+        {
+          "name": "Review ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Period"
+        },
+        {
+          "name": "Site"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Review Date"
+        },
+        {
+          "name": "Chair"
+        },
+        {
+          "name": "Open CAPAs"
+        },
+        {
+          "name": "Overdue Items"
+        },
+        {
+          "name": "Complaint Trend"
+        },
+        {
+          "name": "Supplier Performance"
+        },
+        {
+          "name": "Audit Results"
+        },
+        {
+          "name": "Training Compliance"
+        },
+        {
+          "name": "Inputs Summary",
+          "rows": 3
+        },
+        {
+          "name": "Actions",
+          "rows": 3
+        },
+        {
+          "name": "Owner"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Review ID]",
+          "values[Site]",
+          "values[Status]",
+          "values[Review Date]",
+          "values[Period]"
+        ]
+      }
+    },
+    {
+      "slug": "esignatures",
+      "name": "E-Signatures",
+      "description": "Append-only 21 CFR Part 11 electronic-signature manifest — signer, meaning, reason, record version and tamper-evident hash",
+      "submissionLabelExpression": "${values('Signature ID')} - ${values('Record ID')}",
+      "fields": [
+        {
+          "name": "Signature ID",
+          "required": true
+        },
+        {
+          "name": "Record Type"
+        },
+        {
+          "name": "Record ID"
+        },
+        {
+          "name": "Signer"
+        },
+        {
+          "name": "Signer Name"
+        },
+        {
+          "name": "Meaning"
+        },
+        {
+          "name": "Reason",
+          "rows": 2
+        },
+        {
+          "name": "Record Version"
+        },
+        {
+          "name": "Auth Method"
+        },
+        {
+          "name": "Signed Date"
+        },
+        {
+          "name": "Hash"
+        },
+        {
+          "name": "Correlation ID"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Signature ID]",
+          "values[Record Type]",
+          "values[Record ID]",
+          "values[Signer]",
+          "values[Meaning]",
+          "values[Signed Date]"
+        ]
+      }
+    },
+    {
+      "slug": "audit-trail",
+      "name": "Audit Trail",
+      "description": "Append-only regulated change log — actor, timestamp, previous/new values, reason for change, source and correlation ID",
+      "submissionLabelExpression": "${values('Entry ID')} - ${values('Record ID')}",
+      "fields": [
+        {
+          "name": "Entry ID",
+          "required": true
+        },
+        {
+          "name": "Record Type"
+        },
+        {
+          "name": "Record ID"
+        },
+        {
+          "name": "Actor"
+        },
+        {
+          "name": "Action"
+        },
+        {
+          "name": "Field"
+        },
+        {
+          "name": "Old Value"
+        },
+        {
+          "name": "New Value"
+        },
+        {
+          "name": "Reason",
+          "rows": 2
+        },
+        {
+          "name": "Workflow State"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Correlation ID"
+        },
+        {
+          "name": "Timestamp"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Entry ID]",
+          "values[Record Type]",
+          "values[Record ID]",
+          "values[Actor]",
+          "values[Action]",
+          "values[Correlation ID]",
+          "values[Timestamp]"
+        ],
+        "compound": [
+          [
+            "values[Record Type]",
+            "values[Record ID]"
+          ]
+        ]
+      }
+    }
+  ]
+}

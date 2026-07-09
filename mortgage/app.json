@@ -1,0 +1,195 @@
+{
+  "name": "Meridian Capital",
+  "slug": "mortgage",
+  "description": "Private mortgage & real-estate debt fund tracking across the United States — investors, loans, participations, contracts, payments, fees, interest and complaints.",
+  "category": "Finance",
+  "icon": "dollar-sign",
+  "color": "#13294B",
+  "bg": "#EEF1F6",
+  "forms": [
+    {
+      "slug": "investors",
+      "name": "Investors",
+      "description": "Capital partners committing $50K–$500K per loan across the portfolio",
+      "submissionLabelExpression": "${values('Investor ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Investor ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Entity Type" },
+        { "name": "Contact Name" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "State" },
+        { "name": "Accredited" },
+        { "name": "Committed Capital" },
+        { "name": "Deployed Capital" },
+        { "name": "Available Capital" },
+        { "name": "Target Return" },
+        { "name": "Status" },
+        { "name": "Join Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Investor ID]", "values[Status]", "values[State]", "values[Entity Type]"]
+      }
+    },
+    {
+      "slug": "loans",
+      "name": "Loans",
+      "description": "Mortgage projects — loans secured by US real estate (the central object)",
+      "submissionLabelExpression": "${values('Loan ID')} - ${values('Loan Name')}",
+      "fields": [
+        { "name": "Loan ID", "required": true },
+        { "name": "Loan Name", "required": true },
+        { "name": "Borrower" },
+        { "name": "Borrower Entity" },
+        { "name": "Property Address" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Property Type" },
+        { "name": "Loan Type" },
+        { "name": "Loan Amount" },
+        { "name": "Property Value" },
+        { "name": "LTV" },
+        { "name": "Interest Rate" },
+        { "name": "Term Months" },
+        { "name": "Origination Date" },
+        { "name": "Maturity Date" },
+        { "name": "Status" },
+        { "name": "Lien Position" },
+        { "name": "Payment Type" },
+        { "name": "Monthly Payment" },
+        { "name": "Principal Balance" },
+        { "name": "Total Funded" },
+        { "name": "Origination Fee" },
+        { "name": "Servicing Fee Rate" },
+        { "name": "Investor Count" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Loan ID]", "values[Status]", "values[State]", "values[Property Type]", "values[Loan Type]", "values[Lien Position]"],
+        "compound": [["values[Status]", "values[State]"], ["values[Status]", "values[Loan Type]"]]
+      }
+    },
+    {
+      "slug": "participations",
+      "name": "Participations",
+      "description": "Investor stakes in loans — amount, ownership percentage and expected return",
+      "submissionLabelExpression": "${values('Investor Name')} - ${values('Loan Name')}",
+      "fields": [
+        { "name": "Participation ID", "required": true },
+        { "name": "Investor" },
+        { "name": "Investor Name" },
+        { "name": "Loan" },
+        { "name": "Loan Name" },
+        { "name": "Amount" },
+        { "name": "Ownership Percentage" },
+        { "name": "Expected Return Rate" },
+        { "name": "Funded Date" },
+        { "name": "Status" },
+        { "name": "Distributions Paid" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Investor]", "values[Loan]", "values[Status]"],
+        "compound": [["values[Loan]", "values[Status]"], ["values[Investor]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "contracts",
+      "name": "Contracts",
+      "description": "Loan agreements, notes, deeds of trust, guaranties and investor subscriptions",
+      "submissionLabelExpression": "${values('Contract ID')} - ${values('Contract Type')}",
+      "fields": [
+        { "name": "Contract ID", "required": true },
+        { "name": "Contract Type" },
+        { "name": "Related Loan" },
+        { "name": "Related Investor" },
+        { "name": "Party" },
+        { "name": "Status" },
+        { "name": "Effective Date" },
+        { "name": "Expiration Date" },
+        { "name": "Amount" },
+        { "name": "Document Link" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Contract Type]", "values[Status]", "values[Related Loan]", "values[Related Investor]"]
+      }
+    },
+    {
+      "slug": "payments",
+      "name": "Payments",
+      "description": "Borrower principal & interest payments and investor distributions",
+      "submissionLabelExpression": "${values('Payment ID')} - ${values('Payment Type')}",
+      "fields": [
+        { "name": "Payment ID", "required": true },
+        { "name": "Payment Type" },
+        { "name": "Direction" },
+        { "name": "Loan" },
+        { "name": "Loan Name" },
+        { "name": "Investor" },
+        { "name": "Investor Name" },
+        { "name": "Amount" },
+        { "name": "Principal Portion" },
+        { "name": "Interest Portion" },
+        { "name": "Fee Portion" },
+        { "name": "Due Date" },
+        { "name": "Paid Date" },
+        { "name": "Status" },
+        { "name": "Method" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Payment Type]", "values[Status]", "values[Loan]", "values[Investor]", "values[Direction]"],
+        "compound": [["values[Loan]", "values[Status]"], ["values[Payment Type]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "fees",
+      "name": "Fees",
+      "description": "Origination, servicing, late, extension and exit fees",
+      "submissionLabelExpression": "${values('Fee ID')} - ${values('Fee Type')}",
+      "fields": [
+        { "name": "Fee ID", "required": true },
+        { "name": "Fee Type" },
+        { "name": "Loan" },
+        { "name": "Loan Name" },
+        { "name": "Amount" },
+        { "name": "Charged Date" },
+        { "name": "Status" },
+        { "name": "Beneficiary" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Fee Type]", "values[Status]", "values[Loan]"]
+      }
+    },
+    {
+      "slug": "complaints",
+      "name": "Complaints",
+      "description": "Borrower, investor and regulator complaints with resolution tracking",
+      "submissionLabelExpression": "${values('Complaint ID')} - ${values('Category')}",
+      "fields": [
+        { "name": "Complaint ID", "required": true },
+        { "name": "Source" },
+        { "name": "Complainant" },
+        { "name": "Related Loan" },
+        { "name": "Related Investor" },
+        { "name": "Category" },
+        { "name": "Severity" },
+        { "name": "Status" },
+        { "name": "Opened Date" },
+        { "name": "Resolved Date" },
+        { "name": "Assigned To" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Resolution", "rows": 2 },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Severity]", "values[Source]", "values[Category]", "values[Related Loan]"],
+        "compound": [["values[Status]", "values[Severity]"]]
+      }
+    }
+  ]
+}

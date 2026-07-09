@@ -1,0 +1,154 @@
+{
+  "name": "KISS Army HQ",
+  "slug": "kiss",
+  "description": "The hottest band in the world, all in one place — band lineup, concert history, merch catalog, the 8-room KISS Hotel, and the KISS Army fan club with monthly newsletters",
+  "category": "Industry",
+  "icon": "music",
+  "color": "#111111",
+  "bg": "#F1F1F1",
+  "kapp": "kiss",
+  "forms": [
+    {
+      "slug": "members",
+      "name": "Band Members",
+      "description": "The faces behind the makeup — every musician who has worn a KISS persona.",
+      "submissionLabelExpression": "${values('Member Name')} — ${values('Persona')} (${values('Status')})",
+      "fields": [
+        { "name": "Member Name", "required": true },
+        { "name": "Persona" },
+        { "name": "Instrument" },
+        { "name": "Years Active" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Member Name]", "values[Persona]", "values[Status]"],
+        "compound": [["values[Status]", "values[Persona]"]]
+      }
+    },
+    {
+      "slug": "concerts",
+      "name": "Concerts",
+      "description": "Every show on the board — tours, venues, capacity and ticket sales.",
+      "submissionLabelExpression": "${values('Tour')} — ${values('Venue')}, ${values('City')} (${values('Concert Date')})",
+      "fields": [
+        { "name": "Concert Date", "required": true },
+        { "name": "Tour" },
+        { "name": "Venue", "required": true },
+        { "name": "City" },
+        { "name": "Country" },
+        { "name": "Capacity" },
+        { "name": "Tickets Sold" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Concert Date]", "values[Tour]", "values[Status]", "values[Country]", "values[City]"],
+        "compound": [["values[Status]", "values[Concert Date]"], ["values[Tour]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "merchandise",
+      "name": "Merchandise",
+      "description": "The KISS merch machine — apparel, vinyl, collectibles and everything in between.",
+      "submissionLabelExpression": "${values('Item Name')} — ${values('Category')} ($${values('Price')})",
+      "fields": [
+        { "name": "Item Name", "required": true },
+        { "name": "Category" },
+        { "name": "SKU" },
+        { "name": "Price" },
+        { "name": "Stock" },
+        { "name": "Status" },
+        { "name": "Description", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Item Name]", "values[Category]", "values[SKU]", "values[Status]"],
+        "compound": [["values[Status]", "values[Category]"]]
+      }
+    },
+    {
+      "slug": "rooms",
+      "name": "Hotel Rooms",
+      "description": "The 8 themed suites of the KISS Hotel — one per persona and anthem.",
+      "submissionLabelExpression": "Room ${values('Room Number')} — ${values('Room Name')} (${values('Status')})",
+      "fields": [
+        { "name": "Room Number", "required": true },
+        { "name": "Room Name", "required": true },
+        { "name": "Room Type" },
+        { "name": "Nightly Rate" },
+        { "name": "Max Occupancy" },
+        { "name": "Status" },
+        { "name": "Amenities", "rows": 2 },
+        { "name": "Description", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Room Number]", "values[Room Type]", "values[Status]"],
+        "compound": [["values[Status]", "values[Room Type]"]]
+      }
+    },
+    {
+      "slug": "bookings",
+      "name": "Hotel Bookings",
+      "description": "Guest reservations for the KISS Hotel — lifecycle: Reserved → Checked In → Checked Out.",
+      "submissionLabelExpression": "${values('Confirmation Number')} — ${values('Guest Name')}, Room ${values('Room Number')} (${values('Status')})",
+      "fields": [
+        { "name": "Confirmation Number", "required": true },
+        { "name": "Guest Name", "required": true },
+        { "name": "Guest Email" },
+        { "name": "Room Number", "required": true },
+        { "name": "Room Name" },
+        { "name": "Check In", "required": true },
+        { "name": "Check Out", "required": true },
+        { "name": "Nights" },
+        { "name": "Total" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Confirmation Number]", "values[Guest Email]", "values[Room Number]", "values[Status]", "values[Check In]"],
+        "compound": [["values[Status]", "values[Check In]"], ["values[Room Number]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "fans",
+      "name": "KISS Army",
+      "description": "The fan club roster — members who can opt in to the monthly newsletter.",
+      "submissionLabelExpression": "${values('Full Name')} — ${values('Fan Level')} (${values('Newsletter')})",
+      "fields": [
+        { "name": "Full Name", "required": true },
+        { "name": "Email", "required": true },
+        { "name": "City" },
+        { "name": "Country" },
+        { "name": "Fan Level" },
+        { "name": "Member Since" },
+        { "name": "Newsletter" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Email]", "values[Fan Level]", "values[Newsletter]", "values[Status]", "values[Country]"],
+        "compound": [["values[Status]", "values[Newsletter]"], ["values[Newsletter]", "values[Fan Level]"]]
+      }
+    },
+    {
+      "slug": "newsletters",
+      "name": "Newsletter Log",
+      "description": "Monthly newsletter sends — one record per recipient. Each Submitted record can trigger the SMTP send workflow.",
+      "submissionLabelExpression": "${values('To Email')} — ${values('Campaign')} (${values('Status')})",
+      "fields": [
+        { "name": "To Name" },
+        { "name": "To Email", "required": true },
+        { "name": "Subject", "required": true },
+        { "name": "Body", "rows": 5 },
+        { "name": "Campaign" },
+        { "name": "Email Type" },
+        { "name": "Status" },
+        { "name": "Sent At" }
+      ],
+      "indexes": {
+        "single": ["values[Campaign]", "values[Status]", "values[To Email]", "values[Email Type]"],
+        "compound": [["values[Status]", "values[Campaign]"]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Capital</title>
+<style>
+:root{--navy:#13294B;--navy-l:#1E3A66;--gold:#C9A227;--gold-l:#E0B93A;--green:#2E8B57;--green-d:#1E6E43;--red:#C5453B;--amber:#D98A1F;--blue:#2D6CDF;--purple:#6E4FB0;--teal:#0E7C86;--gray:#5C6670;--light:#F5F7FA;--border:#E3E8EF;--bg:#EEF1F6;--white:#fff;--shadow:0 1px 3px rgba(16,35,75,.10),0 1px 2px rgba(16,35,75,.06);--shadow-lg:0 10px 28px rgba(16,35,75,.18)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#16202E;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#F4F7FC}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0B1A33 0%,#13294B 55%,#1E3A66 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--navy);font-size:25px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--gold)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--gold);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--navy);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--navy-l)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+.topbar{background:var(--navy);color:white;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:17px;white-space:nowrap;margin-right:22px;letter-spacing:-.2px}
+.topbar .logo span{color:var(--gold)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.74);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--gold);color:var(--navy);font-weight:700}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.74);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.74);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--gold);color:white}
+
+.console{display:none;padding:22px;max-width:1480px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:22px;font-weight:700;margin:4px 0;color:var(--navy)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.gold .val{color:var(--gold)}.kpi.gold{border-top-color:var(--gold)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.amber .val{color:var(--amber)}.kpi.amber{border-top-color:var(--amber)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.navy .val{color:var(--navy)}.kpi.navy{border-top-color:var(--navy)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-performing,.badge-paid,.badge-collected,.badge-executed,.badge-active,.badge-resolved,.badge-closed,.badge-repaid,.badge-yes,.badge-fully-deployed{background:#E4F1EA;color:#1E6E43}
+.badge-watch,.badge-late,.badge-outstanding,.badge-investigating,.badge-draft,.badge-scheduled,.badge-funding,.badge-partial,.badge-sent,.badge-medium,.badge-onboarding{background:#FBF0DC;color:#9A6710}
+.badge-delinquent,.badge-default,.badge-foreclosure,.badge-missed,.badge-open,.badge-escalated,.badge-defaulted,.badge-terminated,.badge-expired,.badge-high,.badge-critical,.badge-no{background:#FBE6E4;color:#A6362D}
+.badge-redeeming,.badge-low,.badge-1st-lien{background:#E6EEFC;color:#1F54C9}
+.badge-default-grey,.badge-inactive,.badge-waived,.badge-2nd-lien{background:var(--light);color:var(--gray)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:130px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:980px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:19px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--navy);color:white;border-color:var(--navy)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-row .bl{min-width:150px;text-align:right;color:var(--gray)}
+.bar-row .bt{flex:1;background:var(--light);border-radius:5px;height:18px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:5px;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700}
+.bar-row .bv{min-width:34px;font-weight:700;color:var(--navy)}
+
+.capbar{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:8px 0}
+.capseg{height:100%;font-size:10px;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;min-width:2px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:26px;max-width:900px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:14px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap}
+.meta-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:14px}
+.banner{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5;background:var(--light);color:var(--gray)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+.empty{text-align:center;color:var(--gray);padding:24px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Meridian <span>Capital</span></h1>
+    <p class="sub">Private mortgage &amp; real-estate debt fund administration</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Meridian <span>Capital</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Fund Dashboard</button>
+      <button onclick="switchTab('loans')">Loans</button>
+      <button onclick="switchTab('investors')">Investors</button>
+      <button onclick="switchTab('participations')">Participations</button>
+      <button onclick="switchTab('payments')">Payments</button>
+      <button onclick="switchTab('fees')">Fees</button>
+      <button onclick="switchTab('contracts')">Contracts</button>
+      <button onclick="switchTab('complaints')">Complaints</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Fund Dashboard</div>
+    <div class="page-sub">Portfolio performance, capital deployment, yield &amp; credit risk</div>
+    <div class="kpi-row" id="db-kpis"></div>
+    <div class="grid-2"><div id="db-left"></div><div id="db-right"></div></div>
+    <div class="grid-2"><div id="db-risk"></div><div id="db-mix"></div></div>
+  </div>
+
+  <!-- LOANS -->
+  <div class="console" id="tab-loans">
+    <div class="page-title">Loans</div>
+    <div class="page-sub">Mortgage projects secured by US real estate</div>
+    <div class="toolbar">
+      <input type="text" id="s-loans" placeholder="Search loan, borrower, city..." oninput="loadTable('loans')">
+      <select id="f-loans-Status" onchange="loadTable('loans')"><option value="">All Status</option><option>Funding</option><option>Performing</option><option>Watch</option><option>Delinquent</option><option>Default</option><option>Foreclosure</option><option>Paid Off</option></select>
+      <select id="f-loans-State" onchange="loadTable('loans')"><option value="">All States</option></select>
+      <select id="f-loans-Loan Type" onchange="loadTable('loans')"><option value="">All Types</option><option>Fix &amp; Flip</option><option>Bridge</option><option>Ground-Up Construction</option><option>Rental / DSCR</option><option>Commercial</option><option>Cash-Out Refinance</option></select>
+      <button class="btn-primary" onclick="showForm('loans')">+ New Loan</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Loan ID</th><th>Name</th><th>State</th><th>Type</th><th class="num">Amount</th><th class="num">Rate</th><th class="num">LTV</th><th class="num">Inv</th><th>Status</th></tr></thead><tbody id="b-loans"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('loans',-1)" id="p-loans-prev" disabled>Prev</button><span class="page-info" id="p-loans-info">Page 1</span><button class="btn-outline" onclick="pageTable('loans',1)" id="p-loans-next" disabled>Next</button></div>
+  </div>
+
+  <!-- INVESTORS -->
+  <div class="console" id="tab-investors">
+    <div class="page-title">Investors</div>
+    <div class="page-sub">Capital partners and committed / deployed capital</div>
+    <div class="toolbar">
+      <input type="text" id="s-investors" placeholder="Search investor..." oninput="loadTable('investors')">
+      <select id="f-investors-Status" onchange="loadTable('investors')"><option value="">All Status</option><option>Active</option><option>Onboarding</option><option>Fully Deployed</option><option>Redeeming</option><option>Inactive</option></select>
+      <select id="f-investors-Entity Type" onchange="loadTable('investors')"><option value="">All Entity Types</option><option>Individual</option><option>LLC</option><option>Trust</option><option>IRA</option><option>Partnership</option></select>
+      <button class="btn-primary" onclick="showForm('investors')">+ New Investor</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Entity</th><th>State</th><th class="num">Committed</th><th class="num">Deployed</th><th class="num">Available</th><th>Status</th></tr></thead><tbody id="b-investors"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('investors',-1)" id="p-investors-prev" disabled>Prev</button><span class="page-info" id="p-investors-info">Page 1</span><button class="btn-outline" onclick="pageTable('investors',1)" id="p-investors-next" disabled>Next</button></div>
+  </div>
+
+  <!-- PARTICIPATIONS -->
+  <div class="console" id="tab-participations">
+    <div class="page-title">Participations</div>
+    <div class="page-sub">Investor stakes in loans — amount, ownership % and expected return</div>
+    <div class="toolbar">
+      <input type="text" id="s-participations" placeholder="Search investor, loan..." oninput="loadTable('participations')">
+      <select id="f-participations-Status" onchange="loadTable('participations')"><option value="">All Status</option><option>Active</option><option>Repaid</option><option>Defaulted</option></select>
+      <button class="btn-primary" onclick="showForm('participations')">+ New Participation</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Investor</th><th>Loan</th><th class="num">Amount</th><th class="num">Ownership</th><th class="num">Exp. Return</th><th class="num">Distributions</th><th>Status</th></tr></thead><tbody id="b-participations"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('participations',-1)" id="p-participations-prev" disabled>Prev</button><span class="page-info" id="p-participations-info">Page 1</span><button class="btn-outline" onclick="pageTable('participations',1)" id="p-participations-next" disabled>Next</button></div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="console" id="tab-payments">
+    <div class="page-title">Payments</div>
+    <div class="page-sub">Borrower P&amp;I payments and investor distributions</div>
+    <div class="toolbar">
+      <input type="text" id="s-payments" placeholder="Search loan, investor..." oninput="loadTable('payments')">
+      <select id="f-payments-Payment Type" onchange="loadTable('payments')"><option value="">All Types</option><option>Borrower Payment</option><option>Investor Distribution</option></select>
+      <select id="f-payments-Status" onchange="loadTable('payments')"><option value="">All Status</option><option>Scheduled</option><option>Paid</option><option>Late</option><option>Missed</option><option>Partial</option></select>
+      <button class="btn-primary" onclick="showForm('payments')">+ New Payment</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Type</th><th>Loan</th><th>Party</th><th class="num">Amount</th><th class="num">Interest</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-payments"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('payments',-1)" id="p-payments-prev" disabled>Prev</button><span class="page-info" id="p-payments-info">Page 1</span><button class="btn-outline" onclick="pageTable('payments',1)" id="p-payments-next" disabled>Next</button></div>
+  </div>
+
+  <!-- FEES -->
+  <div class="console" id="tab-fees">
+    <div class="page-title">Fees</div>
+    <div class="page-sub">Origination, servicing, late, default and exit fees</div>
+    <div class="toolbar">
+      <input type="text" id="s-fees" placeholder="Search loan..." oninput="loadTable('fees')">
+      <select id="f-fees-Fee Type" onchange="loadTable('fees')"><option value="">All Types</option><option>Origination</option><option>Servicing</option><option>Late</option><option>Default Interest</option><option>Extension</option><option>Exit / Prepayment</option><option>Legal</option></select>
+      <select id="f-fees-Status" onchange="loadTable('fees')"><option value="">All Status</option><option>Charged</option><option>Collected</option><option>Outstanding</option><option>Waived</option></select>
+      <button class="btn-primary" onclick="showForm('fees')">+ New Fee</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Type</th><th>Loan</th><th class="num">Amount</th><th>Charged</th><th>Beneficiary</th><th>Status</th></tr></thead><tbody id="b-fees"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('fees',-1)" id="p-fees-prev" disabled>Prev</button><span class="page-info" id="p-fees-info">Page 1</span><button class="btn-outline" onclick="pageTable('fees',1)" id="p-fees-next" disabled>Next</button></div>
+  </div>
+
+  <!-- CONTRACTS -->
+  <div class="console" id="tab-contracts">
+    <div class="page-title">Contracts</div>
+    <div class="page-sub">Notes, deeds of trust, guaranties &amp; investor subscriptions</div>
+    <div class="toolbar">
+      <input type="text" id="s-contracts" placeholder="Search party, loan..." oninput="loadTable('contracts')">
+      <select id="f-contracts-Contract Type" onchange="loadTable('contracts')"><option value="">All Types</option><option>Loan Agreement</option><option>Promissory Note</option><option>Deed of Trust</option><option>Personal Guaranty</option><option>Subscription Agreement</option><option>Servicing Agreement</option></select>
+      <select id="f-contracts-Status" onchange="loadTable('contracts')"><option value="">All Status</option><option>Draft</option><option>Sent</option><option>Executed</option><option>Expired</option><option>Terminated</option></select>
+      <button class="btn-primary" onclick="showForm('contracts')">+ New Contract</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Type</th><th>Party</th><th>Loan</th><th class="num">Amount</th><th>Effective</th><th>Status</th></tr></thead><tbody id="b-contracts"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('contracts',-1)" id="p-contracts-prev" disabled>Prev</button><span class="page-info" id="p-contracts-info">Page 1</span><button class="btn-outline" onclick="pageTable('contracts',1)" id="p-contracts-next" disabled>Next</button></div>
+  </div>
+
+  <!-- COMPLAINTS -->
+  <div class="console" id="tab-complaints">
+    <div class="page-title">Complaints</div>
+    <div class="page-sub">Borrower, investor &amp; regulator complaints and resolution</div>
+    <div class="toolbar">
+      <input type="text" id="s-complaints" placeholder="Search complainant..." oninput="loadTable('complaints')">
+      <select id="f-complaints-Status" onchange="loadTable('complaints')"><option value="">All Status</option><option>Open</option><option>Investigating</option><option>Escalated</option><option>Resolved</option><option>Closed</option></select>
+      <select id="f-complaints-Severity" onchange="loadTable('complaints')"><option value="">All Severity</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
+      <select id="f-complaints-Source" onchange="loadTable('complaints')"><option value="">All Sources</option><option>Borrower</option><option>Investor</option><option>Regulator</option><option>Third Party</option></select>
+      <button class="btn-primary" onclick="showForm('complaints')">+ New Complaint</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Source</th><th>Complainant</th><th>Category</th><th>Severity</th><th>Opened</th><th>Status</th></tr></thead><tbody id="b-complaints"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('complaints',-1)" id="p-complaints-prev" disabled>Prev</button><span class="page-info" id="p-complaints-info">Page 1</span><button class="btn-outline" onclick="pageTable('complaints',1)" id="p-complaints-next" disabled>Next</button></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Portfolio performance and investor capital</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('portfolio')">Loan Portfolio</button>
+      <button class="subtab" onclick="showReport('investors')">Investor Capital</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='mortgage';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
+function fmt$(x){const f=n_(x);return '$'+f.toLocaleString('en-US',{maximumFractionDigits:0})}
+function fmtM(x){const f=n_(x);if(Math.abs(f)>=1e6)return '$'+(f/1e6).toFixed(2)+'M';if(Math.abs(f)>=1e3)return '$'+(f/1e3).toFixed(0)+'K';return '$'+f.toFixed(0)}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default-grey';return'badge-'+String(val).toLowerCase().replace(/\s*\/\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}
+function badge(val){return`<span class="badge ${badgeClass(val)}">${esc(val||'—')}</span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={dashboard:'Fund Dashboard',loans:'Loans',investors:'Investors',participations:'Participations',payments:'Payments',fees:'Fees',contracts:'Contracts',complaints:'Complaints',reports:'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.textContent===TAB_MAP[tab]));
+  if(tab==='dashboard')loadDashboard();
+  else if(tab==='reports')showReport('portfolio');
+  else if(TABLES[tab]){fillRefSelects();loadTable(tab)}
+}
+
+let _states=null;
+async function fillRefSelects(){
+  try{if(!_states){const r=await api(`/kapps/${KAPP}/forms/loans/submissions?include=values&limit=25`);_states=[...new Set((r.submissions||[]).map(s=>v(s,'State')).filter(Boolean))].sort()}}catch(e){}
+  const sel=document.getElementById('f-loans-State');if(sel&&_states&&sel.options.length<=1)_states.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o)});
+}
+
+/* ===== generic table driver ===== */
+const TABLES={
+  loans:{filters:['Status','State','Loan Type'],search:['Loan Name','Borrower','City'],onRow:s=>`openLoan('${s.id}')`,row:s=>`<td>${esc(v(s,'Loan ID'))}</td><td style="font-weight:600">${esc(v(s,'Loan Name'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'Loan Type'))}</td><td class="num">${fmt$(v(s,'Loan Amount'))}</td><td class="num">${esc(v(s,'Interest Rate'))}</td><td class="num">${esc(v(s,'LTV'))}</td><td class="num">${esc(v(s,'Investor Count'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  investors:{filters:['Status','Entity Type'],search:['Name','Contact Name'],onRow:s=>`openInvestor('${s.id}')`,row:s=>`<td>${esc(v(s,'Investor ID'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Entity Type'))}</td><td>${esc(v(s,'State'))}</td><td class="num">${fmt$(v(s,'Committed Capital'))}</td><td class="num">${fmt$(v(s,'Deployed Capital'))}</td><td class="num">${fmt$(v(s,'Available Capital'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  participations:{filters:['Status'],search:['Investor Name','Loan Name'],onRow:s=>`showEditForm('participations','${s.id}')`,row:s=>`<td>${esc(v(s,'Participation ID'))}</td><td style="font-weight:600">${esc(v(s,'Investor Name'))}</td><td>${esc(v(s,'Loan Name'))}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td class="num">${esc(v(s,'Ownership Percentage'))}</td><td class="num">${esc(v(s,'Expected Return Rate'))}</td><td class="num">${fmt$(v(s,'Distributions Paid'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  payments:{filters:['Payment Type','Status'],search:['Loan Name','Investor Name'],onRow:s=>`showEditForm('payments','${s.id}')`,row:s=>`<td>${esc(v(s,'Payment ID'))}</td><td>${badge(v(s,'Payment Type')==='Borrower Payment'?'Performing':'1st Lien')}<span style="font-size:11px;margin-left:4px">${esc(v(s,'Payment Type').replace(' Payment','').replace('Investor ',''))}</span></td><td>${esc(v(s,'Loan Name'))}</td><td>${esc(v(s,'Investor Name')||'—')}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td class="num">${fmt$(v(s,'Interest Portion'))}</td><td>${esc(v(s,'Due Date'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  fees:{filters:['Fee Type','Status'],search:['Loan Name'],onRow:s=>`showEditForm('fees','${s.id}')`,row:s=>`<td>${esc(v(s,'Fee ID'))}</td><td>${esc(v(s,'Fee Type'))}</td><td>${esc(v(s,'Loan Name'))}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td>${esc(v(s,'Charged Date'))}</td><td>${esc(v(s,'Beneficiary'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  contracts:{filters:['Contract Type','Status'],search:['Party','Related Loan'],onRow:s=>`showEditForm('contracts','${s.id}')`,row:s=>`<td>${esc(v(s,'Contract ID'))}</td><td>${esc(v(s,'Contract Type'))}</td><td style="font-weight:600">${esc(v(s,'Party'))}</td><td>${esc(v(s,'Related Loan')||v(s,'Related Investor'))}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td>${esc(v(s,'Effective Date'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  complaints:{filters:['Status','Severity','Source'],search:['Complainant','Description'],onRow:s=>`showEditForm('complaints','${s.id}')`,row:s=>`<td>${esc(v(s,'Complaint ID'))}</td><td>${esc(v(s,'Source'))}</td><td style="font-weight:600">${esc(v(s,'Complainant'))}</td><td>${esc(v(s,'Category'))}</td><td>${badge(v(s,'Severity'))}</td><td>${esc(v(s,'Opened Date'))}</td><td>${badge(v(s,'Status'))}</td>`},
+};
+const PAGERS={};
+function pager(k){if(!PAGERS[k])PAGERS[k]={page:1,keys:{1:null},hasNext:false};return PAGERS[k]}
+function loadTable(k){const p=pager(k);p.page=1;p.keys={1:null};fetchTable(k)}
+function pageTable(k,dir){const p=pager(k);if(dir>0&&p.hasNext)p.page++;else if(dir<0&&p.page>1)p.page--;else return;fetchTable(k)}
+async function fetchTable(k){
+  const cfg=TABLES[k],p=pager(k);
+  try{
+    let kql='';
+    (cfg.filters||[]).forEach(f=>{const el=document.getElementById('f-'+k+'-'+f);const val=el&&el.value;if(val)kql=kql?`${kql} AND values[${f}]="${val.replace(/"/g,'\\"')}"`:`values[${f}]="${val.replace(/"/g,'\\"')}"`});
+    const last=p.keys[p.page];if(last)kql=kql?`(${kql}) AND createdAt<"${last}"`:`createdAt<"${last}"`;
+    let path=`/kapps/${KAPP}/forms/${k}/submissions?include=details,values&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];p.hasNext=!!res.nextPageToken;
+    if(p.hasNext&&data.length)p.keys[p.page+1]=data[data.length-1].createdAt;
+    const sEl=document.getElementById('s-'+k);const term=sEl?sEl.value.toLowerCase().trim():'';
+    if(term)data=data.filter(s=>(cfg.search||[]).some(f=>v(s,f).toLowerCase().includes(term)));
+    document.getElementById('b-'+k).innerHTML=data.length?data.map(s=>`<tr class="clickable-row" onclick="${cfg.onRow(s)}">${cfg.row(s)}</tr>`).join(''):`<tr><td colspan="12" class="empty">No records found</td></tr>`;
+    document.getElementById('p-'+k+'-info').textContent='Page '+p.page;
+    document.getElementById('p-'+k+'-prev').disabled=p.page<=1;
+    document.getElementById('p-'+k+'-next').disabled=!p.hasNext;
+  }catch(e){document.getElementById('b-'+k).innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`}
+}
+
+/* ===== DASHBOARD ===== */
+async function loadDashboard(){
+  document.getElementById('db-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading fund dashboard…</div>';
+  ['db-left','db-right','db-risk','db-mix'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{
+    const d=await sapi('/api/mortgage/dashboard');const k=d.kpis;
+    document.getElementById('db-kpis').innerHTML=`
+      <div class="kpi navy"><div class="val">${fmtM(k.aum)}</div><div class="label">Principal Outstanding</div><div class="sub">${k.activeLoans} active loans</div></div>
+      <div class="kpi gold"><div class="val">${fmtM(k.deployed)}</div><div class="label">Capital Deployed</div><div class="sub">${k.deploymentRate}% of committed</div></div>
+      <div class="kpi blue"><div class="val">${fmtM(k.available)}</div><div class="label">Dry Powder</div><div class="sub">${k.investorCount} investors</div></div>
+      <div class="kpi green"><div class="val">${k.weightedYield}%</div><div class="label">Weighted Yield</div><div class="sub">${k.avgLTV}% avg LTV</div></div>
+      <div class="kpi ${k.delinquencyRate>10?'red':'teal'}"><div class="val">${k.delinquencyRate}%</div><div class="label">Delinquency Rate</div><div class="sub">${k.distressed} distressed</div></div>
+      <div class="kpi green"><div class="val">${fmtM(k.interestCollected)}</div><div class="label">Interest Collected</div></div>
+      <div class="kpi purple"><div class="val">${fmtM(k.distributions)}</div><div class="label">Distributions Paid</div></div>
+      <div class="kpi amber"><div class="val">${fmtM(k.feesCollected)}</div><div class="label">Fees Collected</div><div class="sub">${fmtM(k.feesOutstanding)} outstanding</div></div>
+      <div class="kpi gold"><div class="val">${fmtM(k.originatedTotal)}</div><div class="label">Total Originated</div><div class="sub">${k.paidOff} paid off</div></div>
+      <div class="kpi ${k.openComplaints>0?'red':'green'}"><div class="val">${k.openComplaints}</div><div class="label">Open Complaints</div><div class="sub">${k.missedPayments} late/missed pmts</div></div>`;
+
+    document.getElementById('db-left').innerHTML=`<div class="card"><h3>Largest Active Loans</h3><table><thead><tr><th>Loan</th><th>State</th><th class="num">Amount</th><th class="num">Rate</th><th>Status</th></tr></thead><tbody>${d.topLoans.map(l=>`<tr class="clickable-row" onclick="openLoan('${l.id}')"><td style="font-weight:600">${esc(l.name)}</td><td>${esc(l.state)}</td><td class="num">${fmt$(l.amount)}</td><td class="num">${esc(l.rate)}</td><td>${badge(l.status)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">None</td></tr>'}</tbody></table></div>`;
+
+    document.getElementById('db-right').innerHTML=`<div class="card"><h3>Capital Deployed by Investor</h3>${barList(d.capitalByInvestor,'var(--gold)',fmtM)}</div>
+      <div class="card"><h3>Upcoming Maturities (90 days)</h3>${d.maturing.length?`<table><thead><tr><th>Loan</th><th>Maturity</th><th class="num">Days</th><th class="num">Amount</th></tr></thead><tbody>${d.maturing.map(m=>`<tr class="clickable-row" onclick="openLoan('${m.id}')"><td style="font-weight:600">${esc(m.name)}</td><td>${esc(m.maturity)}</td><td class="num" style="color:${m.daysLeft<=14?'var(--red)':'var(--amber)'};font-weight:700">${m.daysLeft}d</td><td class="num">${fmt$(m.amount)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No maturities in 90 days</p>'}</div>`;
+
+    document.getElementById('db-risk').innerHTML=`<div class="card"><h3>Watch List &amp; Distressed Loans</h3>${d.atRisk.length?`<table><thead><tr><th>Loan</th><th>Borrower</th><th>State</th><th class="num">Amount</th><th class="num">LTV</th><th>Status</th></tr></thead><tbody>${d.atRisk.map(l=>`<tr class="clickable-row" onclick="openLoan('${l.id}')"><td style="font-weight:600">${esc(l.name)}</td><td>${esc(l.borrower)}</td><td>${esc(l.state)}</td><td class="num">${fmt$(l.amount)}</td><td class="num">${esc(l.ltv)}</td><td>${badge(l.status)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No at-risk loans 🎉</p>'}</div>`;
+
+    document.getElementById('db-mix').innerHTML=`<div class="card"><h3>Portfolio by Status</h3>${barList(d.byStatus,'var(--navy)')}
+      <h3 style="margin-top:16px">By Loan Type</h3>${barList(d.byLoanType,'var(--teal)')}</div>
+      <div class="card"><h3>By State</h3>${barList(d.byState,'var(--gold)')}<h3 style="margin-top:16px">By Property Type</h3>${barList(d.byPropertyType,'var(--purple)')}</div>`;
+  }catch(e){document.getElementById('db-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+function barList(arr,color,fmt){if(!arr||!arr.length)return'<p class="empty">No data</p>';const max=Math.max(...arr.map(a=>a.count),1);return arr.map(a=>`<div class="bar-row"><span class="bl">${esc(a.name)}</span><div class="bt"><div class="bf" style="width:${Math.round(a.count/max*100)}%${color?';background:'+color:''}">${a.count>=max*0.2?(fmt?fmt(a.count):a.count):''}</div></div><span class="bv">${a.count>=max*0.2?'':(fmt?fmt(a.count):a.count)}</span></div>`).join('')}
+
+/* ===== LOAN 360 ===== */
+const CAPCOLORS=['#13294B','#C9A227','#2E8B57','#2D6CDF','#6E4FB0','#0E7C86','#D98A1F','#C5453B'];
+async function openLoan(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading loan…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/mortgage/loan/${id}`);const l=d.loan;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th class="${c[2]||''}">${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    const capbar=d.capStack.length?`<div class="capbar">${d.capStack.map((p,i)=>`<div class="capseg" title="${esc(p.investor)} ${esc(p.pct)}" style="width:${n_(p.pct)}%;background:${CAPCOLORS[i%CAPCOLORS.length]}">${n_(p.pct)>=8?esc(p.pct):''}</div>`).join('')}</div>`:'';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(l,'Loan Name'))}</h2>
+      <div class="meta-row"><span>${esc(v(l,'Loan ID'))}</span><span>${esc(v(l,'Property Address'))}, ${esc(v(l,'City'))} ${esc(v(l,'State'))}</span><span>Borrower: <strong>${esc(v(l,'Borrower'))}</strong></span><span>${badge(v(l,'Status'))}</span><span>${badge(v(l,'Lien Position'))}</span></div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--navy)">${fmt$(v(l,'Loan Amount'))}</div><div class="l">Loan Amount</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--gold)">${esc(v(l,'Interest Rate'))}</div><div class="l">Interest Rate · ${esc(v(l,'Payment Type'))}</div></div>
+        <div class="stat-box"><div class="v">${esc(v(l,'LTV'))}</div><div class="l">LTV · ${fmt$(v(l,'Property Value'))} value</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:14px">
+        <div class="stat-box"><div class="v" style="color:var(--green)">${fmt$(s.interestPaid)}</div><div class="l">Interest Paid</div></div>
+        <div class="stat-box"><div class="v">${fmt$(s.monthlyPayment)}</div><div class="l">Monthly Payment</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--amber)">${fmt$(s.feesCharged)}</div><div class="l">Fees Charged</div></div>
+      </div>
+      <div class="meta-row"><span>Originated: <strong>${esc(v(l,'Origination Date'))}</strong></span><span>Matures: <strong>${esc(v(l,'Maturity Date'))}</strong></span><span>Term: <strong>${esc(v(l,'Term Months'))} mo</strong></span><span>Type: <strong>${esc(v(l,'Loan Type'))}</strong></span></div>
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:6px 0">Capital Stack — ${s.investorCount} investors</h3>${capbar}
+      <div class="subtabs" style="margin-top:6px">
+        <button class="subtab active" onclick="lTab(this,'ld-cap')">Cap Stack (${d.capStack.length})</button>
+        <button class="subtab" onclick="lTab(this,'ld-pay')">Payments (${d.payments.length})</button>
+        <button class="subtab" onclick="lTab(this,'ld-fee')">Fees (${d.fees.length})</button>
+        <button class="subtab" onclick="lTab(this,'ld-con')">Contracts (${d.contracts.length})</button>
+        <button class="subtab" onclick="lTab(this,'ld-cmp')">Complaints (${d.complaints.length})</button>
+      </div>
+      <div id="ld-cap" class="subtab-panel active">${tbl(d.capStack,[['Investor',r=>esc(r.investor)],['Amount',r=>fmt$(r.amount),'num'],['Ownership',r=>esc(r.pct),'num'],['Exp. Return',r=>esc(r.expected),'num'],['Distributions',r=>fmt$(r.distributions),'num'],['Status',r=>badge(r.status)]])}</div>
+      <div id="ld-pay" class="subtab-panel">${tbl(d.payments,[['Type',r=>esc(r.type.replace(' Payment','').replace('Investor ',''))],['Party',r=>esc(r.party)],['Amount',r=>fmt$(r.amount),'num'],['Interest',r=>fmt$(r.interest),'num'],['Due',r=>esc(r.due)],['Status',r=>badge(r.status)]])}</div>
+      <div id="ld-fee" class="subtab-panel">${tbl(d.fees,[['Type',r=>esc(r.type)],['Amount',r=>fmt$(r.amount),'num'],['Charged',r=>esc(r.date)],['Status',r=>badge(r.status)]])}</div>
+      <div id="ld-con" class="subtab-panel">${tbl(d.contracts,[['Type',r=>esc(r.type)],['Party',r=>esc(r.party)],['Effective',r=>esc(r.effective)],['Status',r=>badge(r.status)]])}</div>
+      <div id="ld-cmp" class="subtab-panel">${tbl(d.complaints,[['ID',r=>esc(r.cid)],['Category',r=>esc(r.category)],['Severity',r=>badge(r.severity)],['Status',r=>badge(r.status)]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('loans','${l.id}')">Edit Loan</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+function lTab(btn,id){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+/* ===== INVESTOR 360 ===== */
+async function openInvestor(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading investor…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/mortgage/investor/${id}`);const iv=d.investor;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th class="${c[2]||''}">${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    const util=s.committed?Math.round(s.deployed/s.committed*100):0;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(iv,'Name'))}</h2>
+      <div class="meta-row"><span>${esc(v(iv,'Investor ID'))}</span><span>${esc(v(iv,'Entity Type'))} · ${esc(v(iv,'State'))}</span><span>Contact: <strong>${esc(v(iv,'Contact Name'))}</strong></span><span>${badge(v(iv,'Status'))}</span><span>Target: ${esc(v(iv,'Target Return'))}</span></div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--navy)">${fmt$(s.committed)}</div><div class="l">Committed</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--gold)">${fmt$(s.deployed)}</div><div class="l">Deployed (${util}%)</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${fmt$(s.available)}</div><div class="l">Available</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:14px">
+        <div class="stat-box"><div class="v">${s.loans}</div><div class="l">Loans (${s.activeLoans} active)</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${fmt$(s.distributions)}</div><div class="l">Distributions Received</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--teal)">${s.avgReturn}%</div><div class="l">Avg Expected Return</div></div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab active" onclick="lTab(this,'id-part')">Participations (${d.participations.length})</button>
+        <button class="subtab" onclick="lTab(this,'id-dist')">Distributions (${d.distributionsList.length})</button>
+        <button class="subtab" onclick="lTab(this,'id-con')">Contracts (${d.contracts.length})</button>
+      </div>
+      <div id="id-part" class="subtab-panel active">${tbl(d.participations,[['Loan',r=>esc(r.loan)],['Amount',r=>fmt$(r.amount),'num'],['Ownership',r=>esc(r.pct),'num'],['Exp. Return',r=>esc(r.expected),'num'],['Distributions',r=>fmt$(r.distributions),'num'],['Status',r=>badge(r.status)]])}</div>
+      <div id="id-dist" class="subtab-panel">${tbl(d.distributionsList,[['Loan',r=>esc(r.loan)],['Amount',r=>fmt$(r.amount),'num'],['Date',r=>esc(r.date)],['Status',r=>badge(r.status)]])}</div>
+      <div id="id-con" class="subtab-panel">${tbl(d.contracts,[['Type',r=>esc(r.type)],['Amount',r=>fmt$(r.amount),'num'],['Effective',r=>esc(r.effective)],['Status',r=>badge(r.status)]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('investors','${iv.id}')">Edit Investor</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+/* ===== REPORTS ===== */
+async function showReport(type){
+  document.querySelectorAll('#tab-reports .subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(type==='portfolio'?'portfolio':'investor')));
+  document.getElementById('report-content').innerHTML='<div class="card"><p class="empty">Loading report…</p></div>';
+  try{
+    if(type==='portfolio'){
+      const r=await sapi('/api/mortgage/reports/portfolio');
+      document.getElementById('report-content').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Loan</th><th>State</th><th>Type</th><th>Property</th><th class="num">Amount</th><th class="num">Balance</th><th class="num">Rate</th><th class="num">LTV</th><th class="num">Inv</th><th class="num">Interest Paid</th><th>Status</th></tr></thead><tbody>${
+        r.loans.map(l=>`<tr class="clickable-row" onclick="openLoan('${l.id}')"><td style="font-weight:600">${esc(l.name)}</td><td>${esc(l.state)}</td><td>${esc(l.type)}</td><td>${esc(l.propertyType)}</td><td class="num">${fmt$(l.amount)}</td><td class="num">${fmt$(l.balance)}</td><td class="num">${l.rate}%</td><td class="num">${l.ltv}%</td><td class="num">${l.investors}</td><td class="num" style="color:var(--green)">${fmt$(l.interestPaid)}</td><td>${badge(l.status)}</td></tr>`).join('')||'<tr><td colspan="11" class="empty">No data</td></tr>'
+      }</tbody></table></div>`;
+    }else{
+      const r=await sapi('/api/mortgage/reports/investors');
+      document.getElementById('report-content').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Investor</th><th>Entity</th><th>State</th><th class="num">Committed</th><th class="num">Deployed</th><th class="num">Available</th><th class="num">Utilization</th><th class="num">Loans</th><th class="num">Distributions</th><th>Status</th></tr></thead><tbody>${
+        r.investors.map(i=>`<tr class="clickable-row" onclick="openInvestor('${i.id}')"><td style="font-weight:600">${esc(i.name)}</td><td>${esc(i.entity)}</td><td>${esc(i.state)}</td><td class="num">${fmt$(i.committed)}</td><td class="num">${fmt$(i.deployed)}</td><td class="num">${fmt$(i.available)}</td><td class="num" style="font-weight:700;color:${i.utilization>90?'var(--amber)':'var(--navy)'}">${i.utilization}%</td><td class="num">${i.loans}</td><td class="num" style="color:var(--green)">${fmt$(i.distributions)}</td><td>${badge(i.status)}</td></tr>`).join('')||'<tr><td colspan="10" class="empty">No data</td></tr>'
+      }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}
+}
+
+/* ===== GENERIC FORM MODAL ===== */
+const STATES='AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY';
+const PROP='Single Family,Multi-Family,Townhome,Condominium,Mixed-Use,Commercial Retail,Office,Industrial,Land';
+const LTYPE='Fix & Flip,Bridge,Ground-Up Construction,Rental / DSCR,Commercial,Cash-Out Refinance';
+const FORM_DEFS={
+  loans:{title:'Loan',fields:[{r:['Loan ID','Loan Name']},{r:['Borrower','Borrower Entity']},'Property Address',{r:['City','State|select:'+STATES]},{r:['Property Type|select:'+PROP,'Loan Type|select:'+LTYPE]},{r:['Loan Amount|number','Property Value|number']},{r:['LTV','Interest Rate']},{r:['Term Months|number','Lien Position|select:1st Lien,2nd Lien']},{r:['Payment Type|select:Interest Only,Amortizing','Monthly Payment|number']},{r:['Origination Date|date','Maturity Date|date']},{r:['Status|select:Funding,Performing,Watch,Delinquent,Default,Foreclosure,Paid Off','Principal Balance|number']},{r:['Total Funded|number','Investor Count|number']},{r:['Origination Fee|number','Servicing Fee Rate']},'Notes|textarea']},
+  investors:{title:'Investor',fields:[{r:['Investor ID','Name']},{r:['Entity Type|select:Individual,LLC,Trust,IRA,Partnership','Status|select:Active,Onboarding,Fully Deployed,Redeeming,Inactive']},{r:['Contact Name','Accredited|select:Yes,No']},{r:['Email','Phone']},{r:['State|select:'+STATES,'Target Return']},{r:['Committed Capital|number','Deployed Capital|number']},{r:['Available Capital|number','Join Date|date']},'Notes|textarea']},
+  participations:{title:'Participation',fields:[{r:['Participation ID','Status|select:Active,Repaid,Defaulted']},{r:['Investor','Investor Name']},{r:['Loan','Loan Name']},{r:['Amount|number','Ownership Percentage']},{r:['Expected Return Rate','Funded Date|date']},{r:['Distributions Paid|number','']},'Notes|textarea']},
+  payments:{title:'Payment',fields:[{r:['Payment ID','Payment Type|select:Borrower Payment,Investor Distribution']},{r:['Direction|select:Inbound,Outbound','Status|select:Scheduled,Paid,Late,Missed,Partial']},{r:['Loan','Loan Name']},{r:['Investor','Investor Name']},{r:['Amount|number','Method|select:ACH,Wire,Check']},{r:['Principal Portion|number','Interest Portion|number']},{r:['Fee Portion|number','']},{r:['Due Date|date','Paid Date|date']},'Notes|textarea']},
+  fees:{title:'Fee',fields:[{r:['Fee ID','Fee Type|select:Origination,Servicing,Late,Default Interest,Extension,Exit / Prepayment,Legal']},{r:['Loan','Loan Name']},{r:['Amount|number','Beneficiary|select:Fund,Servicer']},{r:['Charged Date|date','Status|select:Charged,Collected,Outstanding,Waived']},'Notes|textarea']},
+  contracts:{title:'Contract',fields:[{r:['Contract ID','Contract Type|select:Loan Agreement,Promissory Note,Deed of Trust,Personal Guaranty,Subscription Agreement,Servicing Agreement']},{r:['Related Loan','Related Investor']},{r:['Party','Status|select:Draft,Sent,Executed,Expired,Terminated']},{r:['Effective Date|date','Expiration Date|date']},{r:['Amount|number','Document Link']},'Notes|textarea']},
+  complaints:{title:'Complaint',fields:[{r:['Complaint ID','Status|select:Open,Investigating,Escalated,Resolved,Closed']},{r:['Source|select:Borrower,Investor,Regulator,Third Party','Severity|select:Low,Medium,High,Critical']},{r:['Complainant','Category|select:Payment Dispute,Servicing,Disclosure,Foreclosure,Communication,Fees,Returns,Other']},{r:['Related Loan','Related Investor']},{r:['Opened Date|date','Resolved Date|date']},'Assigned To','Description|textarea','Resolution|textarea','Notes|textarea']},
+};
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){if(typeof field==='string')html+=renderField(field,sub);else if(field.r)html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'}
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${formSlug}','${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show');
+}
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;
+  if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea')input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`;
+  else if(type==='date')input=`<input id="${id}" type="date" value="${esc(val)}">`;
+  else if(type==='number')input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`;
+  else input=`<input id="${id}" type="text" value="${esc(val)}">`;
+  return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const el=document.getElementById('m-'+name.replace(/\s+/g,'-').toLowerCase());if(el)vals[name]=el.value}}
+  try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_states=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(formSlug,id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+function refreshActive(formSlug){if(TABLES[activeTab])loadTable(activeTab);else switchTab(activeTab)}
+</script>
+</body>
+</html>

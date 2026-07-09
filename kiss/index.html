@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KISS Army HQ</title>
+<style>
+:root{--black:#111111;--ink:#1c1c1c;--silver:#C8CDD4;--silver-d:#8a9099;--red:#E4002B;--red-d:#b3001f;--gold:#E8B923;--green:#2E7D32;--blue:#1565C0;--gray:#5F6368;--light:#F6F7F8;--border:#E2E4E8;--bg:#F1F1F2;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 6px 20px rgba(0,0,0,.22)}
+*{margin:0;padding:0;box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#222}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(228,0,43,.25),transparent 60%),linear-gradient(160deg,#000 0%,#16161a 55%,#000 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:26px;color:var(--black);margin-bottom:2px;letter-spacing:1px;font-weight:800} .login-box h1 span{color:var(--red)}
+.login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .orange-bar{height:3px;background:var(--red);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(228,0,43,.14)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--black);color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+.login-box button:hover{background:#000} .login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red-d);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--black);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:20px;font-weight:800;letter-spacing:2px} .topbar .logo span{color:var(--red)}
+.nav-tabs{display:flex;gap:4px;margin-left:24px;flex-wrap:wrap}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.12);color:white} .nav-tabs button.active{background:var(--red);color:#fff}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px} .user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
+
+.console{display:none;padding:24px;max-width:1340px;margin:0 auto} .console.active{display:block}
+.page-title{font-size:22px;font-weight:800;color:var(--black);margin-bottom:4px} .page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);border-top:3px solid var(--black)}
+.kpi.red{border-top-color:var(--red)} .kpi.gold{border-top-color:var(--gold)} .kpi.green{border-top-color:var(--green)} .kpi.blue{border-top-color:var(--blue)}
+.kpi .val{font-size:24px;font-weight:800;color:var(--black)} .kpi .label{font-size:11px;color:var(--gray);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)} tr:hover td{background:var(--light)}
+.price{font-weight:700;color:var(--black)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#ECEFF1;color:#37474F}
+.badge-current,.badge-available,.badge-active,.badge-completed,.badge-sent,.badge-subscribed,.badge-checked-out{background:#E8F5E9;color:#2E7D32}
+.badge-scheduled,.badge-reserved,.badge-queued{background:#E3F2FD;color:#1565C0}
+.badge-checked-in{background:#FFF8E1;color:#F57F17}
+.badge-former,.badge-inactive,.badge-unsubscribed,.badge-out-of-stock,.badge-cancelled,.badge-failed,.badge-discontinued{background:#FFEBEE;color:#C62828}
+.badge-maintenance{background:#FFF3E0;color:#E65100}
+.badge-elite,.badge-kiss-army-elite{background:#111;color:#E8B923} .badge-gold{background:#FFF8E1;color:#9a7d00} .badge-general{background:#ECEFF1;color:#37474F}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--black);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer} .btn-primary:hover{background:#000}
+.btn-red{background:var(--red);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer} .btn-red:hover{background:var(--red-d)}
+.btn-secondary{background:var(--light);color:var(--black);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer} .btn-secondary:hover{background:var(--border)}
+.btn-danger{background:#fff;color:var(--red-d);border:1px solid var(--red-d);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer} .btn-danger:hover{background:#FFEBEE}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center} #modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:600px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--black)} .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px} .modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(228,0,43,.12)}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--red);margin:16px 0 2px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--black);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)} #toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+.bar-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+
+/* Hotel room cards */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.room-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.room-head{padding:14px 16px;color:#fff;background:linear-gradient(135deg,#1c1c1c,#000)}
+.room-card.s-occupied .room-head{background:linear-gradient(135deg,#5a3c12,#3a2606)}
+.room-card.s-maintenance .room-head{background:linear-gradient(135deg,#7a3a10,#4a2208)}
+.room-head .rnum{font-size:11px;letter-spacing:1px;opacity:.7;text-transform:uppercase}
+.room-head .rname{font-size:17px;font-weight:800;margin-top:2px}
+.room-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:8px}
+.room-body .meta{font-size:12px;color:var(--gray)}
+.room-body .rate{font-size:20px;font-weight:800;color:var(--black)} .room-body .rate span{font-size:12px;font-weight:500;color:var(--gray)}
+.room-body .desc{font-size:12px;color:#444;line-height:1.4}
+.room-foot{padding:0 16px 14px}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <h1>KISS<span> ARMY HQ</span></h1><div class="sub">The hottest band in the world — concerts, merch, hotel &amp; fan club</div><div class="orange-bar"></div>
+    <label>Server URL</label><input id="login-url" value="">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">KISS<span>★</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('band')">The Band</button>
+      <button onclick="switchTab('concerts')">Concerts</button>
+      <button onclick="switchTab('merch')">Merch</button>
+      <button onclick="switchTab('hotel')">Hotel</button>
+      <button onclick="switchTab('army')">KISS Army</button>
+      <button onclick="switchTab('news')">Newsletters</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">The KISS empire at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>🎤 Upcoming Concerts</h3><div id="dash-upcoming"></div></div>
+      <div class="card"><h3>🏨 Hotel Status</h3><div id="dash-rooms"></div></div>
+      <div class="card"><h3>🎖 KISS Army by Tier</h3><div id="dash-levels"></div></div>
+      <div class="card"><h3>🌍 KISS Army by Country</h3><div id="dash-countries"></div></div>
+    </div>
+  </div>
+
+  <!-- BAND -->
+  <div id="console-band" class="console">
+    <h2 class="page-title">The Band</h2><div class="page-sub">Every face behind the makeup</div>
+    <div class="toolbar"><button class="btn-red" onclick="openMemberModal()">+ Add Member</button>
+      <div class="filter-bar"><select id="f-mstatus" onchange="loadBand()"><option value="">All</option><option>Current</option><option>Former</option></select></div>
+    </div>
+    <div class="card"><table><thead><tr><th>Member</th><th>Persona</th><th>Instrument</th><th>Years Active</th><th>Status</th><th></th></tr></thead><tbody id="band-body"></tbody></table></div>
+    <div class="pagination" id="band-pag"></div>
+  </div>
+
+  <!-- CONCERTS -->
+  <div id="console-concerts" class="console">
+    <h2 class="page-title">Concerts</h2><div class="page-sub">Tours, venues &amp; ticket sales</div>
+    <div class="toolbar"><button class="btn-red" onclick="openConcertModal()">+ Add Concert</button>
+      <div class="filter-bar">
+        <select id="f-cstatus" onchange="loadConcerts()"><option value="">All Status</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select>
+        <input id="f-ctour" placeholder="Filter tour…" onkeydown="if(event.key==='Enter')loadConcerts()">
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Date</th><th>Tour</th><th>Venue</th><th>Location</th><th>Tickets</th><th>Status</th><th></th></tr></thead><tbody id="concert-body"></tbody></table></div>
+    <div class="pagination" id="concert-pag"></div>
+  </div>
+
+  <!-- MERCH -->
+  <div id="console-merch" class="console">
+    <h2 class="page-title">Merchandise</h2><div class="page-sub">The KISS merch machine</div>
+    <div class="toolbar"><button class="btn-red" onclick="openMerchModal()">+ Add Item</button>
+      <div class="filter-bar">
+        <select id="f-mcat" onchange="loadMerch()"><option value="">All Categories</option><option>Apparel</option><option>Music</option><option>Accessories</option><option>Collectibles</option></select>
+        <select id="f-mstat" onchange="loadMerch()"><option value="">All Status</option><option>Available</option><option>Out of Stock</option><option>Discontinued</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Item</th><th>Category</th><th>SKU</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody id="merch-body"></tbody></table></div>
+    <div class="pagination" id="merch-pag"></div>
+  </div>
+
+  <!-- HOTEL -->
+  <div id="console-hotel" class="console">
+    <h2 class="page-title">KISS Hotel</h2><div class="page-sub">8 themed suites — book a room and rock all nite</div>
+    <div class="card"><h3>Rooms</h3><div class="room-grid" id="room-grid"></div></div>
+    <div class="card"><h3>Bookings</h3>
+      <div class="toolbar"><div class="filter-bar">
+        <select id="f-bstatus" onchange="loadBookings()"><option value="">All Status</option><option>Reserved</option><option>Checked In</option><option>Checked Out</option><option>Cancelled</option></select>
+      </div></div>
+      <table><thead><tr><th>Conf #</th><th>Guest</th><th>Room</th><th>Dates</th><th>Nights</th><th>Total</th><th>Status</th><th style="min-width:160px"></th></tr></thead><tbody id="booking-body"></tbody></table>
+      <div class="pagination" id="booking-pag"></div>
+    </div>
+  </div>
+
+  <!-- KISS ARMY -->
+  <div id="console-army" class="console">
+    <h2 class="page-title">KISS Army</h2><div class="page-sub">The fan club — sign up new members and manage subscriptions</div>
+    <div class="toolbar"><button class="btn-red" onclick="openFanModal()">+ Sign Up Fan</button>
+      <div class="filter-bar">
+        <select id="f-flevel" onchange="loadArmy()"><option value="">All Tiers</option><option>KISS Army Elite</option><option>Gold</option><option>General</option></select>
+        <select id="f-fnews" onchange="loadArmy()"><option value="">All</option><option>Subscribed</option><option>Unsubscribed</option></select>
+        <select id="f-fstatus" onchange="loadArmy()"><option value="">All Status</option><option>Active</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Fan</th><th>Email</th><th>Location</th><th>Tier</th><th>Newsletter</th><th>Status</th><th></th></tr></thead><tbody id="army-body"></tbody></table></div>
+    <div class="pagination" id="army-pag"></div>
+  </div>
+
+  <!-- NEWSLETTERS -->
+  <div id="console-news" class="console">
+    <h2 class="page-title">Newsletters</h2><div class="page-sub">Send the monthly dispatch to every subscribed fan</div>
+    <div class="toolbar"><button class="btn-red" onclick="openNewsletterModal()">✉ Send Monthly Newsletter</button>
+      <div class="filter-bar">
+        <select id="f-nstatus" onchange="loadNews()"><option value="">All Status</option><option>Sent</option><option>Queued</option><option>Failed</option></select>
+        <input id="f-ncamp" placeholder="Filter campaign…" onkeydown="if(event.key==='Enter')loadNews()">
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Recipient</th><th>Subject</th><th>Campaign</th><th>Status</th><th>Sent At</th></tr></thead><tbody id="news-body"></tbody></table></div>
+    <div class="pagination" id="news-pag"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='kiss';
+const PS={band:{pt:null,p:1,h:[]},concert:{pt:null,p:1,h:[]},merch:{pt:null,p:1,h:[]},booking:{pt:null,p:1,h:[]},army:{pt:null,p:1,h:[]},news:{pt:null,p:1,h:[]}};
+let ROOM_CACHE=[];
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
+function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function money(n){if(n==null||n==='')return'—';const f=parseFloat(n);return isNaN(f)?esc(n):'$'+Math.round(f).toLocaleString()}
+function num(n){const f=parseInt(n,10);return isNaN(f)?0:f}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function monthLabel(){return new Date().toLocaleString('en-US',{month:'long',year:'numeric'})}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid credentials');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('login-pass').value=''}
+
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+async function customApi(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+  const t=await r.text();let b;try{b=t?JSON.parse(t):{}}catch{b=t}
+  if(!r.ok)throw new Error(b?.error||`${r.status}: ${t.slice(0,200)}`);return b}
+
+const TABS=['dash','band','concerts','merch','hotel','army','news'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='band')loadBand();
+  else if(tab==='concerts')loadConcerts();
+  else if(tab==='merch')loadMerch();
+  else if(tab==='hotel')loadHotel();
+  else if(tab==='army')loadArmy();
+  else loadNews();
+}
+function enterApp(){loadDash()}
+
+function pager(ps,loadFn){return `<button class="btn-secondary btn-sm" onclick="${loadFn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="${loadFn}('next')" ${!ps.pt?'disabled':''}>Next</button>`}
+function paginateState(ps,dir){if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}else if(!dir){ps.h=[];ps.p=1;ps.pt=null}}
+function qParam(ps,q){let p='';if(q&&q.length)p+='&q='+encodeURIComponent(q.join(' AND '));if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];return p}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const d=await customApi('/api/kiss/dashboard');const k=d.kpis||{};
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi red"><div class="val">${k.currentMembers??0}</div><div class="label">Current Members</div></div>
+    <div class="kpi"><div class="val">${k.concerts??0}</div><div class="label">Concerts (${k.upcomingConcerts??0} upcoming)</div></div>
+    <div class="kpi gold"><div class="val">${(k.ticketsSold??0).toLocaleString()}</div><div class="label">Tickets Sold (${k.sellThrough??0}% sell-through)</div></div>
+    <div class="kpi"><div class="val">${k.merchItems??0}</div><div class="label">Merch SKUs (${k.merchInStock??0} in stock)</div></div>
+    <div class="kpi gold"><div class="val">${money(k.inventoryValue)}</div><div class="label">Merch Inventory Value</div></div>
+    <div class="kpi blue"><div class="val">${k.occupiedRooms??0}/${k.totalRooms??8}</div><div class="label">Rooms Occupied (${k.occupancyPct??0}%)</div></div>
+    <div class="kpi"><div class="val">${k.activeBookings??0}</div><div class="label">Active Bookings</div></div>
+    <div class="kpi green"><div class="val">${money(k.bookingRevenue)}</div><div class="label">Hotel Revenue</div></div>
+    <div class="kpi red"><div class="val">${(k.fans??0).toLocaleString()}</div><div class="label">KISS Army (${k.subscribers??0} subscribed)</div></div>
+    <div class="kpi"><div class="val">${k.newslettersSent??0}</div><div class="label">Newsletters Sent</div></div>`;
+  document.getElementById('dash-upcoming').innerHTML=(d.upcoming||[]).length?`<table><thead><tr><th>Date</th><th>Venue</th><th>Tickets</th></tr></thead><tbody>${d.upcoming.map(c=>`<tr>
+    <td><strong>${esc(c.date)}</strong><div style="font-size:11px;color:var(--gray)">${esc(c.tour)}</div></td>
+    <td>${esc(c.venue)}<div style="font-size:11px;color:var(--gray)">${esc(c.city)}, ${esc(c.country)}</div></td>
+    <td>${(c.sold||0).toLocaleString()} / ${(c.capacity||0).toLocaleString()}</td></tr>`).join('')}</tbody></table>`:'<div style="color:var(--gray);font-size:13px">No upcoming shows scheduled.</div>';
+  document.getElementById('dash-rooms').innerHTML=`<table><thead><tr><th>#</th><th>Suite</th><th>Rate</th><th>Status</th></tr></thead><tbody>${(d.roomGrid||[]).map(r=>`<tr>
+    <td>${esc(r.number)}</td><td>${esc(r.name)}</td><td class="price">${money(r.rate)}</td><td>${badge(r.status)}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('dash-levels').innerHTML=(d.fanLevels||[]).map(l=>`<div class="bar-row">${badge(l.level)}<strong>${l.count}</strong></div>`).join('');
+  document.getElementById('dash-countries').innerHTML=(d.topCountries||[]).map(c=>`<div class="bar-row"><span>${esc(c.name)}</span><strong>${c.count}</strong></div>`).join('')||'<div style="color:var(--gray);font-size:13px">No fans yet.</div>';
+  }catch(e){toast('Dashboard error: '+e.message)}
+}
+
+/* ── THE BAND ── */
+async function loadBand(dir){
+  const ps=PS.band;paginateState(ps,dir);const stat=document.getElementById('f-mstatus').value;const q=[];if(stat)q.push(`values[Status]="${stat}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/members/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('band-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Member Name'))}</strong></td><td>${esc(v(s,'Persona'))}</td><td style="font-size:12px">${esc(v(s,'Instrument'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Years Active'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editMember('${s.id}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No members</td></tr>';
+  document.getElementById('band-pag').innerHTML=pager(ps,'loadBand');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openMemberModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Member':'Add Member';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-grid">
+    <div><label>Member Name *</label><input id="m-name" value="${esc(vl['Member Name']||'')}"></div>
+    <div><label>Persona</label><input id="m-persona" value="${esc(vl.Persona||'')}"></div>
+    <div><label>Instrument</label><input id="m-inst" value="${esc(vl.Instrument||'')}"></div>
+    <div><label>Years Active</label><input id="m-years" value="${esc(vl['Years Active']||'')}"></div>
+    <div><label>Status</label><select id="m-status">${['Current','Former'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div><label>Notes</label><textarea id="m-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="saveMember('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadBand')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editMember(id){const d=await api(`/submissions/${id}?include=values`);openMemberModal(d.submission||d)}
+async function saveMember(id){const values={'Member Name':val('m-name'),Persona:val('m-persona'),Instrument:val('m-inst'),'Years Active':val('m-years'),Status:document.getElementById('m-status').value,Notes:document.getElementById('m-notes').value};
+  if(!values['Member Name']){toast('Member name required.');return}
+  await saveSub(id,'members',values,'loadBand')}
+
+/* ── CONCERTS ── */
+async function loadConcerts(dir){
+  const ps=PS.concert;paginateState(ps,dir);const stat=document.getElementById('f-cstatus').value,tour=document.getElementById('f-ctour').value.trim();
+  const q=[];if(stat)q.push(`values[Status]="${stat}"`);if(tour)q.push(`values[Tour]="${tour.replace(/"/g,'\\"')}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/concerts/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('concert-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Concert Date'))}</strong></td><td style="font-size:12px">${esc(v(s,'Tour'))}</td>
+    <td>${esc(v(s,'Venue'))}</td><td style="font-size:12px">${esc(v(s,'City'))}, ${esc(v(s,'Country'))}</td>
+    <td style="font-size:12px">${num(v(s,'Tickets Sold')).toLocaleString()} / ${num(v(s,'Capacity')).toLocaleString()}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editConcert('${s.id}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No concerts</td></tr>';
+  document.getElementById('concert-pag').innerHTML=pager(ps,'loadConcerts');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openConcertModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Concert':'Add Concert';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-grid">
+    <div><label>Concert Date *</label><input id="c-date" type="date" value="${esc(vl['Concert Date']||'')}"></div>
+    <div><label>Tour</label><input id="c-tour" value="${esc(vl.Tour||'')}"></div>
+    <div><label>Venue *</label><input id="c-venue" value="${esc(vl.Venue||'')}"></div>
+    <div><label>City</label><input id="c-city" value="${esc(vl.City||'')}"></div>
+    <div><label>Country</label><input id="c-country" value="${esc(vl.Country||'')}"></div>
+    <div><label>Status</label><select id="c-status">${['Scheduled','Completed','Cancelled'].map(x=>`<option ${(vl.Status||'Scheduled')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label>Capacity</label><input id="c-cap" value="${esc(vl.Capacity||'')}"></div>
+    <div><label>Tickets Sold</label><input id="c-sold" value="${esc(vl['Tickets Sold']||'')}"></div>
+    </div><label>Notes</label><textarea id="c-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="saveConcert('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadConcerts')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editConcert(id){const d=await api(`/submissions/${id}?include=values`);openConcertModal(d.submission||d)}
+async function saveConcert(id){const values={'Concert Date':document.getElementById('c-date').value,Tour:val('c-tour'),Venue:val('c-venue'),City:val('c-city'),Country:val('c-country'),Status:document.getElementById('c-status').value,Capacity:val('c-cap'),'Tickets Sold':val('c-sold'),Notes:document.getElementById('c-notes').value};
+  if(!values['Concert Date']||!values.Venue){toast('Date and venue required.');return}
+  await saveSub(id,'concerts',values,'loadConcerts')}
+
+/* ── MERCH ── */
+async function loadMerch(dir){
+  const ps=PS.merch;paginateState(ps,dir);const cat=document.getElementById('f-mcat').value,stat=document.getElementById('f-mstat').value;
+  const q=[];if(cat)q.push(`values[Category]="${cat}"`);if(stat)q.push(`values[Status]="${stat}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/merchandise/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('merch-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Item Name'))}</strong></td><td>${esc(v(s,'Category'))}</td><td style="font-size:12px;color:var(--gray)">${esc(v(s,'SKU'))}</td>
+    <td class="price">${money(v(s,'Price'))}</td><td>${esc(v(s,'Stock'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editMerch('${s.id}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No merch</td></tr>';
+  document.getElementById('merch-pag').innerHTML=pager(ps,'loadMerch');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openMerchModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Item':'Add Item';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-grid">
+    <div><label>Item Name *</label><input id="me-name" value="${esc(vl['Item Name']||'')}"></div>
+    <div><label>Category</label><select id="me-cat">${['Apparel','Music','Accessories','Collectibles','Other'].map(x=>`<option ${vl.Category===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label>SKU</label><input id="me-sku" value="${esc(vl.SKU||'')}"></div>
+    <div><label>Price ($)</label><input id="me-price" value="${esc(vl.Price||'')}"></div>
+    <div><label>Stock</label><input id="me-stock" value="${esc(vl.Stock||'')}"></div>
+    <div><label>Status</label><select id="me-status">${['Available','Out of Stock','Discontinued'].map(x=>`<option ${(vl.Status||'Available')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div><label>Description</label><textarea id="me-desc">${esc(vl.Description||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="saveMerch('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadMerch')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editMerch(id){const d=await api(`/submissions/${id}?include=values`);openMerchModal(d.submission||d)}
+async function saveMerch(id){const values={'Item Name':val('me-name'),Category:document.getElementById('me-cat').value,SKU:val('me-sku'),Price:val('me-price'),Stock:val('me-stock'),Status:document.getElementById('me-status').value,Description:document.getElementById('me-desc').value};
+  if(!values['Item Name']){toast('Item name required.');return}
+  await saveSub(id,'merchandise',values,'loadMerch')}
+
+/* ── HOTEL ── */
+async function loadHotel(){loadRooms();loadBookings()}
+async function loadRooms(){
+  try{const d=await api(`/kapps/${KAPP}/forms/rooms/submissions?include=values&limit=25`);
+  ROOM_CACHE=(d.submissions||[]).sort((a,b)=>num(v(a,'Room Number'))-num(v(b,'Room Number')));
+  document.getElementById('room-grid').innerHTML=ROOM_CACHE.map(s=>{const st=v(s,'Status');
+    return `<div class="room-card s-${st.toLowerCase()}">
+      <div class="room-head"><div class="rnum">Room ${esc(v(s,'Room Number'))} · ${esc(v(s,'Room Type'))}</div><div class="rname">${esc(v(s,'Room Name'))}</div></div>
+      <div class="room-body"><div class="rate">${money(v(s,'Nightly Rate'))}<span> / night · sleeps ${esc(v(s,'Max Occupancy'))}</span></div>
+        <div>${badge(st)}</div><div class="desc">${esc(v(s,'Description'))}</div><div class="meta">${esc(v(s,'Amenities'))}</div></div>
+      <div class="room-foot">${st==='Available'?`<button class="btn-red btn-sm" style="width:100%" onclick="openBookModal('${esc(v(s,'Room Number'))}')">Book This Room</button>`:`<button class="btn-secondary btn-sm" style="width:100%" disabled>${st}</button>`}</div>
+    </div>`}).join('')||'<div style="color:var(--gray)">No rooms</div>';
+  }catch(e){toast('Rooms error: '+e.message)}
+}
+async function loadBookings(dir){
+  const ps=PS.booking;paginateState(ps,dir);const stat=document.getElementById('f-bstatus').value;const q=[];if(stat)q.push(`values[Status]="${stat}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/bookings/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('booking-body').innerHTML=subs.length?subs.map(s=>{const st=v(s,'Status'),conf=v(s,'Confirmation Number').replace(/'/g,"\\'");
+    let act='';if(st==='Reserved')act=`<button class="btn-red btn-sm" onclick="checkout('${conf}','checkin')">Check In</button> <button class="btn-danger btn-sm" onclick="checkout('${conf}','cancel')">Cancel</button>`;
+    else if(st==='Checked In')act=`<button class="btn-red btn-sm" onclick="checkout('${conf}','checkout')">Check Out</button>`;
+    return `<tr>
+    <td><strong>${esc(v(s,'Confirmation Number'))}</strong></td>
+    <td>${esc(v(s,'Guest Name'))}<div style="font-size:11px;color:var(--gray)">${esc(v(s,'Guest Email'))}</div></td>
+    <td style="font-size:12px">#${esc(v(s,'Room Number'))} ${esc(v(s,'Room Name'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Check In'))} → ${esc(v(s,'Check Out'))}</td>
+    <td>${esc(v(s,'Nights'))}</td><td class="price">${money(v(s,'Total'))}</td><td>${badge(st)}</td>
+    <td style="white-space:nowrap">${act}</td></tr>`}).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--gray)">No bookings</td></tr>';
+  document.getElementById('booking-pag').innerHTML=pager(ps,'loadBookings');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openBookModal(roomNumber){
+  const opts=ROOM_CACHE.filter(r=>v(r,'Status')==='Available').map(r=>`<option value="${esc(v(r,'Room Number'))}" ${v(r,'Room Number')===roomNumber?'selected':''}>Room ${esc(v(r,'Room Number'))} — ${esc(v(r,'Room Name'))} (${money(v(r,'Nightly Rate'))}/nt)</option>`).join('');
+  document.getElementById('modal-title').textContent='Book a Room';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-grid">
+    <div><label>Guest Name *</label><input id="b-name"></div>
+    <div><label>Guest Email</label><input id="b-email"></div>
+    <div><label>Room *</label><select id="b-room">${opts||'<option value="">No rooms available</option>'}</select></div>
+    <div><label>&nbsp;</label><div style="font-size:12px;color:var(--gray);padding-top:8px">Total is calculated automatically.</div></div>
+    <div><label>Check In *</label><input id="b-in" type="date" value="${todayStr()}"></div>
+    <div><label>Check Out *</label><input id="b-out" type="date"></div>
+    </div><label>Notes</label><textarea id="b-notes"></textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="submitBooking()">Reserve</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function submitBooking(){
+  const payload={guestName:val('b-name'),guestEmail:val('b-email'),roomNumber:document.getElementById('b-room').value,checkIn:document.getElementById('b-in').value,checkOut:document.getElementById('b-out').value,notes:document.getElementById('b-notes').value};
+  if(!payload.guestName||!payload.roomNumber||!payload.checkIn||!payload.checkOut){toast('Guest, room and both dates are required.');return}
+  try{const r=await customApi('/api/kiss/book-room',{method:'POST',body:JSON.stringify(payload)});
+  closeModal();toast(`Booked ${r.confirmation} — ${r.nights} nt, ${money(r.total)}`);loadHotel();}catch(e){toast('Error: '+e.message)}
+}
+async function checkout(conf,mode){
+  if(mode==='checkin'){try{await api(`/kapps/${KAPP}/forms/bookings/submissions?include=values&limit=1&q=`+encodeURIComponent(`values[Confirmation Number]="${conf}"`)).then(async d=>{const b=(d.submissions||[])[0];if(b)await api(`/submissions/${b.id}`,{method:'PUT',body:JSON.stringify({values:{Status:'Checked In'}})})});toast(`${conf} checked in`);loadHotel();}catch(e){toast('Error: '+e.message)}return}
+  const label=mode==='cancel'?'Cancel':'Check out';
+  if(!confirm(`${label} booking ${conf}?`))return;
+  try{const r=await customApi('/api/kiss/checkout',{method:'POST',body:JSON.stringify({confirmationNumber:conf,action:mode==='cancel'?'cancel':'checkout'})});
+  toast(`${conf} → ${r.status}`);loadHotel();}catch(e){toast('Error: '+e.message)}
+}
+
+/* ── KISS ARMY ── */
+async function loadArmy(dir){
+  const ps=PS.army;paginateState(ps,dir);const lvl=document.getElementById('f-flevel').value,news=document.getElementById('f-fnews').value,stat=document.getElementById('f-fstatus').value;
+  const q=[];if(lvl)q.push(`values[Fan Level]="${lvl}"`);if(news)q.push(`values[Newsletter]="${news}"`);if(stat)q.push(`values[Status]="${stat}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/fans/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('army-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Full Name'))}</strong><div style="font-size:11px;color:var(--gray)">since ${esc(v(s,'Member Since'))}</div></td>
+    <td style="font-size:12px">${esc(v(s,'Email'))}</td><td style="font-size:12px">${esc(v(s,'City'))}, ${esc(v(s,'Country'))}</td>
+    <td>${badge(v(s,'Fan Level'))}</td><td>${badge(v(s,'Newsletter'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editFan('${s.id}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No fans</td></tr>';
+  document.getElementById('army-pag').innerHTML=pager(ps,'loadArmy');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openFanModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Fan':'Sign Up Fan';
+  document.getElementById('modal-body').innerHTML=`<div class="modal-grid">
+    <div><label>Full Name *</label><input id="fa-name" value="${esc(vl['Full Name']||'')}"></div>
+    <div><label>Email *</label><input id="fa-email" value="${esc(vl.Email||'')}"></div>
+    <div><label>City</label><input id="fa-city" value="${esc(vl.City||'')}"></div>
+    <div><label>Country</label><input id="fa-country" value="${esc(vl.Country||'')}"></div>
+    <div><label>Fan Level</label><select id="fa-level">${['General','Gold','KISS Army Elite'].map(x=>`<option ${(vl['Fan Level']||'General')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label>Member Since</label><input id="fa-since" type="date" value="${esc(vl['Member Since']||todayStr())}"></div>
+    <div><label>Newsletter</label><select id="fa-news">${['Subscribed','Unsubscribed'].map(x=>`<option ${(vl.Newsletter||'Subscribed')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label>Status</label><select id="fa-status">${['Active','Inactive'].map(x=>`<option ${(vl.Status||'Active')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div><label>Notes</label><textarea id="fa-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="saveFan('${s.id||''}')">${ex?'Update':'Sign Up'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadArmy')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editFan(id){const d=await api(`/submissions/${id}?include=values`);openFanModal(d.submission||d)}
+async function saveFan(id){const values={'Full Name':val('fa-name'),Email:val('fa-email'),City:val('fa-city'),Country:val('fa-country'),'Fan Level':document.getElementById('fa-level').value,'Member Since':document.getElementById('fa-since').value,Newsletter:document.getElementById('fa-news').value,Status:document.getElementById('fa-status').value,Notes:document.getElementById('fa-notes').value};
+  if(!values['Full Name']||!values.Email){toast('Name and email required.');return}
+  await saveSub(id,'fans',values,'loadArmy')}
+
+/* ── NEWSLETTERS ── */
+async function loadNews(dir){
+  const ps=PS.news;paginateState(ps,dir);const stat=document.getElementById('f-nstatus').value,camp=document.getElementById('f-ncamp').value.trim();
+  const q=[];if(stat)q.push(`values[Status]="${stat}"`);if(camp)q.push(`values[Campaign]="${camp.replace(/"/g,'\\"')}"`);
+  try{const d=await api(`/kapps/${KAPP}/forms/newsletters/submissions?include=values&limit=25`+qParam(ps,q));const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('news-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'To Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'To Email'))}</div></td>
+    <td style="font-size:12px">${esc(v(s,'Subject'))}</td><td style="font-size:12px">${esc(v(s,'Campaign'))}</td>
+    <td>${badge(v(s,'Status'))}</td><td style="font-size:12px;color:var(--gray)">${esc(v(s,'Sent At'))}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--gray)">No newsletters sent yet</td></tr>';
+  document.getElementById('news-pag').innerHTML=pager(ps,'loadNews');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openNewsletterModal(){
+  const camp=monthLabel()+' Newsletter';
+  document.getElementById('modal-title').textContent='Send Monthly Newsletter';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:12px;color:var(--gray);margin-bottom:8px">Queues one email per <strong>subscribed, active</strong> KISS Army member. Anyone already sent this campaign is skipped. Use <code>{{firstName}}</code> in the body for personalization.</div>
+    <label>Campaign *</label><input id="n-camp" value="${esc(camp)}">
+    <label>Subject *</label><input id="n-subj" value="KISS Army Dispatch — ${esc(monthLabel())}">
+    <label>Body</label><textarea id="n-body" style="min-height:150px">Hi {{firstName}},
+
+The hottest band in the world has news for you this month — new tour dates, fresh merch drops, and exclusive KISS Army deals.
+
+Rock and roll all nite,
+The KISS Army</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-red" onclick="sendNewsletter()">Send to Subscribers</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function sendNewsletter(){
+  const payload={campaign:val('n-camp'),subject:val('n-subj'),body:document.getElementById('n-body').value};
+  if(!payload.campaign||!payload.subject){toast('Campaign and subject required.');return}
+  try{const r=await customApi('/api/kiss/send-newsletter',{method:'POST',body:JSON.stringify(payload)});
+  closeModal();
+  let msg=`Sent ${r.sent} of ${r.queued} queued`;if(r.skippedAlreadySent)msg+=` (${r.skippedAlreadySent} already sent)`;
+  toast(msg);switchTab('news');}catch(e){toast('Error: '+e.message)}
+}
+
+/* ── SHARED ── */
+function val(id){return document.getElementById(id).value.trim()}
+async function saveSub(id,form,values,reload){
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+  else await api(`/kapps/${KAPP}/forms/${form}/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');window[reload]();}catch(e){toast('Error: '+e.message)}
+}
+async function delSub(id,reload){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[reload]();}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>

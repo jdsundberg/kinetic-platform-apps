@@ -1,0 +1,54 @@
+<tree schema_version="1.0">
+  <sourceName>Kinetic Request CE</sourceName>
+  <sourceGroup>7f4a3976-a957-4d68-9aaf-60af92012b4a</sourceGroup>
+  <type>Tree</type>
+  <status>Active</status>
+  <taskTree builder_version="" schema_version="1.0" version="1">
+    <name>Approval Decision Sync</name>
+    <author></author>
+    <notes></notes>
+    <lastID>3</lastID>
+    <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="240" y="40">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="" type="Complete" value="">kinetic_core_api_connection_v1_1</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Find Quote" x="240" y="170">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">GET</parameter><parameter id="path">/app/api/v1/kapps/cpq/forms/quotes/submissions?limit=1&amp;include=values&amp;q=values%5BQuote%20Number%5D%3D%22&lt;%= @values['Quote Number'] %&gt;%22</parameter><parameter id="body"></parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="approved" type="Complete" value="@values['Status'] == 'Approved'">kinetic_core_api_connection_v1_2</task><task label="rejected" type="Complete" value="@values['Status'] == 'Rejected'">kinetic_core_api_connection_v1_3</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Approve Quote" x="110" y="320">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= require 'json'; JSON.parse(@results['Find Quote']['Response Body'])['submissions'][0]['id'] %&gt;</parameter><parameter id="body">{"values":{"Approval Status":"Approved","Status":"Approved","Stage":"Approved"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Reject Quote" x="380" y="320">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= require 'json'; JSON.parse(@results['Find Quote']['Response Body'])['submissions'][0]['id'] %&gt;</parameter><parameter id="body">{"values":{"Approval Status":"Rejected","Status":"Negotiation","Stage":"Negotiation"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    </request>
+  </taskTree>
+</tree>

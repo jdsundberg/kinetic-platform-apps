@@ -1,0 +1,180 @@
+{
+  "name": "Junior Track & Field",
+  "slug": "track",
+  "description": "K–6 youth track & field across all 50 states — one state league each, with teams, coaches, athletes (boys & girls), meet schedules, event-time results and a records board, plus a parent/coach feedback system.",
+  "category": "Sports & Recreation",
+  "icon": "flag",
+  "color": "#D62828",
+  "bg": "#FDECEC",
+  "forms": [
+    {
+      "slug": "leagues",
+      "name": "State Leagues",
+      "description": "One youth track & field league per US state",
+      "submissionLabelExpression": "${values('League Name')}",
+      "fields": [
+        { "name": "League ID", "required": true },
+        { "name": "State", "required": true },
+        { "name": "State Code" },
+        { "name": "League Name" },
+        { "name": "Region" },
+        { "name": "Director" },
+        { "name": "Director Email" },
+        { "name": "Season" },
+        { "name": "Team Count" },
+        { "name": "Athlete Count" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[State]", "values[State Code]", "values[Region]", "values[League Name]", "values[Status]"],
+        "compound": [["values[Region]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "teams",
+      "name": "Teams",
+      "description": "Schools and clubs competing within each state league",
+      "submissionLabelExpression": "${values('Team Name')} (${values('State')})",
+      "fields": [
+        { "name": "Team ID", "required": true },
+        { "name": "Team Name", "required": true },
+        { "name": "State" },
+        { "name": "City" },
+        { "name": "Head Coach" },
+        { "name": "Division" },
+        { "name": "Grade Range" },
+        { "name": "Athlete Count" },
+        { "name": "Home Track" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Team Name]", "values[State]", "values[City]", "values[Division]", "values[Status]"],
+        "compound": [["values[State]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "coaches",
+      "name": "Coaches",
+      "description": "Head, assistant and event coaches across teams",
+      "submissionLabelExpression": "${values('Name')} - ${values('Role')}",
+      "fields": [
+        { "name": "Coach ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "State" },
+        { "name": "Team" },
+        { "name": "Role" },
+        { "name": "Certification" },
+        { "name": "Background Check" },
+        { "name": "Years Experience" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[State]", "values[Team]", "values[Role]", "values[Status]"],
+        "compound": [["values[State]", "values[Status]"], ["values[Team]", "values[Role]"]]
+      }
+    },
+    {
+      "slug": "athletes",
+      "name": "Athletes",
+      "description": "Registered K–6 boys and girls with primary events",
+      "submissionLabelExpression": "${values('Name')} - ${values('Team')} (${values('Grade')})",
+      "fields": [
+        { "name": "Athlete ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "State" },
+        { "name": "Team" },
+        { "name": "Gender" },
+        { "name": "Grade" },
+        { "name": "Age" },
+        { "name": "Bib Number" },
+        { "name": "Primary Event" },
+        { "name": "Guardian" },
+        { "name": "Registration Paid" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[State]", "values[Team]", "values[Gender]", "values[Grade]", "values[Primary Event]", "values[Status]"],
+        "compound": [["values[State]", "values[Status]"], ["values[Team]", "values[Status]"], ["values[Gender]", "values[Grade]"]]
+      }
+    },
+    {
+      "slug": "meets",
+      "name": "Schedule",
+      "description": "Meet schedule by state league",
+      "submissionLabelExpression": "${values('Meet Name')} - ${values('Meet Date')}",
+      "fields": [
+        { "name": "Meet ID", "required": true },
+        { "name": "Meet Name", "required": true },
+        { "name": "State" },
+        { "name": "Meet Date" },
+        { "name": "Start Time" },
+        { "name": "Location" },
+        { "name": "Host Team" },
+        { "name": "Divisions" },
+        { "name": "Grade Range" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Meet Name]", "values[State]", "values[Host Team]", "values[Status]", "values[Meet Date]"],
+        "compound": [["values[State]", "values[Status]"], ["values[Status]", "values[Meet Date]"]]
+      }
+    },
+    {
+      "slug": "results",
+      "name": "Results",
+      "description": "Event-time results — every mark by athlete, event, gender and grade",
+      "submissionLabelExpression": "${values('Athlete')} - ${values('Event')} - ${values('Mark')}",
+      "fields": [
+        { "name": "Result ID", "required": true },
+        { "name": "Meet" },
+        { "name": "State" },
+        { "name": "Team" },
+        { "name": "Athlete" },
+        { "name": "Event" },
+        { "name": "Event Type" },
+        { "name": "Gender" },
+        { "name": "Grade" },
+        { "name": "Mark" },
+        { "name": "Unit" },
+        { "name": "Place" },
+        { "name": "Personal Best" },
+        { "name": "Date" }
+      ],
+      "indexes": {
+        "single": ["values[Meet]", "values[State]", "values[Team]", "values[Athlete]", "values[Event]", "values[Gender]", "values[Grade]"],
+        "compound": [["values[Event]", "values[Gender]"], ["values[State]", "values[Event]"], ["values[Gender]", "values[Grade]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "description": "Parent, coach, athlete and official feedback",
+      "submissionLabelExpression": "${values('Submitted By')} - ${values('Category')}",
+      "fields": [
+        { "name": "Feedback ID", "required": true },
+        { "name": "Date" },
+        { "name": "State" },
+        { "name": "Team" },
+        { "name": "Submitted By" },
+        { "name": "Role" },
+        { "name": "Category" },
+        { "name": "Rating" },
+        { "name": "Would Recommend" },
+        { "name": "Comment", "rows": 3 },
+        { "name": "Response", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[State]", "values[Category]", "values[Role]", "values[Rating]", "values[Status]"],
+        "compound": [["values[State]", "values[Category]"], ["values[Category]", "values[Status]"]]
+      }
+    }
+  ]
+}

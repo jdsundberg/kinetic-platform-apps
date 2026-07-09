@@ -1,0 +1,333 @@
+{
+  "name": "RoamCare Workforce Hub",
+  "slug": "roamcare",
+  "description": "Healthcare workforce orchestration — match roaming, floating, surge & internal-gig opportunities to qualified hospital staff with explainable scoring, compliance guardrails, and a real-time staffing command center.",
+  "category": "Healthcare",
+  "tags": ["Healthcare"],
+  "icon": "activity",
+  "color": "#0B5563",
+  "bg": "#EAF3F4",
+  "forms": [
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "description": "Hospital workforce roster with roaming eligibility, skills, credentials and preferences",
+      "submissionLabelExpression": "${values('Employee ID')} - ${values('First Name')} ${values('Last Name')}",
+      "fields": [
+        { "name": "Employee ID", "required": true },
+        { "name": "First Name", "required": true },
+        { "name": "Last Name", "required": true },
+        { "name": "Preferred Name" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Home Department" },
+        { "name": "Home Location" },
+        { "name": "Primary Manager" },
+        { "name": "Job Title" },
+        { "name": "Job Family" },
+        { "name": "Employment Type" },
+        { "name": "FTE" },
+        { "name": "Union Status" },
+        { "name": "Bargaining Unit" },
+        { "name": "Seniority Date" },
+        { "name": "Hire Date" },
+        { "name": "Status" },
+        { "name": "Primary Skills" },
+        { "name": "Secondary Skills" },
+        { "name": "Certifications" },
+        { "name": "Licenses" },
+        { "name": "Languages" },
+        { "name": "Preferred Locations" },
+        { "name": "Travel Radius" },
+        { "name": "Willing to Float" },
+        { "name": "Willing to Work Overtime" },
+        { "name": "Willing to Work Weekends" },
+        { "name": "Willing to Work Nights" },
+        { "name": "Development Interests" },
+        { "name": "Fatigue Risk Score" },
+        { "name": "Last Roaming Assignment Date" },
+        { "name": "Roaming Eligibility Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Employee ID]", "values[Status]", "values[Home Location]", "values[Home Department]", "values[Job Title]", "values[Job Family]", "values[Roaming Eligibility Status]", "values[Employment Type]"],
+        "compound": [["values[Status]", "values[Job Title]"], ["values[Home Location]", "values[Job Title]"], ["values[Roaming Eligibility Status]", "values[Job Title]"]]
+      }
+    },
+    {
+      "slug": "departments",
+      "name": "Departments",
+      "description": "Hospital departments with staffing rules, release/receive policy and required credentials",
+      "submissionLabelExpression": "${values('Department Name')} - ${values('Location')}",
+      "fields": [
+        { "name": "Department Name", "required": true },
+        { "name": "Department Type" },
+        { "name": "Cost Center" },
+        { "name": "Location" },
+        { "name": "Department Manager" },
+        { "name": "Backup Manager" },
+        { "name": "Required Skills" },
+        { "name": "Required Certifications" },
+        { "name": "Allowed Floating Roles" },
+        { "name": "Can Release Staff" },
+        { "name": "Can Receive Staff" },
+        { "name": "Staffing Minimum" },
+        { "name": "Current Staffing" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Location]", "values[Department Type]"],
+        "compound": [["values[Location]", "values[Department Type]"]]
+      }
+    },
+    {
+      "slug": "facilities",
+      "name": "Facilities",
+      "description": "Campuses and facilities in the health system",
+      "submissionLabelExpression": "${values('Facility Name')}",
+      "fields": [
+        { "name": "Facility Name", "required": true },
+        { "name": "Campus" },
+        { "name": "Address" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Region" },
+        { "name": "Time Zone" },
+        { "name": "Parking Instructions", "rows": 2 },
+        { "name": "Badge Access Requirements", "rows": 2 },
+        { "name": "Orientation Requirements", "rows": 2 },
+        { "name": "Contact Person" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Region]", "values[State]"]
+      }
+    },
+    {
+      "slug": "opportunities",
+      "name": "Opportunities",
+      "description": "The central object — roaming, float, surge, gig and emergency staffing needs",
+      "submissionLabelExpression": "${values('Opportunity ID')} - ${values('Opportunity Title')}",
+      "fields": [
+        { "name": "Opportunity ID", "required": true },
+        { "name": "Opportunity Title", "required": true },
+        { "name": "Opportunity Type" },
+        { "name": "Status" },
+        { "name": "Requesting Department" },
+        { "name": "Requesting Location" },
+        { "name": "Requesting Manager" },
+        { "name": "Needed Role" },
+        { "name": "Job Family" },
+        { "name": "Required Skills" },
+        { "name": "Preferred Skills" },
+        { "name": "Required Certifications" },
+        { "name": "Required Licenses" },
+        { "name": "Number of People Needed" },
+        { "name": "Start Date" },
+        { "name": "End Date" },
+        { "name": "Duration" },
+        { "name": "Shift Type" },
+        { "name": "Urgency" },
+        { "name": "Patient Care Impact" },
+        { "name": "Orientation Required" },
+        { "name": "Badge Access Required" },
+        { "name": "Premium Pay Offered" },
+        { "name": "Overtime Allowed" },
+        { "name": "Cost Center" },
+        { "name": "Budget Approval Required" },
+        { "name": "Compliance Review Required" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Instructions", "rows": 2 },
+        { "name": "Application Deadline" },
+        { "name": "Auto-Match Enabled" },
+        { "name": "Filled Count" },
+        { "name": "Created By" },
+        { "name": "Created Date" },
+        { "name": "Filled Date" },
+        { "name": "Cancelled Reason" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Opportunity ID]", "values[Status]", "values[Urgency]", "values[Requesting Location]", "values[Needed Role]", "values[Opportunity Type]", "values[Shift Type]", "values[Patient Care Impact]", "values[Requesting Department]"],
+        "compound": [["values[Status]", "values[Urgency]"], ["values[Status]", "values[Requesting Location]"], ["values[Status]", "values[Needed Role]"]]
+      }
+    },
+    {
+      "slug": "applications",
+      "name": "Applications",
+      "description": "Employee interest and approval pipeline for opportunities",
+      "submissionLabelExpression": "${values('Application ID')} - ${values('Employee Name')}",
+      "fields": [
+        { "name": "Application ID", "required": true },
+        { "name": "Opportunity" },
+        { "name": "Opportunity Title" },
+        { "name": "Employee" },
+        { "name": "Employee Name" },
+        { "name": "Application Status" },
+        { "name": "Match Score" },
+        { "name": "Employee Message", "rows": 2 },
+        { "name": "Manager Comments", "rows": 2 },
+        { "name": "Compliance Comments", "rows": 2 },
+        { "name": "Applied Date" },
+        { "name": "Approval Date" },
+        { "name": "Offer Date" },
+        { "name": "Acceptance Date" },
+        { "name": "Decline Reason" }
+      ],
+      "indexes": {
+        "single": ["values[Application Status]", "values[Opportunity]", "values[Employee]"],
+        "compound": [["values[Opportunity]", "values[Application Status]"], ["values[Employee]", "values[Application Status]"]]
+      }
+    },
+    {
+      "slug": "matches",
+      "name": "Match Recommendations",
+      "description": "System-generated, explainable candidate match recommendations",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Opportunity Title')}",
+      "fields": [
+        { "name": "Opportunity" },
+        { "name": "Opportunity Title" },
+        { "name": "Employee" },
+        { "name": "Employee Name" },
+        { "name": "Match Score" },
+        { "name": "Match Reason", "rows": 3 },
+        { "name": "Missing Requirements", "rows": 2 },
+        { "name": "Risk Flags", "rows": 2 },
+        { "name": "Skill Match" },
+        { "name": "Certification Match" },
+        { "name": "Location Match" },
+        { "name": "Schedule Match" },
+        { "name": "Overtime Risk" },
+        { "name": "Fatigue Risk" },
+        { "name": "Recommendation Status" },
+        { "name": "Generated Date" }
+      ],
+      "indexes": {
+        "single": ["values[Opportunity]", "values[Employee]", "values[Recommendation Status]"],
+        "compound": [["values[Opportunity]", "values[Recommendation Status]"]]
+      }
+    },
+    {
+      "slug": "credentials",
+      "name": "Credentials",
+      "description": "Employee licenses, certifications and verification status",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Credential Name')}",
+      "fields": [
+        { "name": "Credential ID", "required": true },
+        { "name": "Employee" },
+        { "name": "Employee Name" },
+        { "name": "Credential Type" },
+        { "name": "Credential Name" },
+        { "name": "Issuing Organization" },
+        { "name": "License Number" },
+        { "name": "State" },
+        { "name": "Effective Date" },
+        { "name": "Expiration Date" },
+        { "name": "Verification Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Employee]", "values[Verification Status]", "values[Credential Name]", "values[Expiration Date]"],
+        "compound": [["values[Employee]", "values[Verification Status]"]]
+      }
+    },
+    {
+      "slug": "availability",
+      "name": "Availability",
+      "description": "Employee availability windows from self-service or source systems",
+      "submissionLabelExpression": "${values('Employee Name')} - ${values('Date')}",
+      "fields": [
+        { "name": "Employee" },
+        { "name": "Employee Name" },
+        { "name": "Date" },
+        { "name": "Start Time" },
+        { "name": "End Time" },
+        { "name": "Availability Type" },
+        { "name": "Source" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Employee]", "values[Date]", "values[Availability Type]"]
+      }
+    },
+    {
+      "slug": "assignments",
+      "name": "Assignments",
+      "description": "Confirmed roaming assignments with check-in, completion and cost data",
+      "submissionLabelExpression": "${values('Assignment ID')} - ${values('Employee Name')}",
+      "fields": [
+        { "name": "Assignment ID", "required": true },
+        { "name": "Opportunity" },
+        { "name": "Opportunity Title" },
+        { "name": "Employee" },
+        { "name": "Employee Name" },
+        { "name": "Assignment Status" },
+        { "name": "Start Date" },
+        { "name": "End Date" },
+        { "name": "Actual Start Time" },
+        { "name": "Actual End Time" },
+        { "name": "Home Department" },
+        { "name": "Receiving Department" },
+        { "name": "Receiving Location" },
+        { "name": "Cost Center" },
+        { "name": "Pay Code" },
+        { "name": "Premium Pay" },
+        { "name": "Overtime Hours" },
+        { "name": "Hours Worked" },
+        { "name": "Manager Confirmation" },
+        { "name": "Employee Confirmation" },
+        { "name": "Performance Rating" },
+        { "name": "Completion Notes", "rows": 2 },
+        { "name": "Issue Reported" },
+        { "name": "Follow-up Required" }
+      ],
+      "indexes": {
+        "single": ["values[Assignment Status]", "values[Employee]", "values[Receiving Department]", "values[Receiving Location]"],
+        "compound": [["values[Assignment Status]", "values[Employee]"]]
+      }
+    },
+    {
+      "slug": "rules",
+      "name": "Rules",
+      "description": "Configurable eligibility, credentialing, fatigue, overtime and union rules engine",
+      "submissionLabelExpression": "${values('Rule Name')}",
+      "fields": [
+        { "name": "Rule Name", "required": true },
+        { "name": "Rule Type" },
+        { "name": "Applies To" },
+        { "name": "Condition", "rows": 2 },
+        { "name": "Action" },
+        { "name": "Severity" },
+        { "name": "Active" },
+        { "name": "Effective Date" },
+        { "name": "Expiration Date" },
+        { "name": "Owner" },
+        { "name": "Description", "rows": 2 },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Rule Type]", "values[Severity]", "values[Active]"]
+      }
+    },
+    {
+      "slug": "alerts",
+      "name": "Alerts",
+      "description": "Notification log across email, SMS, in-app and Teams channels",
+      "submissionLabelExpression": "${values('Alert Type')} - ${values('Recipient')}",
+      "fields": [
+        { "name": "Recipient" },
+        { "name": "Alert Type" },
+        { "name": "Channel" },
+        { "name": "Message", "rows": 2 },
+        { "name": "Status" },
+        { "name": "Related Opportunity" },
+        { "name": "Related Assignment" },
+        { "name": "Created Date" },
+        { "name": "Sent Date" }
+      ],
+      "indexes": {
+        "single": ["values[Alert Type]", "values[Status]", "values[Recipient]"]
+      }
+    }
+  ]
+}

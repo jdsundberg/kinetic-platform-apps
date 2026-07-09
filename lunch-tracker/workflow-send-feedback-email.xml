@@ -1,0 +1,40 @@
+<taskTree builder_version="" schema_version="1.0" version="">
+  <name>Send Feedback Email</name>
+  <author>john</author>
+  <notes>Fires on email-log Submission Created. MOCK MODE: no SMTP send — marks the record Sent with a timestamp. Swap in smtp_email_send_v1 when SMTP is configured.</notes>
+  <lastID>1</lastID>
+  <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>true</visible>
+      <parameters/>
+      <messages>
+        <message type="Complete"></message>
+      </messages>
+      <dependents>
+        <task label="" type="Complete" value="">kinetic_core_api_connection_v1_1</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Mark Sent" x="250" y="10">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>true</visible>
+      <parameters>
+        <parameter id="method" label="Method" required="true" menu="GET,POST,PUT,PATCH,DELETE">PUT</parameter>
+        <parameter id="path" label="Path" required="true">/app/api/v1/submissions/&lt;%= @submission['Id'] %></parameter>
+        <parameter id="body" label="Body" required="false">{"values":{"Status":"Sent","Sent At":"&lt;%= Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ') %>"}}</parameter>
+        <parameter id="extra_headers" label="Extra Headers" required="false"></parameter>
+        <parameter id="error_handling" label="Error Handling" required="true" menu="Error Message,Raise Error">Error Message</parameter>
+      </parameters>
+      <messages>
+        <message type="Complete"></message>
+      </messages>
+      <dependents/>
+    </task>
+  </request>
+</taskTree>

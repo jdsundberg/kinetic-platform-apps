@@ -1,0 +1,198 @@
+{
+  "name": "Northstar Contracting",
+  "slug": "contractor",
+  "description": "Home-improvement contractor management for the Twin Cities — projects, quotes, schedules, crews, permits, materials, invoices & receipts.",
+  "category": "Industry",
+  "icon": "home",
+  "color": "#242F4D",
+  "bg": "#ECEFF1",
+  "forms": [
+    {
+      "slug": "projects",
+      "name": "Projects",
+      "description": "Home improvement projects ($5K-$200K) across the Twin Cities metro",
+      "submissionLabelExpression": "${values('Project ID')} - ${values('Project Name')}",
+      "fields": [
+        { "name": "Project ID", "required": true },
+        { "name": "Project Name", "required": true },
+        { "name": "Client Name" },
+        { "name": "Client Email" },
+        { "name": "Client Phone" },
+        { "name": "Address" },
+        { "name": "City" },
+        { "name": "Project Type" },
+        { "name": "Status" },
+        { "name": "Health" },
+        { "name": "Contract Value" },
+        { "name": "Project Manager" },
+        { "name": "Start Date" },
+        { "name": "Target End Date" },
+        { "name": "Actual End Date" },
+        { "name": "Scope Summary", "rows": 3 },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project Type]", "values[City]", "values[Health]", "values[Project Manager]"],
+        "compound": [["values[Status]", "values[Project Type]"], ["values[Status]", "values[Health]"]]
+      }
+    },
+    {
+      "slug": "quotes",
+      "name": "Quotes",
+      "description": "Estimates and quotes issued to clients",
+      "submissionLabelExpression": "${values('Quote Number')} - ${values('Project')}",
+      "fields": [
+        { "name": "Quote Number", "required": true },
+        { "name": "Project" },
+        { "name": "Client Name" },
+        { "name": "Project Type" },
+        { "name": "Labor Cost" },
+        { "name": "Material Cost" },
+        { "name": "Permit Cost" },
+        { "name": "Contingency" },
+        { "name": "Total Amount" },
+        { "name": "Status" },
+        { "name": "Issue Date" },
+        { "name": "Valid Until" },
+        { "name": "Scope", "rows": 3 },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project]"],
+        "compound": [["values[Project]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "schedules",
+      "name": "Schedules",
+      "description": "Work phases and crew scheduling per project",
+      "submissionLabelExpression": "${values('Project')} - ${values('Task')}",
+      "fields": [
+        { "name": "Project" },
+        { "name": "Task" },
+        { "name": "Assigned To" },
+        { "name": "Crew Size" },
+        { "name": "Start Date" },
+        { "name": "End Date" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project]", "values[Assigned To]"],
+        "compound": [["values[Project]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "description": "Crew members, trades, licenses and rates",
+      "submissionLabelExpression": "${values('Name')} - ${values('Role')}",
+      "fields": [
+        { "name": "Employee ID" },
+        { "name": "Name", "required": true },
+        { "name": "Role" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Hourly Rate" },
+        { "name": "License Type" },
+        { "name": "License Number" },
+        { "name": "Status" },
+        { "name": "Hire Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Role]"],
+        "compound": [["values[Status]", "values[Role]"]]
+      }
+    },
+    {
+      "slug": "permits",
+      "name": "Permits",
+      "description": "Municipal permits and inspections",
+      "submissionLabelExpression": "${values('Permit Number')} - ${values('Permit Type')}",
+      "fields": [
+        { "name": "Permit Number" },
+        { "name": "Project" },
+        { "name": "Permit Type" },
+        { "name": "Issuing City" },
+        { "name": "Status" },
+        { "name": "Application Date" },
+        { "name": "Issue Date" },
+        { "name": "Expiration Date" },
+        { "name": "Fee" },
+        { "name": "Inspector" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project]", "values[Permit Type]", "values[Issuing City]"],
+        "compound": [["values[Project]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "materials",
+      "name": "Materials",
+      "description": "Materials ordering and delivery tracking per project",
+      "submissionLabelExpression": "${values('Item')} - ${values('Project')}",
+      "fields": [
+        { "name": "Project" },
+        { "name": "Item", "required": true },
+        { "name": "Category" },
+        { "name": "Supplier" },
+        { "name": "Quantity" },
+        { "name": "Unit Cost" },
+        { "name": "Total Cost" },
+        { "name": "Status" },
+        { "name": "Order Date" },
+        { "name": "Delivery Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project]", "values[Category]"],
+        "compound": [["values[Project]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "invoices",
+      "name": "Invoices",
+      "description": "Client billing and payment tracking",
+      "submissionLabelExpression": "${values('Invoice Number')} - ${values('Project')}",
+      "fields": [
+        { "name": "Invoice Number", "required": true },
+        { "name": "Project" },
+        { "name": "Client Name" },
+        { "name": "Amount" },
+        { "name": "Status" },
+        { "name": "Issue Date" },
+        { "name": "Due Date" },
+        { "name": "Paid Date" },
+        { "name": "Payment Method" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Status]", "values[Project]"],
+        "compound": [["values[Project]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "receipts",
+      "name": "Receipts",
+      "description": "Field expenses and reimbursable receipts",
+      "submissionLabelExpression": "${values('Vendor')} - ${values('Amount')}",
+      "fields": [
+        { "name": "Project" },
+        { "name": "Vendor", "required": true },
+        { "name": "Category" },
+        { "name": "Amount" },
+        { "name": "Date" },
+        { "name": "Paid By" },
+        { "name": "Payment Method" },
+        { "name": "Reimbursable" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Project]", "values[Category]", "values[Reimbursable]"],
+        "compound": [["values[Project]", "values[Category]"]]
+      }
+    }
+  ]
+}
