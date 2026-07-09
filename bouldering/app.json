@@ -1,0 +1,129 @@
+{
+  "name": "Crux Bouldering",
+  "slug": "bouldering",
+  "description": "Bouldering gym & crag management — locations, the boulder board (rate & comment on problems), a boulder reservation scheduler, and the Boulder Training Fund with $5/$10/$20 donations.",
+  "category": "Sports & Recreation",
+  "icon": "mountain",
+  "color": "#6D28D9",
+  "bg": "#F3E8FF",
+  "forms": [
+    {
+      "slug": "locations",
+      "name": "Locations",
+      "description": "Bouldering gyms and outdoor crags in the network",
+      "submissionLabelExpression": "${values('Name')} (${values('City')})",
+      "fields": [
+        { "name": "Location ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Type" },
+        { "name": "Address" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Phone" },
+        { "name": "Hours" },
+        { "name": "Capacity" },
+        { "name": "Boulder Count" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[Type]", "values[City]", "values[State]", "values[Status]"],
+        "compound": [["values[Type]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "boulders",
+      "name": "Boulders",
+      "description": "Individual boulder problems with grade, style and set details",
+      "submissionLabelExpression": "${values('Name')} ${values('Grade')} - ${values('Location')}",
+      "fields": [
+        { "name": "Boulder ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Location" },
+        { "name": "Grade" },
+        { "name": "Hold Color" },
+        { "name": "Wall Section" },
+        { "name": "Style" },
+        { "name": "Setter" },
+        { "name": "Set Date" },
+        { "name": "Avg Rating" },
+        { "name": "Rating Count" },
+        { "name": "Send Count" },
+        { "name": "Status" },
+        { "name": "Description", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[Location]", "values[Grade]", "values[Style]", "values[Setter]", "values[Status]"],
+        "compound": [["values[Location]", "values[Status]"], ["values[Location]", "values[Grade]"]]
+      }
+    },
+    {
+      "slug": "reservations",
+      "name": "Reservations",
+      "description": "Boulder time-slot reservations booked by climbers",
+      "submissionLabelExpression": "${values('Boulder')} - ${values('Reserve Date')} ${values('Start Time')}",
+      "fields": [
+        { "name": "Reservation ID", "required": true },
+        { "name": "Boulder" },
+        { "name": "Location" },
+        { "name": "Reserved By" },
+        { "name": "Email" },
+        { "name": "Reserve Date" },
+        { "name": "Start Time" },
+        { "name": "End Time" },
+        { "name": "Party Size" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Boulder]", "values[Location]", "values[Reserved By]", "values[Reserve Date]", "values[Status]"],
+        "compound": [["values[Location]", "values[Status]"], ["values[Boulder]", "values[Reserve Date]"], ["values[Reserve Date]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "comments",
+      "name": "Boulder Board",
+      "description": "Climber ratings and comments on boulder problems",
+      "submissionLabelExpression": "${values('Author')} on ${values('Boulder')} (${values('Rating')}★)",
+      "fields": [
+        { "name": "Comment ID", "required": true },
+        { "name": "Boulder" },
+        { "name": "Location" },
+        { "name": "Author" },
+        { "name": "Rating" },
+        { "name": "Suggested Grade" },
+        { "name": "Attempts" },
+        { "name": "Sent" },
+        { "name": "Comment", "rows": 3 },
+        { "name": "Date" }
+      ],
+      "indexes": {
+        "single": ["values[Boulder]", "values[Location]", "values[Author]", "values[Rating]", "values[Sent]"],
+        "compound": [["values[Boulder]", "values[Rating]"], ["values[Location]", "values[Sent]"]]
+      }
+    },
+    {
+      "slug": "donations",
+      "name": "Training Fund",
+      "description": "Donations to the Boulder Training Fund ($5 / $10 / $20 tiers)",
+      "submissionLabelExpression": "${values('Donor Name')} - ${values('Amount')}",
+      "fields": [
+        { "name": "Donation ID", "required": true },
+        { "name": "Donor Name" },
+        { "name": "Email" },
+        { "name": "Amount" },
+        { "name": "Tier" },
+        { "name": "Fund" },
+        { "name": "Location" },
+        { "name": "Message", "rows": 2 },
+        { "name": "Anonymous" },
+        { "name": "Date" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Donor Name]", "values[Amount]", "values[Tier]", "values[Fund]", "values[Status]"],
+        "compound": [["values[Fund]", "values[Status]"]]
+      }
+    }
+  ]
+}
