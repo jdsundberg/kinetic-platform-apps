@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Swap</title>
+<style>
+:root { --indigo:#283593; --indigo-dark:#1A237E; --gold:#C9A227; --gold-light:#E6C765; --green:#2E7D32; --red:#C62828; --yellow:#F9A825; --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff; --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); --shadow-lg:0 4px 12px rgba(0,0,0,.15); }
+*{margin:0;padding:0;box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#333}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0d1033 0%,#1A237E 55%,#283593 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:24px;color:var(--indigo-dark);margin-bottom:4px} .login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .orange-bar{height:3px;background:var(--gold);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.18)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--indigo);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:var(--indigo-dark)} .login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--indigo-dark);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:18px;font-weight:700;letter-spacing:.5px} .topbar .logo span{color:var(--gold-light)}
+.nav-tabs{display:flex;gap:4px;margin-left:24px;flex-wrap:wrap}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.1);color:white} .nav-tabs button.active{background:var(--gold);color:#1A237E}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px} .user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--gold);border-color:var(--gold);color:#1A237E}
+
+.console{display:none;padding:24px;max-width:1340px;margin:0 auto} .console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--indigo-dark);margin-bottom:4px} .page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.kpi .val{font-size:24px;font-weight:700} .kpi .label{font-size:11px;color:var(--gray);margin-top:2px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)} tr:hover td{background:var(--light)}
+.price{font-weight:600;color:var(--indigo-dark)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-painting{background:#E8EAF6;color:#283593} .badge-sculpture{background:#E0F2F1;color:#00695C}
+.badge-available{background:#E8F5E9;color:#2E7D32} .badge-swap-pending{background:#FFF8E1;color:#F57F17} .badge-in-transit{background:#E3F2FD;color:#1565C0} .badge-not-for-swap{background:#ECEFF1;color:#37474F}
+.badge-proposed{background:#ECEFF1;color:#37474F} .badge-approved{background:#FFF8E1;color:#F57F17} .badge-completed{background:#E8F5E9;color:#2E7D32} .badge-cancelled{background:#FFEBEE;color:#C62828}
+.badge-scheduled{background:#ECEFF1;color:#37474F} .badge-delivered{background:#E8F5E9;color:#2E7D32} .badge-damaged{background:#FFEBEE;color:#C62828}
+.badge-active{background:#E8F5E9;color:#2E7D32} .badge-inactive{background:#FFEBEE;color:#C62828}
+.alert-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:var(--red);color:white}
+.warn-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:var(--yellow);color:#5d4400}
+.chip{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10.5px;font-weight:600;background:#E8EAF6;color:#283593;margin:1px 2px 1px 0}
+.chip-ok{background:#E8F5E9;color:#2E7D32}
+.alert-row td{background:#FFF5F5}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--indigo);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:var(--indigo-dark)}
+.btn-gold{background:var(--gold);color:#1A237E;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-gold:hover{background:#b08c1d}
+.btn-secondary{background:var(--light);color:var(--indigo-dark);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--border)} .btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+.filter-bar label.toggle{font-size:12px;color:var(--gray);display:flex;gap:5px;align-items:center;cursor:pointer}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:600px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--indigo-dark)} .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px} .modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin:16px 0 2px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--indigo-dark);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)}
+#toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+
+/* ── Gallery wall (type × era grid) ── */
+.gallery-wall{background:radial-gradient(ellipse 60% 50% at 30% 0%,rgba(201,162,39,.16),transparent 60%),radial-gradient(ellipse 50% 60% at 85% 100%,rgba(94,53,177,.22),transparent 55%),linear-gradient(165deg,#161a3d 0%,#1A237E 55%,#10133a 100%);border-radius:16px;padding:26px 24px 30px;margin-bottom:20px;box-shadow:var(--shadow-lg);overflow-x:auto}
+.gallery-wall h2{font-family:Georgia,'Times New Roman',serif;color:#F3E9C9;font-size:21px;letter-spacing:.5px;margin-bottom:2px}
+.gallery-wall .gsub{color:rgba(243,233,201,.55);font-size:12px;margin-bottom:18px;font-style:italic}
+.era-grid{display:grid;gap:10px 14px;min-width:900px}
+.era-head{font-family:Georgia,serif;color:var(--gold-light);font-size:12px;letter-spacing:2px;text-transform:uppercase;text-align:center;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,.35)}
+.type-head{font-family:Georgia,serif;color:#F3E9C9;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;opacity:.85}
+.era-cell{display:flex;flex-direction:column;gap:8px;min-height:40px;justify-content:flex-start}
+.era-cell .empty-hook{height:26px;border-radius:4px;border:1px dashed rgba(243,233,201,.14)}
+.mini-art{border-radius:3px;padding:7px 9px;cursor:pointer;transition:transform .18s,box-shadow .18s;position:relative}
+.mini-art:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 10px 22px rgba(0,0,0,.5);z-index:2}
+.mini-art .t{font-size:11.5px;font-weight:700;line-height:1.25}
+.mini-art .a{font-size:10px;opacity:.75;margin-top:1px}
+.mini-art .vrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:10px}
+.mini-art .val{font-weight:800}
+.mini-painting{background:linear-gradient(160deg,#fdf8ec,#f1e3bd);color:#3a2c12;border:3px solid #C9A227;outline:1px solid #8a6d14;box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 0 0 1px #e7cf8a}
+.mini-sculpture{background:linear-gradient(165deg,#e8eaf0,#b9bfcc 70%,#9aa1b0);color:#23283a;border-radius:6px 6px 2px 2px;border:1px solid #7e8595;box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+.mini-art .moving-dot{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:9px;padding:1px 6px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+
+/* ── 12-month location timeline ── */
+.tl-card{background:linear-gradient(180deg,#fff,#f6f7fb);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:22px;overflow-x:auto}
+.tl-card h2{font-family:Georgia,serif;color:var(--indigo-dark);font-size:19px;margin-bottom:2px}
+.tl-card .gsub{color:var(--gray);font-size:12px;margin-bottom:14px;font-style:italic}
+.tl-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tl-legend .lg{display:flex;align-items:center;gap:5px;font-size:11px;color:#333;background:#fff;border:1px solid var(--border);border-radius:12px;padding:3px 9px}
+.tl-legend .sw{width:10px;height:10px;border-radius:3px}
+.tl-grid{min-width:1000px}
+.tl-row{display:grid;grid-template-columns:230px repeat(12,1fr);align-items:stretch;gap:0 2px;margin-bottom:3px}
+.tl-row.head{position:sticky;top:56px;background:transparent;margin-bottom:8px}
+.tl-row.head .mh{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--gray);text-transform:uppercase;text-align:center;padding:4px 0;border-bottom:2px solid var(--border)}
+.tl-art{font-size:11.5px;padding:4px 10px 4px 2px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-art .ic{font-size:13px}
+.tl-art .nm{font-weight:600;color:#222;overflow:hidden;text-overflow:ellipsis}
+.tl-art.is-moving .nm{color:var(--indigo-dark)}
+.tl-seg{border-radius:6px;font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;padding:0 8px;gap:4px;min-height:24px;white-space:nowrap;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tl-seg .truck{font-size:11px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+.tl-row:hover .tl-seg{filter:brightness(1.08)}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Art Swap</h1><div class="sub">Minnesota corporate art exchange — value, insurance &amp; shipping</div><div class="orange-bar"></div>
+    <label>Server URL</label><input id="login-url" value="">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Art<span>Swap</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('gallery')">Gallery</button>
+      <button onclick="switchTab('artworks')">Artworks</button>
+      <button onclick="switchTab('swaps')">Swaps</button>
+      <button onclick="switchTab('shipments')">Shipments</button>
+      <button onclick="switchTab('companies')">Companies</button>
+      <button onclick="switchTab('insurance')">Insurance</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">The exchange at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="dash-grid">
+      <div class="card"><h3>⚠ Insurance — Expiring ≤ 90 Days</h3><div id="dash-expiring"></div></div>
+      <div class="card"><h3>⚠ Underinsured Artworks</h3><div id="dash-underinsured"></div></div>
+      <div class="card"><h3>Swap Pipeline</h3><div id="dash-pipeline"></div></div>
+      <div class="card"><h3>Collection Value by Company</h3><div id="dash-companies"></div></div>
+    </div>
+    <div class="card"><h3>Artwork On The Road</h3><div id="dash-shipments"></div></div>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="console-gallery" class="console">
+    <h2 class="page-title">Gallery</h2><div class="page-sub">The collection by type &amp; era — and where every piece will hang next</div>
+    <div class="gallery-wall">
+      <h2>The Collection</h2>
+      <div class="gsub">Paintings in gold frames · sculptures on plinths · grouped by era — hover a piece for its appraised value</div>
+      <div id="era-grid" class="era-grid"></div>
+    </div>
+    <div class="tl-card">
+      <h2>Where The Art Will Be — Next 12 Months</h2>
+      <div class="gsub">Projected from active swaps: in-transit pieces land at carrier ETA, approved swaps move next month, proposals in two. 🚚 marks the move.</div>
+      <div class="tl-legend" id="tl-legend"></div>
+      <div class="tl-grid" id="tl-grid"></div>
+    </div>
+  </div>
+
+  <!-- ARTWORKS -->
+  <div id="console-artworks" class="console">
+    <h2 class="page-title">Artworks</h2><div class="page-sub">Paintings &amp; sculptures across member collections</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openArtModal()">+ Add Artwork</button>
+      <div class="filter-bar">
+        <select id="f-aowner" onchange="loadArt()"><option value="">All Owners</option></select>
+        <select id="f-atype" onchange="loadArt()"><option value="">All Types</option><option>Painting</option><option>Sculpture</option></select>
+        <select id="f-astatus" onchange="loadArt()"><option value="">All Status</option><option>Available</option><option>Swap Pending</option><option>In Transit</option><option>Not For Swap</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Artwork</th><th>Type</th><th>Owner</th><th>Appraised</th><th>Insurance</th><th>Status</th><th></th></tr></thead><tbody id="art-body"></tbody></table></div>
+    <div class="pagination" id="art-pag"></div>
+  </div>
+
+  <!-- SWAPS -->
+  <div id="console-swaps" class="console">
+    <h2 class="page-title">Swaps</h2><div class="page-sub">Proposed → Approved → In Transit → Completed</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openSwapModal()">+ Propose Swap</button>
+      <div class="filter-bar">
+        <select id="f-wstatus" onchange="loadSwaps()"><option value="">All Status</option><option>Proposed</option><option>Approved</option><option>In Transit</option><option>Completed</option><option>Cancelled</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Swap</th><th>Companies</th><th>Artworks</th><th>Status</th><th>Dates</th><th style="min-width:210px">Actions</th></tr></thead><tbody id="swap-body"></tbody></table></div>
+    <div class="pagination" id="swap-pag"></div>
+  </div>
+
+  <!-- SHIPMENTS -->
+  <div id="console-shipments" class="console">
+    <h2 class="page-title">Shipments</h2><div class="page-sub">Fine-art transit — tracking, declared value, condition</div>
+    <div class="toolbar">
+      <div class="filter-bar">
+        <select id="f-hstatus" onchange="loadShip()"><option value="">All Status</option><option>Scheduled</option><option>In Transit</option><option>Delivered</option><option>Damaged</option></select>
+        <select id="f-hcarrier" onchange="loadShip()"><option value="">All Carriers</option><option>Atelier North Fine Art Logistics</option><option>Twin Ports Art Transit</option><option>Gallery Movers MN</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Shipment</th><th>Artwork</th><th>Route</th><th>Carrier / Tracking</th><th>Declared</th><th>Dates</th><th>Status</th><th></th></tr></thead><tbody id="ship-body"></tbody></table></div>
+    <div class="pagination" id="ship-pag"></div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div id="console-companies" class="console">
+    <h2 class="page-title">Companies</h2><div class="page-sub">Minnesota member companies</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openCoModal()">+ Add Company</button>
+      <div class="filter-bar">
+        <select id="f-cstatus" onchange="loadCo()"><option value="">All</option><option>Active</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Company</th><th>City</th><th>Contact</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="co-body"></tbody></table></div>
+    <div class="pagination" id="co-pag"></div>
+  </div>
+
+  <!-- INSURANCE -->
+  <div id="console-insurance" class="console">
+    <h2 class="page-title">Insurance</h2><div class="page-sub">Per-artwork coverage — underinsured rows highlighted</div>
+    <div class="toolbar">
+      <div class="filter-bar">
+        <label class="toggle"><input type="checkbox" id="f-iexpiring" onchange="loadIns()"> Expiring ≤ 90 days</label>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Artwork</th><th>Owner</th><th>Insurer</th><th>Policy #</th><th>Appraised</th><th>Insured</th><th>Coverage</th><th>Expires</th><th></th></tr></thead><tbody id="ins-body"></tbody></table></div>
+    <div class="pagination" id="ins-pag"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='art-swap';
+const PS={art:{pt:null,p:1,h:[]},swap:{pt:null,p:1,h:[]},ship:{pt:null,p:1,h:[]},co:{pt:null,p:1,h:[]},ins:{pt:null,p:1,h:[]}};
+let COMPANY_CACHE=[]; // active companies (latest 25) for selects
+const CARRIERS=['Atelier North Fine Art Logistics','Twin Ports Art Transit','Gallery Movers MN'];
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
+function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function money(n){if(n==null||n==='')return'—';const f=parseFloat(n);return isNaN(f)?esc(n):'$'+Math.round(f).toLocaleString()}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function plusDaysStr(d){const t=new Date();t.setDate(t.getDate()+d);return t.toISOString().slice(0,10)}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid credentials');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('login-pass').value=''}
+
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+async function customApi(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+  const t=await r.text();let b;try{b=t?JSON.parse(t):{}}catch{b=t}
+  if(!r.ok)throw new Error(b?.error||`${r.status}: ${t.slice(0,200)}`);return b}
+
+const TABS=['dash','gallery','artworks','swaps','shipments','companies','insurance'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='gallery')loadGallery();
+  else if(tab==='artworks')loadArt();
+  else if(tab==='swaps')loadSwaps();
+  else if(tab==='shipments')loadShip();
+  else if(tab==='companies')loadCo();
+  else loadIns();
+}
+function enterApp(){loadLookups();loadDash()}
+
+async function loadLookups(){
+  try{
+    const d=await api(`/kapps/${KAPP}/forms/companies/submissions?include=details,values&limit=25&q=`+encodeURIComponent(`values[Status]="Active"`));
+    COMPANY_CACHE=(d.submissions||[]).sort((a,b)=>v(a,'Company Name').localeCompare(v(b,'Company Name')));
+    document.getElementById('f-aowner').innerHTML='<option value="">All Owners</option>'+COMPANY_CACHE.map(c=>`<option>${esc(v(c,'Company Name'))}</option>`).join('');
+  }catch{}
+}
+
+function pager(ps,loadFn){
+  return `<button class="btn-secondary btn-sm" onclick="${loadFn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="${loadFn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+function paginateState(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const d=await customApi('/api/art-swap/dashboard');const k=d.kpis||{};
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="val" style="color:var(--indigo-dark)">${k.artworks??0}</div><div class="label">Artworks (${k.paintings??0}P / ${k.sculptures??0}S)</div></div>
+    <div class="kpi"><div class="val" style="color:var(--gold)">${money(k.totalValue)}</div><div class="label">Collection Value</div></div>
+    <div class="kpi"><div class="val" style="color:var(--indigo-dark)">${k.companies??0}</div><div class="label">Member Companies</div></div>
+    <div class="kpi"><div class="val" style="color:var(--indigo-dark)">${k.activeSwaps??0}</div><div class="label">Active Swaps</div></div>
+    <div class="kpi"><div class="val" style="color:#1565C0">${k.shipmentsMoving??0}</div><div class="label">Shipments Moving</div></div>
+    <div class="kpi"><div class="val" style="color:${(k.expiringPolicies||0)>0?'var(--red)':'var(--green)'}">${k.expiringPolicies??0}</div><div class="label">⚠ Policies Expiring ≤90d</div></div>
+    <div class="kpi"><div class="val" style="color:${(k.underinsured||0)>0?'var(--red)':'var(--green)'}">${k.underinsured??0}</div><div class="label">⚠ Underinsured</div></div>`;
+  document.getElementById('dash-expiring').innerHTML=(d.expiring||[]).length?`<table><thead><tr><th>Artwork</th><th>Owner</th><th>Policy</th><th>Expires</th></tr></thead><tbody>${d.expiring.map(x=>`<tr class="alert-row">
+    <td><strong>${esc(x.title)}</strong></td><td style="font-size:12px">${esc(x.owner)}</td>
+    <td style="font-size:12px">${esc(x.insurer)} ${esc(x.policy)}</td>
+    <td>${x.expired?`<span class="alert-badge">EXPIRED ${esc(x.expires)}</span>`:`<span class="warn-badge">${esc(x.expires)}</span>`}</td></tr>`).join('')}</tbody></table>`
+    :'<div style="color:var(--green);font-size:13px;font-weight:600">✓ No policies expiring in the next 90 days.</div>';
+  document.getElementById('dash-underinsured').innerHTML=(d.underinsured||[]).length?`<table><thead><tr><th>Artwork</th><th>Appraised</th><th>Insured</th><th>Gap</th></tr></thead><tbody>${d.underinsured.map(x=>`<tr class="alert-row">
+    <td><strong>${esc(x.title)}</strong><div style="font-size:11px;color:var(--gray)">${esc(x.owner)}</div></td>
+    <td class="price">${money(x.appraised)}</td><td>${money(x.insured)}</td>
+    <td><span class="alert-badge">-${money(x.gap).replace('$','$')}</span></td></tr>`).join('')}</tbody></table>`
+    :'<div style="color:var(--green);font-size:13px;font-weight:600">✓ Every artwork is insured to its appraised value.</div>';
+  const PIPE_ORDER=['Proposed','Approved','In Transit','Completed','Cancelled'];
+  document.getElementById('dash-pipeline').innerHTML=PIPE_ORDER.map(st=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${badge(st)} <strong>${(d.pipeline||{})[st]||0}</strong></div>`).join('');
+  document.getElementById('dash-companies').innerHTML=(d.topCompanies||[]).map(c=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${esc(c.name)} <span style="color:var(--gray);font-size:11px">(${c.count})</span></span> <strong class="price">${money(c.value)}</strong></div>`).join('')||'<div style="color:var(--gray);font-size:13px">No artworks</div>';
+  document.getElementById('dash-shipments').innerHTML=(d.inTransit||[]).length?`<table><thead><tr><th>Shipment</th><th>Artwork</th><th>Route</th><th>Carrier / Tracking</th><th>Declared</th><th>ETA</th><th>Status</th></tr></thead><tbody>${d.inTransit.map(s=>`<tr>
+    <td><strong>${esc(s.number)}</strong><div style="font-size:11px;color:var(--gray)">${esc(s.swap)}</div></td>
+    <td>${esc(s.artwork)}</td><td style="font-size:12px">${esc(s.from)} → ${esc(s.to)}</td>
+    <td style="font-size:12px">${esc(s.carrier)}<div style="color:var(--gray)">${esc(s.tracking)}</div></td>
+    <td class="price">${money(s.declared)}</td><td>${esc(s.eta)}</td><td>${badge(s.status)}</td></tr>`).join('')}</tbody></table>`
+    :'<div style="color:var(--gray);font-size:13px">Nothing on the road right now.</div>';
+  }catch(e){toast('Dashboard error: '+e.message)}
+}
+
+/* ── GALLERY (type × era grid + 12-month location timeline) ── */
+const CO_PALETTE=['#3949AB','#00897B','#C0742C','#7B1FA2','#1976D2','#5D8C3E','#C2185B','#5D4037','#455A64','#B0901F','#00838F','#8E24AA'];
+function shortCo(name){return String(name).replace(/ (Insurance|Company|Group|Holdings|Co|Energy|Outfitters|Bank|Shipping|Software|Paper|Iron|Mutual)\b/g,m=>({' Insurance':' Ins.',' Company':' Co.',' Group':' Grp.',' Holdings':' Hldgs.',' Outfitters':' Outf.',' Software':' SW'})[m]||m)}
+async function loadGallery(){
+  try{const d=await customApi('/api/art-swap/gallery');
+  const rows=d.rows||[],months=d.months||[];
+  // company → color
+  const coNames=[...new Set(rows.flatMap(r=>r.segments.map(s=>s.company)))].sort();
+  const coColor={};coNames.forEach((n,i)=>coColor[n]=CO_PALETTE[i%CO_PALETTE.length]);
+
+  /* — era × type grid — */
+  const decades=[...new Set(rows.map(r=>Math.floor(parseInt(r.year||0,10)/10)*10).filter(x=>x>0))].sort((a,b)=>a-b);
+  let g=`<div style="display:grid;grid-template-columns:34px repeat(${decades.length},minmax(120px,1fr));gap:10px 14px;min-width:${140*decades.length}px">`;
+  g+=`<div></div>`+decades.map(dec=>`<div class="era-head">${dec}s</div>`).join('');
+  for(const type of ['Painting','Sculpture']){
+    g+=`<div class="type-head">${type}s</div>`;
+    for(const dec of decades){
+      const cell=rows.filter(r=>r.type===type&&Math.floor(parseInt(r.year||0,10)/10)*10===dec).sort((a,b)=>b.value-a.value);
+      g+=`<div class="era-cell">`+(cell.length?cell.map(r=>`
+        <div class="mini-art ${type==='Painting'?'mini-painting':'mini-sculpture'}" onclick="editArt('${r.id}')" title="${esc(r.title)} (${esc(r.year)}) — ${money(r.value)} — ${esc(r.owner)}${r.via?' — moving via '+esc(r.via):''}">
+          ${r.moving?'<span class="moving-dot">🚚</span>':''}
+          <div class="t">${esc(r.title)}</div>
+          <div class="a">${esc(r.artist)} · ${esc(r.year)}</div>
+          <div class="vrow"><span class="val">${money(r.value)}</span><span style="opacity:.7">${esc(shortCo(r.owner))}</span></div>
+        </div>`).join(''):'<div class="empty-hook"></div>')+`</div>`;
+    }
+  }
+  g+='</div>';
+  document.getElementById('era-grid').outerHTML=`<div id="era-grid">${g}</div>`;
+
+  /* — legend — */
+  document.getElementById('tl-legend').innerHTML=coNames.map(n=>{
+    const city=(d.companies||[]).find(c=>c.name===n)?.city||'';
+    return `<span class="lg"><span class="sw" style="background:${coColor[n]}"></span>${esc(shortCo(n))}${city?` <span style="color:var(--gray)">· ${esc(city)}</span>`:''}</span>`}).join('');
+
+  /* — timeline: merge consecutive same-company months into runs — */
+  let t=`<div class="tl-row head"><div></div>${months.map(m=>`<div class="mh">${esc(m.label)}</div>`).join('')}</div>`;
+  for(const r of rows){
+    const runs=[];
+    for(let i=0;i<r.segments.length;i++){
+      const s=r.segments[i],last=runs[runs.length-1];
+      if(last&&last.company===s.company)last.len++;
+      else runs.push({company:s.company,city:s.city,start:i,len:1,move:s.move});
+    }
+    t+=`<div class="tl-row"><div class="tl-art${r.moving?' is-moving':''}" title="${esc(r.title)} — ${esc(r.artist)}"><span class="ic">${r.type==='Sculpture'?'🗿':'🖼️'}</span><span class="nm">${esc(r.title)}</span></div>`;
+    t+=runs.map(run=>`<div class="tl-seg" style="grid-column:${run.start+2} / span ${run.len};background:linear-gradient(180deg,${coColor[run.company]},${coColor[run.company]}cc)" title="${esc(r.title)} @ ${esc(run.company)}${run.city?' ('+esc(run.city)+')':''}${run.move?' — arrives via '+esc(r.via||'swap'):''}">${run.move?'<span class="truck">🚚</span>':''}${run.len>=2?esc(run.city||shortCo(run.company)):''}</div>`).join('');
+    t+=`</div>`;
+  }
+  document.getElementById('tl-grid').innerHTML=t;
+  }catch(e){toast('Gallery error: '+e.message)}
+}
+
+/* ── ARTWORKS ── */
+function insCell(s){
+  const ins=v(s,'Insurer'),exp=v(s,'Insurance Expires');
+  const appraised=parseFloat(v(s,'Appraised Value')||0),insured=parseFloat(v(s,'Insured Value')||0);
+  let flags='';
+  if(exp&&exp<=plusDaysStr(90))flags+=exp<todayStr()?' <span class="alert-badge">EXPIRED</span>':' <span class="warn-badge">EXPIRING</span>';
+  if(appraised>0&&insured>0&&insured<appraised)flags+=' <span class="alert-badge">UNDERINSURED</span>';
+  return ins?`<div style="font-size:12px">${esc(ins)}<div style="color:var(--gray)">${esc(v(s,'Policy Number'))} · exp ${esc(exp)}</div>${flags}</div>`:'<span style="color:var(--gray);font-size:11px">uninsured</span>';
+}
+async function loadArt(dir){
+  const ps=PS.art;paginateState(ps,dir);
+  const owner=document.getElementById('f-aowner').value,type=document.getElementById('f-atype').value,stat=document.getElementById('f-astatus').value;
+  let p=`/kapps/${KAPP}/forms/artworks/submissions?include=details,values&limit=25`;const q=[];
+  if(owner)q.push(`values[Owner Company]="${owner.replace(/"/g,'\\"')}"`);if(stat)q.push(`values[Status]="${stat}"`);if(type)q.push(`values[Type]="${type}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('art-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Title'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Artist'))} · ${esc(v(s,'Year'))}</div></td>
+    <td>${badge(v(s,'Type'))}</td><td style="font-size:12px">${esc(v(s,'Owner Company'))}</td>
+    <td class="price">${money(v(s,'Appraised Value'))}</td>
+    <td>${insCell(s)}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editArt('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No artworks</td></tr>';
+  document.getElementById('art-pag').innerHTML=pager(ps,'loadArt');
+  }catch(e){toast('Error: '+e.message)}
+}
+function coOpts(sel){return '<option value="">…</option>'+COMPANY_CACHE.map(c=>`<option ${sel===v(c,'Company Name')?'selected':''}>${esc(v(c,'Company Name'))}</option>`).join('')}
+function openArtModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Artwork':'New Artwork';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Title *</label><input id="a-title" value="${esc(vl.Title||'')}"></div>
+      <div><label>Artist</label><input id="a-artist" value="${esc(vl.Artist||'')}"></div>
+      <div><label>Type</label><select id="a-type">${['Painting','Sculpture'].map(x=>`<option ${vl.Type===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Medium</label><input id="a-medium" value="${esc(vl.Medium||'')}"></div>
+      <div><label>Year</label><input id="a-year" value="${esc(vl.Year||'')}"></div>
+      <div><label>Dimensions</label><input id="a-dim" value="${esc(vl.Dimensions||'')}"></div>
+      <div><label>Owner Company *</label><select id="a-owner">${coOpts(vl['Owner Company'])}</select></div>
+      <div><label>Location</label><input id="a-loc" value="${esc(vl.Location||'')}"></div>
+      <div><label>Status</label><select id="a-status">${['Available','Swap Pending','In Transit','Not For Swap'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <div class="modal-section">Value</div>
+    <div class="modal-grid">
+      <div><label>Appraised Value ($)</label><input id="a-value" value="${esc(vl['Appraised Value']||'')}"></div>
+      <div><label>Appraisal Date</label><input id="a-appdate" type="date" value="${esc(vl['Appraisal Date']||'')}"></div>
+    </div>
+    <div class="modal-section">Insurance</div>
+    <div class="modal-grid">
+      <div><label>Insurer</label><input id="a-insurer" value="${esc(vl.Insurer||'')}"></div>
+      <div><label>Policy Number</label><input id="a-policy" value="${esc(vl['Policy Number']||'')}"></div>
+      <div><label>Insured Value ($)</label><input id="a-insval" value="${esc(vl['Insured Value']||'')}"></div>
+      <div><label>Insurance Expires</label><input id="a-insexp" type="date" value="${esc(vl['Insurance Expires']||'')}"></div>
+    </div>
+    <label>Description</label><textarea id="a-desc">${esc(vl.Description||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveArt('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadArt')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editArt(id){const d=await api(`/submissions/${id}?include=details,values`);openArtModal(d.submission||d)}
+async function saveArt(id){const values={Title:document.getElementById('a-title').value.trim(),Artist:document.getElementById('a-artist').value.trim(),Type:document.getElementById('a-type').value,Medium:document.getElementById('a-medium').value.trim(),Year:document.getElementById('a-year').value.trim(),Dimensions:document.getElementById('a-dim').value.trim(),'Owner Company':document.getElementById('a-owner').value,Location:document.getElementById('a-loc').value.trim(),Status:document.getElementById('a-status').value,'Appraised Value':document.getElementById('a-value').value.trim(),'Appraisal Date':document.getElementById('a-appdate').value,Insurer:document.getElementById('a-insurer').value.trim(),'Policy Number':document.getElementById('a-policy').value.trim(),'Insured Value':document.getElementById('a-insval').value.trim(),'Insurance Expires':document.getElementById('a-insexp').value,Description:document.getElementById('a-desc').value};
+  if(!values.Title||!values['Owner Company']){toast('Title and owner company are required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/artworks/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadArt()}catch(e){toast('Error: '+e.message)}}
+
+/* ── SWAPS ── */
+function swapActions(s){
+  const st=v(s,'Status'),num=v(s,'Swap Number').replace(/'/g,"\\'");
+  const b=(label,action,cls)=>`<button class="${cls} btn-sm" onclick="advanceSwap('${num}','${action}')">${label}</button>`;
+  if(st==='Proposed')return b('Approve','approve','btn-gold')+' '+b('Cancel','cancel','btn-danger');
+  if(st==='Approved')return b('Ship','ship','btn-gold')+' '+b('Cancel','cancel','btn-danger');
+  if(st==='In Transit')return b('Complete','complete','btn-gold');
+  return '';
+}
+async function loadSwaps(dir){
+  const ps=PS.swap;paginateState(ps,dir);
+  const stat=document.getElementById('f-wstatus').value;
+  let p=`/kapps/${KAPP}/forms/swaps/submissions?include=details,values&limit=25`;
+  if(stat)p+='&q='+encodeURIComponent(`values[Status]="${stat}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('swap-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Swap Number'))}</strong></td>
+    <td style="font-size:12px">${esc(v(s,'From Company'))} ⇄ ${esc(v(s,'To Company'))}</td>
+    <td style="font-size:12px">${esc(v(s,'From Artwork'))}${v(s,'To Artwork')?' ⇄ '+esc(v(s,'To Artwork')):' <span style="color:var(--gray)">(one-way)</span>'}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Proposed Date'))}${v(s,'Completed Date')?' → '+esc(v(s,'Completed Date')):''}</td>
+    <td style="white-space:nowrap">${swapActions(s)} <button class="btn-secondary btn-sm" onclick="editSwap('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No swaps</td></tr>';
+  document.getElementById('swap-pag').innerHTML=pager(ps,'loadSwaps');
+  }catch(e){toast('Error: '+e.message)}
+}
+async function advanceSwap(num,action){
+  const labels={approve:'Approve',ship:'Ship (creates shipments)',complete:'Complete (transfers ownership)',cancel:'Cancel'};
+  if(!confirm(`${labels[action]} swap ${num}?`))return;
+  try{const r=await customApi('/api/art-swap/advance-swap',{method:'POST',body:JSON.stringify({swapNumber:num,action})});
+  let msg=`${num} → ${r.status}`;
+  if(r.shipments?.length)msg+=` (shipments ${r.shipments.join(', ')})`;
+  if(r.ownershipTransferred?.length)msg+=` — ownership transferred`;
+  toast(msg);loadSwaps()}catch(e){toast('Error: '+e.message)}
+}
+async function artOptionsFor(company,selectedTitle){
+  if(!company)return '<option value="">choose company first…</option>';
+  try{const q=`values[Owner Company]="${company.replace(/"/g,'\\"')}" AND values[Status]="Available"`;
+  const d=await api(`/kapps/${KAPP}/forms/artworks/submissions?include=values&limit=25&q=`+encodeURIComponent(q));
+  let arts=(d.submissions||[]).map(a=>v(a,'Title'));
+  if(selectedTitle&&!arts.includes(selectedTitle))arts.unshift(selectedTitle);
+  return '<option value="">…</option>'+arts.map(t=>`<option ${t===selectedTitle?'selected':''}>${esc(t)}</option>`).join('');
+  }catch{return '<option value="">error loading artworks</option>'}
+}
+async function syncSwapArts(which){
+  const co=document.getElementById(which==='from'?'w-fromco':'w-toco').value;
+  const sel=document.getElementById(which==='from'?'w-fromart':'w-toart');
+  sel.innerHTML=await artOptionsFor(co);
+}
+function openSwapModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Swap':'Propose Swap';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>From Company *</label><select id="w-fromco" onchange="syncSwapArts('from')">${coOpts(vl['From Company'])}</select></div>
+      <div><label>To Company *</label><select id="w-toco" onchange="syncSwapArts('to')">${coOpts(vl['To Company'])}</select></div>
+      <div><label>From Artwork * <span style="font-weight:400;color:var(--gray)">(leaves From Company)</span></label><select id="w-fromart"><option>${esc(vl['From Artwork']||'')}</option></select></div>
+      <div><label>To Artwork <span style="font-weight:400;color:var(--gray)">(optional return piece)</span></label><select id="w-toart"><option>${esc(vl['To Artwork']||'')}</option></select></div>
+      <div><label>Status</label><select id="w-status">${['Proposed','Approved','In Transit','Completed','Cancelled'].map(x=>`<option ${(vl.Status||'Proposed')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Proposed Date</label><input id="w-pdate" type="date" value="${esc(vl['Proposed Date']||todayStr())}"></div>
+    </div>
+    <label>Notes</label><textarea id="w-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveSwap('${s.id||''}','${esc(vl['Swap Number']||'')}')">${ex?'Update':'Propose'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadSwaps')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+  if(vl['From Company'])artOptionsFor(vl['From Company'],vl['From Artwork']).then(h=>document.getElementById('w-fromart').innerHTML=h);
+  if(vl['To Company'])artOptionsFor(vl['To Company'],vl['To Artwork']).then(h=>document.getElementById('w-toart').innerHTML=h);
+}
+async function editSwap(id){const d=await api(`/submissions/${id}?include=details,values`);openSwapModal(d.submission||d)}
+async function nextSwapNumber(){
+  try{const d=await api(`/kapps/${KAPP}/forms/swaps/submissions?include=values&limit=25`);
+  let max=1000;for(const s of (d.submissions||[])){const m=String(v(s,'Swap Number')).match(/SW-(\d+)/);if(m)max=Math.max(max,parseInt(m[1],10))}
+  return 'SW-'+(max+1)}catch{return 'SW-'+Date.now().toString().slice(-4)}
+}
+async function saveSwap(id,existingNum){
+  const values={'From Company':document.getElementById('w-fromco').value,'To Company':document.getElementById('w-toco').value,'From Artwork':document.getElementById('w-fromart').value,'To Artwork':document.getElementById('w-toart').value,Status:document.getElementById('w-status').value,'Proposed Date':document.getElementById('w-pdate').value,Notes:document.getElementById('w-notes').value};
+  if(!values['From Company']||!values['To Company']||!values['From Artwork']){toast('Both companies and the From artwork are required.');return}
+  if(values['From Company']===values['To Company']){toast('Choose two different companies.');return}
+  try{
+    if(id){values['Swap Number']=existingNum;await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})})}
+    else{values['Swap Number']=await nextSwapNumber();await api(`/kapps/${KAPP}/forms/swaps/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+  closeModal();toast(id?'Updated':`Proposed ${values['Swap Number']}`);loadSwaps()}catch(e){toast('Error: '+e.message)}}
+
+/* ── SHIPMENTS ── */
+async function loadShip(dir){
+  const ps=PS.ship;paginateState(ps,dir);
+  const stat=document.getElementById('f-hstatus').value,car=document.getElementById('f-hcarrier').value;
+  let p=`/kapps/${KAPP}/forms/shipments/submissions?include=details,values&limit=25`;const q=[];
+  if(stat)q.push(`values[Status]="${stat}"`);if(car)q.push(`values[Carrier]="${car}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('ship-body').innerHTML=subs.length?subs.map(s=>`<tr${v(s,'Status')==='Damaged'?' class="alert-row"':''}>
+    <td><strong>${esc(v(s,'Shipment Number'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Swap Number'))}</div></td>
+    <td style="font-size:12px">${esc(v(s,'Artwork Title'))}</td>
+    <td style="font-size:12px">${esc(v(s,'From Company'))} → ${esc(v(s,'To Company'))}</td>
+    <td style="font-size:12px">${esc(v(s,'Carrier'))}<div style="color:var(--gray)">${esc(v(s,'Tracking Number'))}</div></td>
+    <td class="price">${money(v(s,'Declared Value'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc(v(s,'Ship Date'))}${v(s,'Delivered Date')?' → '+esc(v(s,'Delivered Date')):(v(s,'Expected Delivery')?' · eta '+esc(v(s,'Expected Delivery')):'')}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editShip('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--gray)">No shipments</td></tr>';
+  document.getElementById('ship-pag').innerHTML=pager(ps,'loadShip');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openShipModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent='Edit Shipment '+(vl['Shipment Number']||'');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Carrier</label><select id="h-carrier">${CARRIERS.map(c=>`<option ${vl.Carrier===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Tracking Number</label><input id="h-track" value="${esc(vl['Tracking Number']||'')}"></div>
+      <div><label>Declared Value ($)</label><input id="h-declared" value="${esc(vl['Declared Value']||'')}"></div>
+      <div><label>Status</label><select id="h-status">${['Scheduled','In Transit','Delivered','Damaged'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Ship Date</label><input id="h-shipdate" type="date" value="${esc(vl['Ship Date']||'')}"></div>
+      <div><label>Expected Delivery</label><input id="h-eta" type="date" value="${esc(vl['Expected Delivery']||'')}"></div>
+      <div><label>Delivered Date</label><input id="h-delivered" type="date" value="${esc(vl['Delivered Date']||'')}"></div>
+    </div>
+    <label>Condition Notes</label><textarea id="h-cond">${esc(vl['Condition Notes']||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveShip('${s.id}')">Update</button><button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadShip')">Delete</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editShip(id){const d=await api(`/submissions/${id}?include=details,values`);openShipModal(d.submission||d)}
+async function saveShip(id){const values={Carrier:document.getElementById('h-carrier').value,'Tracking Number':document.getElementById('h-track').value.trim(),'Declared Value':document.getElementById('h-declared').value.trim(),Status:document.getElementById('h-status').value,'Ship Date':document.getElementById('h-shipdate').value,'Expected Delivery':document.getElementById('h-eta').value,'Delivered Date':document.getElementById('h-delivered').value,'Condition Notes':document.getElementById('h-cond').value};
+  try{await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+  closeModal();toast('Updated');loadShip()}catch(e){toast('Error: '+e.message)}}
+
+/* ── COMPANIES ── */
+async function loadCo(dir){
+  const ps=PS.co;paginateState(ps,dir);
+  const stat=document.getElementById('f-cstatus').value;
+  let p=`/kapps/${KAPP}/forms/companies/submissions?include=details,values&limit=25`;
+  if(stat)p+='&q='+encodeURIComponent(`values[Status]="${stat}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('co-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Company Name'))}</strong></td><td>${esc(v(s,'City'))}</td>
+    <td style="font-size:12px">${esc(v(s,'Contact Name'))}<div style="color:var(--gray)">${esc(v(s,'Contact Email'))}</div></td>
+    <td style="font-size:12px">${esc(v(s,'Phone'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editCo('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No companies</td></tr>';
+  document.getElementById('co-pag').innerHTML=pager(ps,'loadCo');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openCoModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Company':'New Company';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Company Name *</label><input id="c-name" value="${esc(vl['Company Name']||'')}"></div>
+      <div><label>City</label><input id="c-city" value="${esc(vl.City||'')}"></div>
+      <div><label>Contact Name</label><input id="c-contact" value="${esc(vl['Contact Name']||'')}"></div>
+      <div><label>Contact Email</label><input id="c-email" value="${esc(vl['Contact Email']||'')}"></div>
+      <div><label>Phone</label><input id="c-phone" value="${esc(vl.Phone||'')}"></div>
+      <div><label>Status</label><select id="c-status">${['Active','Inactive'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Address</label><input id="c-addr" value="${esc(vl.Address||'')}">
+    <label>Notes</label><textarea id="c-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveCo('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadCo')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editCo(id){const d=await api(`/submissions/${id}?include=details,values`);openCoModal(d.submission||d)}
+async function saveCo(id){const values={'Company Name':document.getElementById('c-name').value.trim(),City:document.getElementById('c-city').value.trim(),'Contact Name':document.getElementById('c-contact').value.trim(),'Contact Email':document.getElementById('c-email').value.trim(),Phone:document.getElementById('c-phone').value.trim(),Status:document.getElementById('c-status').value,Address:document.getElementById('c-addr').value.trim(),Notes:document.getElementById('c-notes').value};
+  if(!values['Company Name']){toast('Company name is required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/companies/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadCo();loadLookups()}catch(e){toast('Error: '+e.message)}}
+
+/* ── INSURANCE ── */
+async function loadIns(dir){
+  const ps=PS.ins;paginateState(ps,dir);
+  const expiringOnly=document.getElementById('f-iexpiring').checked;
+  let p=`/kapps/${KAPP}/forms/artworks/submissions?include=details,values&limit=25`;
+  if(expiringOnly){
+    p+='&q='+encodeURIComponent(`values[Insurance Expires] <= "${plusDaysStr(90)}"`)+'&orderBy='+encodeURIComponent('values[Insurance Expires]')+'&direction=ASC';
+  }
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('ins-body').innerHTML=subs.length?subs.map(s=>{
+    const appraised=parseFloat(v(s,'Appraised Value')||0),insured=parseFloat(v(s,'Insured Value')||0);
+    const under=appraised>0&&insured>0&&insured<appraised;
+    const exp=v(s,'Insurance Expires');
+    const expFlag=exp&&exp<todayStr()?'<span class="alert-badge">EXPIRED</span>':(exp&&exp<=plusDaysStr(90)?'<span class="warn-badge">≤90d</span>':'');
+    const cover=under?`<span class="alert-badge">-${money(appraised-insured)}</span>`:(insured>0?'<span class="chip chip-ok">✓ Full</span>':'<span style="color:var(--gray);font-size:11px">—</span>');
+    return `<tr${under||expFlag.includes('EXPIRED')?' class="alert-row"':''}>
+    <td><strong>${esc(v(s,'Title'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Artist'))}</div></td>
+    <td style="font-size:12px">${esc(v(s,'Owner Company'))}</td>
+    <td style="font-size:12px">${esc(v(s,'Insurer'))}</td><td style="font-size:12px">${esc(v(s,'Policy Number'))}</td>
+    <td class="price">${money(appraised)}</td><td>${money(insured)}</td><td>${cover}</td>
+    <td style="font-size:12px">${esc(exp)} ${expFlag}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editArt('${s.id}')">Edit</button></td></tr>`}).join('')
+    :'<tr><td colspan="9" style="text-align:center;color:var(--gray)">No artworks match</td></tr>';
+  document.getElementById('ins-pag').innerHTML=pager(ps,'loadIns');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+/* ── SHARED ── */
+async function delSub(id,fn){if(!confirm('Delete?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>
