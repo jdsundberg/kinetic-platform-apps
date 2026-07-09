@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Slam Softball - Kinetic Platform</title>
+<style>
+:root{--green:#1B7A3D;--green-dark:#14602F;--green-light:#2E9E52;--orange:#F26522;--orange-light:#FF7F45;--dirt:#B5651D;--blue:#1565C0;--red:#EA4335;--yellow:#F9A825;--purple:#7B1FA2;--teal:#00695C;--gray:#5F6368;--light:#F8F9FA;--border:#E8EAED;--bg:#F1F3F4;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(27,122,61,.12)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#14602F 0%,#1B7A3D 55%,#2E9E52 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--green);font-size:26px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--green);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--green-dark)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--green);color:white;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:24px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.75);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.75);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--green);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.3px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:24px;font-weight:700;margin:4px 0;color:var(--green)}
+.kpi .label{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active,.badge-final,.badge-paid,.badge-yes,.badge-approved,.badge-resolved,.badge-cleared,.badge-income{background:#E8F5E9;color:#2E7D32}
+.badge-in-progress,.badge-responded,.badge-registered{background:#E0F2F1;color:#00695C}
+.badge-scheduled,.badge-new,.badge-pending,.badge-reviewed,.badge-open{background:#E3F2FD;color:#1565C0}
+.badge-planned,.badge-provisional{background:#E8EAF6;color:#283593}
+.badge-postponed,.badge-follow-up-needed,.badge-partial,.badge-waitlist,.badge-expense{background:#FFF8E1;color:#F9A825}
+.badge-cancelled,.badge-inactive,.badge-overdue,.badge-no,.badge-forfeit,.badge-suspended,.badge-expired{background:#FDECEA;color:#C62828}
+.badge-default,.badge-draft,.badge-closed{background:var(--light);color:var(--gray)}
+
+.stars{color:var(--orange);letter-spacing:1px;font-size:13px;white-space:nowrap}
+.stars .off{color:var(--border)}
+.pos-pill{display:inline-block;background:#EEF6F0;color:var(--green-dark);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:120px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:20px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.bar-row .bl{min-width:130px;color:var(--gray)}
+.bar-track{flex:1;height:14px;background:var(--light);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:var(--green);border-radius:7px}
+.bar-fill.exp{background:var(--orange)}
+.bar-row .bv{min-width:64px;text-align:right;font-weight:600}
+.match{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px}
+.match:last-child{border-bottom:none}
+.match .vs{color:var(--gray);font-size:11px;margin:0 6px}
+.score{font-weight:700;color:var(--green)}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--green);color:white;border-color:var(--green)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+.review{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.review .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.review .rc{font-size:13px;color:#3c4043;line-height:1.5}
+.review .rm{font-size:11px;color:var(--gray);margin-top:6px}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:820px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--green);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Grand Slam <span>Softball</span></h1>
+    <p class="sub">National league management</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://first.kinetics.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Grand Slam <span>Softball</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('leagues')">Leagues</button>
+      <button onclick="switchTab('teams')">Teams</button>
+      <button onclick="switchTab('coaches')">Coaches</button>
+      <button onclick="switchTab('players')">Players</button>
+      <button onclick="switchTab('schedules')">Schedule</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('finances')">Finances</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">League Operations</div>
+    <div class="page-sub">Participation, schedule, standings, satisfaction and finances across all four divisions</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2" id="dash-grid1"></div>
+    <div class="grid-2" id="dash-grid2"></div>
+  </div>
+
+  <!-- LEAGUES -->
+  <div class="console" id="tab-leagues">
+    <div class="page-title">Leagues</div>
+    <div class="page-sub">The four national divisions of the association</div>
+    <div class="toolbar">
+      <input type="text" id="lg-search" placeholder="Search leagues, commissioner, region..." oninput="lgLoad()">
+      <select id="lg-division" onchange="lgLoad()"><option value="">All Divisions</option><option>Fastpitch</option><option>Slowpitch</option><option>Youth</option><option>Senior</option></select>
+      <select id="lg-status" onchange="lgLoad()"><option value="">All Status</option><option>Active</option><option>Planned</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('leagues')">+ New League</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>League</th><th>Division</th><th>Region</th><th>Commissioner</th><th>Teams</th><th>Players</th><th>Season</th><th>Status</th></tr></thead><tbody id="lg-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="lgPrev()" id="lg-prev" disabled>Prev</button><span class="page-info" id="lg-page-info">Page 1</span><button class="btn-outline" onclick="lgNext()" id="lg-next" disabled>Next</button></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div class="console" id="tab-teams">
+    <div class="page-title">Teams</div>
+    <div class="page-sub">Rostered teams competing across the divisions</div>
+    <div class="toolbar">
+      <input type="text" id="tm-search" placeholder="Search teams, coach, city..." oninput="tmLoad()">
+      <select id="tm-league" onchange="tmLoad()"><option value="">All Leagues</option></select>
+      <select id="tm-status" onchange="tmLoad()"><option value="">All Status</option><option>Active</option><option>Provisional</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('teams')">+ New Team</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Team</th><th>League</th><th>City</th><th>Head Coach</th><th>Home Field</th><th>Record</th><th>Roster</th><th>Status</th></tr></thead><tbody id="tm-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="tmPrev()" id="tm-prev" disabled>Prev</button><span class="page-info" id="tm-page-info">Page 1</span><button class="btn-outline" onclick="tmNext()" id="tm-next" disabled>Next</button></div>
+  </div>
+
+  <!-- COACHES -->
+  <div class="console" id="tab-coaches">
+    <div class="page-title">Coaches</div>
+    <div class="page-sub">Head, assistant and specialty coaching staff</div>
+    <div class="toolbar">
+      <input type="text" id="co-search" placeholder="Search coaches..." oninput="coLoad()">
+      <select id="co-league" onchange="coLoad()"><option value="">All Leagues</option></select>
+      <select id="co-role" onchange="coLoad()"><option value="">All Roles</option><option>Head Coach</option><option>Assistant Coach</option><option>Pitching Coach</option><option>Hitting Coach</option><option>Bench Coach</option></select>
+      <select id="co-status" onchange="coLoad()"><option value="">All Status</option><option>Active</option><option>Provisional</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('coaches')">+ New Coach</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Role</th><th>League</th><th>Team</th><th>Cert.</th><th>Exp.</th><th>Bg Check</th><th>Status</th></tr></thead><tbody id="co-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="coPrev()" id="co-prev" disabled>Prev</button><span class="page-info" id="co-page-info">Page 1</span><button class="btn-outline" onclick="coNext()" id="co-next" disabled>Next</button></div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="console" id="tab-players">
+    <div class="page-title">Players</div>
+    <div class="page-sub">Rostered players, positions and season batting stats</div>
+    <div class="toolbar">
+      <input type="text" id="pl-search" placeholder="Search players..." oninput="plLoad()">
+      <select id="pl-league" onchange="plLoad()"><option value="">All Leagues</option></select>
+      <select id="pl-position" onchange="plLoad()"><option value="">All Positions</option><option>Pitcher</option><option>Catcher</option><option>First Base</option><option>Second Base</option><option>Third Base</option><option>Shortstop</option><option>Left Field</option><option>Center Field</option><option>Right Field</option><option>Utility</option></select>
+      <select id="pl-status" onchange="plLoad()"><option value="">All Status</option><option>Active</option><option>Injured</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('players')">+ New Player</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>#</th><th>Name</th><th>League</th><th>Team</th><th>Pos</th><th>AVG</th><th>HR</th><th>RBI</th><th>Paid</th><th>Status</th></tr></thead><tbody id="pl-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="plPrev()" id="pl-prev" disabled>Prev</button><span class="page-info" id="pl-page-info">Page 1</span><button class="btn-outline" onclick="plNext()" id="pl-next" disabled>Next</button></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="console" id="tab-schedules">
+    <div class="page-title">Schedule</div>
+    <div class="page-sub">Game matchups, fields, officials and results</div>
+    <div class="toolbar">
+      <select id="sc-league" onchange="scLoad()"><option value="">All Leagues</option></select>
+      <select id="sc-status" onchange="scLoad()"><option value="">All Status</option><option>Scheduled</option><option>In Progress</option><option>Final</option><option>Postponed</option><option>Cancelled</option><option>Forfeit</option></select>
+      <select id="sc-week" onchange="scLoad()"><option value="">All Weeks</option></select>
+      <button class="btn-primary" onclick="showForm('schedules')">+ New Game</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Time</th><th>Wk</th><th>League</th><th>Home</th><th>Away</th><th>Score</th><th>Field</th><th>Status</th></tr></thead><tbody id="sc-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="scPrev()" id="sc-prev" disabled>Prev</button><span class="page-info" id="sc-page-info">Page 1</span><button class="btn-outline" onclick="scNext()" id="sc-next" disabled>Next</button></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Feedback</div>
+    <div class="page-sub">Player, coach, parent and umpire feedback</div>
+    <div class="toolbar">
+      <select id="fb-league" onchange="fbLoad()"><option value="">All Leagues</option></select>
+      <select id="fb-category" onchange="fbLoad()"><option value="">All Categories</option><option>Officiating</option><option>Facilities</option><option>Scheduling</option><option>Coaching</option><option>Communication</option><option>Registration</option><option>Safety</option></select>
+      <select id="fb-rating" onchange="fbLoad()"><option value="">All Ratings</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+      <select id="fb-status" onchange="fbLoad()"><option value="">All Status</option><option>New</option><option>Reviewed</option><option>Responded</option><option>Follow Up Needed</option><option>Resolved</option></select>
+      <button class="btn-primary" onclick="showForm('feedback')">+ New Feedback</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Submitted By</th><th>Role</th><th>League</th><th>Category</th><th>Rating</th><th>Recommend</th><th>Date</th><th>Status</th></tr></thead><tbody id="fb-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="fbPrev()" id="fb-prev" disabled>Prev</button><span class="page-info" id="fb-page-info">Page 1</span><button class="btn-outline" onclick="fbNext()" id="fb-next" disabled>Next</button></div>
+  </div>
+
+  <!-- FINANCES -->
+  <div class="console" id="tab-finances">
+    <div class="page-title">Finances</div>
+    <div class="page-sub">Income and expenses across the association</div>
+    <div class="kpi-row" id="fin-kpis"></div>
+    <div class="toolbar">
+      <select id="ft-league" onchange="ftLoad()"><option value="">All Leagues</option></select>
+      <select id="ft-type" onchange="ftLoad()"><option value="">All Types</option><option>Income</option><option>Expense</option></select>
+      <select id="ft-category" onchange="ftLoad()"><option value="">All Categories</option><option>Registration</option><option>Sponsorship</option><option>Concessions</option><option>Merchandise</option><option>Grants</option><option>Field Rental</option><option>Umpire Fees</option><option>Equipment</option><option>Uniforms</option><option>Insurance</option><option>Awards</option><option>Travel</option><option>Marketing</option><option>Administration</option></select>
+      <select id="ft-status" onchange="ftLoad()"><option value="">All Status</option><option>Paid</option><option>Pending</option><option>Overdue</option><option>Cleared</option></select>
+      <button class="btn-primary" onclick="showForm('finances')">+ New Transaction</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>League</th><th>Description</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead><tbody id="ft-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="ftPrev()" id="ft-prev" disabled>Prev</button><span class="page-info" id="ft-page-info">Page 1</span><button class="btn-outline" onclick="ftNext()" id="ft-next" disabled>Next</button></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Standings and financial performance</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('standings')">Standings</button>
+      <button class="subtab" onclick="showReport('finances')">Financials</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='softball';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function fmt$(n){const num=parseFloat(n);const neg=num<0;const a=Math.abs(isNaN(num)?0:num);return (neg?'-$':'$')+a.toLocaleString('en-US',{maximumFractionDigits:0})}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/\s+/g,'-')}
+function stars(n){const r=Math.max(0,Math.min(5,Math.round(parseFloat(n)||0)));return`<span class="stars">${'★'.repeat(r)}<span class="off">${'★'.repeat(5-r)}</span></span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={'dashboard':'Dashboard','leagues':'Leagues','teams':'Teams','coaches':'Coaches','players':'Players','schedules':'Schedule','feedback':'Feedback','finances':'Finances','reports':'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>{b.classList.toggle('active',b.textContent===TAB_MAP[tab])});
+if(tab==='dashboard')loadDashboard();
+else if(tab==='leagues')lgLoad();
+else if(tab==='teams'){fillLeagueSelect('tm-league');tmLoad()}
+else if(tab==='coaches'){fillLeagueSelect('co-league');coLoad()}
+else if(tab==='players'){fillLeagueSelect('pl-league');plLoad()}
+else if(tab==='schedules'){fillLeagueSelect('sc-league');fillWeekSelect();scLoad()}
+else if(tab==='feedback'){fillLeagueSelect('fb-league');fbLoad()}
+else if(tab==='finances'){fillLeagueSelect('ft-league');loadFinKpis();ftLoad()}
+else if(tab==='reports')showReport('standings')}
+
+// ===== shared reference lists =====
+let _leagueNames=null,_teamNames=null;
+async function fillLeagueSelect(id){const sel=document.getElementById(id);if(!sel||sel.options.length>1)return;try{if(!_leagueNames){const r=await api(`/kapps/${KAPP}/forms/leagues/submissions?include=values&limit=25`);_leagueNames=(r.submissions||[]).map(s=>v(s,'League Name')).filter(Boolean).sort()}_leagueNames.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)})}catch(e){}}
+function fillWeekSelect(){const sel=document.getElementById('sc-week');if(!sel||sel.options.length>1)return;for(let i=1;i<=16;i++){const o=document.createElement('option');o.value=String(i);o.textContent='Week '+i;sel.appendChild(o)}}
+async function loadTeamNames(){if(_teamNames)return _teamNames;try{const r=await api(`/kapps/${KAPP}/forms/teams/submissions?include=values&limit=25`);_teamNames=(r.submissions||[]).map(s=>v(s,'Team Name')).filter(Boolean).sort()}catch(e){_teamNames=[]}return _teamNames}
+
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px;grid-column:1/-1">Loading dashboard...</div>';
+  document.getElementById('dash-grid1').innerHTML='';document.getElementById('dash-grid2').innerHTML='';
+  try{
+    const d=await sapi('/api/softball/dashboard');const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi green"><div class="val">${k.leagues}</div><div class="label">Leagues</div><div class="sub">${k.teams} active teams</div></div>
+      <div class="kpi blue"><div class="val">${k.players}</div><div class="label">Active Players</div><div class="sub">${k.coaches} coaches</div></div>
+      <div class="kpi teal"><div class="val">${k.gamesPlayed}</div><div class="label">Games Played</div></div>
+      <div class="kpi orange"><div class="val">${k.gamesUpcoming}</div><div class="label">Upcoming Games</div><div class="sub">${k.postponed} postponed</div></div>
+      <div class="kpi green"><div class="val">${fmt$(k.totalIncome)}</div><div class="label">Income</div></div>
+      <div class="kpi red"><div class="val">${fmt$(k.totalExpense)}</div><div class="label">Expenses</div></div>
+      <div class="kpi ${k.netIncome>=0?'green':'red'}"><div class="val">${fmt$(k.netIncome)}</div><div class="label">Net Position</div></div>
+      <div class="kpi yellow"><div class="val">${fmt$(k.outstanding)}</div><div class="label">Outstanding</div></div>
+      <div class="kpi orange"><div class="val">${k.avgRating||'—'}★</div><div class="label">Avg Rating</div><div class="sub">${k.recPct}% recommend</div></div>
+      <div class="kpi blue"><div class="val">${k.openFeedback}</div><div class="label">Open Feedback</div></div>
+      <div class="kpi red"><div class="val">${k.unpaidPlayers}</div><div class="label">Unpaid Registrations</div></div>`;
+
+    document.getElementById('dash-grid1').innerHTML=`
+      <div class="card"><h3>Leagues Overview</h3><table><thead><tr><th>League</th><th>Div</th><th>Teams</th><th>Players</th><th>Games</th><th>Net</th></tr></thead><tbody>${
+        d.byLeague.map(l=>`<tr class="clickable-row" onclick="openLeagueDetail('${l.id}')"><td style="font-weight:600">${esc(l.name)}</td><td>${esc(l.division)}</td><td>${l.teams}</td><td>${l.players}</td><td>${l.played}/${l.games}</td><td style="font-weight:600;color:${l.net>=0?'var(--green)':'var(--red)'}">${fmt$(l.net)}</td></tr>`).join('')||'<tr><td colspan="6" style="color:var(--gray)">No leagues</td></tr>'
+      }</tbody></table></div>
+      <div class="card"><h3>Top Teams (overall)</h3><table><thead><tr><th>Team</th><th>League</th><th>W</th><th>L</th><th>PCT</th><th>Diff</th></tr></thead><tbody>${
+        d.standings.map(t=>`<tr><td style="font-weight:600">${esc(t.team)}</td><td style="font-size:12px;color:var(--gray)">${esc(t.league)}</td><td>${t.w}</td><td>${t.l}</td><td style="font-weight:700">${t.pct.toFixed(3)}</td><td style="color:${t.diff>=0?'var(--green)':'var(--red)'}">${t.diff>=0?'+':''}${t.diff}</td></tr>`).join('')||'<tr><td colspan="6" style="color:var(--gray)">No results yet</td></tr>'
+      }</tbody></table></div>`;
+
+    document.getElementById('dash-grid2').innerHTML=`
+      <div class="card"><h3>Upcoming Games</h3>${d.upcoming.length===0?'<p style="color:var(--gray);font-size:13px">No games scheduled</p>':d.upcoming.map(g=>`<div class="match"><div><strong>${esc(g.home)}</strong><span class="vs">vs</span>${esc(g.away)}</div><div style="text-align:right;font-size:12px;color:var(--gray)">${esc(g.date)} ${esc(g.time)}<br>${esc(g.field)}</div></div>`).join('')}
+        <h3 style="margin-top:16px">Recent Results</h3>${d.recentResults.length===0?'<p style="color:var(--gray);font-size:13px">No games played yet</p>':d.recentResults.map(g=>`<div class="match"><div>${esc(g.home)} <span class="score">${esc(g.hs)}</span><span class="vs">-</span><span class="score">${esc(g.as)}</span> ${esc(g.away)}</div><div style="font-size:12px;color:var(--gray)">${esc(g.date)}</div></div>`).join('')}</div>
+      <div class="card"><h3>Recent Feedback</h3>${d.recentFeedback.length===0?'<p style="color:var(--gray);font-size:13px">No feedback yet</p>':d.recentFeedback.map(f=>`<div class="review"><div class="rh"><strong>${esc(f.by)} <span style="font-weight:400;color:var(--gray);font-size:12px">(${esc(f.role)})</span></strong>${stars(f.rating)}</div><div class="rc">${esc(f.comments)}</div><div class="rm">${esc(f.league)} · ${esc(f.category)} · ${esc(f.date)}</div></div>`).join('')}</div>`;
+  }catch(e){document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}}
+
+// ===== GENERIC PAGER =====
+function makePager(){return{page:1,pageKeys:{1:null},hasNext:false}}
+async function loadPaged(pager,form,bodyId,renderRow,pageId,prevId,nextId,kqlFn,filterFn,colspan){
+  try{
+    const lastCA=pager.pageKeys[pager.page];let kql=kqlFn?kqlFn():'';
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);const data=res.submissions||[];pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&data.length)pager.pageKeys[pager.page+1]=data[data.length-1].createdAt;
+    const filtered=filterFn?data.filter(filterFn):data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0?`<tr><td colspan="${colspan||10}" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>`:filtered.map(renderRow).join('');
+    document.getElementById(pageId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){document.getElementById(bodyId).innerHTML=`<tr><td colspan="${colspan||10}" style="color:var(--red)">${esc(e.message)}</td></tr>`}}
+
+// ===== LEAGUES =====
+const lgP=makePager();
+function lgLoad(){lgP.page=1;lgP.pageKeys={1:null};loadLeagues()}
+function lgNext(){if(lgP.hasNext){lgP.page++;loadLeagues()}}
+function lgPrev(){if(lgP.page>1){lgP.page--;loadLeagues()}}
+function loadLeagues(){const search=document.getElementById('lg-search').value.toLowerCase();const dv=document.getElementById('lg-division').value,st=document.getElementById('lg-status').value;loadPaged(lgP,'leagues','lg-body',s=>`<tr class="clickable-row" onclick="openLeagueDetail('${s.id}')"><td style="font-weight:600">${esc(v(s,'League Name'))}</td><td>${esc(v(s,'Division'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Commissioner'))}</td><td>${esc(v(s,'Team Count'))}</td><td>${esc(v(s,'Player Count'))}</td><td>${esc(v(s,'Season'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'lg-page-info','lg-prev','lg-next',()=>{let kql='';if(dv)kql=`values[Division]="${dv}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'League Name').toLowerCase().includes(search)||v(s,'Commissioner').toLowerCase().includes(search)||v(s,'Region').toLowerCase().includes(search):null,8)}
+
+// ===== TEAMS =====
+const tmP=makePager();
+function tmLoad(){tmP.page=1;tmP.pageKeys={1:null};loadTeams()}
+function tmNext(){if(tmP.hasNext){tmP.page++;loadTeams()}}
+function tmPrev(){if(tmP.page>1){tmP.page--;loadTeams()}}
+function loadTeams(){const search=document.getElementById('tm-search').value.toLowerCase();const lg=document.getElementById('tm-league').value,st=document.getElementById('tm-status').value;loadPaged(tmP,'teams','tm-body',s=>`<tr class="clickable-row" onclick="showEditForm('teams','${s.id}')"><td style="font-weight:600">${esc(v(s,'Team Name'))}</td><td>${esc(v(s,'League'))}</td><td>${esc(v(s,'City'))}${v(s,'State')?', '+esc(v(s,'State')):''}</td><td>${esc(v(s,'Head Coach'))}</td><td>${esc(v(s,'Home Field'))}</td><td style="font-weight:600">${esc(v(s,'Wins')||0)}-${esc(v(s,'Losses')||0)}${parseFloat(v(s,'Ties'))?'-'+esc(v(s,'Ties')):''}</td><td>${esc(v(s,'Roster Size'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'tm-page-info','tm-prev','tm-next',()=>{let kql='';if(lg)kql=`values[League]="${lg}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Team Name').toLowerCase().includes(search)||v(s,'Head Coach').toLowerCase().includes(search)||v(s,'City').toLowerCase().includes(search):null,8)}
+
+// ===== COACHES =====
+const coP=makePager();
+function coLoad(){coP.page=1;coP.pageKeys={1:null};loadCoaches()}
+function coNext(){if(coP.hasNext){coP.page++;loadCoaches()}}
+function coPrev(){if(coP.page>1){coP.page--;loadCoaches()}}
+function loadCoaches(){const search=document.getElementById('co-search').value.toLowerCase();const lg=document.getElementById('co-league').value,role=document.getElementById('co-role').value,st=document.getElementById('co-status').value;loadPaged(coP,'coaches','co-body',s=>`<tr class="clickable-row" onclick="showEditForm('coaches','${s.id}')"><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Role'))}</td><td>${esc(v(s,'League'))}</td><td>${esc(v(s,'Team'))}</td><td style="font-size:12px">${esc(v(s,'Certification'))}</td><td>${esc(v(s,'Years Experience'))}</td><td><span class="badge ${badgeClass(v(s,'Background Check'))}">${esc(v(s,'Background Check')||'—')}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'co-page-info','co-prev','co-next',()=>{let kql='';if(lg)kql=`values[League]="${lg}"`;if(role)kql=kql?`${kql} AND values[Role]="${role}"`:`values[Role]="${role}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search):null,8)}
+
+// ===== PLAYERS =====
+const plP=makePager();
+function plLoad(){plP.page=1;plP.pageKeys={1:null};loadPlayers()}
+function plNext(){if(plP.hasNext){plP.page++;loadPlayers()}}
+function plPrev(){if(plP.page>1){plP.page--;loadPlayers()}}
+function loadPlayers(){const search=document.getElementById('pl-search').value.toLowerCase();const lg=document.getElementById('pl-league').value,pos=document.getElementById('pl-position').value,st=document.getElementById('pl-status').value;loadPaged(plP,'players','pl-body',s=>`<tr class="clickable-row" onclick="showEditForm('players','${s.id}')"><td style="font-weight:700;color:var(--green)">${esc(v(s,'Jersey Number'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'League'))}</td><td>${esc(v(s,'Team'))}</td><td><span class="pos-pill">${esc(v(s,'Position'))}</span></td><td>${esc(v(s,'Batting Avg'))}</td><td>${esc(v(s,'Home Runs'))}</td><td>${esc(v(s,'RBIs'))}</td><td><span class="badge ${badgeClass(v(s,'Registration Paid'))}">${esc(v(s,'Registration Paid')||'—')}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'pl-page-info','pl-prev','pl-next',()=>{let kql='';if(lg)kql=`values[League]="${lg}"`;if(pos)kql=kql?`${kql} AND values[Position]="${pos}"`:`values[Position]="${pos}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search)||v(s,'Team').toLowerCase().includes(search):null,10)}
+
+// ===== SCHEDULE =====
+const scP=makePager();
+function scLoad(){scP.page=1;scP.pageKeys={1:null};loadSchedule()}
+function scNext(){if(scP.hasNext){scP.page++;loadSchedule()}}
+function scPrev(){if(scP.page>1){scP.page--;loadSchedule()}}
+function loadSchedule(){const lg=document.getElementById('sc-league').value,st=document.getElementById('sc-status').value,wk=document.getElementById('sc-week').value;loadPaged(scP,'schedules','sc-body',s=>{const isFinal=v(s,'Status')==='Final';const score=isFinal?`<span class="score">${esc(v(s,'Home Score'))}</span> - <span class="score">${esc(v(s,'Away Score'))}</span>`:'<span style="color:var(--gray)">—</span>';return`<tr class="clickable-row" onclick="showEditForm('schedules','${s.id}')"><td>${esc(v(s,'Game Date'))}</td><td>${esc(v(s,'Game Time'))}</td><td>${esc(v(s,'Week'))}</td><td style="font-size:12px">${esc(v(s,'League'))}</td><td style="font-weight:600">${esc(v(s,'Home Team'))}</td><td>${esc(v(s,'Away Team'))}</td><td>${score}</td><td style="font-size:12px">${esc(v(s,'Field'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`},'sc-page-info','sc-prev','sc-next',()=>{let kql='';if(lg)kql=`values[League]="${lg}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;if(wk)kql=kql?`${kql} AND values[Week]="${wk}"`:`values[Week]="${wk}"`;return kql},null,9)}
+
+// ===== FEEDBACK =====
+const fbP=makePager();
+function fbLoad(){fbP.page=1;fbP.pageKeys={1:null};loadFeedback()}
+function fbNext(){if(fbP.hasNext){fbP.page++;loadFeedback()}}
+function fbPrev(){if(fbP.page>1){fbP.page--;loadFeedback()}}
+function loadFeedback(){const lg=document.getElementById('fb-league').value,cat=document.getElementById('fb-category').value,rt=document.getElementById('fb-rating').value,st=document.getElementById('fb-status').value;loadPaged(fbP,'feedback','fb-body',s=>`<tr class="clickable-row" onclick="showEditForm('feedback','${s.id}')"><td style="font-weight:600">${esc(v(s,'Submitted By'))}</td><td>${esc(v(s,'Role'))}</td><td style="font-size:12px">${esc(v(s,'League'))}</td><td>${esc(v(s,'Category'))}</td><td>${stars(v(s,'Rating'))}</td><td><span class="badge ${badgeClass(v(s,'Would Recommend'))}">${esc(v(s,'Would Recommend'))}</span></td><td>${esc(v(s,'Date'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'fb-page-info','fb-prev','fb-next',()=>{let kql='';if(lg)kql=`values[League]="${lg}"`;if(cat)kql=kql?`${kql} AND values[Category]="${cat}"`:`values[Category]="${cat}"`;if(rt)kql=kql?`${kql} AND values[Rating]="${rt}"`:`values[Rating]="${rt}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},null,8)}
+
+// ===== FINANCES =====
+const ftP=makePager();
+function ftLoad(){ftP.page=1;ftP.pageKeys={1:null};loadFinances()}
+function ftNext(){if(ftP.hasNext){ftP.page++;loadFinances()}}
+function ftPrev(){if(ftP.page>1){ftP.page--;loadFinances()}}
+async function loadFinKpis(){try{const d=await sapi('/api/softball/reports/finances');const t=d.totals;document.getElementById('fin-kpis').innerHTML=`
+  <div class="kpi green"><div class="val">${fmt$(t.income)}</div><div class="label">Total Income</div></div>
+  <div class="kpi red"><div class="val">${fmt$(t.expense)}</div><div class="label">Total Expenses</div></div>
+  <div class="kpi ${t.net>=0?'green':'red'}"><div class="val">${fmt$(t.net)}</div><div class="label">Net</div></div>
+  <div class="kpi yellow"><div class="val">${d.outstanding.length}</div><div class="label">Outstanding Items</div><div class="sub">${fmt$(d.outstanding.reduce((s,o)=>s+o.amount,0))}</div></div>`}catch(e){document.getElementById('fin-kpis').innerHTML=''}}
+function loadFinances(){const lg=document.getElementById('ft-league').value,ty=document.getElementById('ft-type').value,cat=document.getElementById('ft-category').value,st=document.getElementById('ft-status').value;loadPaged(ftP,'finances','ft-body',s=>{const isInc=v(s,'Type')==='Income';return`<tr class="clickable-row" onclick="showEditForm('finances','${s.id}')"><td>${esc(v(s,'Date'))}</td><td><span class="badge ${badgeClass(v(s,'Type'))}">${esc(v(s,'Type'))}</span></td><td>${esc(v(s,'Category'))}</td><td style="font-size:12px">${esc(v(s,'League'))}</td><td style="font-size:12px">${esc(v(s,'Description'))}</td><td style="font-weight:700;color:${isInc?'var(--green)':'var(--red)'}">${isInc?'+':'-'}${fmt$(v(s,'Amount'))}</td><td style="font-size:12px">${esc(v(s,'Payment Method'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`},'ft-page-info','ft-prev','ft-next',()=>{let kql='';if(ty)kql=`values[Type]="${ty}"`;if(cat)kql=kql?`${kql} AND values[Category]="${cat}"`:`values[Category]="${cat}"`;if(lg)kql=kql?`${kql} AND values[League]="${lg}"`:`values[League]="${lg}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},null,8)}
+
+// ===== REPORTS =====
+async function showReport(type){
+  document.querySelectorAll('#tab-reports .subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(type)));
+  document.getElementById('report-content').innerHTML='<div class="card"><p style="color:var(--gray)">Loading report...</p></div>';
+  try{
+    if(type==='standings'){
+      const r=await sapi('/api/softball/standings');
+      document.getElementById('report-content').innerHTML=r.byLeague.map(lg=>`<div class="card"><h3>${esc(lg.league)} <span style="color:var(--gray);font-weight:400">· ${esc(lg.division)}</span></h3><table><thead><tr><th>#</th><th>Team</th><th>City</th><th>W</th><th>L</th><th>T</th><th>PCT</th><th>RF</th><th>RA</th><th>Diff</th></tr></thead><tbody>${
+        lg.teams.map((t,i)=>`<tr><td>${i+1}</td><td style="font-weight:600">${esc(t.team)}</td><td>${esc(t.city)}</td><td>${t.w}</td><td>${t.l}</td><td>${t.tie}</td><td style="font-weight:700">${t.pct.toFixed(3)}</td><td>${t.rf}</td><td>${t.ra}</td><td style="color:${t.diff>=0?'var(--green)':'var(--red)'};font-weight:600">${t.diff>=0?'+':''}${t.diff}</td></tr>`).join('')
+      }</tbody></table></div>`).join('')||'<div class="card"><p style="color:var(--gray)">No standings yet</p></div>';
+    }else if(type==='finances'){
+      const r=await sapi('/api/softball/reports/finances');const t=r.totals;
+      const maxInc=Math.max(1,...r.incomeByCat.map(c=>c.amount));
+      const maxExp=Math.max(1,...r.expenseByCat.map(c=>c.amount));
+      document.getElementById('report-content').innerHTML=`
+        <div class="kpi-row">
+          <div class="kpi green"><div class="val">${fmt$(t.income)}</div><div class="label">Income</div></div>
+          <div class="kpi red"><div class="val">${fmt$(t.expense)}</div><div class="label">Expenses</div></div>
+          <div class="kpi ${t.net>=0?'green':'red'}"><div class="val">${fmt$(t.net)}</div><div class="label">Net Surplus</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><h3>Income by Category</h3>${r.incomeByCat.map(c=>`<div class="bar-row"><span class="bl">${esc(c.category)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c.amount/maxInc*100)}%"></div></div><span class="bv">${fmt$(c.amount)}</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No income</p>'}</div>
+          <div class="card"><h3>Expenses by Category</h3>${r.expenseByCat.map(c=>`<div class="bar-row"><span class="bl">${esc(c.category)}</span><div class="bar-track"><div class="bar-fill exp" style="width:${Math.round(c.amount/maxExp*100)}%"></div></div><span class="bv">${fmt$(c.amount)}</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No expenses</p>'}</div>
+        </div>
+        <div class="card"><h3>Profit &amp; Loss by League</h3><table><thead><tr><th>League</th><th>Division</th><th>Income</th><th>Expense</th><th>Net</th></tr></thead><tbody>${
+          r.byLeague.map(l=>`<tr><td style="font-weight:600">${esc(l.league)}</td><td>${esc(l.division)}</td><td style="color:var(--green)">${fmt$(l.income)}</td><td style="color:var(--red)">${fmt$(l.expense)}</td><td style="font-weight:700;color:${l.net>=0?'var(--green)':'var(--red)'}">${fmt$(l.net)}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">No data</td></tr>'
+        }</tbody></table></div>
+        <div class="card"><h3>Outstanding (Pending / Overdue)</h3><table><thead><tr><th>Date</th><th>League</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead><tbody>${
+          r.outstanding.map(o=>`<tr class="clickable-row" onclick="showEditForm('finances','${o.id}')"><td>${esc(o.date)}</td><td style="font-size:12px">${esc(o.league)}</td><td>${esc(o.type)}</td><td>${esc(o.category)}</td><td style="font-size:12px">${esc(o.desc)}</td><td style="font-weight:600">${fmt$(o.amount)}</td><td><span class="badge ${badgeClass(o.status)}">${esc(o.status)}</span></td></tr>`).join('')||'<tr><td colspan="7" style="color:var(--gray)">Nothing outstanding &#127881;</td></tr>'
+        }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== LEAGUE DETAIL (MODAL) =====
+async function openLeagueDetail(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading league...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/softball/league/${id}`);const lg=d.league;const s=d.summary;
+    const tbl=(rows,cols,empty)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:`<p style="color:var(--gray);font-size:13px;padding:8px">${empty||'None'}</p>`;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(lg,'League Name'))}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>Division: <strong>${esc(v(lg,'Division'))}</strong></span>
+        <span>Region: <strong>${esc(v(lg,'Region'))}</strong></span>
+        <span>Commissioner: <strong>${esc(v(lg,'Commissioner'))}</strong></span>
+        <span>Season: <strong>${esc(v(lg,'Season'))}</strong></span>
+        <span>Status: <span class="badge ${badgeClass(v(lg,'Status'))}">${esc(v(lg,'Status'))}</span></span>
+      </div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--green)">${s.teams}</div><div class="l">Teams</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${s.players}</div><div class="l">Players</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--teal)">${s.coaches}</div><div class="l">Coaches</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-box"><div class="v" style="color:var(--purple)">${s.gamesPlayed}</div><div class="l">Games Played</div></div>
+        <div class="stat-box"><div class="v">${s.gamesUpcoming}</div><div class="l">Upcoming</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.net>=0?'var(--green)':'var(--red)'}">${fmt$(s.net)}</div><div class="l">Net (${s.avgRating||'—'}★)</div></div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab active" onclick="showLgTab(this,'ld-st')">Standings (${d.standings.length})</button>
+        <button class="subtab" onclick="showLgTab(this,'ld-tm')">Teams (${d.teams.length})</button>
+        <button class="subtab" onclick="showLgTab(this,'ld-co')">Coaches (${d.coaches.length})</button>
+        <button class="subtab" onclick="showLgTab(this,'ld-up')">Upcoming (${d.upcoming.length})</button>
+      </div>
+      <div id="ld-st" class="subtab-panel active">${tbl(d.standings,[['#',(r)=>d.standings.indexOf(r)+1],['Team',r=>esc(r.team)],['W',r=>r.w],['L',r=>r.l],['PCT',r=>r.pct.toFixed(3)],['Diff',r=>`<span style="color:${r.diff>=0?'var(--green)':'var(--red)'}">${r.diff>=0?'+':''}${r.diff}</span>`]],'No results yet')}</div>
+      <div id="ld-tm" class="subtab-panel">${tbl(d.teams,[['Team',r=>esc(r.name)],['City',r=>esc(r.city)],['Coach',r=>esc(r.coach)],['Field',r=>esc(r.field)],['Record',r=>`${esc(r.w||0)}-${esc(r.l||0)}`],['Roster',r=>esc(r.roster)]])}</div>
+      <div id="ld-co" class="subtab-panel">${tbl(d.coaches,[['Name',r=>esc(r.name)],['Role',r=>esc(r.role)],['Team',r=>esc(r.team)],['Cert.',r=>esc(r.cert)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]])}</div>
+      <div id="ld-up" class="subtab-panel">${tbl(d.upcoming,[['Date',r=>esc(r.date)],['Time',r=>esc(r.time)],['Home',r=>esc(r.home)],['Away',r=>esc(r.away)],['Field',r=>esc(r.field)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]],'No upcoming games')}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('leagues','${lg.id}')">Edit League</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+function showLgTab(btn,panelId){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(panelId).classList.add('active')}
+
+// ===== GENERIC FORM MODAL =====
+const DIVISIONS='Fastpitch,Slowpitch,Youth,Senior';
+const REGIONS='Northeast,Southeast,Midwest,South,Southwest,West,Northwest,Mountain,Pacific';
+const POSITIONS='Pitcher,Catcher,First Base,Second Base,Third Base,Shortstop,Left Field,Center Field,Right Field,Utility,Designated Player';
+const HAND='Right,Left,Switch';
+const AGEGRP='10U,12U,14U,16U,18U,Open,35+,50+,60+';
+const COACH_ROLES='Head Coach,Assistant Coach,Pitching Coach,Hitting Coach,Bench Coach';
+const FB_CATS='Officiating,Facilities,Scheduling,Coaching,Communication,Registration,Safety';
+const FB_ROLES='Player,Coach,Parent,Umpire,Volunteer,Spectator';
+const FIN_INC='Registration,Sponsorship,Concessions,Merchandise,Grants,Donations,Tournament Fees';
+const FIN_EXP='Field Rental,Umpire Fees,Equipment,Uniforms,Insurance,Awards,Travel,Marketing,Administration';
+const PAY_METHODS='Credit Card,Check,ACH Transfer,Cash,Online,Invoice';
+const YN='Yes,No';
+const FORM_DEFS={
+  'leagues':{title:'League',fields:[{r:['League ID','League Name']},{r:['Division|select:'+DIVISIONS,'Region|select:'+REGIONS]},{r:['Commissioner','Commissioner Email']},{r:['Season','Founded Year|number']},{r:['Team Count|number','Player Count|number']},{r:['Age Range','Status|select:Active,Planned,Inactive']},'Notes|textarea']},
+  'teams':{title:'Team',fields:[{r:['Team ID','Team Name']},{r:['League|leagues','City']},{r:['State','Home Field']},{r:['Head Coach','Founded Year|number']},{r:['Wins|number','Losses|number']},{r:['Ties|number','Roster Size|number']},{r:['Status|select:Active,Provisional,Inactive','']},'Notes|textarea']},
+  'coaches':{title:'Coach',fields:[{r:['Coach ID','Name']},{r:['Email','Phone']},{r:['League|leagues','Team|teams']},{r:['Role|select:'+COACH_ROLES,'Certification|select:ASA/USA Certified,NFHS Certified,Level 1,Level 2,Level 3,None']},{r:['Years Experience|number','Background Check|select:Cleared,Pending,Expired,Not Started']},{r:['Status|select:Active,Provisional,Inactive','']},'Notes|textarea']},
+  'players':{title:'Player',fields:[{r:['Player ID','Name']},{r:['Email','Phone']},{r:['League|leagues','Team|teams']},{r:['Position|select:'+POSITIONS,'Jersey Number|number']},{r:['Bats|select:'+HAND,'Throws|select:'+HAND]},{r:['Age Group|select:'+AGEGRP,'Registration Paid|select:'+YN]},{r:['Batting Avg','Home Runs|number']},{r:['RBIs|number','Status|select:Active,Injured,Inactive']},'Notes|textarea']},
+  'schedules':{title:'Game',fields:[{r:['Game ID','League|leagues']},{r:['Game Date|date','Game Time']},{r:['Week|number','Field']},{r:['Home Team|teams','Away Team|teams']},{r:['City','Umpire']},{r:['Home Score|number','Away Score|number']},{r:['Status|select:Scheduled,In Progress,Final,Postponed,Cancelled,Forfeit','']},'Notes|textarea']},
+  'feedback':{title:'Feedback',fields:[{r:['Feedback ID','Date|date']},{r:['League|leagues','Team|teams']},{r:['Submitted By','Role|select:'+FB_ROLES]},{r:['Category|select:'+FB_CATS,'Rating|select:5,4,3,2,1']},{r:['Would Recommend|select:'+YN,'Status|select:New,Reviewed,Responded,Follow Up Needed,Resolved']},'Comments|textarea','Response|textarea']},
+  'finances':{title:'Transaction',fields:[{r:['Transaction ID','Date|date']},{r:['Type|select:Income,Expense','Amount|number']},{r:['Category|select:'+FIN_INC+','+FIN_EXP,'League|leagues']},{r:['Team|teams','Vendor']},{r:['Payment Method|select:'+PAY_METHODS,'Status|select:Paid,Pending,Overdue,Cleared']},'Description','Notes|textarea']},
+};
+
+async function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){html+=await renderField(field,sub)}
+    else if(field.r){const parts=await Promise.all(field.r.map(async f=>f?'<div>'+await renderField(f,sub)+'</div>':'<div></div>'));html+='<div class="field-row">'+parts.join('')+'</div>'}
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show')
+}
+async function renderField(spec,sub){
+  const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;
+  if(type==='leagues'){await ensureLeagueNames();const opts=_leagueNames||[];input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='teams'){const opts=await loadTeamNames();input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea'){input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`}
+  else if(type==='date'){input=`<input id="${id}" type="date" value="${esc(val)}">`}
+  else if(type==='number'){input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`}
+  else{input=`<input id="${id}" type="text" value="${esc(val)}">`}
+  return`<label>${esc(name)}</label>${input}`}
+// note: fillLeagueSelect early-returns on a real select; ensure league names are cached for the modal
+async function ensureLeagueNames(){if(_leagueNames)return;try{const r=await api(`/kapps/${KAPP}/forms/leagues/submissions?include=values&limit=25`);_leagueNames=(r.submissions||[]).map(s=>v(s,'League Name')).filter(Boolean).sort()}catch(e){_leagueNames=[]}}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();const el=document.getElementById(elId);if(el)vals[name]=el.value}}try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_leagueNames=null;_teamNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_leagueNames=null;_teamNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+
+// preload league names for modal selects
+ensureLeagueNames();
+</script>
+</body>
+</html>

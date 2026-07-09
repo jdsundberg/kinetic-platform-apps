@@ -1,0 +1,189 @@
+{
+  "name": "Grand Slam Softball",
+  "slug": "softball",
+  "description": "National softball league management — four divisions, teams, coaches, players, game schedules, participant feedback and league finances.",
+  "category": "Sports & Recreation",
+  "icon": "award",
+  "color": "#1B7A3D",
+  "bg": "#E8F5E9",
+  "forms": [
+    {
+      "slug": "leagues",
+      "name": "Leagues",
+      "description": "The four national sub-leagues (divisions) of the association",
+      "submissionLabelExpression": "${values('League Name')}",
+      "fields": [
+        { "name": "League ID", "required": true },
+        { "name": "League Name", "required": true },
+        { "name": "Division" },
+        { "name": "Region" },
+        { "name": "Commissioner" },
+        { "name": "Commissioner Email" },
+        { "name": "Season" },
+        { "name": "Founded Year" },
+        { "name": "Team Count" },
+        { "name": "Player Count" },
+        { "name": "Age Range" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[League Name]", "values[Division]", "values[Region]", "values[Status]"],
+        "compound": [["values[Division]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "teams",
+      "name": "Teams",
+      "description": "Rostered teams competing within each league",
+      "submissionLabelExpression": "${values('Team Name')} (${values('League')})",
+      "fields": [
+        { "name": "Team ID", "required": true },
+        { "name": "Team Name", "required": true },
+        { "name": "League" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Head Coach" },
+        { "name": "Home Field" },
+        { "name": "Wins" },
+        { "name": "Losses" },
+        { "name": "Ties" },
+        { "name": "Roster Size" },
+        { "name": "Founded Year" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Team Name]", "values[League]", "values[City]", "values[State]", "values[Status]"],
+        "compound": [["values[League]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "coaches",
+      "name": "Coaches",
+      "description": "Head, assistant and specialty coaches across all teams",
+      "submissionLabelExpression": "${values('Name')} - ${values('Role')}",
+      "fields": [
+        { "name": "Coach ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "League" },
+        { "name": "Team" },
+        { "name": "Role" },
+        { "name": "Certification" },
+        { "name": "Years Experience" },
+        { "name": "Background Check" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[League]", "values[Team]", "values[Role]", "values[Status]"],
+        "compound": [["values[Team]", "values[Role]"], ["values[League]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "players",
+      "name": "Players",
+      "description": "Rostered players with positions and season batting stats",
+      "submissionLabelExpression": "${values('Name')} #${values('Jersey Number')}",
+      "fields": [
+        { "name": "Player ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "League" },
+        { "name": "Team" },
+        { "name": "Position" },
+        { "name": "Jersey Number" },
+        { "name": "Bats" },
+        { "name": "Throws" },
+        { "name": "Age Group" },
+        { "name": "Batting Avg" },
+        { "name": "Home Runs" },
+        { "name": "RBIs" },
+        { "name": "Registration Paid" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[League]", "values[Team]", "values[Position]", "values[Age Group]", "values[Status]"],
+        "compound": [["values[League]", "values[Status]"], ["values[Team]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "schedules",
+      "name": "Schedule",
+      "description": "Game schedule with matchups, fields, officials and final scores",
+      "submissionLabelExpression": "${values('Home Team')} vs ${values('Away Team')} - ${values('Game Date')}",
+      "fields": [
+        { "name": "Game ID", "required": true },
+        { "name": "League" },
+        { "name": "Game Date" },
+        { "name": "Game Time" },
+        { "name": "Week" },
+        { "name": "Home Team" },
+        { "name": "Away Team" },
+        { "name": "Field" },
+        { "name": "City" },
+        { "name": "Umpire" },
+        { "name": "Home Score" },
+        { "name": "Away Score" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[League]", "values[Status]", "values[Home Team]", "values[Away Team]", "values[Week]", "values[Field]"],
+        "compound": [["values[League]", "values[Status]"], ["values[Status]", "values[Week]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "description": "Player, coach, parent and umpire feedback about the league",
+      "submissionLabelExpression": "${values('Submitted By')} - ${values('Category')}",
+      "fields": [
+        { "name": "Feedback ID", "required": true },
+        { "name": "Date" },
+        { "name": "League" },
+        { "name": "Team" },
+        { "name": "Submitted By" },
+        { "name": "Role" },
+        { "name": "Category" },
+        { "name": "Rating" },
+        { "name": "Would Recommend" },
+        { "name": "Comments", "rows": 3 },
+        { "name": "Response", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[League]", "values[Category]", "values[Role]", "values[Rating]", "values[Status]"],
+        "compound": [["values[League]", "values[Category]"], ["values[Category]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "finances",
+      "name": "Finances",
+      "description": "League income and expenses — registration, sponsorship, fields, officials, gear",
+      "submissionLabelExpression": "${values('Type')}: ${values('Category')} - ${values('Amount')}",
+      "fields": [
+        { "name": "Transaction ID", "required": true },
+        { "name": "Date" },
+        { "name": "League" },
+        { "name": "Team" },
+        { "name": "Type" },
+        { "name": "Category" },
+        { "name": "Amount" },
+        { "name": "Description" },
+        { "name": "Payment Method" },
+        { "name": "Vendor" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[League]", "values[Type]", "values[Category]", "values[Status]"],
+        "compound": [["values[Type]", "values[Category]"], ["values[League]", "values[Type]"]]
+      }
+    }
+  ]
+}
