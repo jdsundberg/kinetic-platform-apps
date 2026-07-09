@@ -6,6 +6,7 @@ Single-page web applications on the Kinetic Platform. Each app is a standalone N
 
 - **Architecture & data model:** [app.md](app.md)
 - **Branding & design:** [branding.md](branding.md)
+- **Custom server functions (PROPOSED):** [custom-functions-design.md](custom-functions-design.md) — plan to eliminate per-app server.mjs via declarative engines + platform WebAPIs
 - **Session persistence across tabs:** [apps.md](apps.md) — mirror sessionStorage to localStorage so new tabs don't force re-login
 - **Test suites:** [kinetic-test-suite.md](kinetic-test-suite.md)
 
@@ -37,21 +38,24 @@ Everything runs through :3011. Standalone server ports are for development only.
 - **Industry** (custom API, 500+ lines): Server-side aggregation, computed endpoints
 - Industry apps: sec_ops, mining_management, innovation, school-for-good, og_compliance, agent_hub
 
-## Adding a New App — Two Registration Points
+## Adding a New App — Drop a Folder In
 
-### 1. `base/server.mjs` — Backend routing & API
-- **APP_REGISTRY** (~line 16): `"slug": { dir: "dir_name", name: "Display Name", kapp: "kapp-slug" }`
-- **Custom API handler**: Add `handleFooAPI(req, res, pathname, auth)` function
-- **Route dispatch** (~line 2800+): `if (pathname.startsWith("/api/foo/"))` block
-- **APP_ABOUT**: Metadata object with title, overview, kapp, tabs[], entities[], rels[]
-- **console.log**: API endpoint listing at the bottom
+**Just drop the files into a new directory under `apps/` and restart the launcher.** There is NO central registry to edit — you do **not** modify `base/server.mjs` or `base/index.html`. `base/server.mjs` auto-discovers every app at startup by scanning `apps/` (skipping `base`, `home`, `node_modules`, and dotfiles).
 
-### 2. `base/index.html` — Platform Launcher card
-- **APPS array** (~line 192): `{ slug, name, desc, icon, color, bg }`
-  - No flags = **Applications** section
-  - `industry: true` = **Industry** section
-  - `admin: true` = **Admin Tools** section
-- **svgIcon function**: Add SVG if using a new icon name
+```
+apps/my-app/
+├── app.json          ← Registers the app: name, slug, category, icon, color, forms, indexes
+├── seed-data.json    ← Sample data keyed by form slug (optional)
+├── index.html        ← Single-page app — all that's strictly required to serve a page
+└── server.mjs        ← Custom API handler (optional)
+```
+
+How discovery wires each file in:
+- **`app.json`** — read into `APP_REGISTRY` for routing (`/{slug}/`) and into the launcher grid for the card (icon, color, description, category all come from here, not `base/index.html`). Its `forms`/`indexes` drive installation.
+- **`server.mjs`** — auto-mounted *only if* it exports `apiPrefix` + `handleAPI`. Its routes are served under `apiPrefix`; there is no dispatch block to add in `base/server.mjs`. See "server.mjs export format" below.
+- **`index.html`** — served statically at `/{slug}/`.
+
+Pick up a newly added folder via a launcher restart, **or** `POST /api/base/rescan` to register it live without bouncing the server.
 
 ## Auth Pattern
 
@@ -74,13 +78,17 @@ if (sess) {
 
 ## File Pattern Per App
 
+The canonical layout is the auto-discovered packaging below (see "Adding a New App" and "App Packaging"):
+
 ```
 app_name/
-├── setup.mjs      ← Create kapp + forms on Kinetic
-├── seed.mjs       ← Populate sample data
-├── server.mjs     ← Standalone server + custom API
-└── index.html     ← Single-page app (all CSS/JS inline)
+├── app.json        ← Registers the app + defines kapp/forms/indexes
+├── seed-data.json  ← Sample data keyed by form slug (optional)
+├── server.mjs      ← Exports apiPrefix + handleAPI for custom API (optional)
+└── index.html      ← Single-page app (all CSS/JS inline)
 ```
+
+Older apps may also carry legacy `setup.mjs`/`seed.mjs` provisioning scripts and a standalone-server `server.mjs`; new apps don't need them — installation is driven by `app.json` and the install flow.
 
 ## GOLDEN RULE: 25 Submissions Per Page Maximum
 
@@ -158,10 +166,10 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
 
 ## Common Mistakes
 
-- **"Platform Launcher" = `base/index.html`** (APPS array), NOT `home/index.html`
+- **App card metadata comes from `app.json`** (icon, color, description, category), NOT a hand-edited APPS array in `base/index.html`
 - **`collectByQuery` signature differs**: base server takes `(kapp, formSlug, kql, auth)`, standalone takes `(formSlug, kql, auth)`
 - Don't assume standalone ports matter — users access everything through :3011
-- Custom APIs must be duplicated in `base/server.mjs` for launcher compatibility
+- Custom APIs are auto-mounted from the app's exported `apiPrefix`/`handleAPI` — do NOT duplicate handler code into `base/server.mjs`
 
 ## Required Patterns (from code review)
 
