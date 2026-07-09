@@ -1,0 +1,128 @@
+{
+  "name": "Pool Management",
+  "slug": "pool-management",
+  "description": "Minnesota pool cleaning & repair — customers, pools, chemicals, water tests, heating & skimmers",
+  "category": "Field Service",
+  "icon": "droplet",
+  "color": "#0277BD",
+  "bg": "#E1F5FE",
+  "forms": [
+    {
+      "slug": "employees",
+      "name": "Employees",
+      "description": "Field technicians and service staff",
+      "submissionLabelExpression": "${values('Name')} - ${values('Role')}",
+      "fields": [
+        { "name": "Employee Id" },
+        { "name": "Name", "required": true },
+        { "name": "Role" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "City" },
+        { "name": "Status" },
+        { "name": "Hire Date" },
+        { "name": "Certifications" }
+      ],
+      "indexes": {
+        "single": ["values[Employee Id]", "values[Name]", "values[Role]", "values[Status]"],
+        "compound": [["values[Status]", "values[Role]"]]
+      }
+    },
+    {
+      "slug": "customers",
+      "name": "Customers",
+      "description": "Pool owners served across Minnesota",
+      "submissionLabelExpression": "${values('Customer Id')} - ${values('Name')}",
+      "fields": [
+        { "name": "Customer Id" },
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Address" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Zip" },
+        { "name": "Status" },
+        { "name": "Customer Since" }
+      ],
+      "indexes": {
+        "single": ["values[Customer Id]", "values[Name]", "values[City]", "values[Status]"],
+        "compound": [["values[Status]", "values[City]"]]
+      }
+    },
+    {
+      "slug": "pools",
+      "name": "Pools",
+      "description": "Pools under service — type, heating, skimmers and condition",
+      "submissionLabelExpression": "${values('Pool Id')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Pool Id" },
+        { "name": "Customer Id" },
+        { "name": "Customer Name" },
+        { "name": "Address" },
+        { "name": "City" },
+        { "name": "Pool Type" },
+        { "name": "Surface" },
+        { "name": "Volume" },
+        { "name": "Heating Manufacturer" },
+        { "name": "Heating Model" },
+        { "name": "Skimmer Count" },
+        { "name": "Status" },
+        { "name": "Assigned Employee" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Pool Id]", "values[Customer Id]", "values[City]", "values[Status]", "values[Heating Manufacturer]", "values[Assigned Employee]"],
+        "compound": [["values[Status]", "values[City]"], ["values[Status]", "values[Heating Manufacturer]"]]
+      }
+    },
+    {
+      "slug": "service-visits",
+      "name": "Service Visits",
+      "description": "Cleaning and repair visits scheduled per pool",
+      "submissionLabelExpression": "${values('Visit Id')} - ${values('Service Type')}",
+      "fields": [
+        { "name": "Visit Id" },
+        { "name": "Pool Id" },
+        { "name": "Customer Name" },
+        { "name": "City" },
+        { "name": "Date" },
+        { "name": "Service Type" },
+        { "name": "Employee" },
+        { "name": "Status" },
+        { "name": "Duration" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Visit Id]", "values[Pool Id]", "values[Status]", "values[Service Type]", "values[Employee]", "values[Date]"],
+        "compound": [["values[Status]", "values[Service Type]"], ["values[Pool Id]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "water-tests",
+      "name": "Water Tests",
+      "description": "Chemical test results and treatments per pool",
+      "submissionLabelExpression": "${values('Test Id')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Test Id" },
+        { "name": "Pool Id" },
+        { "name": "Customer Name" },
+        { "name": "Date" },
+        { "name": "Employee" },
+        { "name": "pH" },
+        { "name": "Free Chlorine" },
+        { "name": "Total Alkalinity" },
+        { "name": "Calcium Hardness" },
+        { "name": "Cyanuric Acid" },
+        { "name": "Temperature" },
+        { "name": "Result" },
+        { "name": "Chemicals Added" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Test Id]", "values[Pool Id]", "values[Result]", "values[Employee]", "values[Date]"],
+        "compound": [["values[Pool Id]", "values[Result]"]]
+      }
+    }
+  ]
+}
