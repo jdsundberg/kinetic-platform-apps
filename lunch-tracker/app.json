@@ -1,0 +1,126 @@
+{
+  "name": "Lunch Tracker",
+  "slug": "lunch-tracker",
+  "description": "Training-company lunch management — attendees, allergies, lunch orders per session, feedback emails",
+  "category": "Industry",
+  "icon": "utensils",
+  "color": "#2E7D32",
+  "bg": "#E8F5E9",
+  "kapp": "lunch-tracker",
+  "forms": [
+    {
+      "slug": "people",
+      "name": "People",
+      "description": "Training attendees — contact info, dietary preference, allergies.",
+      "submissionLabelExpression": "${values('Full Name')} (${values('Email')})",
+      "fields": [
+        { "name": "Full Name", "required": true },
+        { "name": "Email", "required": true },
+        { "name": "Company" },
+        { "name": "Dietary Preference" },
+        { "name": "Allergies" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Email]", "values[Status]", "values[Company]"],
+        "compound": [["values[Status]", "values[Company]"]]
+      }
+    },
+    {
+      "slug": "sessions",
+      "name": "Training Sessions",
+      "description": "Training classes that lunches are ordered for.",
+      "submissionLabelExpression": "${values('Session Name')} — ${values('Session Date')}",
+      "fields": [
+        { "name": "Session Name", "required": true },
+        { "name": "Session Date", "required": true },
+        { "name": "Instructor" },
+        { "name": "Location" },
+        { "name": "Capacity" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Session Date]", "values[Status]", "values[Instructor]"],
+        "compound": [["values[Status]", "values[Session Date]"]]
+      }
+    },
+    {
+      "slug": "lunch-options",
+      "name": "Lunch Options",
+      "description": "Menu catalog — what attendees can order, with allergen flags.",
+      "submissionLabelExpression": "${values('Option Name')} (${values('Category')})",
+      "fields": [
+        { "name": "Option Name", "required": true },
+        { "name": "Category" },
+        { "name": "Description", "rows": 2 },
+        { "name": "Contains Allergens" },
+        { "name": "Dietary Tags" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Option Name]", "values[Category]", "values[Status]"],
+        "compound": [["values[Status]", "values[Category]"]]
+      }
+    },
+    {
+      "slug": "lunch-orders",
+      "name": "Lunch Orders",
+      "description": "Who wants which lunch for which session.",
+      "submissionLabelExpression": "${values('Person Name')} — ${values('Lunch Option')} (${values('Session Name')})",
+      "fields": [
+        { "name": "Person Name", "required": true },
+        { "name": "Person Email", "required": true },
+        { "name": "Session Name", "required": true },
+        { "name": "Session Date" },
+        { "name": "Lunch Option", "required": true },
+        { "name": "Special Instructions", "rows": 2 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Session Name]", "values[Person Email]", "values[Status]", "values[Lunch Option]"],
+        "compound": [["values[Session Name]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Lunch Feedback",
+      "description": "Attendee feedback on lunches, per session.",
+      "submissionLabelExpression": "${values('Person Name')} — ${values('Session Name')} (${values('Rating')}★)",
+      "fields": [
+        { "name": "Person Name" },
+        { "name": "Person Email" },
+        { "name": "Session Name" },
+        { "name": "Session Date" },
+        { "name": "Rating" },
+        { "name": "Comments", "rows": 3 },
+        { "name": "Submitted Date" }
+      ],
+      "indexes": {
+        "single": ["values[Session Name]", "values[Rating]", "values[Person Email]"],
+        "compound": [["values[Session Name]", "values[Rating]"]]
+      }
+    },
+    {
+      "slug": "email-log",
+      "name": "Email Log",
+      "description": "Feedback-request emails — each Submitted record triggers the send workflow.",
+      "submissionLabelExpression": "${values('To Email')} — ${values('Subject')} (${values('Status')})",
+      "fields": [
+        { "name": "To Name" },
+        { "name": "To Email", "required": true },
+        { "name": "Subject", "required": true },
+        { "name": "Body", "rows": 4 },
+        { "name": "Session Name" },
+        { "name": "Email Type" },
+        { "name": "Status" },
+        { "name": "Sent At" }
+      ],
+      "indexes": {
+        "single": ["values[Session Name]", "values[Status]", "values[To Email]"],
+        "compound": [["values[Status]", "values[Session Name]"]]
+      }
+    }
+  ]
+}

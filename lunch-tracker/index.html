@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunch Tracker</title>
+<style>
+:root { --green:#2E7D32; --green-dark:#1B5E20; --green-light:#E8F5E9; --orange:#EF6C00; --red:#C62828; --yellow:#F9A825; --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff; --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08); --shadow-lg:0 4px 12px rgba(0,0,0,.15); }
+*{margin:0;padding:0;box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#333}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0d2b0f 0%,#1B5E20 55%,#2E7D32 100%)}
+.login-box{background:var(--white);padding:40px;border-radius:16px;width:400px;box-shadow:var(--shadow-lg)}
+.login-box h1{font-size:24px;color:var(--green-dark);margin-bottom:4px} .login-box .sub{font-size:13px;color:var(--gray);margin-bottom:16px}
+.login-box .orange-bar{height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
+.login-box button{width:100%;padding:12px;margin-top:20px;background:var(--green);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:var(--green-dark)} .login-box .error{display:none;margin-top:12px;padding:10px;background:#FFEBEE;color:var(--red);border-radius:6px;font-size:13px}
+
+#app{display:none}
+.topbar{background:var(--green-dark);color:white;height:56px;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:18px;font-weight:700;letter-spacing:.5px} .topbar .logo span{color:#FFB74D}
+.nav-tabs{display:flex;gap:4px;margin-left:24px;flex-wrap:wrap}
+.nav-tabs button{background:transparent;border:none;color:rgba(255,255,255,.7);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.nav-tabs button:hover{background:rgba(255,255,255,.1);color:white} .nav-tabs button.active{background:var(--orange);color:white}
+.spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px} .user-info strong{color:white}
+.logout-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}
+.logout-btn:hover{background:var(--orange);border-color:var(--orange);color:white}
+
+.console{display:none;padding:24px;max-width:1300px;margin:0 auto} .console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--green-dark);margin-bottom:4px} .page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.kpi .val{font-size:26px;font-weight:700} .kpi .label{font-size:11px;color:var(--gray);margin-top:2px}
+
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);position:sticky;top:56px;background:var(--white)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border)} tr:hover td{background:var(--light)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-active{background:#E8F5E9;color:#2E7D32} .badge-inactive{background:#FFEBEE;color:#C62828}
+.badge-scheduled{background:#E3F2FD;color:#1565C0} .badge-in-progress{background:#FFF8E1;color:#F57F17} .badge-completed{background:#E8F5E9;color:#2E7D32} .badge-cancelled{background:#FFEBEE;color:#C62828}
+.badge-requested{background:#ECEFF1;color:#37474F} .badge-confirmed{background:#E3F2FD;color:#1565C0} .badge-delivered{background:#E8F5E9;color:#2E7D32}
+.badge-queued{background:#FFF8E1;color:#F57F17} .badge-sent{background:#E8F5E9;color:#2E7D32} .badge-failed{background:#FFEBEE;color:#C62828}
+.badge-sandwich{background:#FFF3E0;color:#E65100} .badge-wrap{background:#F3E5F5;color:#7B1FA2} .badge-salad{background:#E8F5E9;color:#2E7D32} .badge-hot-entre{background:#FFEBEE;color:#C62828} .badge-soup{background:#E0F7FA;color:#00695C} .badge-box-lunch{background:#EFEBE9;color:#4E342E}
+.badge-none{background:#ECEFF1;color:#37474F} .badge-vegetarian{background:#E8F5E9;color:#2E7D32} .badge-vegan{background:#E8F5E9;color:#1B5E20} .badge-gluten-free{background:#FFF8E1;color:#F57F17} .badge-halal{background:#E3F2FD;color:#1565C0} .badge-kosher{background:#E3F2FD;color:#283593}
+.badge-feedback-request{background:#F3E5F5;color:#7B1FA2}
+.chip{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10.5px;font-weight:600;background:#FFEBEE;color:#C62828;margin:1px 2px 1px 0}
+.chip-ok{background:#E8F5E9;color:#2E7D32}
+.alert-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:var(--red);color:white}
+.conflict-row td{background:#FFF5F5}
+.star-row{color:var(--yellow);font-size:14px} .stars-bg{color:#ddd}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--green);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-orange{background:var(--orange);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-orange:hover{background:#D45A00}
+.btn-secondary{background:var(--light);color:var(--green-dark);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:var(--border)} .btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-sm{padding:4px 10px;font-size:12px}
+.pagination{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--gray)}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.modal-box{background:white;border-radius:12px;width:560px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--green-dark)} .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray)}
+.modal-body{padding:20px} .modal-body label{display:block;font-size:12px;font-weight:600;color:var(--gray);margin:12px 0 4px} .modal-body label:first-child{margin-top:0}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:60px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:10px 24px;border-radius:8px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-lg)}
+#toast.show{display:block}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:800px){.dash-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Lunch Tracker</h1><div class="sub">Training lunches, allergies &amp; feedback</div><div class="orange-bar"></div>
+    <label>Server URL</label><input id="login-url" value="">
+    <label>Username</label><input id="login-user">
+    <label>Password</label><input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button><div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Lunch<span>Tracker</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('orders')">Orders</button>
+      <button onclick="switchTab('people')">People</button>
+      <button onclick="switchTab('sessions')">Sessions</button>
+      <button onclick="switchTab('menu')">Menu</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+      <button onclick="switchTab('email')">Email Log</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="console-dash" class="console active">
+    <h2 class="page-title">Dashboard</h2><div class="page-sub">Training lunches at a glance</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="card" id="conflict-card">
+      <h3>⚠ Allergy Conflicts — orders that clash with the person's allergies</h3>
+      <div id="conflict-list"></div>
+    </div>
+    <div class="dash-grid">
+      <div class="card"><h3>Upcoming Sessions</h3><div id="upcoming-list"></div></div>
+      <div class="card"><h3>Most-Ordered Lunches</h3><div id="top-options"></div></div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div id="console-orders" class="console">
+    <h2 class="page-title">Lunch Orders</h2><div class="page-sub">Who wants what, per session — allergy clashes flagged</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openOrdModal()">+ New Order</button>
+      <div class="filter-bar">
+        <select id="f-osession" onchange="loadOrd()"><option value="">All Sessions</option></select>
+        <select id="f-ostatus" onchange="loadOrd()"><option value="">All Status</option><option>Requested</option><option>Confirmed</option><option>Delivered</option><option>Cancelled</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Person</th><th>Session</th><th>Lunch</th><th>Allergy Check</th><th>Instructions</th><th>Status</th><th></th></tr></thead><tbody id="ord-body"></tbody></table></div>
+    <div class="pagination" id="ord-pag"></div>
+  </div>
+
+  <!-- PEOPLE -->
+  <div id="console-people" class="console">
+    <h2 class="page-title">People</h2><div class="page-sub">Training attendees, dietary preferences &amp; allergies</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openPplModal()">+ Add Person</button>
+      <div class="filter-bar">
+        <select id="f-pstatus" onchange="loadPpl()"><option value="">All</option><option>Active</option><option>Inactive</option></select>
+        <input id="f-pcompany" placeholder="Company filter…" oninput="debouncedPpl()">
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Dietary Pref.</th><th>Allergies</th><th>Status</th><th></th></tr></thead><tbody id="ppl-body"></tbody></table></div>
+    <div class="pagination" id="ppl-pag"></div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div id="console-sessions" class="console">
+    <h2 class="page-title">Training Sessions</h2><div class="page-sub">Classes that lunches are ordered for — send feedback requests after a session</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openSessModal()">+ Add Session</button>
+      <div class="filter-bar">
+        <select id="f-sstatus" onchange="loadSess()"><option value="">All Status</option><option>Scheduled</option><option>In Progress</option><option>Completed</option><option>Cancelled</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Session</th><th>Date</th><th>Instructor</th><th>Location</th><th>Cap.</th><th>Status</th><th></th></tr></thead><tbody id="sess-body"></tbody></table></div>
+    <div class="pagination" id="sess-pag"></div>
+  </div>
+
+  <!-- MENU -->
+  <div id="console-menu" class="console">
+    <h2 class="page-title">Lunch Menu</h2><div class="page-sub">What attendees can order — allergens flagged per item</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openMenuModal()">+ Add Option</button>
+      <div class="filter-bar">
+        <select id="f-mcat" onchange="loadMenu()"><option value="">All Categories</option><option>Sandwich</option><option>Wrap</option><option>Salad</option><option>Hot Entrée</option><option>Soup</option><option>Box Lunch</option></select>
+        <select id="f-mstatus" onchange="loadMenu()"><option value="">All</option><option>Active</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Option</th><th>Category</th><th>Description</th><th>Allergens</th><th>Dietary Tags</th><th>Status</th><th></th></tr></thead><tbody id="menu-body"></tbody></table></div>
+    <div class="pagination" id="menu-pag"></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div id="console-feedback" class="console">
+    <h2 class="page-title">Lunch Feedback</h2><div class="page-sub">What attendees thought of their lunches</div>
+    <div class="toolbar">
+      <button class="btn-primary" onclick="openFbModal()">+ Log Feedback</button>
+      <div class="filter-bar">
+        <select id="f-fsession" onchange="loadFb()"><option value="">All Sessions</option></select>
+        <select id="f-frating" onchange="loadFb()"><option value="">All Ratings</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>Person</th><th>Session</th><th>Rating</th><th>Comments</th><th>Date</th><th></th></tr></thead><tbody id="fb-body"></tbody></table></div>
+    <div class="pagination" id="fb-pag"></div>
+  </div>
+
+  <!-- EMAIL LOG -->
+  <div id="console-email" class="console">
+    <h2 class="page-title">Email Log</h2><div class="page-sub">Feedback-request emails — Queued records are picked up by the send workflow</div>
+    <div class="toolbar">
+      <div class="filter-bar">
+        <select id="f-estatus" onchange="loadMail()"><option value="">All Status</option><option>Queued</option><option>Sent</option><option>Failed</option></select>
+        <select id="f-esession" onchange="loadMail()"><option value="">All Sessions</option></select>
+      </div>
+    </div>
+    <div class="card"><table><thead><tr><th>To</th><th>Subject</th><th>Session</th><th>Type</th><th>Status</th><th>Sent At</th><th></th></tr></thead><tbody id="mail-body"></tbody></table></div>
+    <div class="pagination" id="mail-pag"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box"><div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+  <div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+let API={url:'',auth:'',user:'',displayName:''};
+const KAPP='lunch-tracker';
+const PS={ord:{pt:null,p:1,h:[]},ppl:{pt:null,p:1,h:[]},sess:{pt:null,p:1,h:[]},menu:{pt:null,p:1,h:[]},fb:{pt:null,p:1,h:[]},mail:{pt:null,p:1,h:[]}};
+let SESSION_NAMES=[];   // for filter dropdowns + modals (latest 25)
+let PEOPLE_CACHE=[];    // active people (latest 25) for the order/feedback modals
+let OPTIONS_CACHE=[];   // active menu options (latest 25) for the order modal
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(s,f){return s.values?.[f]||''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
+function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}
+function chips(csv,cls){const t=String(csv||'').split(',').map(x=>x.trim()).filter(Boolean);return t.length?t.map(x=>`<span class="chip ${cls||''}">${esc(x)}</span>`).join(''):''}
+function stars(n){n=parseInt(n||0,10);return `<span class="star-row">${'★'.repeat(n)}<span class="stars-bg">${'★'.repeat(Math.max(0,5-n))}</span></span>`}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(()=>fn.apply(this,arguments),ms)}}
+const debouncedPpl=debounce(loadPpl,300);
+function tokenize(csv){return String(csv||'').split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)}
+function conflictHits(allergies,allergens){const o=new Set(tokenize(allergens));return tokenize(allergies).filter(a=>o.has(a))}
+
+async function doLogin(){
+  const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value,err=document.getElementById('login-error');
+  err.style.display='none';if(!user||!pass){err.textContent='Required.';err.style.display='block';return}
+  try{const auth='Basic '+btoa(user+':'+pass);const r=await fetch(`${url}/app/api/v1/me`,{headers:{Authorization:auth}});if(!r.ok)throw new Error('Invalid credentials');
+  const d=await r.json();API={url,auth:btoa(user+':'+pass),user:d.username,displayName:d.displayName||d.username};
+  sessionStorage.setItem('kinetic_session',JSON.stringify({url:'',auth:API.auth,user:API.user,displayName:API.displayName}));
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;enterApp()}catch(e){err.textContent='Login failed: '+e.message;err.style.display='block'}}
+
+function doLogout(){API={url:'',auth:'',user:'',displayName:''};sessionStorage.clear();document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('login-pass').value=''}
+
+(function(){const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');if(!s)return;try{const ss=JSON.parse(s);
+API={url:ss.url||'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName;enterApp()}catch{}})();
+
+async function api(path,opts={}){const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}const t=await r.text();return t?JSON.parse(t):{}}
+
+async function customApi(path,opts={}){
+  // Custom endpoints live on the base launcher (same origin), not the kinetic server.
+  const r=await fetch(path,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});
+  const t=await r.text();let b;try{b=t?JSON.parse(t):{}}catch{b=t}
+  if(!r.ok)throw new Error(b?.error||`${r.status}: ${t.slice(0,200)}`);return b}
+
+const TABS=['dash','orders','people','sessions','menu','feedback','email'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='orders')loadOrd();
+  else if(tab==='people')loadPpl();
+  else if(tab==='sessions')loadSess();
+  else if(tab==='menu')loadMenu();
+  else if(tab==='feedback')loadFb();
+  else loadMail();
+}
+function enterApp(){loadLookups();loadDash()}
+
+// Latest 25 sessions / active people / active options for dropdowns & modals.
+async function loadLookups(){
+  try{
+    const [sd,pd,od]=await Promise.all([
+      api(`/kapps/${KAPP}/forms/sessions/submissions?include=details,values&limit=25`),
+      api(`/kapps/${KAPP}/forms/people/submissions?include=details,values&limit=25&q=`+encodeURIComponent(`values[Status]="Active"`)),
+      api(`/kapps/${KAPP}/forms/lunch-options/submissions?include=details,values&limit=25&q=`+encodeURIComponent(`values[Status]="Active"`))
+    ]);
+    SESSION_NAMES=(sd.submissions||[]).map(s=>({name:v(s,'Session Name'),date:v(s,'Session Date')}))
+      .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    PEOPLE_CACHE=(pd.submissions||[]).sort((a,b)=>v(a,'Full Name').localeCompare(v(b,'Full Name')));
+    OPTIONS_CACHE=(od.submissions||[]).sort((a,b)=>v(a,'Option Name').localeCompare(v(b,'Option Name')));
+    const opts='<option value="">All Sessions</option>'+SESSION_NAMES.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+    document.getElementById('f-osession').innerHTML=opts;
+    document.getElementById('f-fsession').innerHTML=opts;
+    document.getElementById('f-esession').innerHTML=opts;
+  }catch(e){/* lookups are best-effort */}
+}
+
+function pager(ps,loadFn){
+  return `<button class="btn-secondary btn-sm" onclick="${loadFn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button><span>Page ${ps.p}</span><button class="btn-secondary btn-sm" onclick="${loadFn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+function paginateState(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+
+/* ── DASHBOARD ── */
+async function loadDash(){
+  try{const d=await customApi('/api/lunch-tracker/dashboard');
+  const k=d.kpis||{};
+  document.getElementById('dash-kpis').innerHTML=`
+    <div class="kpi"><div class="val" style="color:var(--green-dark)">${k.activePeople??0}</div><div class="label">Active People</div></div>
+    <div class="kpi"><div class="val" style="color:var(--orange)">${k.peopleWithAllergies??0}</div><div class="label">With Allergies</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green-dark)">${k.upcomingSessions??0}</div><div class="label">Upcoming Sessions</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green)">${k.openOrders??0}</div><div class="label">Open Orders</div></div>
+    <div class="kpi"><div class="val" style="color:var(--yellow)">${k.avgRating?k.avgRating+'★':'—'}</div><div class="label">Avg Lunch Rating (${k.feedbackCount??0})</div></div>
+    <div class="kpi"><div class="val" style="color:${(k.allergyConflicts||0)>0?'var(--red)':'var(--green)'}">${k.allergyConflicts??0}</div><div class="label">⚠ Allergy Conflicts</div></div>`;
+  const conflicts=d.conflicts||[];
+  document.getElementById('conflict-list').innerHTML=conflicts.length?`<table><thead><tr><th>Person</th><th>Session</th><th>Ordered</th><th>Clashes With</th><th>Status</th><th></th></tr></thead><tbody>${conflicts.map(c=>`<tr class="conflict-row">
+    <td><strong>${esc(c.person)}</strong><div style="font-size:11px;color:var(--gray)">${esc(c.email)}</div></td>
+    <td>${esc(c.session)}<div style="font-size:11px;color:var(--gray)">${esc(c.sessionDate)}</div></td>
+    <td>${esc(c.option)}</td>
+    <td>${c.allergens.map(a=>`<span class="alert-badge">${esc(a)}</span>`).join(' ')}</td>
+    <td>${badge(c.status)}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editOrd('${c.orderId}')">Fix Order</button></td></tr>`).join('')}</tbody></table>`
+    :'<div style="color:var(--green);font-size:13px;font-weight:600">✓ No allergy conflicts — every order is safe for its person.</div>';
+  document.getElementById('upcoming-list').innerHTML=(d.upcoming||[]).map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+    <div><strong>${esc(s.name)}</strong><div style="font-size:11px;color:var(--gray)">${esc(s.date)} · ${esc(s.instructor)}</div></div>
+    <div style="display:flex;gap:8px;align-items:center">${badge(s.status)}<span style="font-size:12px;color:var(--gray)">${s.orderCount} orders</span></div></div>`).join('')||'<div style="color:var(--gray);font-size:13px">No upcoming sessions</div>';
+  document.getElementById('top-options').innerHTML=(d.topOptions||[]).map(o=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">${esc(o.name)} <strong>${o.count}</strong></div>`).join('')||'<div style="color:var(--gray);font-size:13px">No orders yet</div>';
+  }catch(e){toast('Dashboard error: '+e.message)}
+}
+
+/* ── ORDERS ── */
+async function loadOrd(dir){
+  const ps=PS.ord;paginateState(ps,dir);
+  const sess=document.getElementById('f-osession').value,stat=document.getElementById('f-ostatus').value;
+  let p=`/kapps/${KAPP}/forms/lunch-orders/submissions?include=details,values&limit=25`;const q=[];
+  if(sess)q.push(`values[Session Name]="${sess.replace(/"/g,'\\"')}"`);if(stat)q.push(`values[Status]="${stat}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  // Join the visible page against people (allergies) and options (allergens) — two indexed IN queries, ≤25 keys each.
+  const emails=[...new Set(subs.map(s=>v(s,'Person Email')).filter(Boolean))];
+  const optNames=[...new Set(subs.map(s=>v(s,'Lunch Option')).filter(Boolean))];
+  const [pplMap,optMap]=await Promise.all([lookupBy('people','Email',emails),lookupBy('lunch-options','Option Name',optNames)]);
+  document.getElementById('ord-body').innerHTML=subs.length?subs.map(s=>{
+    const person=pplMap[(v(s,'Person Email')||'').toLowerCase()],opt=optMap[(v(s,'Lunch Option')||'').toLowerCase()];
+    const hits=(person&&opt)?conflictHits(v(person,'Allergies'),v(opt,'Contains Allergens')):[];
+    const check=hits.length?hits.map(a=>`<span class="alert-badge">⚠ ${esc(a.charAt(0).toUpperCase()+a.slice(1))}</span>`).join(' ')
+      :(person&&opt?'<span class="chip chip-ok">✓ OK</span>':'<span style="color:var(--gray);font-size:11px">—</span>');
+    return `<tr${hits.length?' class="conflict-row"':''}>
+    <td><strong>${esc(v(s,'Person Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Person Email'))}</div></td>
+    <td>${esc(v(s,'Session Name'))}<div style="font-size:11px;color:var(--gray)">${esc(v(s,'Session Date'))}</div></td>
+    <td>${esc(v(s,'Lunch Option'))}</td><td>${check}</td>
+    <td style="max-width:200px;font-size:12px;color:var(--gray)">${esc(v(s,'Special Instructions'))}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editOrd('${s.id}')">Edit</button></td></tr>`}).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No orders</td></tr>';
+  document.getElementById('ord-pag').innerHTML=pager(ps,'loadOrd');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+async function lookupBy(form,field,keys){
+  const map={};if(!keys.length)return map;
+  const inList=keys.slice(0,25).map(k=>`"${String(k).replace(/"/g,'\\"')}"`).join(',');
+  try{const d=await api(`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25&q=`+encodeURIComponent(`values[${field}] IN (${inList})`));
+  for(const s of (d.submissions||[]))map[(v(s,field)||'').toLowerCase()]=s}catch{}
+  return map;
+}
+
+function openOrdModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Order':'New Order';
+  const pplOpts=PEOPLE_CACHE.map(p=>`<option data-email="${esc(v(p,'Email'))}" ${vl['Person Name']===v(p,'Full Name')?'selected':''}>${esc(v(p,'Full Name'))}</option>`).join('');
+  const optOpts=OPTIONS_CACHE.map(o=>`<option ${vl['Lunch Option']===v(o,'Option Name')?'selected':''}>${esc(v(o,'Option Name'))}</option>`).join('');
+  const sessOpts=SESSION_NAMES.map(x=>`<option data-date="${esc(x.date)}" ${vl['Session Name']===x.name?'selected':''}>${esc(x.name)}</option>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Person *</label><select id="o-person" onchange="syncOrderPerson()"><option value="">…</option>${pplOpts}</select></div>
+      <div><label>Email *</label><input id="o-email" value="${esc(vl['Person Email']||'')}"></div>
+      <div><label>Session *</label><select id="o-session" onchange="syncOrderSession()"><option value="">…</option>${sessOpts}</select></div>
+      <div><label>Session Date</label><input id="o-date" type="date" value="${esc(vl['Session Date']||'')}"></div>
+      <div><label>Lunch Option *</label><select id="o-option"><option value="">…</option>${optOpts}</select></div>
+      <div><label>Status</label><select id="o-status">${['Requested','Confirmed','Delivered','Cancelled'].map(c=>`<option ${vl.Status===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <label>Special Instructions</label><textarea id="o-instr">${esc(vl['Special Instructions']||'')}</textarea>
+    <div id="o-allergy-hint" style="margin-top:10px;font-size:12px"></div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveOrd('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadOrd')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+  if(ex){document.getElementById('o-allergy-hint').dataset.name=vl['Person Name']||'';updateAllergyHint()}
+  document.getElementById('o-option').addEventListener('change',updateAllergyHint);
+}
+function syncOrderPerson(){const sel=document.getElementById('o-person');const opt=sel.options[sel.selectedIndex];
+  if(opt&&opt.dataset.email)document.getElementById('o-email').value=opt.dataset.email;updateAllergyHint()}
+function syncOrderSession(){const sel=document.getElementById('o-session');const opt=sel.options[sel.selectedIndex];
+  if(opt&&opt.dataset.date)document.getElementById('o-date').value=opt.dataset.date}
+function updateAllergyHint(){
+  const name=document.getElementById('o-person')?.value,optName=document.getElementById('o-option')?.value,el=document.getElementById('o-allergy-hint');
+  if(!el)return;
+  const person=PEOPLE_CACHE.find(p=>v(p,'Full Name')===name),opt=OPTIONS_CACHE.find(o=>v(o,'Option Name')===optName);
+  if(!person||!opt){el.innerHTML='';return}
+  const hits=conflictHits(v(person,'Allergies'),v(opt,'Contains Allergens'));
+  el.innerHTML=hits.length?`<span class="alert-badge">⚠ ALLERGY CONFLICT</span> <strong>${esc(name)}</strong> is allergic to ${hits.map(esc).join(', ')} — "${esc(optName)}" contains it.`
+    :(v(person,'Allergies')?`<span class="chip chip-ok">✓ Safe</span> No clash with ${esc(name)}'s allergies (${esc(v(person,'Allergies'))}).`:'');
+}
+async function editOrd(id){const d=await api(`/submissions/${id}?include=details,values`);openOrdModal(d.submission||d)}
+async function saveOrd(id){
+  const personSel=document.getElementById('o-person');
+  const values={'Person Name':personSel.value,'Person Email':document.getElementById('o-email').value.trim(),'Session Name':document.getElementById('o-session').value,'Session Date':document.getElementById('o-date').value,'Lunch Option':document.getElementById('o-option').value,'Special Instructions':document.getElementById('o-instr').value,Status:document.getElementById('o-status').value};
+  if(!values['Person Name']||!values['Person Email']||!values['Session Name']||!values['Lunch Option']){toast('Person, email, session, and lunch option are required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/lunch-orders/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Order created');loadOrd()}catch(e){toast('Error: '+e.message)}}
+
+/* ── PEOPLE ── */
+async function loadPpl(dir){
+  const ps=PS.ppl;paginateState(ps,dir);
+  const stat=document.getElementById('f-pstatus').value,co=document.getElementById('f-pcompany').value.trim();
+  let p=`/kapps/${KAPP}/forms/people/submissions?include=details,values&limit=25`;const q=[];
+  if(stat)q.push(`values[Status]="${stat}"`);if(co)q.push(`values[Company]="${co.replace(/"/g,'\\"')}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('ppl-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Full Name'))}</strong></td><td>${esc(v(s,'Email'))}</td><td>${esc(v(s,'Company'))}</td>
+    <td>${badge(v(s,'Dietary Preference'))}</td><td>${chips(v(s,'Allergies'))||'<span style="color:var(--gray);font-size:11px">none</span>'}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editPpl('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No people</td></tr>';
+  document.getElementById('ppl-pag').innerHTML=pager(ps,'loadPpl');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openPplModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Person':'New Person';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Full Name *</label><input id="p-name" value="${esc(vl['Full Name']||'')}"></div>
+      <div><label>Email *</label><input id="p-email" value="${esc(vl.Email||'')}"></div>
+      <div><label>Company</label><input id="p-co" value="${esc(vl.Company||'')}"></div>
+      <div><label>Dietary Preference</label><select id="p-diet">${['None','Vegetarian','Vegan','Gluten-Free','Halal','Kosher'].map(x=>`<option ${vl['Dietary Preference']===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Allergies (comma-separated)</label><input id="p-allergy" value="${esc(vl.Allergies||'')}" placeholder="Peanuts, Dairy, …"></div>
+      <div><label>Status</label><select id="p-status">${['Active','Inactive'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Notes</label><textarea id="p-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="savePpl('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadPpl')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editPpl(id){const d=await api(`/submissions/${id}?include=details,values`);openPplModal(d.submission||d)}
+async function savePpl(id){const values={'Full Name':document.getElementById('p-name').value.trim(),Email:document.getElementById('p-email').value.trim(),Company:document.getElementById('p-co').value.trim(),'Dietary Preference':document.getElementById('p-diet').value,Allergies:document.getElementById('p-allergy').value.trim(),Status:document.getElementById('p-status').value,Notes:document.getElementById('p-notes').value};
+  if(!values['Full Name']||!values.Email){toast('Name and email are required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/people/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Added');loadPpl();loadLookups()}catch(e){toast('Error: '+e.message)}}
+
+/* ── SESSIONS ── */
+async function loadSess(dir){
+  const ps=PS.sess;paginateState(ps,dir);
+  const stat=document.getElementById('f-sstatus').value;
+  let p=`/kapps/${KAPP}/forms/sessions/submissions?include=details,values&limit=25`;
+  if(stat)p+='&q='+encodeURIComponent(`values[Status]="${stat}"`);
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('sess-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Session Name'))}</strong></td><td>${esc(v(s,'Session Date'))}</td>
+    <td>${esc(v(s,'Instructor'))}</td><td>${esc(v(s,'Location'))}</td><td>${esc(v(s,'Capacity'))}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td style="white-space:nowrap"><button class="btn-secondary btn-sm" onclick="editSess('${s.id}')">Edit</button>
+    <button class="btn-orange btn-sm" onclick="sendFeedback('${esc(v(s,'Session Name')).replace(/'/g,"\\'")}')">✉ Feedback</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No sessions</td></tr>';
+  document.getElementById('sess-pag').innerHTML=pager(ps,'loadSess');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openSessModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Session':'New Session';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Session Name *</label><input id="s-name" value="${esc(vl['Session Name']||'')}"></div>
+      <div><label>Date *</label><input id="s-date" type="date" value="${esc(vl['Session Date']||'')}"></div>
+      <div><label>Instructor</label><input id="s-inst" value="${esc(vl.Instructor||'')}"></div>
+      <div><label>Location</label><input id="s-loc" value="${esc(vl.Location||'')}"></div>
+      <div><label>Capacity</label><input id="s-cap" value="${esc(vl.Capacity||'')}"></div>
+      <div><label>Status</label><select id="s-status">${['Scheduled','In Progress','Completed','Cancelled'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Notes</label><textarea id="s-notes">${esc(vl.Notes||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveSess('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadSess')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editSess(id){const d=await api(`/submissions/${id}?include=details,values`);openSessModal(d.submission||d)}
+async function saveSess(id){const values={'Session Name':document.getElementById('s-name').value.trim(),'Session Date':document.getElementById('s-date').value,Instructor:document.getElementById('s-inst').value.trim(),Location:document.getElementById('s-loc').value.trim(),Capacity:document.getElementById('s-cap').value.trim(),Status:document.getElementById('s-status').value,Notes:document.getElementById('s-notes').value};
+  if(!values['Session Name']||!values['Session Date']){toast('Name and date are required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/sessions/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadSess();loadLookups()}catch(e){toast('Error: '+e.message)}}
+
+async function sendFeedback(sessionName){
+  if(!confirm(`Send feedback request emails to everyone who ordered lunch for "${sessionName}"?`))return;
+  try{const r=await customApi('/api/lunch-tracker/send-feedback',{method:'POST',body:JSON.stringify({sessionName})});
+  toast(`Queued ${r.queued} feedback email${r.queued===1?'':'s'}${r.skippedAlreadySent?` (${r.skippedAlreadySent} already sent)`:''}`);
+  }catch(e){toast('Error: '+e.message)}
+}
+
+/* ── MENU ── */
+async function loadMenu(dir){
+  const ps=PS.menu;paginateState(ps,dir);
+  const cat=document.getElementById('f-mcat').value,stat=document.getElementById('f-mstatus').value;
+  let p=`/kapps/${KAPP}/forms/lunch-options/submissions?include=details,values&limit=25`;const q=[];
+  if(stat)q.push(`values[Status]="${stat}"`);if(cat)q.push(`values[Category]="${cat}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('menu-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Option Name'))}</strong></td><td>${badge(v(s,'Category'))}</td>
+    <td style="max-width:260px;font-size:12px;color:var(--gray)">${esc(v(s,'Description'))}</td>
+    <td>${chips(v(s,'Contains Allergens'))||'<span class="chip chip-ok">allergen-free</span>'}</td>
+    <td>${chips(v(s,'Dietary Tags'),'chip-ok')}</td>
+    <td>${badge(v(s,'Status'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editMenu('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No menu options</td></tr>';
+  document.getElementById('menu-pag').innerHTML=pager(ps,'loadMenu');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openMenuModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Option':'New Lunch Option';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Option Name *</label><input id="m-name" value="${esc(vl['Option Name']||'')}"></div>
+      <div><label>Category</label><select id="m-cat">${['Sandwich','Wrap','Salad','Hot Entrée','Soup','Box Lunch'].map(x=>`<option ${vl.Category===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label>Contains Allergens (comma-separated)</label><input id="m-allergens" value="${esc(vl['Contains Allergens']||'')}" placeholder="Gluten, Dairy, …"></div>
+      <div><label>Dietary Tags</label><input id="m-tags" value="${esc(vl['Dietary Tags']||'')}" placeholder="Vegan, Gluten-Free"></div>
+      <div><label>Status</label><select id="m-status">${['Active','Inactive'].map(x=>`<option ${vl.Status===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    </div>
+    <label>Description</label><textarea id="m-desc">${esc(vl.Description||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveMenu('${s.id||''}')">${ex?'Update':'Create'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadMenu')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editMenu(id){const d=await api(`/submissions/${id}?include=details,values`);openMenuModal(d.submission||d)}
+async function saveMenu(id){const values={'Option Name':document.getElementById('m-name').value.trim(),Category:document.getElementById('m-cat').value,'Contains Allergens':document.getElementById('m-allergens').value.trim(),'Dietary Tags':document.getElementById('m-tags').value.trim(),Status:document.getElementById('m-status').value,Description:document.getElementById('m-desc').value};
+  if(!values['Option Name']){toast('Option name is required.');return}
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/lunch-options/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Created');loadMenu();loadLookups()}catch(e){toast('Error: '+e.message)}}
+
+/* ── FEEDBACK ── */
+async function loadFb(dir){
+  const ps=PS.fb;paginateState(ps,dir);
+  const sess=document.getElementById('f-fsession').value,rating=document.getElementById('f-frating').value;
+  let p=`/kapps/${KAPP}/forms/feedback/submissions?include=details,values&limit=25`;const q=[];
+  if(sess)q.push(`values[Session Name]="${sess.replace(/"/g,'\\"')}"`);if(rating)q.push(`values[Rating]="${rating}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('fb-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'Person Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'Person Email'))}</div></td>
+    <td>${esc(v(s,'Session Name'))}</td><td>${stars(v(s,'Rating'))}</td>
+    <td style="max-width:320px;font-size:12px">${esc(v(s,'Comments'))}</td>
+    <td>${esc(v(s,'Submitted Date'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="editFb('${s.id}')">Edit</button></td></tr>`).join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray)">No feedback yet</td></tr>';
+  document.getElementById('fb-pag').innerHTML=pager(ps,'loadFb');
+  }catch(e){toast('Error: '+e.message)}
+}
+function openFbModal(ex){const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Feedback':'Log Feedback';
+  const pplOpts=PEOPLE_CACHE.map(p=>`<option data-email="${esc(v(p,'Email'))}" ${vl['Person Name']===v(p,'Full Name')?'selected':''}>${esc(v(p,'Full Name'))}</option>`).join('');
+  const sessOpts=SESSION_NAMES.map(x=>`<option data-date="${esc(x.date)}" ${vl['Session Name']===x.name?'selected':''}>${esc(x.name)}</option>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Person</label><select id="fb-person" onchange="const o=this.options[this.selectedIndex];if(o&&o.dataset.email)document.getElementById('fb-email').value=o.dataset.email"><option value="">…</option>${pplOpts}</select></div>
+      <div><label>Email</label><input id="fb-email" value="${esc(vl['Person Email']||'')}"></div>
+      <div><label>Session</label><select id="fb-session" onchange="const o=this.options[this.selectedIndex];if(o&&o.dataset.date)document.getElementById('fb-date').value=o.dataset.date"><option value="">…</option>${sessOpts}</select></div>
+      <div><label>Session Date</label><input id="fb-date" type="date" value="${esc(vl['Session Date']||'')}"></div>
+      <div><label>Rating (1-5)</label><select id="fb-rating">${['5','4','3','2','1'].map(n=>`<option ${vl.Rating===n?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div><label>Submitted Date</label><input id="fb-subdate" type="date" value="${esc(vl['Submitted Date']||new Date().toISOString().slice(0,10))}"></div>
+    </div>
+    <label>Comments</label><textarea id="fb-comments">${esc(vl.Comments||'')}</textarea>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveFb('${s.id||''}')">${ex?'Update':'Save'}</button>${ex?`<button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadFb')">Delete</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+async function editFb(id){const d=await api(`/submissions/${id}?include=details,values`);openFbModal(d.submission||d)}
+async function saveFb(id){const values={'Person Name':document.getElementById('fb-person').value,'Person Email':document.getElementById('fb-email').value.trim(),'Session Name':document.getElementById('fb-session').value,'Session Date':document.getElementById('fb-date').value,Rating:document.getElementById('fb-rating').value,Comments:document.getElementById('fb-comments').value,'Submitted Date':document.getElementById('fb-subdate').value};
+  try{if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});else await api(`/kapps/${KAPP}/forms/feedback/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})});
+  closeModal();toast(id?'Updated':'Feedback logged');loadFb()}catch(e){toast('Error: '+e.message)}}
+
+/* ── EMAIL LOG ── */
+async function loadMail(dir){
+  const ps=PS.mail;paginateState(ps,dir);
+  const stat=document.getElementById('f-estatus').value,sess=document.getElementById('f-esession').value;
+  let p=`/kapps/${KAPP}/forms/email-log/submissions?include=details,values&limit=25`;const q=[];
+  if(stat)q.push(`values[Status]="${stat}"`);if(sess)q.push(`values[Session Name]="${sess.replace(/"/g,'\\"')}"`);
+  if(q.length)p+='&q='+encodeURIComponent(q.join(' AND '));
+  if(ps.h.length)p+='&pageToken='+ps.h[ps.h.length-1];
+  try{const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+  document.getElementById('mail-body').innerHTML=subs.length?subs.map(s=>`<tr>
+    <td><strong>${esc(v(s,'To Name'))}</strong><div style="font-size:11px;color:var(--gray)">${esc(v(s,'To Email'))}</div></td>
+    <td style="max-width:260px;font-size:12px">${esc(v(s,'Subject'))}</td>
+    <td style="font-size:12px">${esc(v(s,'Session Name'))}</td>
+    <td>${badge(v(s,'Email Type'))}</td><td>${badge(v(s,'Status'))}</td>
+    <td style="font-size:12px;color:var(--gray)">${esc((v(s,'Sent At')||'').replace('T',' ').replace('Z',' UTC'))}</td>
+    <td><button class="btn-secondary btn-sm" onclick="viewMail('${s.id}')">View</button></td></tr>`).join('')
+    :'<tr><td colspan="7" style="text-align:center;color:var(--gray)">No emails logged</td></tr>';
+  document.getElementById('mail-pag').innerHTML=pager(ps,'loadMail');
+  }catch(e){toast('Error: '+e.message)}
+}
+async function viewMail(id){
+  try{const d=await api(`/submissions/${id}?include=details,values`);const s=d.submission||d,vl=s.values||{};
+  document.getElementById('modal-title').textContent='Email — '+(vl.Status||'');
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:13px;margin-bottom:8px"><strong>To:</strong> ${esc(vl['To Name']||'')} &lt;${esc(vl['To Email']||'')}&gt;</div>
+    <div style="font-size:13px;margin-bottom:8px"><strong>Subject:</strong> ${esc(vl.Subject||'')}</div>
+    <div style="font-size:13px;margin-bottom:8px"><strong>Session:</strong> ${esc(vl['Session Name']||'')} · ${badge(vl['Email Type'])} ${badge(vl.Status)}</div>
+    ${vl['Sent At']?`<div style="font-size:12px;color:var(--gray);margin-bottom:12px">Sent at ${esc(vl['Sent At'])}</div>`:''}
+    <div style="white-space:pre-wrap;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px">${esc(vl.Body||'')}</div>`;
+  document.getElementById('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Close</button><button class="btn-danger btn-sm" onclick="delSub('${s.id}','loadMail')">Delete</button>`;
+  document.getElementById('modal').classList.add('open');
+  }catch(e){toast('Error: '+e.message)}
+}
+
+/* ── SHARED ── */
+async function delSub(id,fn){if(!confirm('Delete?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}catch(e){toast('Error: '+e.message)}}
+</script>
+</body>
+</html>
