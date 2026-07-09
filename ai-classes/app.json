@@ -1,0 +1,112 @@
+{
+  "name": "AI Classes",
+  "slug": "ai-classes",
+  "description": "Manage AI training classes nationwide — teachers, sessions, attendance, lunch & student feedback",
+  "category": "Education",
+  "icon": "graduation-cap",
+  "color": "#F36C24",
+  "bg": "#FFF3E0",
+  "forms": [
+    {
+      "slug": "teachers",
+      "name": "Teachers",
+      "description": "The stable of AI instructors",
+      "submissionLabelExpression": "${values('Name')} - ${values('Specialty')}",
+      "fields": [
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Specialty" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Status" },
+        { "name": "Bio", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[Status]", "values[State]", "values[Specialty]"],
+        "compound": [["values[Status]", "values[State]"]]
+      }
+    },
+    {
+      "slug": "students",
+      "name": "Students",
+      "description": "People enrolled in AI classes",
+      "submissionLabelExpression": "${values('Name')} - ${values('Company')}",
+      "fields": [
+        { "name": "Name", "required": true },
+        { "name": "Email" },
+        { "name": "Company" },
+        { "name": "Title" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Name]", "values[Status]", "values[State]", "values[Company]"],
+        "compound": [["values[Status]", "values[State]"]]
+      }
+    },
+    {
+      "slug": "classes",
+      "name": "Classes",
+      "description": "Scheduled AI class sessions across the United States",
+      "submissionLabelExpression": "${values('Class Code')} - ${values('Class Title')}",
+      "fields": [
+        { "name": "Class Code" },
+        { "name": "Class Title", "required": true },
+        { "name": "Topic" },
+        { "name": "Description", "rows": 3 },
+        { "name": "Date" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Venue" },
+        { "name": "Capacity" },
+        { "name": "Teacher" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Class Code]", "values[Class Title]", "values[Status]", "values[State]", "values[Teacher]", "values[Date]"],
+        "compound": [["values[Status]", "values[State]"]]
+      }
+    },
+    {
+      "slug": "attendance",
+      "name": "Attendance",
+      "description": "Per-student attendance and lunch preference for each class session",
+      "submissionLabelExpression": "${values('Student')} - ${values('Class Title')}",
+      "fields": [
+        { "name": "Class Code" },
+        { "name": "Class Title" },
+        { "name": "Student" },
+        { "name": "Student Email" },
+        { "name": "Status" },
+        { "name": "Lunch Preference" },
+        { "name": "Date" }
+      ],
+      "indexes": {
+        "single": ["values[Class Code]", "values[Student]", "values[Status]", "values[Lunch Preference]"],
+        "compound": [["values[Class Code]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "description": "Student feedback and ratings per class session",
+      "submissionLabelExpression": "${values('Student')} - ${values('Class Title')}",
+      "fields": [
+        { "name": "Class Code" },
+        { "name": "Class Title" },
+        { "name": "Student" },
+        { "name": "Overall Rating" },
+        { "name": "Content Rating" },
+        { "name": "Instructor Rating" },
+        { "name": "Recommend" },
+        { "name": "Comments", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Class Code]", "values[Student]", "values[Recommend]"],
+        "compound": [["values[Class Code]", "values[Recommend]"]]
+      }
+    }
+  ]
+}
