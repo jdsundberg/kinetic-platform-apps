@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Junior Track &amp; Field - Kinetic Platform</title>
+<style>
+:root{--primary:#D62828;--primary-dark:#B21E1E;--primary-light:#E85D5D;--accent:#FCA311;--accent-dark:#E08c00;--navy:#14213D;--green:#2A9D3F;--blue:#1D6FB8;--red:#D62828;--yellow:#F4B400;--purple:#7B2CBF;--teal:#0E7C7B;--gray:#5C6672;--light:#F7F8FA;--border:#E6E9ED;--bg:#F1F2F5;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);--shadow-lg:0 4px 12px rgba(0,0,0,.15)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#1B2430;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(214,40,40,.12)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#FAFAFA}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#14213D 0%,#B21E1E 60%,#D62828 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--primary);font-size:26px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--accent)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--accent);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--primary);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--primary-dark)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+#app{display:none}
+.topbar{background:var(--primary);color:white;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:18px;white-space:nowrap;margin-right:24px;letter-spacing:-.3px}
+.topbar .logo span{color:var(--accent)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.8);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap;border:none}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.topbar nav button.active{background:var(--accent);color:var(--navy)}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:8px}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{border-color:var(--accent);color:white}
+
+.console{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:20px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.3px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:24px;font-weight:700;margin:4px 0;color:var(--primary)}
+.kpi .label{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.accent .val{color:var(--accent-dark)}.kpi.accent{border-top-color:var(--accent)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.yellow .val{color:var(--yellow)}.kpi.yellow{border-top-color:var(--yellow)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.navy .val{color:var(--navy)}.kpi.navy{border-top-color:var(--navy)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active,.badge-scheduled,.badge-completed,.badge-final,.badge-yes,.badge-paid,.badge-cleared,.badge-resolved,.badge-registration-open{background:#E4F6E7;color:#1E7A2E}
+.badge-responded,.badge-in-progress{background:#E0F2F1;color:#00695C}
+.badge-new,.badge-pending,.badge-reviewed,.badge-open{background:#E3F0FB;color:#1D6FB8}
+.badge-planned,.badge-provisional{background:#EDE7F6;color:#5E35B1}
+.badge-postponed,.badge-follow-up-needed,.badge-waitlist{background:#FEF6E0;color:#B7791F}
+.badge-cancelled,.badge-inactive,.badge-no,.badge-expired,.badge-scratched{background:#FDEAEA;color:#C62828}
+.badge-boys{background:#E3F0FB;color:#1D6FB8}.badge-girls{background:#FCE7F1;color:#C2185B}.badge-coed{background:#EDE7F6;color:#5E35B1}
+.badge-default{background:var(--light);color:var(--gray)}
+
+.stars{color:var(--accent);letter-spacing:1px;font-size:14px;white-space:nowrap}
+.stars .off{color:var(--border)}
+.grade-pill{display:inline-block;background:#FDECEC;color:var(--primary-dark);border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700}
+.evt-tag{display:inline-block;background:var(--light);color:var(--gray);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:600}
+.mark{font-variant-numeric:tabular-nums;font-weight:700}
+.medal{font-size:13px}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:180px}
+.toolbar select{min-width:110px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-accent{background:var(--accent);color:var(--navy);font-weight:600}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:20px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.bar-row .bl{min-width:120px;color:var(--gray)}
+.bar-track{flex:1;height:14px;background:var(--light);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:var(--primary);border-radius:7px}
+.bar-fill.acc{background:var(--accent)}
+.bar-row .bv{min-width:52px;text-align:right;font-weight:600}
+.review{padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.review .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.review .rc{font-size:13px;color:#334155;line-height:1.5}
+.review .rm{font-size:11px;color:var(--gray);margin-top:6px}
+
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--primary);color:white;border-color:var(--primary)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.rec-card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.rec-card .rc-evt{font-weight:700;font-size:14px;color:var(--navy);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.rec-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;border-top:1px dashed var(--border)}
+.rec-line .rl-who{color:var(--gray);font-size:12px}
+
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:28px;max-width:840px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Junior <span>Track &amp; Field</span></h1>
+    <p class="sub">K–6 youth athletics · all 50 states</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://first.kinetics.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Junior <span>T&amp;F</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button onclick="switchTab('leagues')">State Leagues</button>
+      <button onclick="switchTab('teams')">Teams</button>
+      <button onclick="switchTab('coaches')">Coaches</button>
+      <button onclick="switchTab('athletes')">Athletes</button>
+      <button onclick="switchTab('meets')">Schedule</button>
+      <button onclick="switchTab('results')">Results</button>
+      <button onclick="switchTab('records')">Records</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">National Overview</div>
+    <div class="page-sub">50 state leagues · participation, schedule, event times and family feedback</div>
+    <div class="kpi-row" id="dash-kpis"></div>
+    <div class="grid-2" id="dash-grid1"></div>
+    <div class="grid-2" id="dash-grid2"></div>
+  </div>
+
+  <!-- STATE LEAGUES -->
+  <div class="console" id="tab-leagues">
+    <div class="page-title">State Leagues</div>
+    <div class="page-sub">One K–6 track &amp; field league per US state</div>
+    <div class="toolbar">
+      <input type="text" id="lg-search" placeholder="Search state, director..." oninput="lgLoad()">
+      <select id="lg-region" onchange="lgLoad()"><option value="">All Regions</option><option>Northeast</option><option>Southeast</option><option>Midwest</option><option>Southwest</option><option>West</option></select>
+      <select id="lg-status" onchange="lgLoad()"><option value="">All Status</option><option>Active</option><option>Planned</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('leagues')">+ New State League</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>State</th><th>League</th><th>Region</th><th>Director</th><th>Teams</th><th>Athletes</th><th>Season</th><th>Status</th></tr></thead><tbody id="lg-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="lgPrev()" id="lg-prev" disabled>Prev</button><span class="page-info" id="lg-page-info">Page 1</span><button class="btn-outline" onclick="lgNext()" id="lg-next" disabled>Next</button></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div class="console" id="tab-teams">
+    <div class="page-title">Teams</div>
+    <div class="page-sub">Schools and clubs across the state leagues</div>
+    <div class="toolbar">
+      <input type="text" id="tm-search" placeholder="Search team, coach, city..." oninput="tmLoad()">
+      <select id="tm-state" onchange="tmLoad()"><option value="">All States</option></select>
+      <select id="tm-division" onchange="tmLoad()"><option value="">All Divisions</option><option>Boys</option><option>Girls</option><option>Coed</option></select>
+      <select id="tm-status" onchange="tmLoad()"><option value="">All Status</option><option>Active</option><option>Provisional</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('teams')">+ New Team</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Team</th><th>State</th><th>City</th><th>Head Coach</th><th>Division</th><th>Grades</th><th>Athletes</th><th>Status</th></tr></thead><tbody id="tm-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="tmPrev()" id="tm-prev" disabled>Prev</button><span class="page-info" id="tm-page-info">Page 1</span><button class="btn-outline" onclick="tmNext()" id="tm-next" disabled>Next</button></div>
+  </div>
+
+  <!-- COACHES -->
+  <div class="console" id="tab-coaches">
+    <div class="page-title">Coaches</div>
+    <div class="page-sub">Head, assistant and event coaches</div>
+    <div class="toolbar">
+      <input type="text" id="co-search" placeholder="Search coaches..." oninput="coLoad()">
+      <select id="co-state" onchange="coLoad()"><option value="">All States</option></select>
+      <select id="co-role" onchange="coLoad()"><option value="">All Roles</option><option>Head Coach</option><option>Assistant Coach</option><option>Sprints Coach</option><option>Distance Coach</option><option>Field Events Coach</option><option>Volunteer</option></select>
+      <select id="co-status" onchange="coLoad()"><option value="">All Status</option><option>Active</option><option>Provisional</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('coaches')">+ New Coach</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Name</th><th>Role</th><th>State</th><th>Team</th><th>Cert.</th><th>Exp.</th><th>Bg Check</th><th>Status</th></tr></thead><tbody id="co-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="coPrev()" id="co-prev" disabled>Prev</button><span class="page-info" id="co-page-info">Page 1</span><button class="btn-outline" onclick="coNext()" id="co-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ATHLETES -->
+  <div class="console" id="tab-athletes">
+    <div class="page-title">Athletes</div>
+    <div class="page-sub">Registered K–6 boys &amp; girls</div>
+    <div class="toolbar">
+      <input type="text" id="at-search" placeholder="Search athletes..." oninput="atLoad()">
+      <select id="at-state" onchange="atLoad()"><option value="">All States</option></select>
+      <select id="at-gender" onchange="atLoad()"><option value="">All</option><option>Boys</option><option>Girls</option></select>
+      <select id="at-grade" onchange="atLoad()"><option value="">All Grades</option><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      <select id="at-status" onchange="atLoad()"><option value="">All Status</option><option>Active</option><option>Injured</option><option>Inactive</option></select>
+      <button class="btn-primary" onclick="showForm('athletes')">+ New Athlete</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Bib</th><th>Name</th><th>State</th><th>Team</th><th>Gender</th><th>Grade</th><th>Age</th><th>Primary Event</th><th>Paid</th><th>Status</th></tr></thead><tbody id="at-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="atPrev()" id="at-prev" disabled>Prev</button><span class="page-info" id="at-page-info">Page 1</span><button class="btn-outline" onclick="atNext()" id="at-next" disabled>Next</button></div>
+  </div>
+
+  <!-- SCHEDULE / MEETS -->
+  <div class="console" id="tab-meets">
+    <div class="page-title">Meet Schedule</div>
+    <div class="page-sub">Upcoming and completed meets by state</div>
+    <div class="toolbar">
+      <input type="text" id="mt2-search" placeholder="Search meet, host..." oninput="meLoad()">
+      <select id="me-state" onchange="meLoad()"><option value="">All States</option></select>
+      <select id="me-status" onchange="meLoad()"><option value="">All Status</option><option>Registration Open</option><option>Scheduled</option><option>Completed</option><option>Postponed</option><option>Cancelled</option></select>
+      <button class="btn-accent" onclick="showForm('meets')">+ Schedule a Meet</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Time</th><th>Meet</th><th>State</th><th>Location</th><th>Host</th><th>Divisions</th><th>Status</th></tr></thead><tbody id="me-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="mePrev()" id="me-prev" disabled>Prev</button><span class="page-info" id="me-page-info">Page 1</span><button class="btn-outline" onclick="meNext()" id="me-next" disabled>Next</button></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="console" id="tab-results">
+    <div class="page-title">Event Results</div>
+    <div class="page-sub">Every recorded time and mark</div>
+    <div class="toolbar">
+      <input type="text" id="rs-search" placeholder="Search athlete..." oninput="rsLoad()">
+      <select id="rs-state" onchange="rsLoad()"><option value="">All States</option></select>
+      <select id="rs-event" onchange="rsLoad()"><option value="">All Events</option></select>
+      <select id="rs-gender" onchange="rsLoad()"><option value="">All</option><option>Boys</option><option>Girls</option></select>
+      <select id="rs-grade" onchange="rsLoad()"><option value="">All Grades</option><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      <button class="btn-primary" onclick="showForm('results')">+ Log Result</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Athlete</th><th>Event</th><th>Gender</th><th>Grade</th><th>Mark</th><th>Place</th><th>State</th><th>PR</th></tr></thead><tbody id="rs-body"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="rsPrev()" id="rs-prev" disabled>Prev</button><span class="page-info" id="rs-page-info">Page 1</span><button class="btn-outline" onclick="rsNext()" id="rs-next" disabled>Next</button></div>
+  </div>
+
+  <!-- RECORDS -->
+  <div class="console" id="tab-records">
+    <div class="page-title">Records Board</div>
+    <div class="page-sub">Best time / mark per event, by gender &amp; grade</div>
+    <div class="toolbar">
+      <select id="rc-gender" onchange="renderRecords()"><option value="Boys">Boys</option><option value="Girls">Girls</option></select>
+      <select id="rc-grade" onchange="renderRecords()"><option value="">All Grades (overall best)</option><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      <span style="color:var(--gray);font-size:12px" id="rc-note"></span>
+    </div>
+    <div id="records-content" class="rec-grid"></div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="console" id="tab-feedback">
+    <div class="page-title">Feedback</div>
+    <div class="page-sub">Parent, coach, athlete and official feedback</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showFbView('list')">All Feedback</button>
+      <button class="subtab" onclick="showFbView('report')">Summary</button>
+    </div>
+    <div id="fb-list-view">
+      <div class="toolbar">
+        <select id="fb-state" onchange="fbLoad()"><option value="">All States</option></select>
+        <select id="fb-category" onchange="fbLoad()"><option value="">All Categories</option><option>Coaching</option><option>Officiating</option><option>Facilities</option><option>Scheduling</option><option>Communication</option><option>Safety</option><option>Registration</option><option>Sportsmanship</option></select>
+        <select id="fb-rating" onchange="fbLoad()"><option value="">All Ratings</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+        <select id="fb-status" onchange="fbLoad()"><option value="">All Status</option><option>New</option><option>Reviewed</option><option>Responded</option><option>Follow Up Needed</option><option>Resolved</option></select>
+        <button class="btn-primary" onclick="showForm('feedback')">+ New Feedback</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Submitted By</th><th>Role</th><th>State</th><th>Category</th><th>Rating</th><th>Recommend</th><th>Status</th></tr></thead><tbody id="fb-body"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="fbPrev()" id="fb-prev" disabled>Prev</button><span class="page-info" id="fb-page-info">Page 1</span><button class="btn-outline" onclick="fbNext()" id="fb-next" disabled>Next</button></div>
+    </div>
+    <div id="fb-report-view" style="display:none"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='track';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+const EVENTS_TRACK=['50m Dash','100m Dash','200m Dash','400m Run','800m Run','1600m Run','4x100m Relay'];
+const EVENTS_FIELD=['Long Jump','Standing Long Jump','High Jump','Softball Throw','Turbo Javelin','Shot Put'];
+const ALL_EVENTS=[...EVENTS_TRACK,...EVENTS_FIELD];
+const GRADES=['K','1','2','3','4','5','6'];
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/[\s]+/g,'-')}
+function stars(n){const r=Math.max(0,Math.min(5,Math.round(parseFloat(n)||0)));return`<span class="stars">${'★'.repeat(r)}<span class="off">${'★'.repeat(5-r)}</span></span>`}
+function genderBadge(g){return`<span class="badge ${g==='Girls'?'badge-girls':g==='Boys'?'badge-boys':'badge-coed'}">${esc(g)}</span>`}
+function markStr(mk,unit){if(mk==null||mk==='')return'—';return esc(mk)+(unit?' '+esc(unit):'')}
+function medal(p){const n=parseInt(p);return n===1?'🥇':n===2?'🥈':n===3?'🥉':''}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');fillEventSelects();requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+function fillEventSelects(){const sel=document.getElementById('rs-event');if(sel&&sel.options.length<=1)ALL_EVENTS.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o)})}
+
+let activeTab='dashboard';
+const TAB_MAP={'dashboard':'Dashboard','leagues':'State Leagues','teams':'Teams','coaches':'Coaches','athletes':'Athletes','meets':'Schedule','results':'Results','records':'Records','feedback':'Feedback'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>{b.classList.toggle('active',b.textContent===TAB_MAP[tab])});
+if(tab==='dashboard')loadDashboard();
+else if(tab==='leagues')lgLoad();
+else if(tab==='teams'){fillStateSelect('tm-state');tmLoad()}
+else if(tab==='coaches'){fillStateSelect('co-state');coLoad()}
+else if(tab==='athletes'){fillStateSelect('at-state');atLoad()}
+else if(tab==='meets'){fillStateSelect('me-state');meLoad()}
+else if(tab==='results'){fillStateSelect('rs-state');rsLoad()}
+else if(tab==='records')loadRecords();
+else if(tab==='feedback'){fillStateSelect('fb-state');showFbView('list')}}
+
+// ===== shared reference lists =====
+let _stateNames=null,_teamNames=null,_athleteNames=null,_meetNames=null;
+async function ensureStates(){if(_stateNames)return _stateNames;try{const r=await api(`/kapps/${KAPP}/forms/leagues/submissions?include=values&limit=25&orderBy=`+encodeURIComponent('values[State]')+'&direction=ASC');_stateNames=(r.submissions||[]).map(s=>v(s,'State')).filter(Boolean)}catch(e){_stateNames=[]}
+  // leagues has 50 rows > 25; page through to collect all state names
+  try{let all=[...(_stateNames||[])];let token=null;for(let i=0;i<3;i++){const r=await api(`/kapps/${KAPP}/forms/leagues/submissions?include=values&limit=25`+(token?'&pageToken='+encodeURIComponent(token):''));(r.submissions||[]).forEach(s=>{const st=v(s,'State');if(st&&!all.includes(st))all.push(st)});token=r.nextPageToken;if(!token)break}_stateNames=all.sort()}catch(e){}
+  return _stateNames}
+async function fillStateSelect(id){const sel=document.getElementById(id);if(!sel||sel.options.length>1)return;const names=await ensureStates();names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)})}
+async function ensureTeams(){if(_teamNames)return _teamNames;try{const r=await api(`/kapps/${KAPP}/forms/teams/submissions?include=values&limit=25`);_teamNames=(r.submissions||[]).map(s=>v(s,'Team Name')).filter(Boolean).sort()}catch(e){_teamNames=[]}return _teamNames}
+async function ensureAthletes(){if(_athleteNames)return _athleteNames;try{const r=await api(`/kapps/${KAPP}/forms/athletes/submissions?include=values&limit=25`);_athleteNames=(r.submissions||[]).map(s=>v(s,'Name')).filter(Boolean).sort()}catch(e){_athleteNames=[]}return _athleteNames}
+async function ensureMeets(){if(_meetNames)return _meetNames;try{const r=await api(`/kapps/${KAPP}/forms/meets/submissions?include=values&limit=25`);_meetNames=(r.submissions||[]).map(s=>v(s,'Meet Name')).filter(Boolean).sort()}catch(e){_meetNames=[]}return _meetNames}
+
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  document.getElementById('dash-kpis').innerHTML='<div style="color:var(--gray);text-align:center;padding:16px;grid-column:1/-1">Loading dashboard...</div>';
+  document.getElementById('dash-grid1').innerHTML='';document.getElementById('dash-grid2').innerHTML='';
+  try{
+    const d=await sapi('/api/track/dashboard');const k=d.kpis;
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi red"><div class="val">${k.states}</div><div class="label">State Leagues</div><div class="sub">${k.teams} teams</div></div>
+      <div class="kpi navy"><div class="val">${k.athletes}</div><div class="label">Athletes</div><div class="sub">${k.boys} boys · ${k.girls} girls</div></div>
+      <div class="kpi teal"><div class="val">${k.coaches}</div><div class="label">Coaches</div></div>
+      <div class="kpi accent"><div class="val">${k.upcomingMeets}</div><div class="label">Upcoming Meets</div><div class="sub">${k.meets} total</div></div>
+      <div class="kpi blue"><div class="val">${k.results}</div><div class="label">Recorded Marks</div><div class="sub">${k.prs} PRs</div></div>
+      <div class="kpi yellow"><div class="val">${k.avgRating||'—'}★</div><div class="label">Avg Feedback</div><div class="sub">${k.recPct}% recommend</div></div>
+      <div class="kpi red"><div class="val">${k.unpaid}</div><div class="label">Unpaid Registrations</div></div>`;
+
+    const maxG=Math.max(1,...Object.values(d.gradeDist));const maxR=Math.max(1,...d.byRegion.map(r=>r.athletes));
+    document.getElementById('dash-grid1').innerHTML=`
+      <div class="card"><h3>Largest State Leagues</h3><table><thead><tr><th>State</th><th>Region</th><th>Teams</th><th>Athletes</th><th>Status</th></tr></thead><tbody>${
+        d.topStates.map(s=>`<tr class="clickable-row" onclick="openLeagueDetail('${s.id}')"><td style="font-weight:600">${esc(s.state)}</td><td>${esc(s.region)}</td><td>${s.teams}</td><td style="font-weight:600">${s.athletes}</td><td><span class="badge ${badgeClass(s.status)}">${esc(s.status)}</span></td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--gray)">No leagues</td></tr>'
+      }</tbody></table></div>
+      <div class="card"><h3>Athletes by Region</h3>${d.byRegion.map(r=>`<div class="bar-row"><span class="bl">${esc(r.region)} <span style="font-size:10px">(${r.states})</span></span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(r.athletes/maxR*100)}%"></div></div><span class="bv">${r.athletes}</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No data</p>'}
+        <h3 style="margin-top:16px">Athletes by Grade</h3><div style="display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:8px">${GRADES.map(g=>{const n=d.gradeDist[g]||0;return`<div style="flex:1;text-align:center"><div style="background:var(--accent);border-radius:4px 4px 0 0;height:${Math.round(n/maxG*70)}px;min-height:2px"></div><div style="font-size:10px;color:var(--gray);margin-top:3px">${g}</div><div style="font-size:11px;font-weight:600">${n}</div></div>`}).join('')}</div></div>`;
+
+    document.getElementById('dash-grid2').innerHTML=`
+      <div class="card"><h3>Upcoming Meets</h3>${d.upcoming.length===0?'<p style="color:var(--gray);font-size:13px">No upcoming meets</p>':`<table><thead><tr><th>Date</th><th>Meet</th><th>State</th><th>Host</th><th>Status</th></tr></thead><tbody>${d.upcoming.map(m=>`<tr class="clickable-row" onclick="openLeagueByState('${esc(m.state)}')"><td>${esc(m.date)}</td><td style="font-weight:600">${esc(m.name)}</td><td>${esc(m.state)}</td><td>${esc(m.host)}</td><td><span class="badge ${badgeClass(m.status)}">${esc(m.status)}</span></td></tr>`).join('')}</tbody></table>`}
+        <h3 style="margin-top:16px">Recent Personal Records</h3>${d.recentPRs.length===0?'<p style="color:var(--gray);font-size:13px">No PRs yet</p>':`<table><thead><tr><th>Athlete</th><th>Event</th><th>Mark</th><th>G/Gr</th></tr></thead><tbody>${d.recentPRs.map(p=>`<tr><td style="font-weight:600">${esc(p.athlete)} ⭐</td><td><span class="evt-tag">${esc(p.event)}</span></td><td class="mark">${markStr(p.mark,p.unit)}</td><td>${esc(p.gender==='Girls'?'G':'B')}/${esc(p.grade)}</td></tr>`).join('')}</tbody></table>`}</div>
+      <div class="card"><h3>Recent Feedback</h3>${d.recentFeedback.length===0?'<p style="color:var(--gray);font-size:13px">No feedback yet</p>':d.recentFeedback.map(f=>`<div class="review"><div class="rh"><strong>${esc(f.by)} <span style="font-weight:400;color:var(--gray);font-size:12px">(${esc(f.role)})</span></strong>${stars(f.rating)}</div><div class="rc">${esc(f.comment)}</div><div class="rm">${esc(f.state)} · ${esc(f.category)} · ${esc(f.date)}</div></div>`).join('')}</div>`;
+  }catch(e){document.getElementById('dash-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}}
+
+// ===== GENERIC PAGER =====
+function makePager(){return{page:1,pageKeys:{1:null},hasNext:false}}
+async function loadPaged(pager,form,bodyId,renderRow,pageId,prevId,nextId,kqlFn,filterFn,colspan){
+  try{
+    const lastCA=pager.pageKeys[pager.page];let kql=kqlFn?kqlFn():'';
+    if(lastCA)kql=kql?`(${kql}) AND createdAt<"${lastCA}"`:`createdAt<"${lastCA}"`;
+    let path=`/kapps/${KAPP}/forms/${form}/submissions?include=details,values&limit=25`;
+    if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);const data=res.submissions||[];pager.hasNext=!!res.nextPageToken;
+    if(pager.hasNext&&data.length)pager.pageKeys[pager.page+1]=data[data.length-1].createdAt;
+    const filtered=filterFn?data.filter(filterFn):data;
+    document.getElementById(bodyId).innerHTML=filtered.length===0?`<tr><td colspan="${colspan||10}" style="text-align:center;color:var(--gray);padding:24px">No records found</td></tr>`:filtered.map(renderRow).join('');
+    document.getElementById(pageId).textContent='Page '+pager.page;
+    document.getElementById(prevId).disabled=pager.page<=1;
+    document.getElementById(nextId).disabled=!pager.hasNext;
+  }catch(e){document.getElementById(bodyId).innerHTML=`<tr><td colspan="${colspan||10}" style="color:var(--red)">${esc(e.message)}</td></tr>`}}
+
+// ===== STATE LEAGUES =====
+const lgP=makePager();
+function lgLoad(){lgP.page=1;lgP.pageKeys={1:null};loadLeagues()}
+function lgNext(){if(lgP.hasNext){lgP.page++;loadLeagues()}}
+function lgPrev(){if(lgP.page>1){lgP.page--;loadLeagues()}}
+function loadLeagues(){const search=document.getElementById('lg-search').value.toLowerCase();const rg=document.getElementById('lg-region').value,st=document.getElementById('lg-status').value;loadPaged(lgP,'leagues','lg-body',s=>`<tr class="clickable-row" onclick="openLeagueDetail('${s.id}')"><td style="font-weight:600">${esc(v(s,'State'))} <span style="color:var(--gray);font-size:11px">${esc(v(s,'State Code'))}</span></td><td>${esc(v(s,'League Name'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Director'))}</td><td>${esc(v(s,'Team Count'))}</td><td style="font-weight:600">${esc(v(s,'Athlete Count'))}</td><td>${esc(v(s,'Season'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'lg-page-info','lg-prev','lg-next',()=>{let kql='';if(rg)kql=`values[Region]="${rg}"`;if(st)kql=kql?`${kql} AND values[Status]="${st}"`:`values[Status]="${st}"`;return kql},search?s=>v(s,'State').toLowerCase().includes(search)||v(s,'Director').toLowerCase().includes(search):null,8)}
+
+// ===== TEAMS =====
+const tmP=makePager();
+function tmLoad(){tmP.page=1;tmP.pageKeys={1:null};loadTeams()}
+function tmNext(){if(tmP.hasNext){tmP.page++;loadTeams()}}
+function tmPrev(){if(tmP.page>1){tmP.page--;loadTeams()}}
+function loadTeams(){const search=document.getElementById('tm-search').value.toLowerCase();const st=document.getElementById('tm-state').value,dv=document.getElementById('tm-division').value,su=document.getElementById('tm-status').value;loadPaged(tmP,'teams','tm-body',s=>`<tr class="clickable-row" onclick="showEditForm('teams','${s.id}')"><td style="font-weight:600">${esc(v(s,'Team Name'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'City'))}</td><td>${esc(v(s,'Head Coach'))}</td><td>${genderBadge(v(s,'Division'))}</td><td>${esc(v(s,'Grade Range'))}</td><td>${esc(v(s,'Athlete Count'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'tm-page-info','tm-prev','tm-next',()=>{let kql='';if(st)kql=`values[State]="${st}"`;if(su)kql=kql?`${kql} AND values[Status]="${su}"`:`values[Status]="${su}"`;if(dv)kql=kql?`${kql} AND values[Division]="${dv}"`:`values[Division]="${dv}"`;return kql},search?s=>v(s,'Team Name').toLowerCase().includes(search)||v(s,'Head Coach').toLowerCase().includes(search)||v(s,'City').toLowerCase().includes(search):null,8)}
+
+// ===== COACHES =====
+const coP=makePager();
+function coLoad(){coP.page=1;coP.pageKeys={1:null};loadCoaches()}
+function coNext(){if(coP.hasNext){coP.page++;loadCoaches()}}
+function coPrev(){if(coP.page>1){coP.page--;loadCoaches()}}
+function loadCoaches(){const search=document.getElementById('co-search').value.toLowerCase();const st=document.getElementById('co-state').value,role=document.getElementById('co-role').value,su=document.getElementById('co-status').value;loadPaged(coP,'coaches','co-body',s=>`<tr class="clickable-row" onclick="showEditForm('coaches','${s.id}')"><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Role'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'Team'))}</td><td style="font-size:12px">${esc(v(s,'Certification'))}</td><td>${esc(v(s,'Years Experience'))}</td><td><span class="badge ${badgeClass(v(s,'Background Check'))}">${esc(v(s,'Background Check')||'—')}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'co-page-info','co-prev','co-next',()=>{let kql='';if(st)kql=`values[State]="${st}"`;if(role)kql=kql?`${kql} AND values[Role]="${role}"`:`values[Role]="${role}"`;if(su)kql=kql?`${kql} AND values[Status]="${su}"`:`values[Status]="${su}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search):null,8)}
+
+// ===== ATHLETES =====
+const atP=makePager();
+function atLoad(){atP.page=1;atP.pageKeys={1:null};loadAthletes()}
+function atNext(){if(atP.hasNext){atP.page++;loadAthletes()}}
+function atPrev(){if(atP.page>1){atP.page--;loadAthletes()}}
+function loadAthletes(){const search=document.getElementById('at-search').value.toLowerCase();const st=document.getElementById('at-state').value,g=document.getElementById('at-gender').value,gr=document.getElementById('at-grade').value,su=document.getElementById('at-status').value;loadPaged(atP,'athletes','at-body',s=>`<tr class="clickable-row" onclick="showEditForm('athletes','${s.id}')"><td style="font-weight:700;color:var(--primary)">${esc(v(s,'Bib Number'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'Team'))}</td><td>${genderBadge(v(s,'Gender'))}</td><td><span class="grade-pill">${esc(v(s,'Grade'))}</span></td><td>${esc(v(s,'Age'))}</td><td><span class="evt-tag">${esc(v(s,'Primary Event'))}</span></td><td><span class="badge ${badgeClass(v(s,'Registration Paid'))}">${esc(v(s,'Registration Paid')||'—')}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'at-page-info','at-prev','at-next',()=>{let kql='';if(st)kql=`values[State]="${st}"`;if(g)kql=kql?`${kql} AND values[Gender]="${g}"`:`values[Gender]="${g}"`;if(gr)kql=kql?`${kql} AND values[Grade]="${gr}"`:`values[Grade]="${gr}"`;if(su)kql=kql?`${kql} AND values[Status]="${su}"`:`values[Status]="${su}"`;return kql},search?s=>v(s,'Name').toLowerCase().includes(search)||v(s,'Team').toLowerCase().includes(search):null,10)}
+
+// ===== MEETS / SCHEDULE =====
+const meP=makePager();
+function meLoad(){meP.page=1;meP.pageKeys={1:null};loadMeets()}
+function meNext(){if(meP.hasNext){meP.page++;loadMeets()}}
+function mePrev(){if(meP.page>1){meP.page--;loadMeets()}}
+function loadMeets(){const search=document.getElementById('mt2-search').value.toLowerCase();const st=document.getElementById('me-state').value,su=document.getElementById('me-status').value;loadPaged(meP,'meets','me-body',s=>`<tr class="clickable-row" onclick="showEditForm('meets','${s.id}')"><td>${esc(v(s,'Meet Date'))}</td><td>${esc(v(s,'Start Time'))}</td><td style="font-weight:600">${esc(v(s,'Meet Name'))}</td><td>${esc(v(s,'State'))}</td><td style="font-size:12px">${esc(v(s,'Location'))}</td><td>${esc(v(s,'Host Team'))}</td><td style="font-size:12px">${esc(v(s,'Divisions'))}</td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'me-page-info','me-prev','me-next',()=>{let kql='';if(st)kql=`values[State]="${st}"`;if(su)kql=kql?`${kql} AND values[Status]="${su}"`:`values[Status]="${su}"`;return kql},search?s=>v(s,'Meet Name').toLowerCase().includes(search)||v(s,'Host Team').toLowerCase().includes(search):null,8)}
+
+// ===== RESULTS =====
+const rsP=makePager();
+function rsLoad(){rsP.page=1;rsP.pageKeys={1:null};loadResults()}
+function rsNext(){if(rsP.hasNext){rsP.page++;loadResults()}}
+function rsPrev(){if(rsP.page>1){rsP.page--;loadResults()}}
+function loadResults(){const search=document.getElementById('rs-search').value.toLowerCase();const st=document.getElementById('rs-state').value,ev=document.getElementById('rs-event').value,g=document.getElementById('rs-gender').value,gr=document.getElementById('rs-grade').value;loadPaged(rsP,'results','rs-body',s=>`<tr class="clickable-row" onclick="showEditForm('results','${s.id}')"><td>${esc(v(s,'Date'))}</td><td style="font-weight:600">${esc(v(s,'Athlete'))}</td><td><span class="evt-tag">${esc(v(s,'Event'))}</span></td><td>${genderBadge(v(s,'Gender'))}</td><td><span class="grade-pill">${esc(v(s,'Grade'))}</span></td><td class="mark">${markStr(v(s,'Mark'),v(s,'Unit'))}</td><td>${medal(v(s,'Place'))} ${esc(v(s,'Place'))}</td><td>${esc(v(s,'State'))}</td><td>${v(s,'Personal Best')==='Yes'?'⭐':''}</td></tr>`,'rs-page-info','rs-prev','rs-next',()=>{let kql='';if(ev)kql=`values[Event]="${ev}"`;if(g)kql=kql?`${kql} AND values[Gender]="${g}"`:`values[Gender]="${g}"`;if(st)kql=kql?`${kql} AND values[State]="${st}"`:`values[State]="${st}"`;if(gr)kql=kql?`${kql} AND values[Grade]="${gr}"`:`values[Grade]="${gr}"`;return kql},search?s=>v(s,'Athlete').toLowerCase().includes(search):null,9)}
+
+// ===== RECORDS BOARD =====
+let _records=null;
+async function loadRecords(){
+  document.getElementById('records-content').innerHTML='<p style="color:var(--gray);padding:16px">Loading records...</p>';
+  try{_records=await sapi('/api/track/records');renderRecords()}
+  catch(e){document.getElementById('records-content').innerHTML=`<p style="color:var(--red);padding:16px">${esc(e.message)}</p>`}}
+function renderRecords(){
+  if(!_records)return;
+  const gender=document.getElementById('rc-gender').value;const grade=document.getElementById('rc-grade').value;
+  document.getElementById('rc-note').textContent=grade?`Best per event for grade ${grade}`:'Fastest / farthest across all K–6 grades';
+  const html=ALL_EVENTS.map(evt=>{
+    let recs=_records.records.filter(r=>r.event===evt&&r.gender===gender);
+    if(grade)recs=recs.filter(r=>r.grade===grade);
+    const asc=EVENTS_TRACK.includes(evt);
+    recs.sort((a,b)=>asc?a.markN-b.markN:b.markN-a.markN);
+    const top=recs.slice(0,3);
+    return`<div class="rec-card"><div class="rc-evt"><span>${esc(evt)}</span><span class="evt-tag">${asc?'Track':'Field'}</span></div>${top.length?top.map((r,i)=>`<div class="rec-line"><span>${['🥇','🥈','🥉'][i]} <span class="mark">${markStr(r.mark,r.unit)}</span></span><span class="rl-who">${esc(r.athlete)} · Gr ${esc(r.grade)} · ${esc(r.state)}</span></div>`).join(''):'<div class="rec-line"><span class="rl-who">No marks yet</span></div>'}</div>`;
+  }).join('');
+  document.getElementById('records-content').innerHTML=html;
+}
+
+// ===== FEEDBACK =====
+const fbP=makePager();
+function fbLoad(){fbP.page=1;fbP.pageKeys={1:null};loadFeedback()}
+function fbNext(){if(fbP.hasNext){fbP.page++;loadFeedback()}}
+function fbPrev(){if(fbP.page>1){fbP.page--;loadFeedback()}}
+function loadFeedback(){const st=document.getElementById('fb-state').value,cat=document.getElementById('fb-category').value,rt=document.getElementById('fb-rating').value,su=document.getElementById('fb-status').value;loadPaged(fbP,'feedback','fb-body',s=>`<tr class="clickable-row" onclick="showEditForm('feedback','${s.id}')"><td>${esc(v(s,'Date'))}</td><td style="font-weight:600">${esc(v(s,'Submitted By'))}</td><td>${esc(v(s,'Role'))}</td><td>${esc(v(s,'State'))}</td><td>${esc(v(s,'Category'))}</td><td>${stars(v(s,'Rating'))}</td><td><span class="badge ${badgeClass(v(s,'Would Recommend'))}">${esc(v(s,'Would Recommend'))}</span></td><td><span class="badge ${badgeClass(v(s,'Status'))}">${esc(v(s,'Status'))}</span></td></tr>`,'fb-page-info','fb-prev','fb-next',()=>{let kql='';if(st)kql=`values[State]="${st}"`;if(cat)kql=kql?`${kql} AND values[Category]="${cat}"`:`values[Category]="${cat}"`;if(rt)kql=kql?`${kql} AND values[Rating]="${rt}"`:`values[Rating]="${rt}"`;if(su)kql=kql?`${kql} AND values[Status]="${su}"`:`values[Status]="${su}"`;return kql},null,8)}
+function showFbView(view){
+  document.querySelectorAll('#tab-feedback .subtab').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(view)));
+  document.getElementById('fb-list-view').style.display=view==='list'?'block':'none';
+  document.getElementById('fb-report-view').style.display=view==='report'?'block':'none';
+  if(view==='list')fbLoad();else loadFbReport();
+}
+async function loadFbReport(){
+  document.getElementById('fb-report-view').innerHTML='<div class="card"><p style="color:var(--gray)">Loading...</p></div>';
+  try{
+    const r=await sapi('/api/track/reports/feedback');
+    const maxC=Math.max(1,...r.byCategory.map(c=>c.count));
+    document.getElementById('fb-report-view').innerHTML=`
+      <div class="kpi-row">
+        <div class="kpi red"><div class="val">${r.total}</div><div class="label">Total Feedback</div></div>
+        <div class="kpi yellow"><div class="val">${r.avg||'—'}★</div><div class="label">Avg Rating</div></div>
+        <div class="kpi green"><div class="val">${r.recPct}%</div><div class="label">Would Recommend</div></div>
+        <div class="kpi blue"><div class="val">${r.open}</div><div class="label">Open / Needs Follow-Up</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>By Category</h3>${r.byCategory.map(c=>`<div class="bar-row"><span class="bl">${esc(c.category)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c.count/maxC*100)}%"></div></div><span class="bv">${c.count} · ${c.avg||'—'}★</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No data</p>'}</div>
+        <div class="card"><h3>By Role</h3>${r.byRole.map(x=>`<div class="bar-row"><span class="bl">${esc(x.role)}</span><div class="bar-track"><div class="bar-fill acc" style="width:${Math.round(x.count/Math.max(1,r.byRole[0].count)*100)}%"></div></div><span class="bv">${x.count}</span></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No data</p>'}</div>
+      </div>
+      <div class="card"><h3>Recent Comments</h3>${r.recent.map(f=>`<div class="review"><div class="rh"><strong>${esc(f.by)} <span style="font-weight:400;color:var(--gray);font-size:12px">(${esc(f.role)}) · ${esc(f.state)}</span></strong>${stars(f.rating)}</div><div class="rc">${esc(f.comment)}</div><div class="rm">${esc(f.category)} · ${esc(f.date)} · <span class="badge ${badgeClass(f.status)}">${esc(f.status)}</span></div></div>`).join('')||'<p style="color:var(--gray);font-size:13px">No feedback</p>'}</div>`;
+  }catch(e){document.getElementById('fb-report-view').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}}
+
+// ===== STATE LEAGUE DETAIL (MODAL) =====
+async function openLeagueByState(state){
+  try{const r=await api(`/kapps/${KAPP}/forms/leagues/submissions?include=values&limit=1&q=`+encodeURIComponent(`values[State]="${state}"`));const s=(r.submissions||[])[0];if(s)openLeagueDetail(s.id);}catch(e){}}
+async function openLeagueDetail(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading state league...</h2>';
+  document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/track/league/${id}`);const lg=d.league;const s=d.summary;
+    const tbl=(rows,cols,empty)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:`<p style="color:var(--gray);font-size:13px;padding:8px">${empty||'None'}</p>`;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(lg,'League Name'))}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:16px">
+        <span>State: <strong>${esc(v(lg,'State'))} (${esc(v(lg,'State Code'))})</strong></span>
+        <span>Region: <strong>${esc(v(lg,'Region'))}</strong></span>
+        <span>Director: <strong>${esc(v(lg,'Director'))}</strong></span>
+        <span>Season: <strong>${esc(v(lg,'Season'))}</strong></span>
+        <span>Status: <span class="badge ${badgeClass(v(lg,'Status'))}">${esc(v(lg,'Status'))}</span></span>
+      </div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--primary)">${s.teams}</div><div class="l">Teams</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--navy)">${s.athletes}</div><div class="l">Athletes (${s.boys}B/${s.girls}G)</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--teal)">${s.coaches}</div><div class="l">Coaches</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-box"><div class="v" style="color:var(--accent-dark)">${s.upcoming}</div><div class="l">Upcoming Meets</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${s.results}</div><div class="l">Marks (${s.prs} PR)</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--yellow)">${s.avg||'—'}★</div><div class="l">Avg Feedback</div></div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab active" onclick="showLgTab(this,'ld-tm')">Teams (${d.teams.length})</button>
+        <button class="subtab" onclick="showLgTab(this,'ld-co')">Coaches (${d.coaches.length})</button>
+        <button class="subtab" onclick="showLgTab(this,'ld-me')">Upcoming Meets (${d.upcoming.length})</button>
+      </div>
+      <div id="ld-tm" class="subtab-panel active">${tbl(d.teams,[['Team',r=>esc(r.name)],['City',r=>esc(r.city)],['Coach',r=>esc(r.coach)],['Division',r=>genderBadge(r.division)],['Athletes',r=>esc(r.athletes)]])}</div>
+      <div id="ld-co" class="subtab-panel">${tbl(d.coaches,[['Name',r=>esc(r.name)],['Role',r=>esc(r.role)],['Team',r=>esc(r.team)],['Cert.',r=>esc(r.cert)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]])}</div>
+      <div id="ld-me" class="subtab-panel">${tbl(d.upcoming,[['Date',r=>esc(r.date)],['Meet',r=>esc(r.name)],['Location',r=>esc(r.location)],['Host',r=>esc(r.host)],['Status',r=>`<span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>`]],'No upcoming meets')}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('leagues','${lg.id}')">Edit League</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}}
+function showLgTab(btn,panelId){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(panelId).classList.add('active')}
+
+// ===== GENERIC FORM MODAL =====
+const REGIONS='Northeast,Southeast,Midwest,Southwest,West';
+const DIVISIONS='Boys,Girls,Coed';
+const GRADE_RANGES='K-2,3-4,5-6,K-6';
+const COACH_ROLES='Head Coach,Assistant Coach,Sprints Coach,Distance Coach,Field Events Coach,Volunteer';
+const FB_CATS='Coaching,Officiating,Facilities,Scheduling,Communication,Safety,Registration,Sportsmanship';
+const FB_ROLES='Parent,Coach,Athlete,Official,Volunteer';
+const UNITS='sec,m,ft';
+const TIMES='8:00 AM,9:00 AM,10:00 AM,11:00 AM,12:00 PM,1:00 PM,2:00 PM,3:00 PM,4:00 PM,5:00 PM';
+const YN='Yes,No';
+const FORM_DEFS={
+  'leagues':{title:'State League',fields:[{r:['League ID','State']},{r:['State Code','Region|select:'+REGIONS]},'League Name',{r:['Director','Director Email']},{r:['Season','Status|select:Active,Planned,Inactive']},{r:['Team Count|number','Athlete Count|number']},'Notes|textarea']},
+  'teams':{title:'Team',fields:[{r:['Team ID','Team Name']},{r:['State|states','City']},{r:['Head Coach','Home Track']},{r:['Division|select:'+DIVISIONS,'Grade Range|select:'+GRADE_RANGES]},{r:['Athlete Count|number','Status|select:Active,Provisional,Inactive']},'Notes|textarea']},
+  'coaches':{title:'Coach',fields:[{r:['Coach ID','Name']},{r:['Email','Phone']},{r:['State|states','Team|teams']},{r:['Role|select:'+COACH_ROLES,'Certification|select:USATF Level 1,USATF Level 2,SafeSport Certified,First Aid/CPR,None']},{r:['Years Experience|number','Background Check|select:Cleared,Pending,Expired,Not Started']},{r:['Status|select:Active,Provisional,Inactive','']},'Notes|textarea']},
+  'athletes':{title:'Athlete',fields:[{r:['Athlete ID','Name']},{r:['State|states','Team|teams']},{r:['Gender|select:Boys,Girls','Grade|select:'+GRADES.join(',')]},{r:['Age|number','Bib Number|number']},{r:['Primary Event|events','Guardian']},{r:['Registration Paid|select:'+YN,'Status|select:Active,Injured,Inactive']},'Notes|textarea']},
+  'meets':{title:'Meet',fields:[{r:['Meet ID','Meet Name']},{r:['State|states','Host Team|teams']},{r:['Meet Date|date','Start Time|select:'+TIMES]},'Location',{r:['Divisions|select:Boys & Girls,Boys,Girls','Grade Range|select:'+GRADE_RANGES]},{r:['Status|select:Registration Open,Scheduled,Completed,Postponed,Cancelled','']},'Notes|textarea']},
+  'results':{title:'Result',fields:[{r:['Result ID','Date|date']},{r:['Meet|meets','Athlete|athletes']},{r:['Event|events','Event Type|select:Track,Field']},{r:['Gender|select:Boys,Girls','Grade|select:'+GRADES.join(',')]},{r:['Mark','Unit|select:'+UNITS]},{r:['Place|number','Personal Best|select:'+YN]},{r:['State|states','Team|teams']}]},
+  'feedback':{title:'Feedback',fields:[{r:['Feedback ID','Date|date']},{r:['State|states','Team|teams']},{r:['Submitted By','Role|select:'+FB_ROLES]},{r:['Category|select:'+FB_CATS,'Rating|select:5,4,3,2,1']},{r:['Would Recommend|select:'+YN,'Status|select:New,Reviewed,Responded,Follow Up Needed,Resolved']},'Comment|textarea','Response|textarea']},
+};
+
+async function showForm(formSlug,sub,prefill){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){
+    if(typeof field==='string'){html+=await renderField(field,sub,prefill)}
+    else if(field.r){const parts=await Promise.all(field.r.map(async f=>f?'<div>'+await renderField(f,sub,prefill)+'</div>':'<div></div>'));html+='<div class="field-row">'+parts.join('')+'</div>'}
+  }
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show')
+}
+async function renderField(spec,sub,prefill){
+  const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();
+  let val=sub?v(sub,name):'';if(!sub&&prefill&&prefill[name]!=null)val=prefill[name];
+  let input;
+  if(type==='states'){const opts=await ensureStates();input=selHtml(id,opts,val)}
+  else if(type==='teams'){const opts=await ensureTeams();input=selHtml(id,opts,val)}
+  else if(type==='athletes'){const opts=await ensureAthletes();input=selHtml(id,opts,val)}
+  else if(type==='meets'){const opts=await ensureMeets();input=selHtml(id,opts,val)}
+  else if(type==='events'){input=selHtml(id,ALL_EVENTS,val)}
+  else if(type.startsWith('select:')){input=selHtml(id,type.replace('select:','').split(','),val)}
+  else if(type==='textarea'){input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`}
+  else if(type==='date'){input=`<input id="${id}" type="date" value="${esc(val)}">`}
+  else if(type==='number'){input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`}
+  else{input=`<input id="${id}" type="text" value="${esc(val)}">`}
+  return`<label>${esc(name)}</label>${input}`}
+function selHtml(id,opts,val){return`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const elId='m-'+name.replace(/\s+/g,'-').toLowerCase();const el=document.getElementById(elId);if(el)vals[name]=el.value}}
+  // auto-fill Event Type from event when logging a result
+  if(formSlug==='results'&&vals['Event']){vals['Event Type']=EVENTS_TRACK.includes(vals['Event'])?'Track':'Field';if(!vals['Unit'])vals['Unit']=EVENTS_TRACK.includes(vals['Event'])?'sec':'m'}
+  try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_teamNames=null;_athleteNames=null;_meetNames=null;if(formSlug==='results')_records=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_teamNames=null;_athleteNames=null;_meetNames=null;switchTab(activeTab)}catch(e){alert('Error: '+e.message)}}
+</script>
+</body>
+</html>
