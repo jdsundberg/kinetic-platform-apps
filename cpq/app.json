@@ -1,0 +1,280 @@
+{
+  "name": "Ironline CPQ",
+  "slug": "cpq",
+  "description": "Configure-Price-Quote for industrial equipment manufacturing — product catalog with options, volume & margin pricing rules, multi-line quotes, discount/margin approval routing, won-quote conversion to orders, invoices and payments. Built to visualize money flow and detect blockages across the quote-to-cash lifecycle.",
+  "category": "Sales",
+  "icon": "file-invoice-dollar",
+  "color": "#0F2A43",
+  "bg": "#EAF0F5",
+  "forms": [
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Configurable industrial equipment catalog — list price, unit cost and lead time",
+      "submissionLabelExpression": "${values('SKU')} - ${values('Name')}",
+      "fields": [
+        { "name": "Product ID", "required": true },
+        { "name": "SKU", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Category" },
+        { "name": "Family" },
+        { "name": "Description", "rows": 2 },
+        { "name": "List Price" },
+        { "name": "Unit Cost" },
+        { "name": "Margin Pct" },
+        { "name": "Unit of Measure" },
+        { "name": "Lead Time Days" },
+        { "name": "Configurable" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Product ID]", "values[SKU]", "values[Category]", "values[Family]", "values[Status]", "values[Configurable]"],
+        "compound": [["values[Status]", "values[Category]"]]
+      }
+    },
+    {
+      "slug": "options",
+      "name": "Product Options",
+      "description": "Configurable add-ons attached to products — price and cost deltas",
+      "submissionLabelExpression": "${values('Product Name')} - ${values('Name')}",
+      "fields": [
+        { "name": "Option ID", "required": true },
+        { "name": "Product SKU" },
+        { "name": "Product Name" },
+        { "name": "Option Group" },
+        { "name": "Name", "required": true },
+        { "name": "Description", "rows": 2 },
+        { "name": "Price Delta" },
+        { "name": "Cost Delta" },
+        { "name": "Default Selected" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Option ID]", "values[Product SKU]", "values[Option Group]", "values[Status]"]
+      }
+    },
+    {
+      "slug": "price-rules",
+      "name": "Price Rules",
+      "description": "Volume tiers, segment discounts, margin floors and promotions governing pricing",
+      "submissionLabelExpression": "${values('Rule ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Rule ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Rule Type" },
+        { "name": "Category" },
+        { "name": "Customer Segment" },
+        { "name": "Min Quantity" },
+        { "name": "Max Quantity" },
+        { "name": "Discount Pct" },
+        { "name": "Margin Floor Pct" },
+        { "name": "Max Discount Pct" },
+        { "name": "Effective Date" },
+        { "name": "Expiration Date" },
+        { "name": "Active" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Rule ID]", "values[Rule Type]", "values[Category]", "values[Customer Segment]", "values[Active]"]
+      }
+    },
+    {
+      "slug": "customers",
+      "name": "Customers",
+      "description": "Accounts that receive quotes — segment, region, credit terms",
+      "submissionLabelExpression": "${values('Customer ID')} - ${values('Name')}",
+      "fields": [
+        { "name": "Customer ID", "required": true },
+        { "name": "Name", "required": true },
+        { "name": "Segment" },
+        { "name": "Industry" },
+        { "name": "Region" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Contact Name" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Credit Terms" },
+        { "name": "Credit Limit" },
+        { "name": "Account Owner" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Customer ID]", "values[Segment]", "values[Industry]", "values[Region]", "values[State]", "values[Status]"]
+      }
+    },
+    {
+      "slug": "quotes",
+      "name": "Quotes",
+      "description": "Quote headers moving through the pipeline — totals, discount, margin, approval and outcome",
+      "submissionLabelExpression": "${values('Quote Number')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Quote Number", "required": true },
+        { "name": "Customer ID" },
+        { "name": "Customer Name" },
+        { "name": "Segment" },
+        { "name": "Owner" },
+        { "name": "Status" },
+        { "name": "Stage" },
+        { "name": "List Total" },
+        { "name": "Discount Total" },
+        { "name": "Net Total" },
+        { "name": "Cost Total" },
+        { "name": "Margin Amount" },
+        { "name": "Margin Pct" },
+        { "name": "Discount Pct" },
+        { "name": "Line Count" },
+        { "name": "Win Probability" },
+        { "name": "Approval Status" },
+        { "name": "Created Date" },
+        { "name": "Sent Date" },
+        { "name": "Stage Entered Date" },
+        { "name": "Expiration Date" },
+        { "name": "Decision Date" },
+        { "name": "Lost Reason" },
+        { "name": "Order Number" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Quote Number]", "values[Customer ID]", "values[Status]", "values[Stage]", "values[Segment]", "values[Owner]", "values[Approval Status]", "values[Expiration Date]"],
+        "compound": [["values[Status]", "values[Owner]"], ["values[Status]", "values[Segment]"]]
+      }
+    },
+    {
+      "slug": "quote-lines",
+      "name": "Quote Lines",
+      "description": "Line items on a quote — product, quantity, options, discount and per-line margin",
+      "submissionLabelExpression": "${values('Quote Number')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "Line ID", "required": true },
+        { "name": "Quote Number" },
+        { "name": "Line Number" },
+        { "name": "Product SKU" },
+        { "name": "Product Name" },
+        { "name": "Category" },
+        { "name": "Quantity" },
+        { "name": "Unit List Price" },
+        { "name": "Unit Cost" },
+        { "name": "Options Summary" },
+        { "name": "Option Price Delta" },
+        { "name": "Discount Pct" },
+        { "name": "Unit Net Price" },
+        { "name": "Extended List" },
+        { "name": "Extended Net" },
+        { "name": "Extended Cost" },
+        { "name": "Margin Amount" },
+        { "name": "Margin Pct" }
+      ],
+      "indexes": {
+        "single": ["values[Line ID]", "values[Quote Number]", "values[Product SKU]", "values[Category]"]
+      }
+    },
+    {
+      "slug": "approvals",
+      "name": "Approvals",
+      "description": "Discount, margin-floor and special-terms approval requests routed to managers",
+      "submissionLabelExpression": "${values('Approval ID')} - ${values('Quote Number')}",
+      "fields": [
+        { "name": "Approval ID", "required": true },
+        { "name": "Quote Number" },
+        { "name": "Customer Name" },
+        { "name": "Approval Type" },
+        { "name": "Requested By" },
+        { "name": "Approver" },
+        { "name": "Approver Role" },
+        { "name": "Status" },
+        { "name": "Priority" },
+        { "name": "Discount Pct" },
+        { "name": "Margin Pct" },
+        { "name": "Net Total" },
+        { "name": "Threshold" },
+        { "name": "Reason", "rows": 2 },
+        { "name": "Requested Date" },
+        { "name": "SLA Due Date" },
+        { "name": "Decision Date" },
+        { "name": "Aging Days" },
+        { "name": "Decision Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Approval ID]", "values[Quote Number]", "values[Status]", "values[Approver]", "values[Approval Type]", "values[Priority]"],
+        "compound": [["values[Status]", "values[Approver]"]]
+      }
+    },
+    {
+      "slug": "orders",
+      "name": "Orders",
+      "description": "Won quotes converted to production orders — fulfillment and margin tracking",
+      "submissionLabelExpression": "${values('Order Number')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Order Number", "required": true },
+        { "name": "Quote Number" },
+        { "name": "Customer ID" },
+        { "name": "Customer Name" },
+        { "name": "Owner" },
+        { "name": "Status" },
+        { "name": "Order Date" },
+        { "name": "Order Total" },
+        { "name": "Cost Total" },
+        { "name": "Margin Amount" },
+        { "name": "Margin Pct" },
+        { "name": "Requested Ship Date" },
+        { "name": "Promised Ship Date" },
+        { "name": "Shipped Date" },
+        { "name": "Fulfillment Status" },
+        { "name": "Invoiced Amount" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Order Number]", "values[Quote Number]", "values[Customer ID]", "values[Status]", "values[Fulfillment Status]"]
+      }
+    },
+    {
+      "slug": "invoices",
+      "name": "Invoices",
+      "description": "Billing against orders — the cash-conversion stage with aging and balances",
+      "submissionLabelExpression": "${values('Invoice Number')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Invoice Number", "required": true },
+        { "name": "Order Number" },
+        { "name": "Quote Number" },
+        { "name": "Customer ID" },
+        { "name": "Customer Name" },
+        { "name": "Status" },
+        { "name": "Invoice Date" },
+        { "name": "Due Date" },
+        { "name": "Terms" },
+        { "name": "Amount" },
+        { "name": "Amount Paid" },
+        { "name": "Balance" },
+        { "name": "Paid Date" },
+        { "name": "Days Outstanding" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Invoice Number]", "values[Order Number]", "values[Customer ID]", "values[Status]", "values[Due Date]"]
+      }
+    },
+    {
+      "slug": "payments",
+      "name": "Payments",
+      "description": "Payments received against invoices — completes the quote-to-cash flow",
+      "submissionLabelExpression": "${values('Payment ID')} - ${values('Customer Name')}",
+      "fields": [
+        { "name": "Payment ID", "required": true },
+        { "name": "Invoice Number" },
+        { "name": "Customer ID" },
+        { "name": "Customer Name" },
+        { "name": "Amount" },
+        { "name": "Method" },
+        { "name": "Status" },
+        { "name": "Payment Date" },
+        { "name": "Reference" }
+      ],
+      "indexes": {
+        "single": ["values[Payment ID]", "values[Invoice Number]", "values[Customer ID]", "values[Status]"]
+      }
+    }
+  ]
+}

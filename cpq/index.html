@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ironline CPQ</title>
+<style>
+:root{--navy:#0F2A43;--navy-l:#1B3F60;--blue:#1E7FB5;--blue-l:#3FA0D6;--gold:#E0A21A;--green:#1F9D6B;--green-d:#157A52;--red:#D14B3F;--amber:#E08A1E;--purple:#6E4FB0;--teal:#0E8C86;--gray:#5C6670;--light:#F4F7FA;--border:#E2E8F0;--bg:#EAF0F5;--white:#fff;--shadow:0 1px 3px rgba(15,42,67,.10),0 1px 2px rgba(15,42,67,.06);--shadow-lg:0 12px 30px rgba(15,42,67,.20)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#16202E;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,127,181,.14)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#EFF5FB}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#08182B 0%,#0F2A43 55%,#1B3F60 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--navy);font-size:25px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--gold)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--gold);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--navy);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--navy-l)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+.topbar{background:var(--navy);color:white;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:17px;white-space:nowrap;margin-right:22px;letter-spacing:-.2px}
+.topbar .logo span{color:var(--gold)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.74);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--gold);color:var(--navy);font-weight:700}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.74);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.74);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--gold);color:white}
+
+.console{display:none;padding:22px;max-width:1520px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.4px}
+.card h3 .hint{float:right;font-weight:600;color:var(--blue);text-transform:none;letter-spacing:0;font-size:11px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:21px;font-weight:700;margin:4px 0;color:var(--navy)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.gold .val{color:var(--gold)}.kpi.gold{border-top-color:var(--gold)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.amber .val{color:var(--amber)}.kpi.amber{border-top-color:var(--amber)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.navy .val{color:var(--navy)}.kpi.navy{border-top-color:var(--navy)}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-won,.badge-approved,.badge-paid,.badge-active,.badge-cleared,.badge-closed,.badge-fulfilled,.badge-delivered,.badge-yes{background:#E1F2EA;color:#157A52}
+.badge-sent,.badge-negotiation,.badge-pending,.badge-pending-approval,.badge-partial,.badge-in-production,.badge-in-transit,.badge-shipped,.badge-medium,.badge-draft,.badge-prospect,.badge-open{background:#FBF1DC;color:#9A6710}
+.badge-lost,.badge-rejected,.badge-overdue,.badge-expired,.badge-discontinued,.badge-high,.badge-escalated,.badge-no,.badge-cancelled{background:#FBE6E4;color:#A6362D}
+.badge-not-required,.badge-low,.badge-void,.badge-inactive{background:var(--light);color:var(--gray)}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:130px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn-danger{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1000px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:18px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--navy);color:white;border-color:var(--navy)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-row .bl{min-width:140px;text-align:right;color:var(--gray)}
+.bar-row .bt{flex:1;background:var(--light);border-radius:5px;height:18px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:5px;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700}
+.bar-row .bv{min-width:54px;font-weight:700;color:var(--navy);text-align:right}
+
+/* Funnel */
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:7px;cursor:pointer}
+.funnel-row:hover .funnel-bar{filter:brightness(1.06)}
+.funnel-lab{min-width:128px;text-align:right;font-size:12px;font-weight:600;color:var(--navy)}
+.funnel-track{flex:1;display:flex;justify-content:center;align-items:center}
+.funnel-bar{height:42px;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font-weight:700;font-size:13px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-width:130px}
+.funnel-bar .stall{position:absolute;right:0;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(209,75,63,.92),rgba(209,75,63,.92) 7px,rgba(165,54,45,.92) 7px,rgba(165,54,45,.92) 14px)}
+.funnel-meta{min-width:150px;font-size:11px;color:var(--gray)}
+.funnel-meta .warn{color:var(--red);font-weight:700}
+
+svg.viz{width:100%;height:auto;display:block;font-family:inherit}
+.flow-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-top:8px}
+.flow-leg span{display:inline-flex;align-items:center;gap:5px}
+.flow-leg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.note{font-size:11px;color:var(--gray);margin-top:6px;line-height:1.5}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:26px;max-width:960px;width:95%;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:14px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap}
+.meta-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:14px}
+.banner{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5;background:var(--light);color:var(--gray)}
+.banner.warn{background:#FBE6E4;color:#A6362D}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+.empty{text-align:center;color:var(--gray);padding:24px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Ironline <span>CPQ</span></h1>
+    <p class="sub">Configure · Price · Quote — industrial equipment quote-to-cash</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://ai-labs.kinopsdev.io">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Ironline <span>CPQ</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Money Flow</button>
+      <button onclick="switchTab('pipeline')">Pipeline</button>
+      <button onclick="switchTab('approvals')">Approvals</button>
+      <button onclick="switchTab('cash')">Cash Conversion</button>
+      <button onclick="switchTab('quotes')">Quotes</button>
+      <button onclick="switchTab('catalog')">Catalog</button>
+      <button onclick="switchTab('customers')">Customers</button>
+      <button onclick="switchTab('orders')">Orders</button>
+      <button onclick="switchTab('invoices')">Invoices</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- MONEY FLOW DASHBOARD -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Money Flow</div>
+    <div class="page-sub">How value moves from quote to cash — and where it gets stuck</div>
+    <div class="kpi-row" id="db-kpis"></div>
+    <div class="card"><h3>Quote-to-Cash Money Flow<span class="hint">value carried forward vs. leaked</span></h3><div id="db-flow"></div></div>
+    <div class="grid-2">
+      <div class="card"><h3>Pipeline Funnel<span class="hint">click a stage</span></h3><div id="db-funnel"></div></div>
+      <div class="card"><h3>Revenue → Margin Waterfall (Won)</h3><div id="db-waterfall"></div></div>
+    </div>
+    <div class="grid-2">
+      <div id="db-approvals"></div>
+      <div id="db-cash"></div>
+    </div>
+    <div class="grid-2"><div id="db-stalled"></div><div id="db-mix"></div></div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="console" id="tab-pipeline">
+    <div class="page-title">Pipeline</div>
+    <div class="page-sub">Open quotes by stage, with stall detection (no movement in 30+ days)</div>
+    <div id="pl-funnel"></div>
+    <div class="toolbar">
+      <input type="text" id="s-quotes2" placeholder="Search quote, customer..." oninput="loadTable('quotes')">
+      <select id="f-quotes2-Status" onchange="loadTable('quotes')"><option value="">All Stages</option><option>Draft</option><option>Sent</option><option>Negotiation</option><option>Pending Approval</option><option>Approved</option><option>Won</option><option>Lost</option><option>Expired</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Quote</th><th>Customer</th><th>Owner</th><th>Stage</th><th class="num">Net</th><th class="num">Disc%</th><th class="num">Margin%</th><th class="num">Age</th><th class="num">Win%</th></tr></thead><tbody id="b-quotes2"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('quotes',-1)" id="p-quotes-prev" disabled>Prev</button><span class="page-info" id="p-quotes-info">Page 1</span><button class="btn-outline" onclick="pageTable('quotes',1)" id="p-quotes-next" disabled>Next</button></div>
+  </div>
+
+  <!-- APPROVALS -->
+  <div class="console" id="tab-approvals">
+    <div class="page-title">Approval Bottlenecks</div>
+    <div class="page-sub">Discount &amp; margin approvals waiting on managers — the most common pipeline blockage</div>
+    <div class="kpi-row" id="ap-kpis"></div>
+    <div class="grid-2"><div id="ap-approver"></div><div id="ap-aging"></div></div>
+    <div class="toolbar">
+      <input type="text" id="s-approvals" placeholder="Search quote, customer, approver..." oninput="loadTable('approvals')">
+      <select id="f-approvals-Status" onchange="loadTable('approvals')"><option value="">All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Escalated</option></select>
+      <select id="f-approvals-Approval Type" onchange="loadTable('approvals')"><option value="">All Types</option><option>Discount</option><option>Margin Floor</option><option>Special Terms</option></select>
+      <select id="f-approvals-Priority" onchange="loadTable('approvals')"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Quote</th><th>Customer</th><th>Type</th><th>Approver</th><th class="num">Disc%</th><th class="num">Margin%</th><th class="num">Net</th><th class="num">Age</th><th>Priority</th><th>Status</th></tr></thead><tbody id="b-approvals"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('approvals',-1)" id="p-approvals-prev" disabled>Prev</button><span class="page-info" id="p-approvals-info">Page 1</span><button class="btn-outline" onclick="pageTable('approvals',1)" id="p-approvals-next" disabled>Next</button></div>
+  </div>
+
+  <!-- CASH CONVERSION -->
+  <div class="console" id="tab-cash">
+    <div class="page-title">Cash Conversion</div>
+    <div class="page-sub">Won → Order → Invoice → Payment, plus aging receivables and unconverted wins</div>
+    <div class="kpi-row" id="cs-kpis"></div>
+    <div class="card"><h3>Cash Conversion Flow</h3><div id="cs-flow"></div></div>
+    <div class="grid-2"><div id="cs-aging"></div><div id="cs-unconverted"></div></div>
+    <div class="toolbar">
+      <input type="text" id="s-invoices2" placeholder="Search invoice, customer..." oninput="loadTable('invoices')">
+      <select id="f-invoices2-Status" onchange="loadTable('invoices')"><option value="">All Status</option><option>Draft</option><option>Sent</option><option>Partial</option><option>Paid</option><option>Overdue</option><option>Void</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Order</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-invoices2"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('invoices',-1)" id="p-invoices-prev2" disabled>Prev</button><span class="page-info" id="p-invoices-info2">Page 1</span><button class="btn-outline" onclick="pageTable('invoices',1)" id="p-invoices-next2" disabled>Next</button></div>
+  </div>
+
+  <!-- QUOTES -->
+  <div class="console" id="tab-quotes">
+    <div class="page-title">Quotes</div>
+    <div class="page-sub">All quotes — click any row for the full quote 360 (lines, pricing, approvals, fulfillment)</div>
+    <div class="toolbar">
+      <input type="text" id="s-quotes" placeholder="Search quote, customer, owner..." oninput="loadTable('quotes')">
+      <select id="f-quotes-Status" onchange="loadTable('quotes')"><option value="">All Status</option><option>Draft</option><option>Sent</option><option>Negotiation</option><option>Pending Approval</option><option>Approved</option><option>Won</option><option>Lost</option><option>Expired</option></select>
+      <select id="f-quotes-Segment" onchange="loadTable('quotes')"><option value="">All Segments</option><option>Enterprise</option><option>Mid-Market</option><option>SMB</option><option>Government</option></select>
+      <button class="btn-primary" onclick="showForm('quotes')">+ New Quote</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Quote</th><th>Customer</th><th>Segment</th><th>Owner</th><th class="num">Net</th><th class="num">Disc%</th><th class="num">Margin%</th><th>Approval</th><th>Status</th></tr></thead><tbody id="b-quotes"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('quotes',-1)" id="p-quotes-prev3" disabled>Prev</button><span class="page-info" id="p-quotes-info3">Page 1</span><button class="btn-outline" onclick="pageTable('quotes',1)" id="p-quotes-next3" disabled>Next</button></div>
+  </div>
+
+  <!-- CATALOG -->
+  <div class="console" id="tab-catalog">
+    <div class="page-title">Catalog</div>
+    <div class="page-sub">Products, configurable options and the price rules that govern quoting</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="catTab(this,'products')">Products</button>
+      <button class="subtab" onclick="catTab(this,'options')">Options</button>
+      <button class="subtab" onclick="catTab(this,'price-rules')">Price Rules</button>
+    </div>
+    <div id="cat-products" class="subtab-panel active">
+      <div class="toolbar"><input type="text" id="s-products" placeholder="Search product, SKU..." oninput="loadTable('products')">
+        <select id="f-products-Category" onchange="loadTable('products')"><option value="">All Categories</option></select>
+        <select id="f-products-Status" onchange="loadTable('products')"><option value="">All Status</option><option>Active</option><option>Discontinued</option></select>
+        <button class="btn-primary" onclick="showForm('products')">+ New Product</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>SKU</th><th>Name</th><th>Category</th><th class="num">List</th><th class="num">Cost</th><th class="num">Margin%</th><th class="num">Lead</th><th>Config</th><th>Status</th></tr></thead><tbody id="b-products"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('products',-1)" id="p-products-prev" disabled>Prev</button><span class="page-info" id="p-products-info">Page 1</span><button class="btn-outline" onclick="pageTable('products',1)" id="p-products-next" disabled>Next</button></div>
+    </div>
+    <div id="cat-options" class="subtab-panel">
+      <div class="toolbar"><input type="text" id="s-options" placeholder="Search option, product..." oninput="loadTable('options')">
+        <select id="f-options-Option Group" onchange="loadTable('options')"><option value="">All Groups</option><option>Voltage</option><option>Capacity</option><option>Controls</option><option>Finish</option><option>Warranty</option><option>Installation</option></select>
+        <button class="btn-primary" onclick="showForm('options')">+ New Option</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Product</th><th>Group</th><th>Name</th><th class="num">Price Δ</th><th class="num">Cost Δ</th><th>Default</th><th>Status</th></tr></thead><tbody id="b-options"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('options',-1)" id="p-options-prev" disabled>Prev</button><span class="page-info" id="p-options-info">Page 1</span><button class="btn-outline" onclick="pageTable('options',1)" id="p-options-next" disabled>Next</button></div>
+    </div>
+    <div id="cat-price-rules" class="subtab-panel">
+      <div class="toolbar"><input type="text" id="s-price-rules" placeholder="Search rule..." oninput="loadTable('price-rules')">
+        <select id="f-price-rules-Rule Type" onchange="loadTable('price-rules')"><option value="">All Types</option><option>Volume Tier</option><option>Segment Discount</option><option>Margin Floor</option><option>Approval Threshold</option><option>Promotion</option></select>
+        <button class="btn-primary" onclick="showForm('price-rules')">+ New Rule</button></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Category</th><th>Segment</th><th class="num">Disc%</th><th class="num">Floor%</th><th>Active</th></tr></thead><tbody id="b-price-rules"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('price-rules',-1)" id="p-price-rules-prev" disabled>Prev</button><span class="page-info" id="p-price-rules-info">Page 1</span><button class="btn-outline" onclick="pageTable('price-rules',1)" id="p-price-rules-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="console" id="tab-customers">
+    <div class="page-title">Customers</div>
+    <div class="page-sub">Accounts receiving quotes — click for a customer 360</div>
+    <div class="toolbar">
+      <input type="text" id="s-customers" placeholder="Search customer, contact..." oninput="loadTable('customers')">
+      <select id="f-customers-Segment" onchange="loadTable('customers')"><option value="">All Segments</option><option>Enterprise</option><option>Mid-Market</option><option>SMB</option><option>Government</option></select>
+      <select id="f-customers-Industry" onchange="loadTable('customers')"><option value="">All Industries</option><option>Automotive</option><option>Food &amp; Beverage</option><option>Pharmaceutical</option><option>Oil &amp; Gas</option><option>Mining &amp; Metals</option><option>Logistics</option><option>Aerospace</option><option>Consumer Goods</option></select>
+      <button class="btn-primary" onclick="showForm('customers')">+ New Customer</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Segment</th><th>Industry</th><th>Region</th><th>Owner</th><th>Terms</th><th>Status</th></tr></thead><tbody id="b-customers"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('customers',-1)" id="p-customers-prev" disabled>Prev</button><span class="page-info" id="p-customers-info">Page 1</span><button class="btn-outline" onclick="pageTable('customers',1)" id="p-customers-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="console" id="tab-orders">
+    <div class="page-title">Orders</div>
+    <div class="page-sub">Won quotes converted to production orders</div>
+    <div class="toolbar">
+      <input type="text" id="s-orders" placeholder="Search order, customer..." oninput="loadTable('orders')">
+      <select id="f-orders-Status" onchange="loadTable('orders')"><option value="">All Status</option><option>Open</option><option>In Production</option><option>Shipped</option><option>Delivered</option><option>Closed</option><option>Cancelled</option></select>
+      <button class="btn-primary" onclick="showForm('orders')">+ New Order</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Order</th><th>Quote</th><th>Customer</th><th class="num">Total</th><th class="num">Margin%</th><th>Order Date</th><th>Fulfillment</th><th>Status</th></tr></thead><tbody id="b-orders"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('orders',-1)" id="p-orders-prev" disabled>Prev</button><span class="page-info" id="p-orders-info">Page 1</span><button class="btn-outline" onclick="pageTable('orders',1)" id="p-orders-next" disabled>Next</button></div>
+  </div>
+
+  <!-- INVOICES -->
+  <div class="console" id="tab-invoices">
+    <div class="page-title">Invoices</div>
+    <div class="page-sub">Billing against orders with balances and aging</div>
+    <div class="toolbar">
+      <input type="text" id="s-invoices" placeholder="Search invoice, customer..." oninput="loadTable('invoices')">
+      <select id="f-invoices-Status" onchange="loadTable('invoices')"><option value="">All Status</option><option>Draft</option><option>Sent</option><option>Partial</option><option>Paid</option><option>Overdue</option><option>Void</option></select>
+      <button class="btn-primary" onclick="showForm('invoices')">+ New Invoice</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Order</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-invoices"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('invoices',-1)" id="p-invoices-prev" disabled>Prev</button><span class="page-info" id="p-invoices-info">Page 1</span><button class="btn-outline" onclick="pageTable('invoices',1)" id="p-invoices-next" disabled>Next</button></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Sales performance and receivables</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('win-loss')">Win / Loss by Rep</button>
+      <button class="subtab" onclick="showReport('ar-aging')">AR Aging</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='cpq';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
+function fmt$(x){return '$'+Math.round(n_(x)).toLocaleString('en-US')}
+function fmtM(x){const f=n_(x);if(Math.abs(f)>=1e6)return '$'+(f/1e6).toFixed(2)+'M';if(Math.abs(f)>=1e3)return '$'+(f/1e3).toFixed(0)+'K';return '$'+Math.round(f)}
+function pctv(x){return (Math.round(n_(x)*10)/10)+'%'}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function badgeClass(val){if(!val)return'badge-not-required';return'badge-'+String(val).toLowerCase().replace(/\s*\/\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}
+function badge(val){return`<span class="badge ${badgeClass(val)}">${esc(val||'—')}</span>`}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={dashboard:'Money Flow',pipeline:'Pipeline',approvals:'Approvals',cash:'Cash Conversion',quotes:'Quotes',catalog:'Catalog',customers:'Customers',orders:'Orders',invoices:'Invoices',reports:'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.textContent===TAB_MAP[tab]));
+  if(tab==='dashboard')loadDashboard();
+  else if(tab==='pipeline'){loadPipeline();loadTable('quotes')}
+  else if(tab==='approvals'){loadApprovalBoard();fillRefSelects();loadTable('approvals')}
+  else if(tab==='cash'){loadCashBoard();loadTable('invoices')}
+  else if(tab==='reports')showReport('win-loss');
+  else if(tab==='catalog'){fillRefSelects();loadTable('products')}
+  else if(TABLES[tab]){fillRefSelects();loadTable(tab)}
+}
+function catTab(btn,slug){document.querySelectorAll('#tab-catalog .subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('#tab-catalog .subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById('cat-'+slug).classList.add('active');loadTable(slug)}
+
+let _cats=null;
+async function fillRefSelects(){
+  try{if(!_cats){const r=await api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=25`);_cats=[...new Set((r.submissions||[]).map(s=>v(s,'Category')).filter(Boolean))].sort()}}catch(e){}
+  const sel=document.getElementById('f-products-Category');if(sel&&_cats&&sel.options.length<=1)_cats.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o)});
+}
+
+/* ===== generic table driver ===== */
+const TABLES={
+  quotes:{form:'quotes',filters:['Status','Segment'],search:['Quote Number','Customer Name','Owner'],onRow:s=>`openQuote('${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Quote Number'))}</td><td>${esc(v(s,'Customer Name'))}</td><td>${esc(v(s,'Segment'))}</td><td>${esc(v(s,'Owner'))}</td><td class="num">${fmt$(v(s,'Net Total'))}</td><td class="num">${pctv(v(s,'Discount Pct'))}</td><td class="num">${pctv(v(s,'Margin Pct'))}</td><td>${badge(v(s,'Approval Status'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  products:{form:'products',filters:['Category','Status'],search:['Name','SKU','Family'],onRow:s=>`showEditForm('products','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'SKU'))}</td><td>${esc(v(s,'Name'))}</td><td>${esc(v(s,'Category'))}</td><td class="num">${fmt$(v(s,'List Price'))}</td><td class="num">${fmt$(v(s,'Unit Cost'))}</td><td class="num">${pctv(v(s,'Margin Pct'))}</td><td class="num">${esc(v(s,'Lead Time Days'))}d</td><td>${badge(v(s,'Configurable'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  options:{form:'options',filters:['Option Group'],search:['Name','Product Name','Product SKU'],onRow:s=>`showEditForm('options','${s.id}')`,row:s=>`<td>${esc(v(s,'Option ID'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Option Group'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td class="num">${fmt$(v(s,'Price Delta'))}</td><td class="num">${fmt$(v(s,'Cost Delta'))}</td><td>${badge(v(s,'Default Selected'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  'price-rules':{form:'price-rules',filters:['Rule Type'],search:['Name','Rule ID'],onRow:s=>`showEditForm('price-rules','${s.id}')`,row:s=>`<td>${esc(v(s,'Rule ID'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Rule Type'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Customer Segment'))}</td><td class="num">${v(s,'Discount Pct')?pctv(v(s,'Discount Pct')):'—'}</td><td class="num">${v(s,'Margin Floor Pct')?pctv(v(s,'Margin Floor Pct')):'—'}</td><td>${badge(v(s,'Active'))}</td>`},
+  customers:{form:'customers',filters:['Segment','Industry'],search:['Name','Contact Name','City'],onRow:s=>`openCustomer('${s.id}')`,row:s=>`<td>${esc(v(s,'Customer ID'))}</td><td style="font-weight:600">${esc(v(s,'Name'))}</td><td>${esc(v(s,'Segment'))}</td><td>${esc(v(s,'Industry'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Account Owner'))}</td><td>${esc(v(s,'Credit Terms'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  approvals:{form:'approvals',filters:['Status','Approval Type','Priority'],search:['Quote Number','Customer Name','Approver'],onRow:s=>`showEditForm('approvals','${s.id}')`,row:s=>`<td>${esc(v(s,'Approval ID'))}</td><td>${esc(v(s,'Quote Number'))}</td><td>${esc(v(s,'Customer Name'))}</td><td>${esc(v(s,'Approval Type'))}</td><td>${esc(v(s,'Approver'))}</td><td class="num">${pctv(v(s,'Discount Pct'))}</td><td class="num">${pctv(v(s,'Margin Pct'))}</td><td class="num">${fmt$(v(s,'Net Total'))}</td><td class="num" style="font-weight:700">${esc(v(s,'Aging Days'))}d</td><td>${badge(v(s,'Priority'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  orders:{form:'orders',filters:['Status'],search:['Order Number','Customer Name','Quote Number'],onRow:s=>`showEditForm('orders','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Order Number'))}</td><td>${esc(v(s,'Quote Number'))}</td><td>${esc(v(s,'Customer Name'))}</td><td class="num">${fmt$(v(s,'Order Total'))}</td><td class="num">${pctv(v(s,'Margin Pct'))}</td><td>${esc(v(s,'Order Date'))}</td><td>${esc(v(s,'Fulfillment Status'))}</td><td>${badge(v(s,'Status'))}</td>`},
+  invoices:{form:'invoices',filters:['Status'],search:['Invoice Number','Customer Name','Order Number'],onRow:s=>`showEditForm('invoices','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Invoice Number'))}</td><td>${esc(v(s,'Customer Name'))}</td><td>${esc(v(s,'Order Number'))}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td class="num">${fmt$(v(s,'Amount Paid'))}</td><td class="num" style="font-weight:700">${fmt$(v(s,'Balance'))}</td><td>${esc(v(s,'Due Date'))}</td><td>${badge(v(s,'Status'))}</td>`},
+};
+const PAGERS={};
+function pager(k){if(!PAGERS[k])PAGERS[k]={page:1,keys:{1:null},hasNext:false};return PAGERS[k]}
+function loadTable(k){const p=pager(k);p.page=1;p.keys={1:null};fetchTable(k)}
+function pageTable(k,dir){const p=pager(k);if(dir>0&&p.hasNext)p.page++;else if(dir<0&&p.page>1)p.page--;else return;fetchTable(k)}
+function syncFilters(k){ // mirror duplicated toolbars (pipeline/cash use *2 ids)
+  if(k==='quotes'){const a=document.getElementById('f-quotes2-Status'),b=document.getElementById('f-quotes-Status');if(activeTab==='pipeline'&&a&&b)b.value=a.value;}
+  if(k==='invoices'){const a=document.getElementById('f-invoices2-Status'),b=document.getElementById('f-invoices-Status');if(activeTab==='cash'&&a&&b)b.value=a.value;}
+}
+async function fetchTable(k){
+  const cfg=TABLES[k],p=pager(k);
+  syncFilters(k);
+  const isAlt={quotes:activeTab==='pipeline',invoices:activeTab==='cash'};
+  const bodyId=isAlt[k]?(k==='quotes'?'b-quotes2':'b-invoices2'):'b-'+k;
+  const searchId=isAlt[k]?(k==='quotes'?'s-quotes2':'s-invoices2'):'s-'+k;
+  const infoId=k==='quotes'?(activeTab==='pipeline'?'p-quotes-info':'p-quotes-info3'):k==='invoices'?(activeTab==='cash'?'p-invoices-info2':'p-invoices-info'):'p-'+k+'-info';
+  try{
+    let kql='';
+    (cfg.filters||[]).forEach(f=>{let el=document.getElementById('f-'+k+'-'+f);if(isAlt[k]){const alt=document.getElementById('f-'+k+'2-'+f);if(alt&&alt.value)el=alt;}const val=el&&el.value;if(val)kql=kql?`${kql} AND values[${f}]="${val.replace(/"/g,'\\"')}"`:`values[${f}]="${val.replace(/"/g,'\\"')}"`});
+    const last=p.keys[p.page];if(last)kql=kql?`(${kql}) AND createdAt<"${last}"`:`createdAt<"${last}"`;
+    let path=`/kapps/${KAPP}/forms/${cfg.form}/submissions?include=details,values&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];p.hasNext=!!res.nextPageToken;
+    if(p.hasNext&&data.length)p.keys[p.page+1]=data[data.length-1].createdAt;
+    const sEl=document.getElementById(searchId);const term=sEl?sEl.value.toLowerCase().trim():'';
+    if(term)data=data.filter(s=>(cfg.search||[]).some(f=>v(s,f).toLowerCase().includes(term)));
+    const body=document.getElementById(bodyId);
+    if(body)body.innerHTML=data.length?data.map(s=>`<tr class="clickable-row" onclick="${cfg.onRow(s)}">${cfg.row(s)}</tr>`).join(''):`<tr><td colspan="12" class="empty">No records found</td></tr>`;
+    const info=document.getElementById(infoId);if(info)info.textContent='Page '+p.page;
+    document.querySelectorAll(`[id^="p-${k}-prev"]`).forEach(b=>b.disabled=p.page<=1);
+    document.querySelectorAll(`[id^="p-${k}-next"]`).forEach(b=>b.disabled=!p.hasNext);
+  }catch(e){const body=document.getElementById(bodyId);if(body)body.innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`}
+}
+
+/* ===== shared chart helpers ===== */
+function barList(arr,color,fmt){if(!arr||!arr.length)return'<p class="empty">No data</p>';const max=Math.max(...arr.map(a=>a.value!=null?a.value:a.count),1);return arr.map(a=>{const val=a.value!=null?a.value:a.count;return`<div class="bar-row"><span class="bl">${esc(a.name||a.bucket)}</span><div class="bt"><div class="bf" style="width:${Math.max(2,Math.round(val/max*100))}%${color?';background:'+color:''}"></div></div><span class="bv">${fmt?fmt(val):val}</span></div>`}).join('')}
+
+/* horizontal Sankey-style money flow: steps decrease left→right, leaks drop down */
+function flowDiagram(steps,leaks,opt){
+  opt=opt||{};const W=980,H=opt.h||260,topY=44,maxBarH=opt.maxBarH||150,nodeW=15;
+  const maxV=Math.max(...steps.map(s=>s.value),1);const scale=maxBarH/maxV;
+  const n=steps.length;const xStep=(W-nodeW-40)/(n-1);const x=i=>20+i*xStep;
+  const colors=opt.colors||['#0F2A43','#1E7FB5','#1F9D6B','#157A52','#0E8C86'];
+  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  // ribbons (carried value = next node value) occupying TOP of source node
+  for(let i=0;i<n-1;i++){
+    const carried=steps[i+1].value*scale;const x0=x(i)+nodeW,x1=x(i+1);
+    svg+=`<path d="M${x0},${topY} L${x1},${topY} L${x1},${topY+carried} L${x0},${topY+carried} Z" fill="${colors[(i+1)%colors.length]}" opacity="0.22"/>`;
+    // leak ribbon: bottom slice of source node dropping down
+    if(leaks&&leaks[i]&&leaks[i].value>0){
+      const lk=leaks[i];const ly0=topY+carried,ly1=topY+steps[i].value*scale;const lh=ly1-ly0;
+      const dropY=topY+maxBarH+46;const cx=x0+(x1-x0)*0.42;
+      svg+=`<path d="M${x0},${ly0} L${x0+18},${ly0} L${cx+30},${dropY} L${cx-30},${dropY} L${x0},${ly1} Z" fill="${lk.color||'#D14B3F'}" opacity="0.30"/>`;
+      svg+=`<rect x="${cx-78}" y="${dropY}" width="156" height="34" rx="6" fill="${lk.color||'#D14B3F'}" opacity="0.12"/>`;
+      svg+=`<text x="${cx}" y="${dropY+14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${lk.color||'#A6362D'}">${esc(lk.label)}</text>`;
+      svg+=`<text x="${cx}" y="${dropY+28}" text-anchor="middle" font-size="11" font-weight="700" fill="${lk.color||'#A6362D'}">${fmtM(lk.value)}</text>`;
+    }
+  }
+  // nodes
+  steps.forEach((s,i)=>{const h=s.value*scale;svg+=`<rect x="${x(i)}" y="${topY}" width="${nodeW}" height="${h}" rx="3" fill="${colors[i%colors.length]}"/>`;
+    svg+=`<text x="${x(i)+nodeW/2}" y="${topY-18}" text-anchor="middle" font-size="11" font-weight="700" fill="#0F2A43">${esc(s.label)}</text>`;
+    svg+=`<text x="${x(i)+nodeW/2}" y="${topY-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#1E7FB5">${fmtM(s.value)}</text>`;});
+  svg+=`</svg>`;return svg;
+}
+
+/* revenue→margin waterfall */
+function waterfall(w){
+  const W=560,H=240,base=185,top=20,chartH=base-top,nodeW=72,gap=26;
+  const max=Math.max(w.list,1);const sc=chartH/max;const x=i=>20+i*(nodeW+gap);
+  const yOf=val=>base-val*sc;
+  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  const bar=(i,yTop,h,fill,lab,val,labCol)=>{svg+=`<rect x="${x(i)}" y="${yTop}" width="${nodeW}" height="${Math.max(1,h)}" rx="3" fill="${fill}"/>`+
+    `<text x="${x(i)+nodeW/2}" y="${yTop-5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16202E">${fmtM(val)}</text>`+
+    `<text x="${x(i)+nodeW/2}" y="${base+15}" text-anchor="middle" font-size="10" font-weight="600" fill="${labCol||'#5C6670'}">${esc(lab)}</text>`};
+  // List (full)
+  bar(0,yOf(w.list),w.list*sc,'#0F2A43','List',w.list);
+  // Discount (floating from list down to net)
+  svg+=`<rect x="${x(1)}" y="${yOf(w.list)}" width="${nodeW}" height="${Math.max(1,w.discount*sc)}" rx="3" fill="#D14B3F"/>`+
+    `<text x="${x(1)+nodeW/2}" y="${yOf(w.list)-5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#A6362D">-${fmtM(w.discount)}</text>`+
+    `<text x="${x(1)+nodeW/2}" y="${base+15}" text-anchor="middle" font-size="10" font-weight="600" fill="#A6362D">Discount</text>`;
+  // Net
+  bar(2,yOf(w.net),w.net*sc,'#1E7FB5','Net Booked',w.net);
+  // Cost (floating from net down to margin)
+  svg+=`<rect x="${x(3)}" y="${yOf(w.net)}" width="${nodeW}" height="${Math.max(1,w.cost*sc)}" rx="3" fill="#E08A1E"/>`+
+    `<text x="${x(3)+nodeW/2}" y="${yOf(w.net)-5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9A6710">-${fmtM(w.cost)}</text>`+
+    `<text x="${x(3)+nodeW/2}" y="${base+15}" text-anchor="middle" font-size="10" font-weight="600" fill="#9A6710">COGS</text>`;
+  // Margin
+  bar(4,yOf(w.margin),w.margin*sc,'#1F9D6B','Gross Margin',w.margin,'#157A52');
+  // connector dotted lines between tops
+  const conn=(i,y)=>{svg+=`<line x1="${x(i)+nodeW}" y1="${y}" x2="${x(i+1)}" y2="${y}" stroke="#B9C4D0" stroke-width="1.4" stroke-dasharray="3,3"/>`};
+  conn(0,yOf(w.list));conn(1,yOf(w.net));conn(2,yOf(w.net));conn(3,yOf(w.margin));
+  svg+=`</svg>`;return svg;
+}
+
+/* funnel (HTML bars) */
+function renderFunnel(pipeline){
+  const max=Math.max(...pipeline.map(p=>p.value),1);
+  return pipeline.map(p=>{
+    const w=Math.max(14,Math.round(p.value/max*100));
+    const stallW=p.value?Math.round((p.stalledValue||0)/p.value*100):0;
+    const grad=`linear-gradient(90deg,var(--navy),var(--blue))`;
+    return `<div class="funnel-row" onclick="openStage('${esc(p.stage)}')">
+      <div class="funnel-lab">${esc(p.stage)}</div>
+      <div class="funnel-track"><div class="funnel-bar" style="width:${w}%;background:${grad}"><span>${p.count}</span><span>${fmtM(p.value)}</span>${stallW>0?`<div class="stall" style="width:${stallW}%"></div>`:''}</div></div>
+      <div class="funnel-meta">avg ${p.avgAge}d in stage${p.stalled>0?` · <span class="warn">⚠ ${p.stalled} stalled (${fmtM(p.stalledValue)})</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== DASHBOARD ===== */
+let _dash=null;
+async function loadDashboard(){
+  document.getElementById('db-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading money-flow dashboard…</div>';
+  ['db-flow','db-funnel','db-waterfall','db-approvals','db-cash','db-stalled','db-mix'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{
+    const d=await sapi('/api/cpq/dashboard');_dash=d;const k=d.kpis;
+    document.getElementById('db-kpis').innerHTML=`
+      <div class="kpi blue"><div class="val">${fmtM(k.openValue)}</div><div class="label">Open Pipeline</div><div class="sub">${k.openCount} quotes</div></div>
+      <div class="kpi navy"><div class="val">${fmtM(k.weightedValue)}</div><div class="label">Weighted Pipeline</div><div class="sub">prob-adjusted</div></div>
+      <div class="kpi green"><div class="val">${fmtM(k.wonValue)}</div><div class="label">Won (booked)</div><div class="sub">${k.wonCount} deals · ${k.winRate}% win</div></div>
+      <div class="kpi gold"><div class="val">${k.avgMargin}%</div><div class="label">Avg Margin (Won)</div><div class="sub">${k.avgDiscount}% avg discount</div></div>
+      <div class="kpi ${k.breachedApprovals>0?'red':'teal'}"><div class="val">${k.pendingApprovals}</div><div class="label">Pending Approvals</div><div class="sub">${k.breachedApprovals} past SLA</div></div>
+      <div class="kpi ${k.totalStalled>0?'amber':'green'}"><div class="val">${k.totalStalled}</div><div class="label">Stalled Quotes</div><div class="sub">30+ days no movement</div></div>
+      <div class="kpi red"><div class="val">${fmtM(k.outstanding)}</div><div class="label">Outstanding AR</div><div class="sub">${fmtM(k.collected)} collected</div></div>
+      <div class="kpi ${k.unconvertedWins>0?'amber':'green'}"><div class="val">${k.unconvertedWins}</div><div class="label">Unconverted Wins</div><div class="sub">${fmtM(k.unconvertedValue)} not ordered</div></div>`;
+
+    // money flow sankey: List → Net → Margin (margin realization)
+    const w=d.waterfall;
+    const flow=flowDiagram(
+      [{label:'List Value',value:w.list},{label:'Net Booked',value:w.net},{label:'Gross Margin',value:w.margin}],
+      [{label:'Discounts given',value:w.discount,color:'#D14B3F'},{label:'Cost of goods',value:w.cost,color:'#E08A1E'}],
+      {colors:['#0F2A43','#1E7FB5','#1F9D6B'],h:250}
+    );
+    document.getElementById('db-flow').innerHTML=flow+`<div class="flow-leg"><span><i style="background:#1E7FB5"></i>carried forward</span><span><i style="background:#D14B3F"></i>discount leakage</span><span><i style="background:#E08A1E"></i>COGS</span></div><p class="note">Of <b>${fmtM(w.list)}</b> in list value on won deals, <b>${fmtM(w.discount)}</b> (${w.discountPct}%) leaked to discounts and <b>${fmtM(w.cost)}</b> to cost — leaving <b>${fmtM(w.margin)}</b> gross margin (${w.marginPct}%).</p>`;
+
+    document.getElementById('db-funnel').innerHTML=renderFunnel(d.pipeline);
+    document.getElementById('db-waterfall').innerHTML=waterfall(w);
+
+    // approval bottleneck card
+    const a=d.approvals;
+    document.getElementById('db-approvals').innerHTML=`<div class="card"><h3>Approval Bottleneck<span class="hint">${a.breached} past SLA</span></h3>
+      <div class="grid-3" style="margin-bottom:12px"><div class="stat-box"><div class="v" style="color:var(--amber)">${a.pending}</div><div class="l">Pending</div></div><div class="stat-box"><div class="v" style="color:var(--red)">${a.breached}</div><div class="l">SLA Breached</div></div><div class="stat-box"><div class="v">${fmtM(a.pendingValue)}</div><div class="l">Value Held</div></div></div>
+      ${a.byApprover.length?`<table><thead><tr><th>Approver</th><th class="num">Queue</th><th class="num">Avg Age</th><th class="num">Breached</th><th class="num">Value</th></tr></thead><tbody>${a.byApprover.map(o=>`<tr class="clickable-row" onclick="switchTab('approvals')"><td><b>${esc(o.name)}</b><div style="font-size:10px;color:var(--gray)">${esc(o.role)}</div></td><td class="num">${o.count}</td><td class="num">${o.avgAge}d</td><td class="num" style="color:${o.breached>0?'var(--red)':'var(--gray)'};font-weight:700">${o.breached}</td><td class="num">${fmtM(o.value)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No pending approvals 🎉</p>'}</div>`;
+
+    // cash conversion card
+    const c=d.cash;
+    document.getElementById('db-cash').innerHTML=`<div class="card"><h3>Cash Conversion<span class="hint">${c.overdueInvoices} overdue</span></h3>
+      ${barList([{name:'Won (booked)',value:c.wonValue},{name:'Ordered',value:c.orderedValue},{name:'Invoiced',value:c.invoicedValue},{name:'Collected',value:c.collectedValue}],'var(--green)',fmtM)}
+      <div class="grid-2" style="margin-top:12px"><div class="stat-box"><div class="v" style="color:var(--red)">${fmtM(c.outstanding)}</div><div class="l">Outstanding AR</div></div><div class="stat-box"><div class="v" style="color:var(--amber)">${fmtM(c.unconvertedValue)}</div><div class="l">Won, not converted (${c.unconvertedCount})</div></div></div></div>`;
+
+    // stalled deals list
+    document.getElementById('db-stalled').innerHTML=`<div class="card"><h3>Most Stalled Open Quotes<span class="hint">blockage</span></h3>${d.stalledList.length?`<table><thead><tr><th>Quote</th><th>Customer</th><th>Stage</th><th class="num">Net</th><th class="num">Age</th></tr></thead><tbody>${d.stalledList.map(q=>`<tr class="clickable-row" onclick="openQuote('${q.id}')"><td style="font-weight:600">${esc(q.qn)}</td><td>${esc(q.customer)}</td><td>${badge(q.status)}</td><td class="num">${fmt$(q.net)}</td><td class="num" style="color:var(--red);font-weight:700">${q.age}d</td></tr>`).join('')}</tbody></table>`:'<p class="empty">Nothing stalled 🎉</p>'}</div>`;
+
+    document.getElementById('db-mix').innerHTML=`<div class="card"><h3>Pipeline by Segment</h3>${barList(d.bySegment,'var(--blue)',fmtM)}<h3 style="margin-top:16px">Won by Owner</h3>${barList(d.byOwner,'var(--navy)',fmtM)}</div>`;
+  }catch(e){document.getElementById('db-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+
+/* ===== PIPELINE TAB ===== */
+async function loadPipeline(){
+  const el=document.getElementById('pl-funnel');el.innerHTML='<div class="card"><p class="empty">Loading…</p></div>';
+  try{const d=_dash||await sapi('/api/cpq/dashboard');_dash=d;
+    el.innerHTML=`<div class="card"><h3>Pipeline Funnel — value &amp; stall</h3>${renderFunnel(d.pipeline)}<p class="note">Striped red = value stalled 30+ days in stage. Total stalled: <b>${d.kpis.totalStalled}</b> quotes.</p></div>`;
+  }catch(e){el.innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}
+}
+function openStage(stage){switchTab('pipeline');setTimeout(()=>{const sel=document.getElementById('f-quotes2-Status');if(sel){sel.value=stage;loadTable('quotes')}},60)}
+
+/* ===== APPROVALS TAB ===== */
+async function loadApprovalBoard(){
+  document.getElementById('ap-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  ['ap-approver','ap-aging'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{const d=_dash||await sapi('/api/cpq/dashboard');_dash=d;const a=d.approvals;
+    document.getElementById('ap-kpis').innerHTML=`
+      <div class="kpi amber"><div class="val">${a.pending}</div><div class="label">Pending</div></div>
+      <div class="kpi red"><div class="val">${a.breached}</div><div class="label">Past SLA</div></div>
+      <div class="kpi navy"><div class="val">${fmtM(a.pendingValue)}</div><div class="label">Value Held</div></div>
+      <div class="kpi blue"><div class="val">${a.byApprover.length}</div><div class="label">Approvers Engaged</div></div>`;
+    document.getElementById('ap-approver').innerHTML=`<div class="card"><h3>Queue by Approver</h3>${a.byApprover.length?barList(a.byApprover.map(o=>({name:o.name+' ('+o.count+')',value:o.value})),'var(--navy)',fmtM):'<p class="empty">None</p>'}</div>`;
+    document.getElementById('ap-aging').innerHTML=`<div class="card"><h3>Pending by Age</h3>${barList(a.aging.filter(x=>x.count>0),'var(--amber)')}
+      <h3 style="margin-top:16px">Oldest Waiting</h3>${a.list.length?`<table><thead><tr><th>Quote</th><th>Approver</th><th class="num">Age</th><th>Prio</th></tr></thead><tbody>${a.list.slice(0,6).map(x=>`<tr><td>${esc(x.quote)}</td><td>${esc(x.approver)}</td><td class="num" style="color:${x.breached?'var(--red)':'var(--gray)'};font-weight:700">${x.age}d</td><td>${badge(x.priority)}</td></tr>`).join('')}</tbody></table>`:''}</div>`;
+  }catch(e){document.getElementById('ap-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== CASH TAB ===== */
+async function loadCashBoard(){
+  document.getElementById('cs-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  ['cs-flow','cs-aging','cs-unconverted'].forEach(i=>document.getElementById(i).innerHTML='');
+  try{const d=_dash||await sapi('/api/cpq/dashboard');_dash=d;const c=d.cash;
+    document.getElementById('cs-kpis').innerHTML=`
+      <div class="kpi green"><div class="val">${fmtM(c.wonValue)}</div><div class="label">Won Booked</div></div>
+      <div class="kpi blue"><div class="val">${fmtM(c.invoicedValue)}</div><div class="label">Invoiced</div></div>
+      <div class="kpi teal"><div class="val">${fmtM(c.collectedValue)}</div><div class="label">Collected</div></div>
+      <div class="kpi red"><div class="val">${fmtM(c.outstanding)}</div><div class="label">Outstanding AR</div><div class="sub">${c.overdueInvoices} overdue</div></div>
+      <div class="kpi amber"><div class="val">${fmtM(c.unconvertedValue)}</div><div class="label">Unconverted Wins</div><div class="sub">${c.unconvertedCount} deals</div></div>`;
+    const flow=flowDiagram(
+      [{label:'Won',value:c.wonValue},{label:'Ordered',value:c.orderedValue},{label:'Invoiced',value:c.invoicedValue},{label:'Collected',value:c.collectedValue}],
+      [{label:'Not converted',value:c.unconvertedValue,color:'#E08A1E'},{label:'In production',value:Math.max(0,c.orderedValue-c.invoicedValue),color:'#1E7FB5'},{label:'Outstanding AR',value:c.outstanding,color:'#D14B3F'}],
+      {colors:['#1F9D6B','#1E7FB5','#6E4FB0','#0E8C86'],h:250}
+    );
+    document.getElementById('cs-flow').innerHTML=flow+`<div class="flow-leg"><span><i style="background:#E08A1E"></i>won but not ordered</span><span><i style="background:#1E7FB5"></i>ordered, not yet invoiced</span><span><i style="background:#D14B3F"></i>invoiced, not collected</span></div>`;
+    document.getElementById('cs-aging').innerHTML=`<div class="card"><h3>AR Aging</h3>${barList(c.arAging.filter(x=>x.amount>0),'var(--red)',fmtM)}</div>`;
+    document.getElementById('cs-unconverted').innerHTML=`<div class="card"><h3>Won Quotes Not Converted<span class="hint">conversion blockage</span></h3>${d.unconvertedList.length?`<table><thead><tr><th>Quote</th><th>Customer</th><th class="num">Net</th><th>Decided</th></tr></thead><tbody>${d.unconvertedList.map(q=>`<tr class="clickable-row" onclick="openQuote('${q.id}')"><td style="font-weight:600">${esc(q.qn)}</td><td>${esc(q.customer)}</td><td class="num">${fmt$(q.net)}</td><td>${esc(q.decided)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">All wins converted 🎉</p>'}</div>`;
+  }catch(e){document.getElementById('cs-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== QUOTE 360 ===== */
+async function openQuote(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading quote…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/cpq/quote/${id}`);const q=d.quote;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th class="${c[2]||''}">${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    const stalled=['Draft','Sent','Negotiation','Pending Approval','Approved'].includes(v(q,'Status'))&&s.ageDays>30;
+    const mini=waterfall({list:s.list,discount:s.discount,net:s.net,cost:s.cost,margin:s.margin});
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(q,'Quote Number'))} — ${esc(v(q,'Customer Name'))}</h2>
+      <div class="meta-row"><span>${badge(v(q,'Status'))}</span><span>${badge(v(q,'Approval Status'))}</span><span>Owner: <strong>${esc(v(q,'Owner'))}</strong></span><span>${esc(v(q,'Segment'))}</span><span>Win prob: <strong>${esc(v(q,'Win Probability'))}%</strong></span></div>
+      ${stalled?`<div class="banner warn">⚠ Stalled — ${s.ageDays} days in "${esc(v(q,'Status'))}" with no movement. ${esc(v(q,'Notes'))}</div>`:''}
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${fmt$(s.net)}</div><div class="l">Net Total</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--red)">${pctv(s.discountPct)}</div><div class="l">Discount</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${pctv(s.marginPct)}</div><div class="l">Margin (${fmt$(s.margin)})</div></div>
+      </div>
+      <div class="grid-2" style="align-items:start">
+        <div><h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:6px 0">Price Build-up</h3>${mini}</div>
+        <div class="meta-row" style="flex-direction:column;gap:6px"><span>Created: <strong>${esc(v(q,'Created Date'))}</strong></span><span>Sent: <strong>${esc(v(q,'Sent Date')||'—')}</strong></span><span>Expires: <strong>${esc(v(q,'Expiration Date'))}</strong></span>${v(q,'Decision Date')?`<span>Decided: <strong>${esc(v(q,'Decision Date'))}</strong></span>`:''}${v(q,'Lost Reason')?`<span>Lost reason: <strong>${esc(v(q,'Lost Reason'))}</strong></span>`:''}${v(q,'Order Number')?`<span>Order: <strong>${esc(v(q,'Order Number'))}</strong></span>`:''}</div>
+      </div>
+      <div class="subtabs" style="margin-top:10px">
+        <button class="subtab active" onclick="lTab(this,'q-lines')">Lines (${d.lines.length})</button>
+        <button class="subtab" onclick="lTab(this,'q-appr')">Approvals (${d.approvals.length})</button>
+        <button class="subtab" onclick="lTab(this,'q-fulfil')">Fulfillment</button>
+      </div>
+      <div id="q-lines" class="subtab-panel active">${tbl(d.lines,[['#',r=>r.line],['Product',r=>esc(r.name)+(r.options?`<div style="font-size:10px;color:var(--gray)">+ ${esc(r.options)}</div>`:'')],['Qty',r=>r.qty,'num'],['Unit List',r=>fmt$(r.unitList),'num'],['Disc',r=>pctv(r.discount),'num'],['Ext Net',r=>fmt$(r.extNet),'num'],['Margin%',r=>pctv(r.marginPct),'num']])}</div>
+      <div id="q-appr" class="subtab-panel">${tbl(d.approvals,[['Type',r=>esc(r.type)],['Approver',r=>esc(r.approver)],['Reason',r=>esc(r.reason)],['Age',r=>r.age+'d','num'],['Status',r=>badge(r.status)]])}</div>
+      <div id="q-fulfil" class="subtab-panel">${d.order?`<div class="meta-row"><span>Order: <strong>${esc(d.order.num)}</strong></span><span>${badge(d.order.status)}</span><span>Fulfillment: ${esc(d.order.fulfillment)}</span><span>Shipped: ${esc(d.order.shipped||'—')}</span></div>${tbl(d.invoices,[['Invoice',r=>esc(r.num)],['Amount',r=>fmt$(r.amount),'num'],['Paid',r=>fmt$(r.paid),'num'],['Balance',r=>fmt$(r.balance),'num'],['Due',r=>esc(r.due)],['Status',r=>badge(r.status)]])}${d.payments.length?'<h3 style="font-size:11px;margin:10px 0 4px;color:var(--gray)">PAYMENTS</h3>'+tbl(d.payments,[['Ref',r=>esc(r.pid)],['Amount',r=>fmt$(r.amount),'num'],['Method',r=>esc(r.method)],['Date',r=>esc(r.date)]]):''}`:'<p class="empty">No order yet — this won quote has not been converted.</p>'}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('quotes','${q.id}')">Edit Quote</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+function lTab(btn,id){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+/* ===== CUSTOMER 360 ===== */
+async function openCustomer(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading customer…</h2>';document.getElementById('modal').classList.add('show');
+  try{
+    const d=await sapi(`/api/cpq/customer/${id}`);const c=d.customer;const s=d.summary;
+    const tbl=(rows,cols)=>rows.length?`<table><thead><tr>${cols.map(x=>`<th class="${x[2]||''}">${x[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr ${r.id?`class="clickable-row" onclick="openQuote('${r.id}')"`:''}>${cols.map(x=>`<td class="${x[2]||''}">${x[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(c,'Name'))}</h2>
+      <div class="meta-row"><span>${esc(v(c,'Customer ID'))}</span><span>${esc(v(c,'Segment'))} · ${esc(v(c,'Industry'))}</span><span>${esc(v(c,'City'))}, ${esc(v(c,'State'))}</span><span>Owner: <strong>${esc(v(c,'Account Owner'))}</strong></span><span>${badge(v(c,'Status'))}</span></div>
+      <div class="grid-3" style="margin-bottom:8px">
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${fmt$(s.openValue)}</div><div class="l">Open Pipeline (${s.quotes-s.won} active)</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--green)">${fmt$(s.wonValue)}</div><div class="l">Won (${s.won})</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--red)">${fmt$(s.outstanding)}</div><div class="l">Outstanding AR</div></div>
+      </div>
+      <div class="meta-row"><span>Contact: <strong>${esc(v(c,'Contact Name'))}</strong></span><span>${esc(v(c,'Email'))}</span><span>${esc(v(c,'Phone'))}</span><span>Terms: ${esc(v(c,'Credit Terms'))}</span><span>Lifetime collected: ${fmt$(s.lifetime)}</span></div>
+      <div class="subtabs">
+        <button class="subtab active" onclick="lTab(this,'c-quotes')">Quotes (${d.quotes.length})</button>
+        <button class="subtab" onclick="lTab(this,'c-orders')">Orders (${d.orders.length})</button>
+        <button class="subtab" onclick="lTab(this,'c-inv')">Invoices (${d.invoices.length})</button>
+      </div>
+      <div id="c-quotes" class="subtab-panel active">${tbl(d.quotes,[['Quote',r=>esc(r.qn)],['Status',r=>badge(r.status)],['Net',r=>fmt$(r.net),'num'],['Margin%',r=>pctv(r.margin),'num'],['Owner',r=>esc(r.owner)],['Created',r=>esc(r.created)]])}</div>
+      <div id="c-orders" class="subtab-panel">${tbl(d.orders,[['Order',r=>esc(r.num)],['Status',r=>badge(r.status)],['Total',r=>fmt$(r.total),'num'],['Date',r=>esc(r.date)]])}</div>
+      <div id="c-inv" class="subtab-panel">${tbl(d.invoices,[['Invoice',r=>esc(r.num)],['Status',r=>badge(r.status)],['Amount',r=>fmt$(r.amount),'num'],['Balance',r=>fmt$(r.balance),'num'],['Due',r=>esc(r.due)]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('customers','${c.id}')">Edit Customer</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+/* ===== REPORTS ===== */
+async function showReport(type){
+  document.querySelectorAll('#tab-reports .subtab').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(type==='win-loss'?'win':'ar')));
+  document.getElementById('report-content').innerHTML='<div class="card"><p class="empty">Loading report…</p></div>';
+  try{
+    if(type==='win-loss'){
+      const r=await sapi('/api/cpq/reports/win-loss');
+      document.getElementById('report-content').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Owner</th><th class="num">Open</th><th class="num">Won</th><th class="num">Lost</th><th class="num">Win Rate</th><th class="num">Won Value</th><th class="num">Open Value</th><th class="num">Avg Disc</th></tr></thead><tbody>${
+        r.reps.map(o=>`<tr><td style="font-weight:600">${esc(o.owner)}</td><td class="num">${o.open}</td><td class="num" style="color:var(--green)">${o.won}</td><td class="num" style="color:var(--red)">${o.lost}</td><td class="num" style="font-weight:700">${o.winRate}%</td><td class="num">${fmt$(o.wonValue)}</td><td class="num">${fmt$(o.openValue)}</td><td class="num">${o.avgDiscount}%</td></tr>`).join('')||'<tr><td colspan="8" class="empty">No data</td></tr>'
+      }</tbody></table></div><div class="card"><h3>Loss Reasons</h3>${barList(r.lostReasons,'var(--red)')}</div>`;
+    }else{
+      const r=await sapi('/api/cpq/reports/ar-aging');
+      const total=r.invoices.reduce((s,i)=>s+i.balance,0);
+      document.getElementById('report-content').innerHTML=`<div class="banner">Open receivables: <b>${fmt$(total)}</b> across ${r.invoices.length} invoices.</div><div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Order</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th><th>Due</th><th class="num">Days Past Due</th><th>Status</th></tr></thead><tbody>${
+        r.invoices.map(i=>`<tr><td style="font-weight:600">${esc(i.num)}</td><td>${esc(i.customer)}</td><td>${esc(i.order)}</td><td class="num">${fmt$(i.amount)}</td><td class="num">${fmt$(i.paid)}</td><td class="num" style="font-weight:700">${fmt$(i.balance)}</td><td>${esc(i.due)}</td><td class="num" style="color:${i.daysPastDue>0?'var(--red)':'var(--gray)'};font-weight:700">${i.daysPastDue||'—'}</td><td>${badge(i.status)}</td></tr>`).join('')||'<tr><td colspan="9" class="empty">No open receivables 🎉</td></tr>'
+      }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}
+}
+
+/* ===== GENERIC FORM MODAL ===== */
+const SEG='Enterprise,Mid-Market,SMB,Government';
+const CAT='Conveyor Systems,Pumps & Compressors,Hydraulic Power Units,Control Panels,Motors & Drives,Sensors & Instrumentation,Robotic Cells,Safety Systems';
+const QSTATUS='Draft,Sent,Negotiation,Pending Approval,Approved,Won,Lost,Expired';
+const FORM_DEFS={
+  quotes:{title:'Quote',fields:[{r:['Quote Number','Status|select:'+QSTATUS]},{r:['Customer ID','Customer Name']},{r:['Segment|select:'+SEG,'Owner']},{r:['Stage|select:'+QSTATUS,'Approval Status|select:Not Required,Pending,Approved,Rejected']},{r:['List Total|number','Discount Total|number']},{r:['Net Total|number','Cost Total|number']},{r:['Margin Amount|number','Margin Pct|number']},{r:['Discount Pct|number','Win Probability|number']},{r:['Created Date|date','Sent Date|date']},{r:['Stage Entered Date|date','Expiration Date|date']},{r:['Decision Date|date','Order Number']},{r:['Lost Reason|select:,Price,Lost to Competitor,Lead Time,No Budget,Project Cancelled,Lost to Incumbent','Line Count|number']},'Notes|textarea']},
+  products:{title:'Product',fields:[{r:['Product ID','SKU']},'Name',{r:['Category|select:'+CAT,'Family']},'Description|textarea',{r:['List Price|number','Unit Cost|number']},{r:['Margin Pct|number','Lead Time Days|number']},{r:['Unit of Measure','Configurable|select:Yes,No']},{r:['Status|select:Active,Discontinued','']},'Notes|textarea']},
+  options:{title:'Option',fields:[{r:['Option ID','Status|select:Active,Inactive']},{r:['Product SKU','Product Name']},{r:['Option Group|select:Voltage,Capacity,Controls,Finish,Warranty,Installation','Name']},'Description|textarea',{r:['Price Delta|number','Cost Delta|number']},{r:['Default Selected|select:Yes,No','']}]},
+  'price-rules':{title:'Price Rule',fields:[{r:['Rule ID','Active|select:Yes,No']},'Name',{r:['Rule Type|select:Volume Tier,Segment Discount,Margin Floor,Approval Threshold,Promotion','Category|select:All,'+CAT]},{r:['Customer Segment|select:All,'+SEG,'Discount Pct|number']},{r:['Min Quantity|number','Max Quantity|number']},{r:['Margin Floor Pct|number','Max Discount Pct|number']},{r:['Effective Date|date','Expiration Date|date']},'Notes|textarea']},
+  customers:{title:'Customer',fields:[{r:['Customer ID','Name']},{r:['Segment|select:'+SEG,'Industry|select:Automotive,Food & Beverage,Pharmaceutical,Oil & Gas,Mining & Metals,Logistics,Aerospace,Consumer Goods']},{r:['Region|select:West,Midwest,Northeast,Southeast,Southwest','State']},{r:['City','Account Owner']},{r:['Contact Name','Status|select:Active,Prospect,Inactive']},{r:['Email','Phone']},{r:['Credit Terms|select:Net 30,Net 45,Net 60','Credit Limit|number']},'Notes|textarea']},
+  approvals:{title:'Approval',fields:[{r:['Approval ID','Status|select:Pending,Approved,Rejected,Escalated']},{r:['Quote Number','Customer Name']},{r:['Approval Type|select:Discount,Margin Floor,Special Terms','Priority|select:Low,Medium,High']},{r:['Requested By','Approver']},{r:['Approver Role','Net Total|number']},{r:['Discount Pct|number','Margin Pct|number']},{r:['Threshold','Requested Date|date']},{r:['SLA Due Date|date','Decision Date|date']},'Reason|textarea','Decision Notes|textarea']},
+  orders:{title:'Order',fields:[{r:['Order Number','Status|select:Open,In Production,Shipped,Delivered,Closed,Cancelled']},{r:['Quote Number','Customer Name']},{r:['Customer ID','Owner']},{r:['Order Total|number','Cost Total|number']},{r:['Margin Amount|number','Margin Pct|number']},{r:['Order Date|date','Fulfillment Status|select:Pending,In Production,In Transit,Delivered,Fulfilled']},{r:['Requested Ship Date|date','Promised Ship Date|date']},{r:['Shipped Date|date','Invoiced Amount|number']},'Notes|textarea']},
+  invoices:{title:'Invoice',fields:[{r:['Invoice Number','Status|select:Draft,Sent,Partial,Paid,Overdue,Void']},{r:['Order Number','Quote Number']},{r:['Customer ID','Customer Name']},{r:['Invoice Date|date','Due Date|date']},{r:['Terms|select:Net 30,Net 45,Net 60','Amount|number']},{r:['Amount Paid|number','Balance|number']},{r:['Paid Date|date','Days Outstanding|number']},'Notes|textarea']},
+  payments:{title:'Payment',fields:[{r:['Payment ID','Status|select:Cleared,Pending,Failed']},{r:['Invoice Number','Customer Name']},{r:['Customer ID','Amount|number']},{r:['Method|select:ACH,Wire,Check,Card','Payment Date|date']},'Reference']},
+};
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){if(typeof field==='string')html+=renderField(field,sub);else if(field.r)html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'}
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${formSlug}','${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show');
+}
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;
+  if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea')input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`;
+  else if(type==='date')input=`<input id="${id}" type="date" value="${esc(val)}">`;
+  else if(type==='number')input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`;
+  else input=`<input id="${id}" type="text" value="${esc(val)}">`;
+  return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const el=document.getElementById('m-'+name.replace(/\s+/g,'-').toLowerCase());if(el)vals[name]=el.value}}
+  try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated — workflow will react')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created — workflow will react')}closeModal();_cats=null;_dash=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(formSlug,id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_dash=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+function refreshActive(formSlug){closeModal();switchTab(activeTab)}
+</script>
+</body>
+</html>

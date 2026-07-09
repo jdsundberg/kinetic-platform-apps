@@ -1,0 +1,988 @@
+[
+ {
+  "title": "Kinetic Request CE :: 142e9d3f-6eb0-4da1-8a26-7567cf81cb7d :: Quote Approval Routing",
+  "name": "Quote Approval Routing",
+  "guid": "142e9d3f-6eb0-4da1-8a26-7567cf81cb7d",
+  "treeJson": {
+   "builderVersion": "",
+   "schemaVersion": "1.0",
+   "version": "1",
+   "processOwnerEmail": "",
+   "lastId": 3,
+   "name": "",
+   "notes": "",
+   "connectors": [
+    {
+     "from": "start",
+     "to": "kinetic_core_api_connection_v1_1",
+     "label": "needs approval",
+     "value": "@values['Discount Pct'].to_f > 15 || @values['Margin Pct'].to_f < 22",
+     "type": "Complete"
+    },
+    {
+     "from": "start",
+     "to": "kinetic_core_api_connection_v1_3",
+     "label": "auto-approve",
+     "value": "!(@values['Discount Pct'].to_f > 15 || @values['Margin Pct'].to_f < 22)",
+     "type": "Complete"
+    },
+    {
+     "from": "kinetic_core_api_connection_v1_1",
+     "to": "kinetic_core_api_connection_v1_2",
+     "label": "",
+     "value": "",
+     "type": "Complete"
+    }
+   ],
+   "nodes": [
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Start",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_1",
+        "value": "@values['Discount Pct'].to_f > 15 || @values['Margin Pct'].to_f < 22",
+        "label": "needs approval"
+       },
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_3",
+        "value": "!(@values['Discount Pct'].to_f > 15 || @values['Margin Pct'].to_f < 22)",
+        "label": "auto-approve"
+       }
+      ]
+     },
+     "id": "start",
+     "position": {
+      "x": 240,
+      "y": 40
+     },
+     "version": 1,
+     "parameters": [],
+     "definitionId": "system_start_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Create Approval",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_2",
+        "value": "",
+        "label": ""
+       }
+      ]
+     },
+     "id": "kinetic_core_api_connection_v1_1",
+     "position": {
+      "x": 120,
+      "y": 180
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "POST",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/kapps/cpq/forms/approvals/submissions",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Approval ID\":\"APR-WF-<%= @run['Id'] %>\",\"Quote Number\":\"<%= @values['Quote Number'] %>\",\"Customer Name\":\"<%= @values['Customer Name'] %>\",\"Approval Type\":\"<%= @values['Margin Pct'].to_f < 22 ? 'Margin Floor' : 'Discount' %>\",\"Requested By\":\"<%= @values['Owner'] %>\",\"Approver\":\"<%= (@values['Discount Pct'].to_f > 25 || @values['Net Total'].to_f > 150000) ? 'Victor Hale' : 'Karen Doyle' %>\",\"Approver Role\":\"Deal Desk\",\"Status\":\"Pending\",\"Priority\":\"<%= @values['Discount Pct'].to_f > 25 ? 'High' : 'Medium' %>\",\"Discount Pct\":\"<%= @values['Discount Pct'] %>\",\"Margin Pct\":\"<%= @values['Margin Pct'] %>\",\"Net Total\":\"<%= @values['Net Total'] %>\",\"Threshold\":\"15% max / 22% floor\",\"Reason\":\"Auto-routed by workflow on quote submit\",\"Requested Date\":\"<%= Time.now.strftime('%Y-%m-%d') %>\",\"SLA Due Date\":\"<%= (Time.now + 259200).strftime('%Y-%m-%d') %>\",\"Aging Days\":\"0\"},\"coreState\":\"Submitted\"}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Flag Quote Pending",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_2",
+     "position": {
+      "x": 120,
+      "y": 320
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= @submission['Id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Approval Status\":\"Pending\",\"Status\":\"Pending Approval\",\"Stage\":\"Pending Approval\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Mark Auto Approved",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_3",
+     "position": {
+      "x": 380,
+      "y": 180
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= @submission['Id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Approval Status\":\"Not Required\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    }
+   ]
+  }
+ },
+ {
+  "title": "Kinetic Request CE :: b192cfff-b131-4cb3-91fc-7fe32aa67529 :: Won to Order Conversion",
+  "name": "Won to Order Conversion",
+  "guid": "b192cfff-b131-4cb3-91fc-7fe32aa67529",
+  "treeJson": {
+   "builderVersion": "",
+   "schemaVersion": "1.0",
+   "version": "1",
+   "processOwnerEmail": "",
+   "lastId": 2,
+   "name": "",
+   "notes": "",
+   "connectors": [
+    {
+     "from": "start",
+     "to": "kinetic_core_api_connection_v1_1",
+     "label": "won, not yet converted",
+     "value": "@values['Status'] == 'Won' && @values['Order Number'].to_s.empty?",
+     "type": "Complete"
+    },
+    {
+     "from": "kinetic_core_api_connection_v1_1",
+     "to": "kinetic_core_api_connection_v1_2",
+     "label": "",
+     "value": "",
+     "type": "Complete"
+    }
+   ],
+   "nodes": [
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Start",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_1",
+        "value": "@values['Status'] == 'Won' && @values['Order Number'].to_s.empty?",
+        "label": "won, not yet converted"
+       }
+      ]
+     },
+     "id": "start",
+     "position": {
+      "x": 240,
+      "y": 40
+     },
+     "version": 1,
+     "parameters": [],
+     "definitionId": "system_start_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Create Order",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_2",
+        "value": "",
+        "label": ""
+       }
+      ]
+     },
+     "id": "kinetic_core_api_connection_v1_1",
+     "position": {
+      "x": 240,
+      "y": 180
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "POST",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/kapps/cpq/forms/orders/submissions",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Order Number\":\"SO-<%= @values['Quote Number'].sub('Q-','') %>\",\"Quote Number\":\"<%= @values['Quote Number'] %>\",\"Customer ID\":\"<%= @values['Customer ID'] %>\",\"Customer Name\":\"<%= @values['Customer Name'] %>\",\"Owner\":\"<%= @values['Owner'] %>\",\"Status\":\"Open\",\"Order Date\":\"<%= Time.now.strftime('%Y-%m-%d') %>\",\"Order Total\":\"<%= @values['Net Total'] %>\",\"Cost Total\":\"<%= @values['Cost Total'] %>\",\"Margin Amount\":\"<%= @values['Margin Amount'] %>\",\"Margin Pct\":\"<%= @values['Margin Pct'] %>\",\"Fulfillment Status\":\"Pending\"},\"coreState\":\"Submitted\"}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Link Order To Quote",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_2",
+     "position": {
+      "x": 240,
+      "y": 320
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= @submission['Id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Order Number\":\"SO-<%= @values['Quote Number'].sub('Q-','') %>\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    }
+   ]
+  }
+ },
+ {
+  "title": "Kinetic Request CE :: 7f4a3976-a957-4d68-9aaf-60af92012b4a :: Approval Decision Sync",
+  "name": "Approval Decision Sync",
+  "guid": "7f4a3976-a957-4d68-9aaf-60af92012b4a",
+  "treeJson": {
+   "builderVersion": "",
+   "schemaVersion": "1.0",
+   "version": "1",
+   "processOwnerEmail": "",
+   "lastId": 3,
+   "name": "",
+   "notes": "",
+   "connectors": [
+    {
+     "from": "start",
+     "to": "kinetic_core_api_connection_v1_1",
+     "label": "",
+     "value": "",
+     "type": "Complete"
+    },
+    {
+     "from": "kinetic_core_api_connection_v1_1",
+     "to": "kinetic_core_api_connection_v1_2",
+     "label": "approved",
+     "value": "@values['Status'] == 'Approved'",
+     "type": "Complete"
+    },
+    {
+     "from": "kinetic_core_api_connection_v1_1",
+     "to": "kinetic_core_api_connection_v1_3",
+     "label": "rejected",
+     "value": "@values['Status'] == 'Rejected'",
+     "type": "Complete"
+    }
+   ],
+   "nodes": [
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Start",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_1",
+        "value": "",
+        "label": ""
+       }
+      ]
+     },
+     "id": "start",
+     "position": {
+      "x": 240,
+      "y": 40
+     },
+     "version": 1,
+     "parameters": [],
+     "definitionId": "system_start_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Find Quote",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_2",
+        "value": "@values['Status'] == 'Approved'",
+        "label": "approved"
+       },
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_3",
+        "value": "@values['Status'] == 'Rejected'",
+        "label": "rejected"
+       }
+      ]
+     },
+     "id": "kinetic_core_api_connection_v1_1",
+     "position": {
+      "x": 240,
+      "y": 170
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "GET",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/kapps/cpq/forms/quotes/submissions?limit=1&include=values&q=values%5BQuote%20Number%5D%3D%22<%= @values['Quote Number'] %>%22",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Approve Quote",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_2",
+     "position": {
+      "x": 110,
+      "y": 320
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= require 'json'; JSON.parse(@results['Find Quote']['Response Body'])['submissions'][0]['id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Approval Status\":\"Approved\",\"Status\":\"Approved\",\"Stage\":\"Approved\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Reject Quote",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_3",
+     "position": {
+      "x": 380,
+      "y": 320
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= require 'json'; JSON.parse(@results['Find Quote']['Response Body'])['submissions'][0]['id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Approval Status\":\"Rejected\",\"Status\":\"Negotiation\",\"Stage\":\"Negotiation\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    }
+   ]
+  }
+ },
+ {
+  "title": "Kinetic Request CE :: 5e969426-af5d-440e-aa5a-1ed84e90a866 :: Order Invoice Generation",
+  "name": "Order Invoice Generation",
+  "guid": "5e969426-af5d-440e-aa5a-1ed84e90a866",
+  "treeJson": {
+   "builderVersion": "",
+   "schemaVersion": "1.0",
+   "version": "1",
+   "processOwnerEmail": "",
+   "lastId": 2,
+   "name": "",
+   "notes": "",
+   "connectors": [
+    {
+     "from": "start",
+     "to": "kinetic_core_api_connection_v1_1",
+     "label": "shipped, not invoiced",
+     "value": "(@values['Status'] == 'Shipped' || @values['Status'] == 'Delivered') && @values['Invoiced Amount'].to_f == 0",
+     "type": "Complete"
+    },
+    {
+     "from": "kinetic_core_api_connection_v1_1",
+     "to": "kinetic_core_api_connection_v1_2",
+     "label": "",
+     "value": "",
+     "type": "Complete"
+    }
+   ],
+   "nodes": [
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Start",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_1",
+        "value": "(@values['Status'] == 'Shipped' || @values['Status'] == 'Delivered') && @values['Invoiced Amount'].to_f == 0",
+        "label": "shipped, not invoiced"
+       }
+      ]
+     },
+     "id": "start",
+     "position": {
+      "x": 240,
+      "y": 40
+     },
+     "version": 1,
+     "parameters": [],
+     "definitionId": "system_start_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Create Invoice",
+     "messages": [],
+     "dependents": {
+      "task": [
+       {
+        "type": "Complete",
+        "content": "kinetic_core_api_connection_v1_2",
+        "value": "",
+        "label": ""
+       }
+      ]
+     },
+     "id": "kinetic_core_api_connection_v1_1",
+     "position": {
+      "x": 240,
+      "y": 180
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "POST",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/kapps/cpq/forms/invoices/submissions",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Invoice Number\":\"INV-WF-<%= @run['Id'] %>\",\"Order Number\":\"<%= @values['Order Number'] %>\",\"Quote Number\":\"<%= @values['Quote Number'] %>\",\"Customer ID\":\"<%= @values['Customer ID'] %>\",\"Customer Name\":\"<%= @values['Customer Name'] %>\",\"Status\":\"Sent\",\"Invoice Date\":\"<%= Time.now.strftime('%Y-%m-%d') %>\",\"Due Date\":\"<%= (Time.now + 2592000).strftime('%Y-%m-%d') %>\",\"Terms\":\"Net 30\",\"Amount\":\"<%= @values['Order Total'] %>\",\"Amount Paid\":\"0\",\"Balance\":\"<%= @values['Order Total'] %>\",\"Days Outstanding\":\"0\"},\"coreState\":\"Submitted\"}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    },
+    {
+     "configured": true,
+     "defers": false,
+     "deferrable": false,
+     "visible": false,
+     "name": "Mark Order Invoiced",
+     "messages": [],
+     "dependents": {
+      "task": []
+     },
+     "id": "kinetic_core_api_connection_v1_2",
+     "position": {
+      "x": 240,
+      "y": 320
+     },
+     "version": 1,
+     "parameters": [
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "method",
+       "label": "method",
+       "menu": "",
+       "value": "PUT",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "path",
+       "label": "path",
+       "menu": "",
+       "value": "/app/api/v1/submissions/<%= @submission['Id'] %>",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "body",
+       "label": "body",
+       "menu": "",
+       "value": "{\"values\":{\"Invoiced Amount\":\"<%= @values['Order Total'] %>\"}}",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "extra_headers",
+       "label": "extra_headers",
+       "menu": "",
+       "value": "",
+       "required": false
+      },
+      {
+       "dependsOnId": "",
+       "dependsOnValue": "",
+       "description": "",
+       "id": "error_handling",
+       "label": "error_handling",
+       "menu": "",
+       "value": "Error Message",
+       "required": false
+      }
+     ],
+     "definitionId": "kinetic_core_api_connection_v1"
+    }
+   ]
+  }
+ }
+]

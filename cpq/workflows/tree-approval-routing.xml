@@ -1,0 +1,54 @@
+<tree schema_version="1.0">
+  <sourceName>Kinetic Request CE</sourceName>
+  <sourceGroup>142e9d3f-6eb0-4da1-8a26-7567cf81cb7d</sourceGroup>
+  <type>Tree</type>
+  <status>Active</status>
+  <taskTree builder_version="" schema_version="1.0" version="1">
+    <name>Quote Approval Routing</name>
+    <author></author>
+    <notes></notes>
+    <lastID>3</lastID>
+    <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="240" y="40">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="needs approval" type="Complete" value="@values['Discount Pct'].to_f &gt; 15 || @values['Margin Pct'].to_f &lt; 22">kinetic_core_api_connection_v1_1</task><task label="auto-approve" type="Complete" value="!(@values['Discount Pct'].to_f &gt; 15 || @values['Margin Pct'].to_f &lt; 22)">kinetic_core_api_connection_v1_3</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Create Approval" x="120" y="180">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">POST</parameter><parameter id="path">/app/api/v1/kapps/cpq/forms/approvals/submissions</parameter><parameter id="body">{"values":{"Approval ID":"APR-WF-&lt;%= @run['Id'] %&gt;","Quote Number":"&lt;%= @values['Quote Number'] %&gt;","Customer Name":"&lt;%= @values['Customer Name'] %&gt;","Approval Type":"&lt;%= @values['Margin Pct'].to_f &lt; 22 ? 'Margin Floor' : 'Discount' %&gt;","Requested By":"&lt;%= @values['Owner'] %&gt;","Approver":"&lt;%= (@values['Discount Pct'].to_f &gt; 25 || @values['Net Total'].to_f &gt; 150000) ? 'Victor Hale' : 'Karen Doyle' %&gt;","Approver Role":"Deal Desk","Status":"Pending","Priority":"&lt;%= @values['Discount Pct'].to_f &gt; 25 ? 'High' : 'Medium' %&gt;","Discount Pct":"&lt;%= @values['Discount Pct'] %&gt;","Margin Pct":"&lt;%= @values['Margin Pct'] %&gt;","Net Total":"&lt;%= @values['Net Total'] %&gt;","Threshold":"15% max / 22% floor","Reason":"Auto-routed by workflow on quote submit","Requested Date":"&lt;%= Time.now.strftime('%Y-%m-%d') %&gt;","SLA Due Date":"&lt;%= (Time.now + 259200).strftime('%Y-%m-%d') %&gt;","Aging Days":"0"},"coreState":"Submitted"}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="" type="Complete" value="">kinetic_core_api_connection_v1_2</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Flag Quote Pending" x="120" y="320">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter><parameter id="body">{"values":{"Approval Status":"Pending","Status":"Pending Approval","Stage":"Pending Approval"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Mark Auto Approved" x="380" y="180">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter><parameter id="body">{"values":{"Approval Status":"Not Required"}}</parameter><parameter id="extra_headers"></parameter><parameter id="error_handling">Error Message</parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    </request>
+  </taskTree>
+</tree>
