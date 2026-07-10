@@ -65,6 +65,14 @@ const RELATED_FORMS = Object.keys(LINK_FIELDS).filter((f) => f !== "capa-actions
 // link fields that store a composite "ID - Name" value → id-prefix they hold.
 // These need `=*` (starts-with) matching instead of exact `=` in the reverse scan.
 const COMPOSITE_LINK = new Map([["Product", "PRD"], ["Linked Product", "PRD"], ["Supplier", "SUP"]]);
+// each link field references exactly one entity type → its id-prefix. Used to prune the
+// reverse scan: only query fields whose target prefix matches the clicked record's prefix.
+// Fields with a variable/unknown prefix (e.g. Document) are omitted → always queried.
+const LINK_TARGET = {
+  "Linked CAPA": "CAPA", "Linked NC": "NC", "Linked Complaint": "CMP", "Linked Event": "QE",
+  "Source Event": "QE", "Linked Risk": "RSK", "Linked Change": "CHG", "Linked SCAR": "SCAR",
+  "Duplicate Of": "CMP", "Product": "PRD", "Linked Product": "PRD", "Supplier": "SUP", "Audit ID": "AUD",
+};
 const firstToken = (val) => { const m = String(val || "").match(/^[A-Z]{2,4}-[0-9A-Za-z-]+/); return m ? m[0] : null; };
 
 // ── simple 5-min cache for the heavy dashboard ────────────────────────────────
@@ -231,7 +239,6 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const revLookup = async (f, field) => {
         try {
           if (COMPOSITE_LINK.has(field)) {
-            if (COMPOSITE_LINK.get(field) !== bidPrefix) return [];        // e.g. Product only holds PRD-*
             const q = encodeURIComponent(`values[${field}] =* "${esc(bid)}"`);
             const ob = encodeURIComponent(`values[${field}]`);
             const r = await kineticRequest("GET", `/kapps/${KAPP}/forms/${f}/submissions?include=values,details&limit=100&q=${q}&orderBy=${ob}`, null, auth);
@@ -240,9 +247,30 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
           return await collect(f, `values[${field}]="${esc(bid)}"`, 2);
         } catch { return []; }
       };
+      // prune to only the (form, field) pairs whose target prefix can match this record
       const revPairs = [];
-      for (const f of RELATED_FORMS) for (const field of (LINK_FIELDS[f] || [])) revPairs.push({ f, field });
-      const revRows = await Promise.all(revPairs.map(({ f, field }) => revLookup(f, field).then((rows) => ({ f, field, rows }))));
+      for (const f of RELATED_FORMS) for (const field of (LINK_FIELDS[f] || [])) {
+        const tgt = LINK_TARGET[field];
+        if (tgt && tgt !== bidPrefix) continue;   // field references a different entity type — can't match
+        revPairs.push({ f, field });
+      }
+
+      // ── one parallel wave: reverse scan + outgoing resolution + trail/sigs/actions ──
+      // (all depend only on `bid`, so they run concurrently — the per-call latency to the
+      //  Kinetic backend dominates, so collapsing waves is the win, not fewer records.)
+      const [revRows, outResolved, trail, sigs, actions] = await Promise.all([
+        Promise.all(revPairs.map(({ f, field }) => revLookup(f, field).then((rows) => ({ f, field, rows })))),
+        Promise.all(outgoing.map(async (o) => {
+          const pm = PREFIX_MAP[o.ref.split("-")[0]];
+          if (!pm) return null;
+          const rr = await collect(pm.form, `values[${pm.idField}]="${esc(o.ref)}"`, 2).catch(() => []);
+          return { o, pm, hitRow: rr[0] };
+        })),
+        collect("audit-trail", `values[Record ID]="${esc(bid)}"`, 4),
+        collect("esignatures", `values[Record ID]="${esc(bid)}"`, 2),
+        form === "capas" ? collect("capa-actions", `values[CAPA ID]="${esc(bid)}"`, 4) : Promise.resolve([]),
+      ]);
+
       revRows.forEach(({ f, field, rows }) => {
         const m = Object.values(PREFIX_MAP).find((x) => x.form === f) || { idField: "", label: f };
         rows.forEach((row) => {
@@ -252,27 +280,12 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
           edges.push({ from: rid, to: bid, rel: field });
         });
       });
-
-      // resolve outgoing refs to nodes (in parallel — each is an indexed id lookup)
-      const outResolved = await Promise.all(outgoing.map(async (o) => {
-        const pm = PREFIX_MAP[o.ref.split("-")[0]];
-        if (!pm) return null;
-        const rr = await collect(pm.form, `values[${pm.idField}]="${esc(o.ref)}"`, 2).catch(() => []);
-        return { o, pm, hitRow: rr[0] };
-      }));
       outResolved.forEach((x) => {
         if (!x) return;
         const { o, pm, hitRow } = x;
         addNode(o.ref, pm.label, hitRow ? (vf(hitRow, "Title") || vf(hitRow, "Name") || o.ref) : o.ref, hitRow ? vf(hitRow, "Status") : "", pm.form, hitRow ? hitRow.id : null);
         edges.push({ from: bid, to: o.ref, rel: o.field });
       });
-
-      // timeline (audit trail) + signatures
-      const [trail, sigs, actions] = await Promise.all([
-        collect("audit-trail", `values[Record ID]="${esc(bid)}"`, 4),
-        collect("esignatures", `values[Record ID]="${esc(bid)}"`, 2),
-        form === "capas" ? collect("capa-actions", `values[CAPA ID]="${esc(bid)}"`, 4) : Promise.resolve([]),
-      ]);
 
       return jsonResp(res, 200, {
         record: rec, businessId: bid, label: meta.label,
