@@ -1197,6 +1197,10 @@ const server = http.createServer((req, res) => {
     delete headers["x-kinetic-server"];
     delete headers["origin"];
     delete headers["referer"];
+    // Request identity (uncompressed) from the origin so a forwarded gzip
+    // Content-Encoding + compressed Content-Length can't be mangled by an edge proxy
+    // (e.g. Fly), which corrupts larger responses while small ones survive.
+    delete headers["accept-encoding"];
 
     const proxyReq = https.request(url, { method: req.method, headers }, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, {
