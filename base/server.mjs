@@ -467,8 +467,9 @@ function injectScripts(html, appSlug) {
   if (!_kappSlug) return;
   var sess;
   try { sess = JSON.parse(sessionStorage.getItem('base_session')); } catch(e){ return; }
-  if (!sess || !sess.auth) return;
-  var authHeader = 'Basic ' + sess.auth;
+  if (!sess || (!sess.auth && !sess.token)) return;
+  // Token/SSO sessions have no password — authenticate with the Bearer token.
+  var authHeader = sess.token ? ('Bearer ' + sess.token) : ('Basic ' + sess.auth);
 
   // Check kapp existence
   fetch('/app/api/v1/kapps/' + _kappSlug, { headers: { Authorization: authHeader } })
