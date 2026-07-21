@@ -1203,8 +1203,14 @@ const server = http.createServer((req, res) => {
     delete headers["accept-encoding"];
 
     const proxyReq = https.request(url, { method: req.method, headers }, (proxyRes) => {
+      // no-transform: stop an edge/CDN (Fly, corporate proxies) from re-compressing the
+      // body, so the browser gets plain untouched bytes and a proxy/VPN that mishandles a
+      // compressed response can't corrupt larger responses like GET /kapps.
+      const _cc = proxyRes.headers["cache-control"];
       res.writeHead(proxyRes.statusCode, {
         ...proxyRes.headers,
+        "Content-Encoding": "identity",
+        "Cache-Control": _cc ? (_cc + ", no-transform") : "no-transform",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Methods": "*",
