@@ -146,7 +146,31 @@ if (sessionStorage.getItem('base_session') || localStorage.getItem('base_session
     <label>Password</label>
     <input id="login-pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()">Sign In</button>
+    <div style="text-align:center;margin:14px 0 8px;color:var(--gray);font-size:12px;position:relative">
+      <span style="background:var(--white);padding:0 10px;position:relative;z-index:1">or</span>
+      <div style="position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--border);z-index:0"></div>
+    </div>
+    <button onclick="startEnterpriseLogin()" style="background:white;color:var(--blue);border:1px solid var(--border)">Enterprise Login (SSO)</button>
     <div id="login-error" class="error"></div>
+  </div>
+
+  <!-- Enterprise Login (SSO) modal -->
+  <div id="ent-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px">
+    <div style="background:white;border-radius:12px;padding:24px;width:520px;max-width:100%;box-shadow:0 8px 24px rgba(0,0,0,.2)">
+      <div style="font-size:18px;font-weight:700;color:var(--blue);margin-bottom:6px">Enterprise Login (SSO)</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:16px">A popup opens to your Kinetic server's login. Sign in there — including SAML/OIDC — and you're brought back automatically. No password is entered into the console.</div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">Server URL</label>
+        <input id="ent-url" placeholder="https://myspace.kinops.io" onkeydown="if(event.key==='Enter')openSsoPopup()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="closeEnterpriseModal()" style="padding:10px 16px;background:white;color:var(--gray);border:1px solid var(--border);border-radius:6px;cursor:pointer;width:auto">Cancel</button>
+        <div style="flex:1"></div>
+        <button id="ent-go" onclick="openSsoPopup()" style="padding:10px 20px;background:var(--blue);color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;width:auto">Open SSO Login</button>
+      </div>
+      <div id="ent-status" style="margin-top:12px;font-size:13px;color:var(--gray);display:none"></div>
+      <div id="ent-error" class="error" style="margin-top:10px"></div>
+    </div>
   </div>
 </div>
 
@@ -421,6 +445,105 @@ function doLogout() {
   populateServerHistory();
 }
 
+/* ── Enterprise Login (SSO): OAuth2 authorization_code + PKCE ──────
+ * The launcher's base server discovers the target's OAuth2 metadata, registers a
+ * client, and exchanges the code for a token server-side (secret + PKCE verifier
+ * never reach the browser). Here we only open the authorize popup and collect the
+ * resulting token, then start a normal token session. */
+var _ssoPopup = null, _ssoState = null, _ssoServer = null, _ssoPoll = null, _ssoFinishing = false, _ssoListenerAttached = false;
+
+function startEnterpriseLogin() {
+  document.getElementById('ent-modal').style.display = 'flex';
+  document.getElementById('ent-error').style.display = 'none';
+  var st = document.getElementById('ent-status'); if (st) st.style.display = 'none';
+  var u = (document.getElementById('login-url').value || '').trim().replace(/\/+$/, '');
+  if (u && !u.match(/^https?:\/\//)) u = 'https://' + u;
+  document.getElementById('ent-url').value = u || (localStorage.getItem('kinetic_server') || '');
+}
+function closeEnterpriseModal() {
+  document.getElementById('ent-modal').style.display = 'none';
+  if (_ssoPoll) { clearInterval(_ssoPoll); _ssoPoll = null; }
+}
+function _ssoStatus(msg, isErr) {
+  var st = document.getElementById('ent-status'), er = document.getElementById('ent-error');
+  if (isErr) { er.textContent = msg; er.style.display = 'block'; if (st) st.style.display = 'none'; }
+  else { if (st) { st.textContent = msg; st.style.display = 'block'; } er.style.display = 'none'; }
+}
+function attachSsoListener() {
+  if (_ssoListenerAttached) return;
+  _ssoListenerAttached = true;
+  window.addEventListener('message', function (ev) {
+    var m = ev.data;
+    if (!m || m.type !== 'kinetic-sso') return;
+    if (_ssoState && m.state && m.state !== _ssoState) return;
+    if (m.ok) { pollSsoResult(); }
+    else if (m.message) { _ssoStatus(m.message, true); if (_ssoPoll) { clearInterval(_ssoPoll); _ssoPoll = null; } }
+  });
+}
+async function openSsoPopup() {
+  var url = (document.getElementById('ent-url').value || '').trim().replace(/\/+$/, '');
+  if (url && !url.match(/^https?:\/\//)) url = 'https://' + url;
+  if (!url) { _ssoStatus('Server URL is required', true); return; }
+  document.getElementById('ent-url').value = url;
+  var goBtn = document.getElementById('ent-go'); if (goBtn) goBtn.disabled = true;
+  _ssoStatus('Preparing secure login…', false);
+  try {
+    var r = await fetch('/api/base/oauth/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ server: url }) });
+    var d = await r.json();
+    if (!r.ok || !d.authorizeUrl) throw new Error(d.error || ('Could not start SSO (HTTP ' + r.status + ')'));
+    _ssoState = d.state; _ssoServer = d.server || url; _ssoFinishing = false;
+    attachSsoListener();
+    _ssoPopup = window.open(d.authorizeUrl, 'kinetic_sso', 'width=760,height=840');
+    if (!_ssoPopup) throw new Error('Popup blocked — allow popups for this site and try again.');
+    _ssoStatus('Complete sign-in in the popup window…', false);
+    if (_ssoPoll) clearInterval(_ssoPoll);
+    _ssoPoll = setInterval(pollSsoResult, 1500);
+  } catch (e) {
+    _ssoStatus(e.message, true);
+  } finally {
+    if (goBtn) goBtn.disabled = false;
+  }
+}
+async function pollSsoResult() {
+  if (_ssoFinishing || !_ssoState) return;
+  try {
+    var r = await fetch('/api/base/oauth/result?state=' + encodeURIComponent(_ssoState));
+    if (r.status === 404) return;
+    var d = await r.json();
+    if (!r.ok || !d.access_token) return;
+    _ssoFinishing = true;
+    if (_ssoPoll) { clearInterval(_ssoPoll); _ssoPoll = null; }
+    await completeSsoSession(_ssoServer, d.access_token, d.refresh_token);
+  } catch (e) { /* transient — keep polling */ }
+}
+async function completeSsoSession(url, accessToken, refreshToken) {
+  try {
+    await fetch('/api/base/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url }) });
+    var meRes = await fetch('/app/api/v1/me', { headers: { Authorization: 'Bearer ' + accessToken, 'X-Kinetic-Server': url } });
+    if (!meRes.ok) throw new Error('Token rejected by /me (HTTP ' + meRes.status + ')');
+    var me = await meRes.json();
+    var spaceSlug = '';
+    try {
+      var sr = await fetch('/app/api/v1/space', { headers: { Authorization: 'Bearer ' + accessToken, 'X-Kinetic-Server': url } });
+      if (sr.ok) { var sd = await sr.json(); spaceSlug = ((sd.space || sd) || {}).slug || ''; }
+    } catch (e2) {}
+    API = { url: url, server: url, auth: '', token: accessToken, refreshToken: refreshToken || '', user: me.username || '', displayName: me.displayName || me.username || '', spaceSlug: spaceSlug };
+    sessionStorage.setItem('base_session', JSON.stringify(API));
+    localStorage.setItem('base_session', JSON.stringify(API));
+    saveServerToHistory(url);
+    closeEnterpriseModal();
+    var bs = document.getElementById('boot-style'); if (bs) bs.remove();
+    setUserDisplay(API.displayName, API.spaceSlug);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderGrid();
+    mergeDiscoveredApps();
+  } catch (e) {
+    _ssoFinishing = false;
+    _ssoStatus(e.message, true);
+  }
+}
+
 async function restoreSession() {
   var saved = sessionStorage.getItem('base_session');
   // Fall back to localStorage for shift-click new tabs
@@ -443,8 +566,8 @@ async function restoreSession() {
       });
     }
 
-    // Build headers with per-tab server routing
-    const proxyHeaders = { 'Authorization': 'Basic ' + API.auth };
+    // Build headers with per-tab server routing (Bearer for SSO/token sessions)
+    const proxyHeaders = { 'Authorization': API.token ? ('Bearer ' + API.token) : ('Basic ' + API.auth) };
     if (API.url) proxyHeaders['X-Kinetic-Server'] = API.url;
 
     const res = await fetch('/app/api/v1/me', { headers: proxyHeaders });
@@ -690,7 +813,7 @@ async function loadKappsForPicker() {
   const body = document.getElementById('picker-body');
   try {
     const res = await proxyFetch('/app/api/v1/kapps', {
-      headers: { 'Authorization': 'Basic ' + API.auth }
+      headers: { 'Authorization': API.token ? ('Bearer ' + API.token) : ('Basic ' + API.auth) }
     });
     if (!res.ok) throw new Error('Failed to load kapps');
     const data = await res.json();

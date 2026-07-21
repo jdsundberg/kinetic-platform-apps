@@ -234,6 +234,72 @@ function jsonResp(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
+/* ───── Enterprise SSO (OAuth2 authorization_code + PKCE) ─────
+ * Lets an operator sign in to any Kinetic server through that server's own
+ * interactive login (local, SAML, OIDC) without typing a password into the
+ * launcher. Flow: discover OAuth2 metadata -> dynamically register a confidential
+ * client whose redirect_uri points back here -> PKCE authorize in a popup ->
+ * exchange the code for a token SERVER-SIDE (secret + verifier never reach the
+ * browser). Apps then run on the resulting Bearer token (the injected wrapper
+ * rewrites their Basic header to Bearer transparently). */
+
+function outboundRequest(method, urlStr, { headers = {}, json = null, form = null } = {}) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(urlStr);
+    const mod = u.protocol === "http:" ? http : https;
+    const h = { ...headers };
+    let payload = null;
+    if (form) { payload = new URLSearchParams(form).toString(); h["Content-Type"] = "application/x-www-form-urlencoded"; }
+    else if (json != null) { payload = JSON.stringify(json); h["Content-Type"] = "application/json"; }
+    if (payload) h["Content-Length"] = Buffer.byteLength(payload);
+    const rq = mod.request(u, { method, headers: h }, (rs) => {
+      const chunks = [];
+      rs.on("data", (c) => chunks.push(c));
+      rs.on("end", () => { const text = Buffer.concat(chunks).toString(); let data = null; try { data = JSON.parse(text); } catch {} resolve({ status: rs.statusCode, data, text }); });
+    });
+    rq.on("error", reject);
+    if (payload) rq.write(payload);
+    rq.end();
+  });
+}
+
+const ssoClients = new Map();  // server -> { clientId, clientSecret, redirectUri, tokenEndpoint }
+const ssoPending = new Map();  // state  -> { server, tokenEndpoint, clientId, clientSecret, verifier, redirectUri, createdAt }
+const ssoResults = new Map();  // state  -> { access_token, ..., server, createdAt }
+function ssoGc() {
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  for (const [k, v] of ssoPending) if (v.createdAt < cutoff) ssoPending.delete(k);
+  for (const [k, v] of ssoResults) if (v.createdAt < cutoff) ssoResults.delete(k);
+}
+
+async function ssoRegisterClient(server, redirectUri) {
+  const disc = await outboundRequest("GET", server + "/.well-known/oauth-authorization-server");
+  if (disc.status !== 200 || !disc.data || !disc.data.authorization_endpoint) {
+    throw new Error("OAuth discovery failed (HTTP " + disc.status + "). Is this a Kinetic server with OAuth enabled?");
+  }
+  const meta = disc.data;
+  const cached = ssoClients.get(server);
+  if (cached && cached.redirectUri === redirectUri) {
+    return { meta, clientId: cached.clientId, clientSecret: cached.clientSecret };
+  }
+  if (!meta.registration_endpoint) throw new Error("Server does not advertise a dynamic registration_endpoint.");
+  const scope = (meta.scopes_supported || []).includes("full") ? "full" : ((meta.scopes_supported || [])[0] || "read");
+  // Always request refresh_token so sessions outlive the short access-token TTL.
+  const reg = await outboundRequest("POST", meta.registration_endpoint, { json: {
+    client_name: "Kinetic App Launcher",
+    redirect_uris: [redirectUri],
+    grant_types: ["authorization_code", "refresh_token"],
+    response_types: ["code"],
+    token_endpoint_auth_method: "client_secret_post",
+    scope,
+  }});
+  if (reg.status >= 400 || !reg.data || !reg.data.client_id) {
+    throw new Error("Client registration failed (HTTP " + reg.status + "): " + ((reg.data && (reg.data.error_description || reg.data.error)) || reg.text || "").slice(0, 200));
+  }
+  ssoClients.set(server, { clientId: reg.data.client_id, clientSecret: reg.data.client_secret, redirectUri, tokenEndpoint: meta.token_endpoint });
+  return { meta, clientId: reg.data.client_id, clientSecret: reg.data.client_secret };
+}
+
 
 /* ───── Shared helpers object for auto-discovered app handlers ───── */
 const appHelpers = {
@@ -291,24 +357,104 @@ function injectScripts(html, appSlug) {
     var server = sess.server || sess.url || '';
     sess.server = server;
     sess.url = '';
+    // SSO/token sessions carry no password. Apps build "Authorization: Basic <base64>"
+    // from sess.auth; synthesize a placeholder from the token so that keeps working,
+    // and the wrapper below rewrites the resulting Basic header to Bearer before it
+    // leaves the browser. Without this, token sessions fail every authenticated call.
+    if (sess.token) {
+      var _u = sess.user || sess.username || 'sso';
+      if (!sess.auth) { try { sess.auth = btoa(_u + ':' + sess.token); } catch(e) {} }
+      if (!sess.pass) { sess.pass = sess.token; }
+    }
     var k = JSON.stringify(sess);
     sessionStorage.setItem('kinetic_session', k);
     sessionStorage.setItem('atlas_session', k);
-    // Intercept fetch to add X-Kinetic-Server header for per-tab proxy routing
     if (server) {
+      var _tok = { access: sess.token || '', refresh: sess.refreshToken || '' };
       var _origFetch = window.fetch;
+      var _refreshing = null;
+
+      // Add X-Kinetic-Server (all sessions) and, for token sessions, a Bearer header.
+      // Absolute same-origin URLs (apps often build \`\${API}/app/...\`) are normalized
+      // to their path so they match the /app/ and /api/ prefixes too.
+      var applyAuth = function(init) {
+        init = init || {};
+        if (!init.headers) init.headers = {};
+        var setHdr = function(name, val) {
+          if (init.headers instanceof Headers) init.headers.set(name, val);
+          else if (typeof init.headers === 'object' && !Array.isArray(init.headers)) init.headers[name] = val;
+        };
+        var hasHdr = function(name) {
+          if (init.headers instanceof Headers) return init.headers.has(name);
+          if (typeof init.headers === 'object' && !Array.isArray(init.headers)) { for (var k in init.headers) if (k.toLowerCase() === name.toLowerCase()) return true; }
+          return false;
+        };
+        var getHdr = function(name) {
+          if (init.headers instanceof Headers) return init.headers.get(name);
+          if (typeof init.headers === 'object' && !Array.isArray(init.headers)) { for (var k in init.headers) if (k.toLowerCase() === name.toLowerCase()) return init.headers[k]; }
+          return '';
+        };
+        if (!hasHdr('X-Kinetic-Server')) setHdr('X-Kinetic-Server', server);
+        if (_tok.access) {
+          var cur = getHdr('Authorization') || '';
+          if (!cur || cur.indexOf('Basic ') === 0 || cur.indexOf('Bearer ') === 0) setHdr('Authorization', 'Bearer ' + _tok.access);
+        }
+        return init;
+      };
+
+      var persistToken = function() {
+        try {
+          ['base_session','kinetic_session','atlas_session'].forEach(function(key){
+            var raw = sessionStorage.getItem(key);
+            if (!raw) return;
+            var o = JSON.parse(raw);
+            o.token = _tok.access; o.refreshToken = _tok.refresh;
+            if (o.pass) o.pass = _tok.access;
+            if (o.auth) { try { o.auth = btoa((o.user||o.username||'sso')+':'+_tok.access); } catch(e){} }
+            sessionStorage.setItem(key, JSON.stringify(o));
+          });
+          var braw = localStorage.getItem('base_session');
+          if (braw) { var bo = JSON.parse(braw); bo.token=_tok.access; bo.refreshToken=_tok.refresh; localStorage.setItem('base_session', JSON.stringify(bo)); }
+        } catch(e) {}
+      };
+
+      var doRefresh = function() {
+        if (!_tok.refresh) return Promise.resolve(false);
+        if (_refreshing) return _refreshing;
+        _refreshing = _origFetch('/api/base/oauth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ server: server, refresh_token: _tok.refresh }) })
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(d){ _refreshing = null; if (!d || !d.access_token) return false; _tok.access = d.access_token; if (d.refresh_token) _tok.refresh = d.refresh_token; persistToken(); return true; })
+          .catch(function(){ _refreshing = null; return false; });
+        return _refreshing;
+      };
+
+      // Proactive refresh ~45s before expiry (first's refresh tokens are short-lived,
+      // so a purely reactive on-401 refresh arrives too late). Reschedule on success.
+      var _refreshTimer = null;
+      var scheduleRefresh = function() {
+        if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
+        if (!_tok.access || !_tok.refresh) return;
+        var exp = 0;
+        try { exp = JSON.parse(atob(_tok.access.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp; } catch(e) {}
+        if (!exp) return;
+        var ms = (exp - Math.floor(Date.now()/1000) - 45) * 1000;
+        if (ms < 3000) ms = 3000;
+        _refreshTimer = setTimeout(function(){ doRefresh().then(function(ok){ if (ok) scheduleRefresh(); }); }, ms);
+      };
+      scheduleRefresh();
+
       window.fetch = function(input, init) {
         var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-        if (url.startsWith('/app/') || url.startsWith('/api/')) {
-          init = init || {};
-          if (!init.headers) init.headers = {};
-          if (init.headers instanceof Headers) {
-            if (!init.headers.has('X-Kinetic-Server')) init.headers.set('X-Kinetic-Server', server);
-          } else if (typeof init.headers === 'object' && !Array.isArray(init.headers)) {
-            if (!init.headers['X-Kinetic-Server']) init.headers['X-Kinetic-Server'] = server;
-          }
-        }
-        return _origFetch.apply(this, arguments);
+        var _path = url;
+        if (/^https?:\\/\\//i.test(_path)) { try { _path = new URL(_path).pathname; } catch(e) {} }
+        if (_path.indexOf('/app/') !== 0 && _path.indexOf('/api/') !== 0) return _origFetch.apply(this, arguments);
+        var self = this;
+        init = applyAuth(init);
+        if (!_tok.access || !_tok.refresh || _path.indexOf('/api/base/oauth/') === 0) return _origFetch.call(self, input, init);
+        return _origFetch.call(self, input, init).then(function(resp){
+          if (resp.status !== 401) return resp;
+          return doRefresh().then(function(ok){ if (!ok) return resp; init = applyAuth(init); return _origFetch.call(self, input, init); });
+        });
       };
     }
   } catch(e) { window.location.replace('/'); }
@@ -706,6 +852,127 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === "/api/base/target" && req.method === "GET") {
     jsonResp(res, 200, { target: proxyTarget });
+    return;
+  }
+
+  // ── Enterprise SSO step 1: begin authorization_code + PKCE flow ──
+  if (pathname === "/api/base/oauth/start" && req.method === "POST") {
+    try {
+      let server = "";
+      try { server = (JSON.parse((await readBody(req)) || "{}").server || "").trim(); } catch {}
+      server = server.replace(/\/+$/, "");
+      if (server && !/^https?:\/\//.test(server)) server = "https://" + server;
+      if (!server) { jsonResp(res, 400, { error: "server is required" }); return; }
+
+      const proto = (req.headers["x-forwarded-proto"] || "").split(",")[0].trim() || "http";
+      const redirectUri = proto + "://" + req.headers.host + "/oauth/callback";
+
+      const { meta, clientId, clientSecret } = await ssoRegisterClient(server, redirectUri);
+      const scope = (meta.scopes_supported || []).includes("full") ? "full" : ((meta.scopes_supported || [])[0] || "read");
+
+      const verifier = crypto.randomBytes(32).toString("base64url");
+      const challenge = crypto.createHash("sha256").update(verifier).digest("base64url");
+      const state = crypto.randomBytes(24).toString("base64url");
+      ssoGc();
+      ssoPending.set(state, { server, tokenEndpoint: meta.token_endpoint, clientId, clientSecret, verifier, redirectUri, createdAt: Date.now() });
+
+      const authorizeUrl = meta.authorization_endpoint +
+        "?response_type=code&client_id=" + encodeURIComponent(clientId) +
+        "&redirect_uri=" + encodeURIComponent(redirectUri) +
+        "&scope=" + encodeURIComponent(scope) +
+        "&state=" + encodeURIComponent(state) +
+        "&code_challenge=" + encodeURIComponent(challenge) + "&code_challenge_method=S256";
+
+      jsonResp(res, 200, { authorizeUrl, state, server });
+    } catch (e) { jsonResp(res, 502, { error: e.message }); }
+    return;
+  }
+
+  // ── Enterprise SSO step 2: OAuth redirect callback (the popup lands here) ──
+  if (pathname === "/oauth/callback" && req.method === "GET") {
+    const code = parsedUrl.searchParams.get("code");
+    const state = parsedUrl.searchParams.get("state");
+    const oauthErr = parsedUrl.searchParams.get("error");
+    const pend = state ? ssoPending.get(state) : null;
+    let ok = false, message = "";
+    if (oauthErr) {
+      const desc = parsedUrl.searchParams.get("error_description");
+      message = "Authorization failed: " + oauthErr + (desc ? (" — " + desc) : "");
+    } else if (!pend) {
+      message = "Login session expired or unknown. Please start over.";
+    } else if (!code) {
+      message = "No authorization code was returned.";
+    } else {
+      try {
+        const tok = await outboundRequest("POST", pend.tokenEndpoint, { form: {
+          grant_type: "authorization_code", code, redirect_uri: pend.redirectUri,
+          client_id: pend.clientId, client_secret: pend.clientSecret, code_verifier: pend.verifier,
+        }});
+        if (tok.status < 400 && tok.data && tok.data.access_token) {
+          ssoResults.set(state, { ...tok.data, server: pend.server, createdAt: Date.now() });
+          ssoPending.delete(state);
+          ok = true;
+        } else {
+          message = "Token exchange failed (HTTP " + tok.status + "): " + ((tok.data && (tok.data.error_description || tok.data.error)) || tok.text || "").slice(0, 200);
+        }
+      } catch (e) { message = "Token exchange error: " + e.message; }
+    }
+    const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Kinetic SSO</title></head>
+<body style="font-family:system-ui,Segoe UI,sans-serif;padding:48px;color:#16213e;text-align:center">
+  <h2 style="color:${ok ? "#1e8e3e" : "#c0392b"}">${ok ? "Signed in &#10003;" : "Sign-in failed"}</h2>
+  <p style="color:#555;max-width:520px;margin:12px auto">${ok ? "You can close this window." : esc(message)}</p>
+  <script>
+    (function(){
+      try { if (window.opener) window.opener.postMessage({ type: "kinetic-sso", ok: ${ok}, state: ${JSON.stringify(state || "")}, message: ${JSON.stringify(message)} }, "*"); } catch (e) {}
+      ${ok ? "setTimeout(function(){ try{ window.close(); }catch(e){} }, 500);" : ""}
+    })();
+  <\/script>
+</body></html>`;
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(html);
+    return;
+  }
+
+  // ── Enterprise SSO step 3: opener retrieves the token once (single-use) ──
+  if (pathname === "/api/base/oauth/result" && req.method === "GET") {
+    const state = parsedUrl.searchParams.get("state");
+    const r = state ? ssoResults.get(state) : null;
+    if (!r) { jsonResp(res, 404, { error: "No completed SSO result for this state." }); return; }
+    ssoResults.delete(state);
+    jsonResp(res, 200, {
+      access_token: r.access_token, refresh_token: r.refresh_token || null,
+      token_type: r.token_type || "Bearer", expires_in: r.expires_in || null,
+      scope: r.scope || null, server: r.server,
+    });
+    return;
+  }
+
+  // ── Enterprise SSO: silently refresh an expired access token (called on 401) ──
+  if (pathname === "/api/base/oauth/refresh" && req.method === "POST") {
+    try {
+      const body = JSON.parse((await readBody(req)) || "{}");
+      let server = (body.server || "").trim().replace(/\/+$/, "");
+      const refreshToken = body.refresh_token;
+      if (!server || !refreshToken) { jsonResp(res, 400, { error: "server and refresh_token required" }); return; }
+      const client = ssoClients.get(server);
+      if (!client) { jsonResp(res, 409, { error: "No registered client for server (launcher restarted) — please sign in again." }); return; }
+      let tokenEndpoint = client.tokenEndpoint;
+      if (!tokenEndpoint) {
+        const disc = await outboundRequest("GET", server + "/.well-known/oauth-authorization-server");
+        tokenEndpoint = disc.data && disc.data.token_endpoint;
+      }
+      if (!tokenEndpoint) { jsonResp(res, 502, { error: "Could not resolve token endpoint." }); return; }
+      const tok = await outboundRequest("POST", tokenEndpoint, { form: {
+        grant_type: "refresh_token", refresh_token: refreshToken,
+        client_id: client.clientId, client_secret: client.clientSecret,
+      }});
+      if (tok.status >= 400 || !tok.data || !tok.data.access_token) {
+        jsonResp(res, 401, { error: "Refresh failed: " + ((tok.data && (tok.data.error_description || tok.data.error)) || tok.text || "").slice(0, 200) });
+        return;
+      }
+      jsonResp(res, 200, { access_token: tok.data.access_token, refresh_token: tok.data.refresh_token || refreshToken, expires_in: tok.data.expires_in || null });
+    } catch (e) { jsonResp(res, 500, { error: e.message }); }
     return;
   }
 
