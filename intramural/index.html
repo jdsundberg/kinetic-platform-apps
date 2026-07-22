@@ -1,0 +1,580 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>St. Olaf Intramurals</title>
+<style>
+:root{
+  --blue:#1b1b1b;        /* St. Olaf black — topbar/headers */
+  --blue-light:#2c2c2c;
+  --orange:#F2A900;      /* Ole gold — accent/CTA */
+  --orange-light:#ffc23d;
+  --green:#34A853; --red:#EA4335; --yellow:#FBBC04;
+  --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+/* ── login ── */
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#111 0%,#1b1b1b 55%,#3a2f00 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:400px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.login-box .brand{font-size:24px;font-weight:800;color:var(--blue);text-align:center}
+.login-box .brand span{color:var(--orange)}
+.login-box .accent{width:40px;height:3px;background:var(--orange);margin:12px auto 20px;border-radius:2px}
+.login-box .sub{text-align:center;color:var(--gray);font-size:12px;margin-bottom:22px}
+.login-box label{display:block;font-size:12px;color:var(--gray);margin:12px 0 4px;font-weight:600}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(242,169,0,.15)}
+.login-box button{width:100%;margin-top:20px;padding:11px;background:var(--orange);color:#1b1b1b;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.login-box button:hover{background:var(--orange-light)}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:12px;min-height:14px}
+/* ── topbar ── */
+#app{display:none}
+.topbar{background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:800;font-size:18px;white-space:nowrap;margin-right:28px}
+.topbar .logo span{color:var(--orange)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.75);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-tabs button.active{background:var(--orange);color:#1b1b1b}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:#fff}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--orange);color:#fff}
+/* ── layout ── */
+.wrap{max-width:1180px;margin:0 auto;padding:24px}
+.console{display:none}
+.console.active{display:block}
+h1{font-size:20px;color:var(--blue);margin-bottom:4px}
+.page-sub{color:var(--gray);font-size:13px;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:15px;color:var(--blue);margin-bottom:14px}
+/* ── kpis ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--orange)}
+.kpi.blue{border-left-color:var(--blue)}
+.kpi.green{border-left-color:var(--green)}
+.kpi.gray{border-left-color:var(--gray)}
+.kpi .val{font-size:26px;font-weight:800;color:var(--blue);line-height:1.1}
+.kpi .label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;font-weight:600}
+/* ── tables ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--light);color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#fafafa}
+.table-wrap{overflow-x:auto}
+/* ── controls ── */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,.controls input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff}
+select:focus,input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(242,169,0,.12)}
+.spacer-h{flex:1}
+.btn-primary{background:var(--orange);color:#1b1b1b;border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:#eceef0}
+.btn-danger{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-sm{padding:5px 10px;font-size:12px}
+.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;color:var(--gray);font-size:13px}
+/* ── badges ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.b-final{background:#E8F5E9;color:#2E7D32}
+.b-sched{background:#E3F2FD;color:#1565C0}
+.b-post{background:#FDECEA;color:#C62828}
+.b-active{background:#E8F5E9;color:#2E7D32}
+.b-withdrawn{background:#F1F3F4;color:#5F6368}
+.b-new{background:#FFF8E1;color:#8D6E00}
+.b-reviewed{background:#E3F2FD;color:#1565C0}
+.b-resolved{background:#E8F5E9;color:#2E7D32}
+.stars{color:var(--orange);letter-spacing:1px}
+.pill{display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--gray)}
+.empty{padding:34px;text-align:center;color:var(--gray);font-size:13px}
+.win{font-weight:700;color:var(--green)}
+.muted{color:var(--gray)}
+/* ── modal ── */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
+#modal.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;width:640px;max-width:96vw;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--blue)}
+.modal-close{background:none;border:none;font-size:24px;color:var(--gray);cursor:pointer;line-height:1}
+.modal-body{padding:22px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-grid .full{grid-column:1/-1}
+.modal-body label{display:block;font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:64px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:16px 22px;border-top:1px solid var(--border)}
+.modal-footer .spacer-h{order:-1}
+/* ── toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+@media(max-width:760px){.modal-grid{grid-template-columns:1fr}.nav-tabs button{padding:8px 9px}}
+</style>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand">St.&nbsp;Olaf <span>Intramurals</span></div>
+    <div class="accent"></div>
+    <div class="sub">Sign in to manage teams, games &amp; feedback</div>
+    <label>Server URL</label>
+    <input id="li-url" value="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="li-user" value="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" value="john1">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">St.&nbsp;Olaf<span>&nbsp;IM</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('teams')">Standings</button>
+      <button onclick="switchTab('games')">Games</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- ── Dashboard ── -->
+    <div id="console-dash" class="console active">
+      <h1>Intramural Dashboard</h1>
+      <div class="page-sub">St. Olaf College · Fall · Winter · Spring — live standings, scores &amp; feedback</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="card"><h2>By Season</h2><div class="table-wrap"><table id="dash-season"></table></div></div>
+      <div class="card"><h2>Standings Leaders</h2><div class="table-wrap"><table id="dash-top"></table></div></div>
+      <div class="card"><h2>Recent Finals</h2><div class="table-wrap"><table id="dash-recent"></table></div></div>
+      <div class="card"><h2>Sports by Season</h2><div class="table-wrap"><table id="dash-sports"></table></div></div>
+    </div>
+
+    <!-- ── Standings / Teams ── -->
+    <div id="console-teams" class="console">
+      <h1>Team Registry &amp; Standings</h1>
+      <div class="page-sub">10 teams per sport · records tally automatically from game results</div>
+      <div class="controls">
+        <select id="t-season" onchange="loadTeams()"></select>
+        <select id="t-sport" onchange="loadTeams()"></select>
+        <select id="t-status" onchange="loadTeams()">
+          <option value="">All statuses</option><option>Active</option><option>Withdrawn</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openTeamModal()">+ Add Team</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="teams-table"></table></div><div class="pager" id="teams-pager"></div></div>
+    </div>
+
+    <!-- ── Games ── -->
+    <div id="console-games" class="console">
+      <h1>Games &amp; Scores</h1>
+      <div class="page-sub">Schedule and results across all three seasons</div>
+      <div class="controls">
+        <select id="g-season" onchange="loadGames()"></select>
+        <select id="g-sport" onchange="loadGames()"></select>
+        <select id="g-status" onchange="loadGames()">
+          <option value="">All statuses</option><option>Final</option><option>Scheduled</option><option>Postponed</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openGameModal()">+ Add Game</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="games-table"></table></div><div class="pager" id="games-pager"></div></div>
+    </div>
+
+    <!-- ── Feedback ── -->
+    <div id="console-feedback" class="console">
+      <h1>Game Feedback</h1>
+      <div class="page-sub">Enjoyment, sportsmanship &amp; officiating ratings from players and captains</div>
+      <div class="controls">
+        <select id="f-season" onchange="loadFeedback()"></select>
+        <select id="f-sport" onchange="loadFeedback()"></select>
+        <select id="f-status" onchange="loadFeedback()">
+          <option value="">All statuses</option><option>New</option><option>Reviewed</option><option>Resolved</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openFeedbackModal()">+ Add Feedback</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="feedback-table"></table></div><div class="pager" id="feedback-pager"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL + TOAST ══════════════ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const KAPP='intramural';
+let API={url:'',auth:'',user:'',displayName:''};
+
+const SEASONS=['Fall','Winter','Spring'];
+const SPORTS_BY_SEASON={
+  Fall:['Flag Football','Soccer','Volleyball'],
+  Winter:['Basketball','Broomball','Dodgeball'],
+  Spring:['Softball','Ultimate','Kickball'],
+};
+const ALL_SPORTS=[].concat(...SEASONS.map(s=>SPORTS_BY_SEASON[s]));
+const DIVISIONS=['Open A','Open B','Rec','Competitive'];
+const VENUES=['Manitou Field','Skoglund Center','Skoglund Gym','Skoglund Gym B','Tostrud Rink','Tostrud Fields','Old Main Field'];
+
+// ── helpers ──
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub&&sub.values?(sub.values[f]||''):''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function stars(n){n=Math.max(0,Math.min(5,parseInt(n)||0));return '★'.repeat(n)+'<span class="muted">'+'☆'.repeat(5-n)+'</span>'}
+function opt(val,cur){return `<option ${val===cur?'selected':''}>${esc(val)}</option>`}
+function nid(pre){return pre+'-'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*1e3)}
+
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,220)}`)}
+  const t=await r.text();return t?JSON.parse(t):{}
+}
+async function appApi(path){
+  const r=await fetch(path,{headers:{Authorization:'Basic '+API.auth}});
+  if(!r.ok)throw new Error(`${r.status}`);
+  return r.json();
+}
+
+// ── auth ──
+function doLogin(){
+  const url=document.getElementById('li-url').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const auth=btoa(user+':'+pass);
+  fetch(`${url}/app/api/v1/me`,{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error('Invalid credentials');return r.json()})
+    .then(d=>{API={url,auth,user:d.username,displayName:d.displayName||d.username};enterApp()})
+    .catch(e=>{document.getElementById('li-err').textContent=e.message});
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;
+  buildFilters();
+  loadDash();
+}
+
+// session bootstrap (launcher-injected) — check before showing login.
+// Served through the base launcher on :3011, which proxies /app/api/v1 same-origin,
+// so force url:'' (a cross-origin fetch to the target server is cert/CORS-blocked).
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s)return;
+  try{const ss=JSON.parse(s);API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};enterApp()}catch(e){}
+})();
+
+// ── tabs ──
+const TABS=['dash','teams','games','feedback'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='teams')loadTeams();
+  else if(tab==='games')loadGames();
+  else if(tab==='feedback')loadFeedback();
+}
+
+function buildFilters(){
+  const seasonOpts='<option value="">All seasons</option>'+SEASONS.map(s=>`<option>${s}</option>`).join('');
+  const sportOpts='<option value="">All sports</option>'+ALL_SPORTS.map(s=>`<option>${esc(s)}</option>`).join('');
+  ['t-season','g-season','f-season'].forEach(id=>document.getElementById(id).innerHTML=seasonOpts);
+  ['t-sport','g-sport','f-sport'].forEach(id=>document.getElementById(id).innerHTML=sportOpts);
+}
+
+// ── pagination state ──
+const PS={teams:{h:[],pt:null,p:1},games:{h:[],pt:null,p:1},feedback:{h:[],pt:null,p:1}};
+function paginate(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+function pagerHTML(ps,fn){
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button>`
+       +`<span>Page ${ps.p}</span>`
+       +`<button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+function buildQ(pairs){
+  const q=pairs.filter(([f,val])=>val).map(([f,val])=>`values[${f}]="${String(val).replace(/"/g,'\\"')}"`);
+  return q.length?'&q='+encodeURIComponent(q.join(' AND ')):'';
+}
+
+// ══════════════ DASHBOARD ══════════════
+async function loadDash(){
+  try{
+    const d=await appApi('/api/intramural/dashboard');
+    const t=d.totals||{};
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi"><div class="val">${t.teams||0}</div><div class="label">Teams</div></div>
+      <div class="kpi blue"><div class="val">${t.sports||0}</div><div class="label">Sports</div></div>
+      <div class="kpi green"><div class="val">${t.completed||0}</div><div class="label">Games Played</div></div>
+      <div class="kpi gray"><div class="val">${t.scheduled||0}</div><div class="label">Upcoming</div></div>
+      <div class="kpi"><div class="val">${(t.avgRating||0).toFixed(1)}</div><div class="label">Avg Rating</div></div>
+      <div class="kpi green"><div class="val">${(t.avgSportsmanship||0).toFixed(1)}</div><div class="label">Sportsmanship</div></div>`;
+
+    document.getElementById('dash-season').innerHTML=
+      `<thead><tr><th>Season</th><th>Sports</th><th>Teams</th><th>Games</th><th>Played</th></tr></thead><tbody>`+
+      (d.bySeason||[]).map(s=>`<tr><td><strong>${esc(s.season)}</strong></td><td>${s.sports}</td><td>${s.teams}</td><td>${s.games}</td><td>${s.completed}</td></tr>`).join('')+`</tbody>`;
+
+    document.getElementById('dash-top').innerHTML=
+      `<thead><tr><th>#</th><th>Team</th><th>Sport</th><th>Season</th><th>W</th><th>L</th><th>T</th><th>Diff</th></tr></thead><tbody>`+
+      (d.topTeams||[]).map((tm,i)=>`<tr><td>${i+1}</td><td><strong>${esc(tm.name)}</strong></td><td>${esc(tm.sport)}</td><td>${esc(tm.season)}</td><td class="win">${tm.w}</td><td>${tm.l}</td><td>${tm.ti}</td><td>${tm.diff>0?'+':''}${tm.diff}</td></tr>`).join('')+`</tbody>`;
+
+    document.getElementById('dash-recent').innerHTML=
+      `<thead><tr><th>Date</th><th>Sport</th><th>Matchup</th><th>Score</th><th>Winner</th></tr></thead><tbody>`+
+      (d.recentGames||[]).map(g=>`<tr><td>${esc(g.date)}</td><td>${esc(g.sport)}</td><td>${esc(g.home)} vs ${esc(g.away)}</td><td><strong>${esc(g.hs)}–${esc(g.as)}</strong></td><td class="win">${esc(g.winner)}</td></tr>`).join('')+`</tbody>`;
+
+    document.getElementById('dash-sports').innerHTML=
+      `<thead><tr><th>Season</th><th>Sport</th><th>Teams</th><th>Games</th><th>Played</th></tr></thead><tbody>`+
+      (d.bySport||[]).map(s=>`<tr><td>${esc(s.season)}</td><td><strong>${esc(s.sport)}</strong></td><td>${s.teams}</td><td>${s.games}</td><td>${s.completed}</td></tr>`).join('')+`</tbody>`;
+  }catch(e){
+    document.getElementById('dash-kpis').innerHTML=`<div class="empty">Error loading dashboard: ${esc(e.message)}</div>`;
+  }
+}
+
+// ══════════════ TEAMS / STANDINGS ══════════════
+async function loadTeams(dir){
+  const ps=PS.teams;paginate(ps,dir);
+  const season=document.getElementById('t-season').value;
+  const sport=document.getElementById('t-sport').value;
+  const status=document.getElementById('t-status').value;
+  let p=`/kapps/${KAPP}/forms/teams/submissions?include=values&limit=25`;
+  p+=buildQ([['Season',season],['Sport',sport],['Status',status]]);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const el=document.getElementById('teams-table');
+  try{
+    const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length){el.innerHTML='';el.closest('.card').querySelector('.table-wrap').innerHTML='<div class="empty">No teams match these filters.</div>';}
+    else{
+      el.closest('.card').querySelector('.table-wrap').innerHTML='<table id="teams-table"></table>';
+      const tbl=document.getElementById('teams-table');
+      tbl.innerHTML=`<thead><tr><th>Team</th><th>Sport</th><th>Season</th><th>Div</th><th>Captain</th><th>W</th><th>L</th><th>T</th><th>PF</th><th>PA</th><th>Status</th><th></th></tr></thead><tbody>`+
+        subs.map(s=>{const vl=s.values;const diff=(parseInt(vl['Points For'])||0)-(parseInt(vl['Points Against'])||0);
+          return `<tr>
+          <td><strong>${esc(vl['Team Name'])}</strong></td>
+          <td>${esc(vl['Sport'])}</td><td>${esc(vl['Season'])}</td>
+          <td><span class="pill">${esc(vl['Division'])}</span></td>
+          <td>${esc(vl['Captain'])}</td>
+          <td class="win">${esc(vl['Wins']||'0')}</td><td>${esc(vl['Losses']||'0')}</td><td>${esc(vl['Ties']||'0')}</td>
+          <td>${esc(vl['Points For']||'0')}</td><td>${esc(vl['Points Against']||'0')}</td>
+          <td><span class="badge ${vl['Status']==='Withdrawn'?'b-withdrawn':'b-active'}">${esc(vl['Status']||'Active')}</span></td>
+          <td><button class="btn-secondary btn-sm" onclick="editTeam('${s.id}')">Edit</button></td></tr>`}).join('')+`</tbody>`;
+    }
+    document.getElementById('teams-pager').innerHTML=pagerHTML(ps,'loadTeams');
+  }catch(e){el.closest('.card').querySelector('.table-wrap').innerHTML=`<div class="empty">Error loading teams: ${esc(e.message)}</div>`}
+}
+async function editTeam(id){const d=await api(`/submissions/${id}?include=values`);openTeamModal(d.submission||d)}
+function openTeamModal(ex){
+  const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Team':'New Team';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Team Name *</label><input id="m-name" value="${esc(vl['Team Name']||'')}"></div>
+      <div><label>Sport</label><select id="m-sport">${ALL_SPORTS.map(x=>opt(x,vl['Sport'])).join('')}</select></div>
+      <div><label>Season</label><select id="m-season">${SEASONS.map(x=>opt(x,vl['Season'])).join('')}</select></div>
+      <div><label>Division</label><select id="m-div">${DIVISIONS.map(x=>opt(x,vl['Division'])).join('')}</select></div>
+      <div><label>Home Venue</label><select id="m-venue"><option value=""></option>${VENUES.map(x=>opt(x,vl['Home Venue'])).join('')}</select></div>
+      <div><label>Captain</label><input id="m-captain" value="${esc(vl['Captain']||'')}"></div>
+      <div><label>Captain Email</label><input id="m-email" value="${esc(vl['Captain Email']||'')}"></div>
+      <div><label>Roster Size</label><input id="m-roster" value="${esc(vl['Roster Size']||'')}"></div>
+      <div><label>Status</label><select id="m-status">${['Active','Withdrawn'].map(x=>opt(x,vl['Status']||'Active')).join('')}</select></div>
+      <div><label>Wins</label><input id="m-w" value="${esc(vl['Wins']||'0')}"></div>
+      <div><label>Losses</label><input id="m-l" value="${esc(vl['Losses']||'0')}"></div>
+      <div><label>Ties</label><input id="m-t" value="${esc(vl['Ties']||'0')}"></div>
+      <div><label>Points For</label><input id="m-pf" value="${esc(vl['Points For']||'0')}"></div>
+      <div><label>Points Against</label><input id="m-pa" value="${esc(vl['Points Against']||'0')}"></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(vl['Notes']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadTeams')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveTeam('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveTeam(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Team Name':g('m-name'),'Sport':g('m-sport'),'Season':g('m-season'),'Division':g('m-div'),
+    'Home Venue':g('m-venue'),'Captain':g('m-captain'),'Captain Email':g('m-email'),'Roster Size':g('m-roster'),
+    'Status':g('m-status'),'Wins':g('m-w'),'Losses':g('m-l'),'Ties':g('m-t'),'Points For':g('m-pf'),
+    'Points Against':g('m-pa'),'Notes':g('m-notes')};
+  if(!values['Team Name']){toast('Team Name is required');return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Team ID']=nid('TM');await api(`/kapps/${KAPP}/forms/teams/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Team updated':'Team created');loadTeams();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ══════════════ GAMES ══════════════
+async function loadGames(dir){
+  const ps=PS.games;paginate(ps,dir);
+  const season=document.getElementById('g-season').value;
+  const sport=document.getElementById('g-sport').value;
+  const status=document.getElementById('g-status').value;
+  let p=`/kapps/${KAPP}/forms/games/submissions?include=values&limit=25`;
+  p+=buildQ([['Season',season],['Sport',sport],['Status',status]]);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const card=document.getElementById('games-table').closest('.card');
+  try{
+    const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length){card.querySelector('.table-wrap').innerHTML='<div class="empty">No games match these filters.</div>';}
+    else{
+      card.querySelector('.table-wrap').innerHTML='<table id="games-table"></table>';
+      document.getElementById('games-table').innerHTML=`<thead><tr><th>Date</th><th>Sport</th><th>Season</th><th>Matchup</th><th>Score</th><th>Winner</th><th>Status</th><th></th></tr></thead><tbody>`+
+        subs.map(s=>{const vl=s.values;const st=vl['Status'];const bc=st==='Final'?'b-final':st==='Postponed'?'b-post':'b-sched';
+          const score=st==='Final'?`<strong>${esc(vl['Home Score'])}–${esc(vl['Away Score'])}</strong>`:'<span class="muted">—</span>';
+          return `<tr>
+          <td>${esc(vl['Game Date'])}<br><span class="muted">${esc(vl['Game Time']||'')}</span></td>
+          <td>${esc(vl['Sport'])}</td><td>${esc(vl['Season'])}</td>
+          <td>${esc(vl['Home Team'])} <span class="muted">vs</span> ${esc(vl['Away Team'])}</td>
+          <td>${score}</td>
+          <td class="win">${esc(vl['Winner']||'')}</td>
+          <td><span class="badge ${bc}">${esc(st)}</span></td>
+          <td><button class="btn-secondary btn-sm" onclick="editGame('${s.id}')">Edit</button></td></tr>`}).join('')+`</tbody>`;
+    }
+    document.getElementById('games-pager').innerHTML=pagerHTML(ps,'loadGames');
+  }catch(e){card.querySelector('.table-wrap').innerHTML=`<div class="empty">Error loading games: ${esc(e.message)}</div>`}
+}
+async function editGame(id){const d=await api(`/submissions/${id}?include=values`);openGameModal(d.submission||d)}
+function openGameModal(ex){
+  const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Game':'New Game';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Sport</label><select id="m-sport">${ALL_SPORTS.map(x=>opt(x,vl['Sport'])).join('')}</select></div>
+      <div><label>Season</label><select id="m-season">${SEASONS.map(x=>opt(x,vl['Season'])).join('')}</select></div>
+      <div><label>Game Date</label><input id="m-date" type="date" value="${esc(vl['Game Date']||'')}"></div>
+      <div><label>Game Time</label><input id="m-time" value="${esc(vl['Game Time']||'')}"></div>
+      <div><label>Home Team</label><input id="m-home" value="${esc(vl['Home Team']||'')}"></div>
+      <div><label>Away Team</label><input id="m-away" value="${esc(vl['Away Team']||'')}"></div>
+      <div><label>Home Score</label><input id="m-hs" value="${esc(vl['Home Score']||'')}"></div>
+      <div><label>Away Score</label><input id="m-as" value="${esc(vl['Away Score']||'')}"></div>
+      <div><label>Winner</label><input id="m-winner" value="${esc(vl['Winner']||'')}" placeholder="Team name or Tie"></div>
+      <div><label>Status</label><select id="m-status">${['Scheduled','Final','Postponed'].map(x=>opt(x,vl['Status']||'Scheduled')).join('')}</select></div>
+      <div><label>Location</label><select id="m-loc"><option value=""></option>${VENUES.map(x=>opt(x,vl['Location'])).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(vl['Notes']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadGames')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveGame('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveGame(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Sport':g('m-sport'),'Season':g('m-season'),'Game Date':g('m-date'),'Game Time':g('m-time'),
+    'Home Team':g('m-home'),'Away Team':g('m-away'),'Home Score':g('m-hs'),'Away Score':g('m-as'),
+    'Winner':g('m-winner'),'Status':g('m-status'),'Location':g('m-loc'),'Notes':g('m-notes')};
+  // auto-derive winner on a final game if left blank
+  if(values['Status']==='Final'&&!values['Winner']&&values['Home Score']!==''&&values['Away Score']!==''){
+    const h=parseFloat(values['Home Score']),a=parseFloat(values['Away Score']);
+    values['Winner']=h>a?values['Home Team']:a>h?values['Away Team']:'Tie';
+  }
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Game ID']=nid('GM');await api(`/kapps/${KAPP}/forms/games/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Game updated':'Game created');loadGames();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ══════════════ FEEDBACK ══════════════
+async function loadFeedback(dir){
+  const ps=PS.feedback;paginate(ps,dir);
+  const season=document.getElementById('f-season').value;
+  const sport=document.getElementById('f-sport').value;
+  const status=document.getElementById('f-status').value;
+  let p=`/kapps/${KAPP}/forms/feedback/submissions?include=values&limit=25`;
+  p+=buildQ([['Season',season],['Sport',sport],['Status',status]]);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const card=document.getElementById('feedback-table').closest('.card');
+  try{
+    const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length){card.querySelector('.table-wrap').innerHTML='<div class="empty">No feedback matches these filters.</div>';}
+    else{
+      card.querySelector('.table-wrap').innerHTML='<table id="feedback-table"></table>';
+      document.getElementById('feedback-table').innerHTML=`<thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>By</th><th>Role</th><th>Overall</th><th>Sport.</th><th>Off.</th><th>Status</th><th></th></tr></thead><tbody>`+
+        subs.map(s=>{const vl=s.values;const st=vl['Status'];const bc=st==='Resolved'?'b-resolved':st==='Reviewed'?'b-reviewed':'b-new';
+          return `<tr>
+          <td>${esc(vl['Date'])}</td><td>${esc(vl['Sport'])}</td>
+          <td>${esc(vl['Game']||'')}</td>
+          <td>${esc(vl['Submitted By'])}</td><td><span class="pill">${esc(vl['Role'])}</span></td>
+          <td class="stars">${stars(vl['Overall Rating'])}</td>
+          <td class="stars">${stars(vl['Sportsmanship Rating'])}</td>
+          <td class="stars">${stars(vl['Officiating Rating'])}</td>
+          <td><span class="badge ${bc}">${esc(st)}</span></td>
+          <td><button class="btn-secondary btn-sm" onclick="editFeedback('${s.id}')">Edit</button></td></tr>`}).join('')+`</tbody>`;
+    }
+    document.getElementById('feedback-pager').innerHTML=pagerHTML(ps,'loadFeedback');
+  }catch(e){card.querySelector('.table-wrap').innerHTML=`<div class="empty">Error loading feedback: ${esc(e.message)}</div>`}
+}
+async function editFeedback(id){const d=await api(`/submissions/${id}?include=values`);openFeedbackModal(d.submission||d)}
+function openFeedbackModal(ex){
+  const s=ex||{},vl=s.values||{};
+  const rate=(id,cur)=>`<select id="${id}">${['','1','2','3','4','5'].map(x=>opt(x,cur)).join('')}</select>`;
+  document.getElementById('modal-title').textContent=ex?'Edit Feedback':'New Feedback';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Sport</label><select id="m-sport">${ALL_SPORTS.map(x=>opt(x,vl['Sport'])).join('')}</select></div>
+      <div><label>Season</label><select id="m-season">${SEASONS.map(x=>opt(x,vl['Season'])).join('')}</select></div>
+      <div class="full"><label>Game</label><input id="m-game" value="${esc(vl['Game']||'')}" placeholder="Home vs Away"></div>
+      <div><label>Team</label><input id="m-team" value="${esc(vl['Team']||'')}"></div>
+      <div><label>Date</label><input id="m-date" type="date" value="${esc(vl['Date']||'')}"></div>
+      <div><label>Submitted By</label><input id="m-by" value="${esc(vl['Submitted By']||'')}"></div>
+      <div><label>Role</label><select id="m-role">${['Player','Captain','Referee'].map(x=>opt(x,vl['Role']||'Player')).join('')}</select></div>
+      <div><label>Overall Rating</label>${rate('m-overall',vl['Overall Rating'])}</div>
+      <div><label>Sportsmanship</label>${rate('m-sports',vl['Sportsmanship Rating'])}</div>
+      <div><label>Officiating</label>${rate('m-off',vl['Officiating Rating'])}</div>
+      <div><label>Would Play Again</label><select id="m-again">${['Yes','No'].map(x=>opt(x,vl['Would Play Again']||'Yes')).join('')}</select></div>
+      <div><label>Status</label><select id="m-status">${['New','Reviewed','Resolved'].map(x=>opt(x,vl['Status']||'New')).join('')}</select></div>
+      <div class="full"><label>Comment</label><textarea id="m-comment">${esc(vl['Comment']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadFeedback')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveFeedback('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveFeedback(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Sport':g('m-sport'),'Season':g('m-season'),'Game':g('m-game'),'Team':g('m-team'),'Date':g('m-date'),
+    'Submitted By':g('m-by'),'Role':g('m-role'),'Overall Rating':g('m-overall'),'Sportsmanship Rating':g('m-sports'),
+    'Officiating Rating':g('m-off'),'Would Play Again':g('m-again'),'Status':g('m-status'),'Comment':g('m-comment')};
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Feedback ID']=nid('FB');await api(`/kapps/${KAPP}/forms/feedback/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Feedback updated':'Feedback created');loadFeedback();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ── shared modal / delete ──
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+async function delSub(id,fn){
+  if(!confirm('Delete this record? This cannot be undone.'))return;
+  try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}
+  catch(e){toast('Delete failed: '+e.message)}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>

@@ -1,0 +1,127 @@
+{
+  "name": "CLADigits Orchestration",
+  "slug": "cladigits",
+  "description": "The orchestration layer around the Digits AI-native ledger. CLA is migrating its CAAS client base onto Digits over three years; Digits handles coding, close and reconciliation — Kinetic handles the work around it: client onboarding, prepared-by-client document collection, cross-practice exception routing, migration sequencing, and advisory deliverable assembly. Demonstrates the CLA + Digits + Kinetic relationship across all four platform primitives: forms, data, workflows, integrations.",
+  "category": "Finance",
+  "tags": ["Finance", "Accounting", "CLA", "Digits"],
+  "icon": "layer-group",
+  "color": "#06223f",
+  "bg": "#EAF0F5",
+  "forms": [
+    {
+      "slug": "client-migrations",
+      "name": "Client Migrations",
+      "description": "Each CAAS client's journey onto the Digits ledger — stage, wave, health and the practices involved",
+      "submissionLabelExpression": "${values('Client Name')} - ${values('Stage')}",
+      "fields": [
+        { "name": "Client ID", "required": true },
+        { "name": "Client Name", "required": true },
+        { "name": "Industry" },
+        { "name": "Region" },
+        { "name": "ARR" },
+        { "name": "Current System" },
+        { "name": "Target Path" },
+        { "name": "Migration Wave" },
+        { "name": "Stage" },
+        { "name": "Health" },
+        { "name": "Practices Involved" },
+        { "name": "Lead Partner" },
+        { "name": "Target Go-Live" },
+        { "name": "Percent Complete" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Client ID]", "values[Client Name]", "values[Stage]", "values[Health]", "values[Migration Wave]", "values[Target Path]", "values[Current System]", "values[Region]"],
+        "compound": [["values[Stage]", "values[Health]"], ["values[Migration Wave]", "values[Stage]"]]
+      }
+    },
+    {
+      "slug": "pbc-requests",
+      "name": "PBC Requests",
+      "description": "Prepared-by-client document collection — the intake work Digits does not do",
+      "submissionLabelExpression": "${values('Client Name')} - ${values('Document Type')}",
+      "fields": [
+        { "name": "Request ID", "required": true },
+        { "name": "Client ID" },
+        { "name": "Client Name", "required": true },
+        { "name": "Document Type" },
+        { "name": "Status" },
+        { "name": "Practice" },
+        { "name": "Owner" },
+        { "name": "Requested Date" },
+        { "name": "Due Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Request ID]", "values[Client ID]", "values[Client Name]", "values[Status]", "values[Document Type]", "values[Practice]"],
+        "compound": [["values[Status]", "values[Practice]"], ["values[Client ID]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "exceptions",
+      "name": "Cross-Practice Exceptions",
+      "description": "Exceptions and approvals routed across tax, audit, wealth and advisory — work a general ledger cannot route",
+      "submissionLabelExpression": "${values('Client Name')} - ${values('Exception Type')}",
+      "fields": [
+        { "name": "Exception ID", "required": true },
+        { "name": "Client ID" },
+        { "name": "Client Name", "required": true },
+        { "name": "Exception Type" },
+        { "name": "Originating Practice" },
+        { "name": "Routed To" },
+        { "name": "Priority" },
+        { "name": "Status" },
+        { "name": "SLA Hours" },
+        { "name": "Assignee" },
+        { "name": "Opened Date" },
+        { "name": "Detail", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Exception ID]", "values[Client ID]", "values[Client Name]", "values[Status]", "values[Priority]", "values[Exception Type]", "values[Routed To]", "values[Originating Practice]"],
+        "compound": [["values[Status]", "values[Priority]"], ["values[Routed To]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "deliverables",
+      "name": "Advisory Deliverables",
+      "description": "Advisory deliverable assembly and review sign-off — the value that lives above the ledger",
+      "submissionLabelExpression": "${values('Client Name')} - ${values('Deliverable Type')}",
+      "fields": [
+        { "name": "Deliverable ID", "required": true },
+        { "name": "Client ID" },
+        { "name": "Client Name", "required": true },
+        { "name": "Deliverable Type" },
+        { "name": "Period" },
+        { "name": "Status" },
+        { "name": "Practice" },
+        { "name": "Reviewer" },
+        { "name": "Due Date" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Deliverable ID]", "values[Client ID]", "values[Client Name]", "values[Status]", "values[Deliverable Type]", "values[Practice]"],
+        "compound": [["values[Status]", "values[Practice]"]]
+      }
+    },
+    {
+      "slug": "connections",
+      "name": "System Connections",
+      "description": "The integration layer — how Kinetic connects Digits to CLA's systems and to the clients who stay put",
+      "submissionLabelExpression": "${values('System Name')} - ${values('Status')}",
+      "fields": [
+        { "name": "Connection ID", "required": true },
+        { "name": "System Name", "required": true },
+        { "name": "System Type" },
+        { "name": "Direction" },
+        { "name": "Status" },
+        { "name": "Purpose" },
+        { "name": "Last Sync" },
+        { "name": "Records Synced" }
+      ],
+      "indexes": {
+        "single": ["values[Connection ID]", "values[System Name]", "values[System Type]", "values[Status]", "values[Direction]"],
+        "compound": [["values[Status]", "values[System Type]"]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "name": "St. Olaf Intramurals",
+  "slug": "intramural",
+  "description": "Intramural sports at St. Olaf College — fall, winter and spring seasons with 10 teams per sport. Team registry, game schedule with live scores and standings, plus player feedback and sportsmanship ratings on every game.",
+  "category": "Sports & Recreation",
+  "icon": "award",
+  "color": "#F2A900",
+  "bg": "#FEF6E0",
+  "forms": [
+    {
+      "slug": "teams",
+      "name": "Team Registry",
+      "description": "Registered intramural teams — 10 per sport across fall, winter and spring",
+      "submissionLabelExpression": "${values('Team Name')} - ${values('Sport')}",
+      "fields": [
+        { "name": "Team ID", "required": true },
+        { "name": "Team Name", "required": true },
+        { "name": "Sport" },
+        { "name": "Season" },
+        { "name": "Division" },
+        { "name": "Captain" },
+        { "name": "Captain Email" },
+        { "name": "Roster Size" },
+        { "name": "Wins" },
+        { "name": "Losses" },
+        { "name": "Ties" },
+        { "name": "Points For" },
+        { "name": "Points Against" },
+        { "name": "Home Venue" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Team Name]", "values[Sport]", "values[Season]", "values[Division]", "values[Status]"],
+        "compound": [["values[Sport]", "values[Season]"], ["values[Season]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "games",
+      "name": "Games",
+      "description": "Scheduled and completed intramural games with scores and winners",
+      "submissionLabelExpression": "${values('Home Team')} vs ${values('Away Team')} - ${values('Game Date')}",
+      "fields": [
+        { "name": "Game ID", "required": true },
+        { "name": "Sport" },
+        { "name": "Season" },
+        { "name": "Game Date" },
+        { "name": "Game Time" },
+        { "name": "Home Team" },
+        { "name": "Away Team" },
+        { "name": "Home Score" },
+        { "name": "Away Score" },
+        { "name": "Winner" },
+        { "name": "Location" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Sport]", "values[Season]", "values[Home Team]", "values[Away Team]", "values[Status]", "values[Game Date]"],
+        "compound": [["values[Sport]", "values[Season]"], ["values[Status]", "values[Game Date]"], ["values[Season]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Game Feedback",
+      "description": "Player and captain feedback on games — enjoyment, sportsmanship and officiating ratings",
+      "submissionLabelExpression": "${values('Submitted By')} - ${values('Sport')} (${values('Overall Rating')})",
+      "fields": [
+        { "name": "Feedback ID", "required": true },
+        { "name": "Date" },
+        { "name": "Game" },
+        { "name": "Sport" },
+        { "name": "Season" },
+        { "name": "Team" },
+        { "name": "Submitted By" },
+        { "name": "Role" },
+        { "name": "Overall Rating" },
+        { "name": "Sportsmanship Rating" },
+        { "name": "Officiating Rating" },
+        { "name": "Would Play Again" },
+        { "name": "Comment", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Sport]", "values[Season]", "values[Team]", "values[Role]", "values[Overall Rating]", "values[Status]"],
+        "compound": [["values[Sport]", "values[Season]"], ["values[Season]", "values[Status]"]]
+      }
+    }
+  ]
+}

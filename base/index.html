@@ -513,10 +513,11 @@ async function pollSsoResult() {
     if (!r.ok || !d.access_token) return;
     _ssoFinishing = true;
     if (_ssoPoll) { clearInterval(_ssoPoll); _ssoPoll = null; }
-    await completeSsoSession(_ssoServer, d.access_token, d.refresh_token);
+    await completeSsoSession(_ssoServer, d.access_token, d.refresh_token, d);
   } catch (e) { /* transient — keep polling */ }
 }
-async function completeSsoSession(url, accessToken, refreshToken) {
+async function completeSsoSession(url, accessToken, refreshToken, creds) {
+  creds = creds || {};
   try {
     await fetch('/api/base/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url }) });
     var meRes = await fetch('/app/api/v1/me', { headers: { Authorization: 'Bearer ' + accessToken, 'X-Kinetic-Server': url } });
@@ -527,7 +528,7 @@ async function completeSsoSession(url, accessToken, refreshToken) {
       var sr = await fetch('/app/api/v1/space', { headers: { Authorization: 'Bearer ' + accessToken, 'X-Kinetic-Server': url } });
       if (sr.ok) { var sd = await sr.json(); spaceSlug = ((sd.space || sd) || {}).slug || ''; }
     } catch (e2) {}
-    API = { url: url, server: url, auth: '', token: accessToken, refreshToken: refreshToken || '', user: me.username || '', displayName: me.displayName || me.username || '', spaceSlug: spaceSlug };
+    API = { url: url, server: url, auth: '', token: accessToken, refreshToken: refreshToken || '', clientId: creds.client_id || '', clientSecret: creds.client_secret || '', tokenEndpoint: creds.token_endpoint || '', user: me.username || '', displayName: me.displayName || me.username || '', spaceSlug: spaceSlug };
     sessionStorage.setItem('base_session', JSON.stringify(API));
     localStorage.setItem('base_session', JSON.stringify(API));
     saveServerToHistory(url);

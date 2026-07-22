@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CLADigits · Migration Orchestration</title>
+<style>
+  :root {
+    /* CLA One derived palette */
+    --navy: #06223f; --navy-2: #0a2e53; --surface: #122a45; --surface-2: #0e2138;
+    --blue: #00a0df; --blue-2: #0085bd; --green: #8bc53f; --green-2: #76b327;
+    --text: #eaf2fa; --muted: #9fb6cf; --muted-2: #6f88a3;
+    --border: #1d3c5e; --border-2: #27496e;
+    --bg: #071a30; --card: #0f2640; --card-2: #12304f;
+    --amber: #f5b942; --red: #ff6b6b; --red-2: #e25555;
+    /* Partnership identity */
+    --kinetic: #f26522; --kinetic-2: #d9531a;   /* Kinetic orange */
+    --digits: #7c8cff; --digits-2: #5b6ce0;      /* Digits indigo (the ledger) */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ::selection { background: rgba(242,101,34,0.3); }
+  .hidden { display: none !important; }
+
+  /* ── Login ── */
+  #login { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(1200px 600px at 30% -10%, #0c3a66 0%, var(--bg) 55%); }
+  .login-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 34px 32px; width: 380px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+  .login-card .logo { justify-content: center; margin-bottom: 6px; }
+  .login-card .sub { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+  .login-card label { display:block; font-size: 11.5px; color: var(--muted); font-weight:700; text-transform: uppercase; letter-spacing:.3px; margin: 12px 0 5px; }
+  .login-card input { width:100%; border:1px solid var(--border-2); border-radius:9px; padding:11px 13px; background: var(--surface-2); color: var(--text); font: inherit; outline:none; }
+  .login-card input:focus { border-color: var(--kinetic); box-shadow: 0 0 0 3px rgba(242,101,34,0.18); }
+  .login-card .err { color: var(--red); font-size: 12.5px; margin-top: 12px; min-height: 16px; }
+
+  /* Logo */
+  .logo { display:inline-flex; align-items:baseline; gap:5px; font-weight: 800; letter-spacing: 0.3px; }
+  .logo .cla { color: #fff; font-size: 20px; }
+  .logo .dig { color: var(--kinetic); font-size: 20px; }
+  .logo .tag { font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; align-self:center; margin-left: 4px; }
+
+  /* Topbar */
+  .topbar { position: sticky; top: 0; z-index: 50; height: 60px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: #fff; display: flex; align-items: center; padding: 0 22px; box-shadow: 0 1px 0 var(--border-2); }
+  .topbar .badge { background: rgba(242,101,34,0.16); color: #ffcfae; border: 1px solid var(--kinetic-2); border-radius: 999px; padding: 3px 11px; font-size: 11px; font-weight: 700; margin-left: 16px; }
+  .topbar .badge .dot { display:inline-block; width:7px; height:7px; background: var(--kinetic); border-radius:50%; margin-right:6px; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  .topbar .spacer { flex: 1; }
+  .topbar .user { font-size: 13px; color: var(--muted); margin-right: 14px; }
+  .topbar .reset { background: transparent; color: var(--muted); border: 1px solid var(--border-2); border-radius: 7px; padding: 7px 12px; cursor: pointer; font-size: 12px; }
+  .topbar .reset:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 232px 1fr; min-height: calc(100vh - 60px); }
+  .sidebar { background: var(--surface-2); border-right: 1px solid var(--border); padding: 16px 0; }
+  .sidebar h5 { font-size: 10px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.8px; padding: 14px 22px 6px; margin: 0; font-weight: 800; }
+  .sidebar a { display: flex; align-items:center; gap:10px; padding: 9px 22px; color: var(--text); font-size: 13px; border-left: 3px solid transparent; cursor:pointer; }
+  .sidebar a:hover { background: rgba(255,255,255,0.04); text-decoration: none; }
+  .sidebar a.active { border-left-color: var(--kinetic); background: rgba(242,101,34,0.09); color: #fff; font-weight: 600; }
+  .sidebar a .ic { width: 18px; text-align:center; opacity: .85; }
+  .sidebar a .cnt { margin-left:auto; font-size:11px; color:var(--muted-2); background: rgba(255,255,255,0.04); border-radius: 999px; padding: 1px 8px; }
+  .sidebar a.active .cnt { color: var(--kinetic); background: rgba(242,101,34,0.12); }
+
+  .content { padding: 0; min-width: 0; }
+  .wrap { padding: 24px 30px; max-width: 1280px; }
+  .view-title { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom: 4px; }
+  .view-title h1 { margin: 0; font-size: 22px; color:#fff; font-weight: 800; letter-spacing: -.2px; }
+  .view-title p { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 760px; line-height: 1.5; }
+
+  /* Hero (command center) */
+  .hero { position: relative; overflow: hidden; background: linear-gradient(120deg, var(--navy) 0%, var(--navy-2) 58%, #0c3a66 100%);
+    border-bottom: 1px solid var(--border-2); padding: 30px 30px 26px; }
+  .hero .eyebrow { color: var(--kinetic); font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .hero h1 { margin: 8px 0 8px; font-size: 30px; color: #fff; font-weight: 800; letter-spacing: -0.4px; line-height: 1.12; }
+  .hero h1 .accent { color: var(--kinetic); }
+  .hero p { margin: 0; color: #bcd4ec; font-size: 14.5px; max-width: 720px; line-height: 1.55; }
+  .hero p b { color: #fff; }
+
+  /* KPI row */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 18px 0 6px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .kpi .n { font-size: 24px; font-weight: 800; color: #fff; line-height: 1.05; }
+  .kpi .n small { font-size: 14px; color: var(--muted); font-weight: 700; }
+  .kpi .l { font-size: 11.5px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .3px; font-weight: 700; }
+  .kpi.k-orange .n { color: var(--kinetic); }
+  .kpi.k-green .n { color: var(--green); }
+  .kpi.k-blue .n { color: var(--blue); }
+  .kpi.k-red .n { color: var(--red); }
+  .kpi.k-indigo .n { color: var(--digits); }
+
+  h2.section-title { font-size: 12px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.9px; margin: 26px 0 12px; font-weight: 800; display:flex; align-items:center; gap:10px; }
+  h2.section-title::after { content:""; flex:1; height:1px; background: var(--border); }
+
+  /* Orchestration diagram */
+  .orch { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+  .orch-grid { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 18px; align-items: stretch; }
+  @media (max-width: 900px){ .orch-grid { grid-template-columns: 1fr; } }
+  .lane { display:flex; flex-direction: column; gap: 10px; }
+  .lane .lane-h { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin-bottom: 2px; }
+  .node { border-radius: 11px; padding: 12px 13px; border: 1px solid var(--border-2); background: var(--surface); }
+  .node .nm { font-weight: 700; color:#fff; font-size: 13.5px; display:flex; align-items:center; gap:8px; }
+  .node .ds { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .node .st { font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left:auto; }
+  .st.on { color:#bff0d0; background: rgba(139,197,63,0.14); border:1px solid var(--green-2); }
+  .st.deg { color:#ffdca0; background: rgba(245,185,66,0.14); border:1px solid rgba(245,185,66,.5); }
+  .st.off { color:#ffb3b3; background: rgba(255,107,107,0.12); border:1px solid rgba(255,107,107,.5); }
+
+  .hub { background: linear-gradient(160deg, rgba(242,101,34,0.16), rgba(242,101,34,0.05)); border: 1.5px solid var(--kinetic-2); border-radius: 14px; padding: 18px 16px; text-align:center; box-shadow: 0 0 0 4px rgba(242,101,34,0.06); }
+  .hub .badge2 { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--kinetic); text-transform: uppercase; }
+  .hub .htitle { font-size: 19px; font-weight: 800; color: #fff; margin: 6px 0 4px; }
+  .hub .hsub { font-size: 12px; color: #ffd2b8; line-height: 1.45; }
+  .hub .prims { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top: 12px; }
+  .hub .prim { font-size: 11px; font-weight: 700; color:#fff; background: rgba(255,255,255,0.06); border:1px solid var(--border-2); border-radius:999px; padding:4px 10px; }
+  .ledger { background: linear-gradient(160deg, rgba(124,140,255,0.16), rgba(124,140,255,0.04)); border-color: var(--digits-2); }
+  .ledger .nm { color:#dfe4ff; }
+  .practices { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .prac { background: var(--surface-2); border:1px solid var(--border); border-radius: 9px; padding: 8px 10px; font-size: 12px; }
+  .prac b { color:#fff; display:block; font-size: 12.5px; }
+  .prac span { color: var(--muted); font-size: 11px; }
+  .flow-note { font-size: 12px; color: var(--muted-2); margin-top: 16px; text-align:center; line-height:1.5; border-top: 1px dashed var(--border); padding-top: 14px; }
+  .flow-note b { color: var(--blue); }
+
+  /* Two-col panels */
+  .cols { display:grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  @media (max-width: 960px){ .cols { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 13px; padding: 18px; }
+  .panel h3 { margin: 0 0 12px; font-size: 14px; color: #fff; display:flex; align-items:center; gap:8px; }
+  .panel h3 .hint { margin-left:auto; font-size: 11px; color: var(--muted-2); font-weight: 600; }
+
+  /* Pipeline bars */
+  .pipe { display:flex; flex-direction: column; gap: 9px; }
+  .pipe-row { display:flex; align-items:center; gap: 12px; }
+  .pipe-row .lbl { width: 128px; font-size: 12px; color: var(--muted); flex:0 0 128px; }
+  .pipe-row .bar { flex:1; height: 20px; background: var(--surface-2); border-radius: 6px; overflow:hidden; border:1px solid var(--border); }
+  .pipe-row .bar > i { display:block; height:100%; background: linear-gradient(90deg, var(--blue-2), var(--blue)); }
+  .pipe-row .v { width: 30px; text-align:right; font-size: 12.5px; font-weight: 700; color:#fff; }
+
+  .wave { display:flex; flex-direction:column; gap: 11px; }
+  .wave-row .top { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; }
+  .wave-row .top b { color:#fff; }
+  .wave-row .top span { color: var(--muted); }
+  .wave-bar { height: 8px; background: var(--surface-2); border-radius:999px; overflow:hidden; border:1px solid var(--border); }
+  .wave-bar > i { display:block; height:100%; background: linear-gradient(90deg, var(--green-2), var(--green)); }
+
+  /* Routing chips */
+  .routes { display:flex; flex-direction:column; gap: 8px; }
+  .route { display:flex; align-items:center; gap: 10px; background: var(--surface-2); border:1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 12.5px; }
+  .route .p { font-weight:700; color:#fff; }
+  .route .arw { color: var(--kinetic); font-weight: 800; }
+  .route .cnt { margin-left:auto; font-weight:800; color: var(--blue); }
+
+  .attn { display:flex; flex-direction:column; gap: 8px; }
+  .attn-row { display:flex; align-items:center; gap:10px; background: var(--surface-2); border:1px solid var(--border); border-radius:9px; padding: 9px 12px; cursor:pointer; }
+  .attn-row:hover { border-color: var(--border-2); }
+  .attn-row .nm { font-weight:700; color:#fff; font-size:12.5px; }
+  .attn-row .meta { font-size:11px; color: var(--muted); }
+  .attn-row .badge3 { margin-left:auto; font-size:10.5px; font-weight:800; padding:2px 9px; border-radius:999px; }
+
+  /* Pills */
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; border:1px solid var(--border-2); white-space:nowrap; }
+  .pill.g { color:#bff0d0; background: rgba(139,197,63,0.13); border-color: var(--green-2); }
+  .pill.b { color:#bfe6f7; background: rgba(0,160,223,0.13); border-color: rgba(0,160,223,.5); }
+  .pill.a { color:#ffe1a8; background: rgba(245,185,66,0.13); border-color: rgba(245,185,66,.5); }
+  .pill.r { color:#ffb3b3; background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,.5); }
+  .pill.o { color:#ffcaa8; background: rgba(242,101,34,0.13); border-color: var(--kinetic-2); }
+  .pill.i { color:#d6dbff; background: rgba(124,140,255,0.14); border-color: var(--digits-2); }
+  .pill.n { color: var(--muted); background: var(--surface-2); }
+
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; gap:8px; padding: 9px 16px; border-radius: 8px; border:0; cursor:pointer; font-weight:700; font-size:13px; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: linear-gradient(135deg, var(--kinetic) 0%, var(--kinetic-2) 100%); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.07); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border-2); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* Toolbar + table */
+  .toolbar { display:flex; align-items:center; gap:10px; margin: 14px 0; flex-wrap:wrap; }
+  .toolbar input, .toolbar select { border:1px solid var(--border-2); border-radius:8px; padding:9px 11px; background: var(--surface-2); color: var(--text); font: inherit; outline:none; }
+  .toolbar input:focus, .toolbar select:focus { border-color: var(--kinetic); }
+  .toolbar .grow { flex:1; }
+  .tbl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 13px; overflow: hidden; }
+  table { width:100%; border-collapse: collapse; }
+  thead th { text-align:left; font-size: 11px; text-transform: uppercase; letter-spacing:.4px; color: var(--muted-2); font-weight: 800; padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); position: sticky; top: 0; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover td { background: rgba(255,255,255,0.03); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .strong { color:#fff; font-weight: 700; }
+  td .sub { color: var(--muted); font-size: 11.5px; }
+  .empty { padding: 40px; text-align:center; color: var(--muted); }
+  .pager { display:flex; align-items:center; gap: 12px; justify-content:flex-end; margin-top: 12px; color: var(--muted); font-size: 12.5px; }
+
+  /* Drawer */
+  .scrim { position: fixed; inset:0; background: rgba(3,10,20,0.6); z-index: 90; opacity:0; pointer-events:none; transition: opacity .18s; }
+  .scrim.open { opacity:1; pointer-events:auto; }
+  .drawer { position: fixed; top:0; right:0; height:100%; width: 480px; max-width: 94vw; background: var(--card); border-left: 1px solid var(--border-2); z-index: 91; transform: translateX(100%); transition: transform .22s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; box-shadow: -20px 0 50px rgba(0,0,0,0.4); }
+  .drawer.open { transform: translateX(0); }
+  .drawer-h { padding: 18px 22px; border-bottom: 1px solid var(--border); display:flex; align-items:flex-start; gap:12px; }
+  .drawer-h h3 { margin:0; font-size: 17px; color:#fff; }
+  .drawer-h p { margin: 3px 0 0; color: var(--muted); font-size: 12.5px; }
+  .drawer-h .x { margin-left:auto; background: transparent; border:1px solid var(--border-2); color: var(--muted); border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:16px; flex:0 0 32px; }
+  .drawer-h .x:hover { color:#fff; background: rgba(255,255,255,0.05); }
+  .drawer-b { padding: 18px 22px; overflow-y: auto; flex:1; }
+  .drawer-f { padding: 14px 22px; border-top: 1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
+  .fld { margin-bottom: 14px; }
+  .fld label { display:block; font-size: 11px; color: var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.3px; margin-bottom: 5px; }
+  .fld label .req { color: var(--kinetic); margin-left:2px; }
+  .fld input, .fld select, .fld textarea { width:100%; border:1px solid var(--border-2); border-radius:8px; padding:9px 11px; background: var(--surface-2); color: var(--text); font: inherit; outline:none; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--kinetic); box-shadow: 0 0 0 3px rgba(242,101,34,0.15); }
+  .fld textarea { min-height: 74px; resize: vertical; }
+  .fld .ro { color: var(--muted); font-size: 13px; padding: 9px 0; }
+  .drawer-msg { font-size: 12.5px; margin-right:auto; align-self:center; }
+  .drawer-msg.ok { color: var(--green); }
+  .drawer-msg.bad { color: var(--red); }
+
+  /* Story view */
+  .story { max-width: 900px; }
+  .story-block { background: var(--card); border:1px solid var(--border); border-radius:13px; padding: 20px 22px; margin-bottom: 14px; }
+  .story-block h3 { margin:0 0 8px; color:#fff; font-size: 16px; }
+  .story-block p { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+  .story-block p b { color: #fff; }
+  .split { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px){ .split { grid-template-columns: 1fr; } }
+  .story ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .story ul b { color: var(--text); }
+  .credible { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 640px){ .credible { grid-template-columns: 1fr; } }
+  .cr { text-align:left; }
+  .cr .big { font-size: 22px; font-weight: 800; color: #fff; }
+  .cr .cap { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cta { background: linear-gradient(135deg, var(--kinetic), var(--kinetic-2)); color:#fff; border-radius:13px; padding: 22px 24px; }
+  .cta .eb { font-size: 11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; opacity:.9; }
+  .cta p { color: #fff; opacity: .96; margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
+  .cta p.ask { font-weight: 800; opacity: 1; margin-top: 12px; }
+
+  .loading { padding: 60px; text-align:center; color: var(--muted); }
+  .spin { display:inline-block; width: 26px; height: 26px; border: 3px solid var(--border-2); border-top-color: var(--kinetic); border-radius:50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="logo"><span class="cla">CLA</span><span class="dig">Digits</span><span class="tag">Orchestration</span></div>
+    <div class="sub">Migration Command Center · powered by Kinetic</div>
+    <label>Username</label>
+    <input id="in-user" value="john" />
+    <label>Password</label>
+    <input id="in-pass" type="password" value="john1" />
+    <div class="err" id="login-err"></div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:16px;" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="logo"><span class="cla">CLA</span><span class="dig">Digits</span><span class="tag">Orchestration</span></div>
+    <span class="badge"><span class="dot"></span>Kinetic Platform · Live</span>
+    <div class="spacer"></div>
+    <div class="user" id="user-info"></div>
+    <button class="reset" onclick="doLogout()">Sign out</button>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <h5>Orchestration</h5>
+      <a data-view="command" class="active" onclick="nav('command')"><span class="ic">◎</span> Command Center</a>
+      <a data-view="clients" onclick="nav('clients')"><span class="ic">▤</span> Client Migrations <span class="cnt" id="cnt-clients"></span></a>
+      <h5>The work around the ledger</h5>
+      <a data-view="pbc" onclick="nav('pbc')"><span class="ic">▦</span> PBC Requests <span class="cnt" id="cnt-pbc"></span></a>
+      <a data-view="exceptions" onclick="nav('exceptions')"><span class="ic">⚑</span> Cross-Practice Exceptions <span class="cnt" id="cnt-exceptions"></span></a>
+      <a data-view="deliverables" onclick="nav('deliverables')"><span class="ic">◈</span> Advisory Deliverables <span class="cnt" id="cnt-deliverables"></span></a>
+      <h5>Integration layer</h5>
+      <a data-view="connections" onclick="nav('connections')"><span class="ic">⇄</span> System Connections <span class="cnt" id="cnt-connections"></span></a>
+      <h5>Why this matters</h5>
+      <a data-view="story" onclick="nav('story')"><span class="ic">✦</span> The CLA + Digits Story</a>
+    </div>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-h">
+    <div>
+      <h3 id="drawer-title">Record</h3>
+      <p id="drawer-sub"></p>
+    </div>
+    <button class="x" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-b" id="drawer-body"></div>
+  <div class="drawer-f">
+    <span class="drawer-msg" id="drawer-msg"></span>
+    <button class="btn btn-secondary" onclick="closeDrawer()">Cancel</button>
+    <button class="btn btn-primary" id="drawer-save" onclick="saveDrawer()">Save</button>
+  </div>
+</div>
+
+<script>
+/* ───────── Config ───────── */
+let API = '';           // base URL for /app proxy (blank = same origin through launcher)
+let AUTH = '';
+let USERNAME = '';
+const KAPP = 'cladigits';
+
+const PRACTICES = ['Tax','Audit','Wealth','Advisory'];
+const REGIONS = ['Upper Midwest','Great Lakes','Southeast','West Coast','Mountain West','Northeast','Gulf South','Southwest'];
+const STAGES = ['Intake','KYC & Engagement','Chart Mapping','Historical Recon','Parallel Run','Go-Live','Complete'];
+
+/* Form metadata — drives tables + drawers */
+const FORMS = {
+  clients: {
+    slug: 'client-migrations', title: 'Client Migrations',
+    subtitle: "Each CAAS client's journey onto the Digits ledger. Digits automates the accounting — Kinetic runs the migration.",
+    label: 'Client Name', idField: 'Client ID',
+    columns: [
+      { f:'Client Name', main:true, sub:'Industry' },
+      { f:'Stage', pill:'stage' },
+      { f:'Health', pill:'health' },
+      { f:'Migration Wave' },
+      { f:'Current System' },
+      { f:'Target Path', pill:'path' },
+      { f:'Lead Partner' },
+      { f:'Percent Complete', pct:true },
+    ],
+    fields: [
+      { f:'Client ID', req:true }, { f:'Client Name', req:true }, { f:'Industry' },
+      { f:'Region', opts:REGIONS }, { f:'ARR', ph:'Annual recurring revenue ($)' },
+      { f:'Current System', opts:['Sage Intacct','QuickBooks Online','NetSuite','Spreadsheets'] },
+      { f:'Target Path', opts:['Migrate to Digits','Stay on Current'] },
+      { f:'Migration Wave', opts:['Wave 1','Wave 2','Wave 3','Wave 4','Wave 5','Wave 6','N/A'] },
+      { f:'Stage', opts:STAGES },
+      { f:'Health', opts:['On Track','At Risk','Blocked'] },
+      { f:'Practices Involved', ph:'Tax;Audit;Advisory' },
+      { f:'Lead Partner' }, { f:'Target Go-Live', ph:'YYYY-MM-DD' },
+      { f:'Percent Complete', ph:'0-100' }, { f:'Notes', ta:true },
+    ],
+    filters: [
+      { f:'Stage', opts:STAGES }, { f:'Health', opts:['On Track','At Risk','Blocked'] },
+      { f:'Migration Wave', opts:['Wave 1','Wave 2','Wave 3','Wave 4','Wave 5','Wave 6'] },
+      { f:'Target Path', opts:['Migrate to Digits','Stay on Current'] },
+    ],
+  },
+  pbc: {
+    slug: 'pbc-requests', title: 'PBC Requests',
+    subtitle: 'Prepared-by-client document collection — the intake work the ledger does not do. Kinetic tracks, reminds, and routes to sign-off.',
+    label: 'Client Name', idField: 'Request ID',
+    columns: [
+      { f:'Client Name', main:true, sub:'Document Type' },
+      { f:'Document Type' },
+      { f:'Status', pill:'pbc' },
+      { f:'Practice', pill:'practice' },
+      { f:'Owner' },
+      { f:'Due Date' },
+    ],
+    fields: [
+      { f:'Request ID', req:true }, { f:'Client ID' }, { f:'Client Name', req:true },
+      { f:'Document Type', opts:['Prior-Year Financials','Bank Statements','AR/AP Aging','Fixed Asset Register','Chart of Accounts','Payroll Register','Tax Returns'] },
+      { f:'Status', opts:['Requested','Received','In Review','Signed Off','Overdue'] },
+      { f:'Practice', opts:PRACTICES }, { f:'Owner' },
+      { f:'Requested Date', ph:'YYYY-MM-DD' }, { f:'Due Date', ph:'YYYY-MM-DD' }, { f:'Notes', ta:true },
+    ],
+    filters: [
+      { f:'Status', opts:['Requested','Received','In Review','Signed Off','Overdue'] },
+      { f:'Practice', opts:PRACTICES },
+      { f:'Document Type', opts:['Prior-Year Financials','Bank Statements','AR/AP Aging','Fixed Asset Register','Chart of Accounts','Payroll Register','Tax Returns'] },
+    ],
+  },
+  exceptions: {
+    slug: 'exceptions', title: 'Cross-Practice Exceptions',
+    subtitle: 'A ledger is scoped to accounting. Exceptions route across tax, audit, wealth and advisory — work nothing in a general ledger can move between them.',
+    label: 'Client Name', idField: 'Exception ID',
+    columns: [
+      { f:'Client Name', main:true, sub:'Exception Type' },
+      { f:'Exception Type' },
+      { f:'Priority', pill:'priority' },
+      { f:'Status', pill:'exc' },
+      { f:'Originating Practice', pill:'practice' },
+      { f:'Routed To', pill:'practice' },
+      { f:'Assignee' },
+    ],
+    fields: [
+      { f:'Exception ID', req:true }, { f:'Client ID' }, { f:'Client Name', req:true },
+      { f:'Exception Type', opts:['Chart Mapping Conflict','Revenue Recognition','Multi-Entity Consolidation','Fixed Asset Discrepancy','Tax Provision Question','Wealth Handoff'] },
+      { f:'Originating Practice', opts:PRACTICES }, { f:'Routed To', opts:PRACTICES },
+      { f:'Priority', opts:['Low','Medium','High','Critical'] },
+      { f:'Status', opts:['Open','Routed','In Review','Resolved'] },
+      { f:'SLA Hours' }, { f:'Assignee' }, { f:'Opened Date', ph:'YYYY-MM-DD' }, { f:'Detail', ta:true },
+    ],
+    filters: [
+      { f:'Status', opts:['Open','Routed','In Review','Resolved'] },
+      { f:'Priority', opts:['Low','Medium','High','Critical'] },
+      { f:'Routed To', opts:PRACTICES },
+    ],
+  },
+  deliverables: {
+    slug: 'deliverables', title: 'Advisory Deliverables',
+    subtitle: "Advisory deliverable assembly and review sign-off — the value that lives above the ledger, portable across whatever systems come next.",
+    label: 'Client Name', idField: 'Deliverable ID',
+    columns: [
+      { f:'Client Name', main:true, sub:'Deliverable Type' },
+      { f:'Deliverable Type' },
+      { f:'Period' },
+      { f:'Status', pill:'deliv' },
+      { f:'Practice', pill:'practice' },
+      { f:'Reviewer' },
+      { f:'Due Date' },
+    ],
+    fields: [
+      { f:'Deliverable ID', req:true }, { f:'Client ID' }, { f:'Client Name', req:true },
+      { f:'Deliverable Type', opts:['Monthly Close Package','Cash Flow Forecast','Board Deck','Advisory Review','KPI Dashboard'] },
+      { f:'Period', ph:'2026-Q2 or 2026-06' },
+      { f:'Status', opts:['Drafting','In Review','Approved','Delivered'] },
+      { f:'Practice', opts:PRACTICES }, { f:'Reviewer' }, { f:'Due Date', ph:'YYYY-MM-DD' }, { f:'Notes', ta:true },
+    ],
+    filters: [
+      { f:'Status', opts:['Drafting','In Review','Approved','Delivered'] },
+      { f:'Practice', opts:PRACTICES },
+    ],
+  },
+  connections: {
+    slug: 'connections', title: 'System Connections',
+    subtitle: 'The integration layer. Kinetic connects Digits to the client, to CLA’s systems, and to the clients who stay on Intacct, QBO or NetSuite.',
+    label: 'System Name', idField: 'Connection ID',
+    columns: [
+      { f:'System Name', main:true, sub:'Purpose' },
+      { f:'System Type', pill:'systype' },
+      { f:'Direction' },
+      { f:'Status', pill:'conn' },
+      { f:'Last Sync' },
+      { f:'Records Synced', num:true },
+    ],
+    fields: [
+      { f:'Connection ID', req:true }, { f:'System Name', req:true },
+      { f:'System Type', opts:['Ledger','ERP','CRM','eSignature'] },
+      { f:'Direction', opts:['Inbound','Outbound','Bidirectional'] },
+      { f:'Status', opts:['Connected','Degraded','Not Connected'] },
+      { f:'Purpose', ta:true }, { f:'Last Sync' }, { f:'Records Synced' },
+    ],
+    filters: [
+      { f:'Status', opts:['Connected','Degraded','Not Connected'] },
+      { f:'System Type', opts:['Ledger','ERP','CRM','eSignature'] },
+    ],
+  },
+};
+
+/* ───────── Utils ───────── */
+function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function v(sub,f){ return (sub.values && sub.values[f]) || ''; }
+function money(n){ n=Number(n)||0; if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K'; return '$'+n; }
+function numfmt(n){ n=Number(n)||0; return n.toLocaleString(); }
+async function api(method, path, body){
+  const r = await fetch(API + path, {
+    method,
+    headers: { 'Authorization': AUTH, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const t = await r.text(); let j=null; try{ j = t?JSON.parse(t):null; }catch{ j=t; }
+  return { status: r.status, ok: r.ok, data: j };
+}
+
+/* pill class + label by value */
+function pillClass(kind, val){
+  const v = (val||'').toLowerCase();
+  if (kind==='health'||kind==='conn') { if(v==='on track'||v==='connected') return 'g'; if(v==='at risk'||v==='degraded') return 'a'; if(v==='blocked'||v==='not connected') return 'r'; }
+  if (kind==='stage') { if(v==='complete') return 'g'; if(v==='go-live') return 'o'; if(v==='intake') return 'n'; return 'b'; }
+  if (kind==='path') { return v.indexOf('digits')>=0 ? 'i' : 'n'; }
+  if (kind==='pbc') { if(v==='signed off') return 'g'; if(v==='overdue') return 'r'; if(v==='in review') return 'a'; return 'b'; }
+  if (kind==='exc') { if(v==='resolved') return 'g'; if(v==='open') return 'r'; if(v==='routed') return 'o'; return 'a'; }
+  if (kind==='deliv') { if(v==='delivered'||v==='approved') return 'g'; if(v==='in review') return 'a'; return 'b'; }
+  if (kind==='priority') { if(v==='critical') return 'r'; if(v==='high') return 'o'; if(v==='medium') return 'a'; return 'n'; }
+  if (kind==='practice') { if(v==='tax') return 'b'; if(v==='audit') return 'i'; if(v==='wealth') return 'o'; if(v==='advisory') return 'g'; }
+  if (kind==='systype') { if(v==='ledger') return 'i'; if(v==='erp') return 'b'; if(v==='crm') return 'o'; return 'g'; }
+  return 'n';
+}
+
+/* ───────── Auth ───────── */
+function boot(){
+  const sess = sessionStorage.getItem('kinetic_session');
+  if (sess) {
+    try {
+      const s = JSON.parse(sess);
+      API = s.url || '';
+      AUTH = 'Basic ' + s.auth;
+      USERNAME = s.displayName || s.user || 'John';
+      enterApp();
+      return;
+    } catch(e){}
+  }
+  document.getElementById('login').classList.remove('hidden');
+}
+async function doLogin(){
+  const user = document.getElementById('in-user').value.trim();
+  const pass = document.getElementById('in-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = 'Signing in…';
+  // Same-origin: /app proxies to Kinetic and /api/cladigits is served by the launcher.
+  API = ''; AUTH = 'Basic ' + btoa(user + ':' + pass);
+  const r = await api('GET', '/app/api/v1/me');
+  if (!r.ok) { errEl.textContent = 'Sign-in failed ('+r.status+'). Check credentials.'; return; }
+  USERNAME = (r.data && (r.data.displayName || r.data.username)) || user;
+  sessionStorage.setItem('kinetic_session', JSON.stringify({ url: '', auth: btoa(user+':'+pass), user, displayName: USERNAME, spaceSlug:'' }));
+  enterApp();
+}
+function doLogout(){
+  sessionStorage.removeItem('kinetic_session');
+  location.reload();
+}
+function enterApp(){
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('user-info').textContent = USERNAME;
+  loadCounts();
+  nav('command');
+}
+
+/* sidebar counts */
+async function loadCounts(){
+  for (const key of Object.keys(FORMS)) {
+    const slug = FORMS[key].slug;
+    api('GET', `/app/api/v1/kapps/${KAPP}/forms/${slug}/submissions?limit=1&include=`).then(r=>{
+      // count not returned without count param; do a count call
+    });
+  }
+  // proper counts via count=true
+  for (const key of Object.keys(FORMS)) {
+    const slug = FORMS[key].slug;
+    const r = await api('GET', `/app/api/v1/kapps/${KAPP}/forms/${slug}/submissions?count=true&limit=1`);
+    const c = (r.data && (r.data.count!=null ? r.data.count : (r.data.submissions? r.data.submissions.length : ''))) ?? '';
+    const el = document.getElementById('cnt-'+key);
+    if (el) el.textContent = c===''?'':c;
+  }
+}
+
+/* ───────── Nav ───────── */
+let CURRENT = 'command';
+function nav(view){
+  CURRENT = view;
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.toggle('active', a.dataset.view===view));
+  const c = document.getElementById('content');
+  if (view==='command') return renderCommand(c);
+  if (view==='story') return renderStory(c);
+  return renderList(c, view);
+}
+
+/* ───────── Command Center ───────── */
+async function renderCommand(c){
+  c.innerHTML = `<div class="loading"><div class="spin"></div><div style="margin-top:12px">Composing the command center…</div></div>`;
+  const r = await api('GET', '/api/cladigits/dashboard');
+  if (!r.ok) { c.innerHTML = `<div class="wrap"><div class="empty">Could not load dashboard (${r.status}). ${esc((r.data&&r.data.error)||'')}</div></div>`; return; }
+  const d = r.data, k = d.kpis;
+
+  const conns = d.connections.map(cn=>{
+    const cls = cn.status==='Connected'?'on':(cn.status==='Degraded'?'deg':'off');
+    const isLedger = cn.type==='Ledger';
+    return `<div class="node ${isLedger?'ledger':''}">
+      <div class="nm">${esc(cn.name)} <span class="st ${cls}">${esc(cn.status)}</span></div>
+      <div class="ds">${esc(cn.type)} · ${esc(cn.direction)} · ${numfmt(cn.records)} records</div>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="hero">
+      <div class="eyebrow">CLA · Digits · Kinetic Platform</div>
+      <h1>The ledger is handled.<br>The work <span class="accent">around it</span> is orchestrated.</h1>
+      <p>CLA is moving its CAAS client base onto the <b>Digits</b> AI-native ledger. Digits handles coding, close and reconciliation. <b>Kinetic handles everything around it</b> — onboarding, document collection, exception routing across practices, and migration sequencing.</p>
+    </div>
+    <div class="wrap">
+      <div class="kpis">
+        <div class="kpi k-orange"><div class="n">${k.inFlight}</div><div class="l">Migrations in flight</div></div>
+        <div class="kpi k-indigo"><div class="n">${k.liveOnDigits}</div><div class="l">Live on Digits</div></div>
+        <div class="kpi k-blue"><div class="n">${k.staying}</div><div class="l">Mixed estate (stay put)</div></div>
+        <div class="kpi k-green"><div class="n">${k.pbcCompletion}<small>%</small></div><div class="l">PBC signed off</div></div>
+        <div class="kpi ${k.criticalExceptions?'k-red':''}"><div class="n">${k.openExceptions}</div><div class="l">Open exceptions</div></div>
+        <div class="kpi"><div class="n">${money(k.managedARR)}</div><div class="l">Managed ARR</div></div>
+      </div>
+
+      <h2 class="section-title">The orchestration layer</h2>
+      <div class="orch">
+        <div class="orch-grid">
+          <div class="lane">
+            <div class="lane-h">CLA's systems &amp; the clients who stay</div>
+            ${conns}
+          </div>
+          <div class="lane">
+            <div class="lane-h" style="text-align:center">The layer that connects them</div>
+            <div class="hub">
+              <div class="badge2">Kinetic Platform</div>
+              <div class="htitle">Firm-owned orchestration</div>
+              <div class="hsub">Judgment encoded in Kinetic workflows stays CLA's — portable across whatever systems come next.</div>
+              <div class="prims">
+                <span class="prim">Forms</span><span class="prim">Data</span><span class="prim">Workflows</span><span class="prim">Integrations</span>
+              </div>
+            </div>
+            <div class="practices">
+              ${d.practiceLoad.map(p=>`<div class="prac"><b>${esc(p.practice)}</b><span>${p.clients} client${p.clients===1?'':'s'} touched</span></div>`).join('')}
+            </div>
+          </div>
+          <div class="lane">
+            <div class="lane-h" style="text-align:right">The ledger</div>
+            <div class="hub" style="background:linear-gradient(160deg, rgba(124,140,255,0.16), rgba(124,140,255,0.05)); border-color:var(--digits-2); box-shadow:0 0 0 4px rgba(124,140,255,0.06)">
+              <div class="badge2" style="color:var(--digits)">Digits</div>
+              <div class="htitle">AI-native general ledger</div>
+              <div class="hsub" style="color:#cdd4ff">Coding, close, reconciliation — automated. It automates the accounting; it does not run the program.</div>
+            </div>
+            <div class="node ledger"><div class="nm">${k.recordsSynced!=null?numfmt(d.recordsSynced):''} records synced</div><div class="ds">across ${k.connectionsOnline}/${k.connectionsTotal} live connections</div></div>
+          </div>
+        </div>
+        <div class="flow-note">Kinetic is not an alternative to Digits. It is the layer that connects Digits to the client, to the rest of CLA's systems, and to the <b>practices that don't run on a ledger at all.</b></div>
+      </div>
+
+      <div class="cols" style="margin-top:22px">
+        <div class="panel">
+          <h3>Migration pipeline <span class="hint">migrating clients by stage</span></h3>
+          <div class="pipe">
+            ${(function(){ const max=Math.max(1,...d.stagePipeline.map(s=>s.count)); return d.stagePipeline.map(s=>`
+              <div class="pipe-row"><div class="lbl">${esc(s.stage)}</div><div class="bar"><i style="width:${Math.round(s.count/max*100)}%"></i></div><div class="v">${s.count}</div></div>`).join(''); })()}
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Wave progress <span class="hint">avg % complete</span></h3>
+          <div class="wave">
+            ${d.waves.map(w=>`<div class="wave-row"><div class="top"><b>${esc(w.wave)}</b><span>${w.complete}/${w.total} complete · ${w.pct}%</span></div><div class="wave-bar"><i style="width:${w.pct}%"></i></div></div>`).join('') || '<div class="empty">No waves yet</div>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="cols" style="margin-top:16px">
+        <div class="panel">
+          <h3>Cross-practice routing <span class="hint">open exceptions in motion</span></h3>
+          <div class="routes">
+            ${d.routes.map(rt=>`<div class="route"><span class="p">${esc(rt.from)}</span><span class="arw">→</span><span class="p">${esc(rt.to)}</span><span class="cnt">${rt.count}</span></div>`).join('') || '<div class="empty">No open exceptions</div>'}
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Kinetic is actively unblocking <span class="hint">at-risk &amp; blocked</span></h3>
+          <div class="attn">
+            ${d.attention.map(a=>`<div class="attn-row" onclick="nav('clients')">
+              <div><div class="nm">${esc(a.name)}</div><div class="meta">${esc(a.stage)} · ${esc(a.wave)} · ${esc(a.partner)}</div></div>
+              <span class="badge3 pill ${a.health==='Blocked'?'r':'a'}">${esc(a.health)}</span>
+            </div>`).join('') || '<div class="empty">Everything on track</div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ───────── List views ───────── */
+const listState = {}; // per-view: { rows, pageTokens, page, filters, search }
+async function renderList(c, view){
+  const cfg = FORMS[view];
+  const st = listState[view] || (listState[view] = { page:0, tokens:[null], filters:{}, search:'' });
+  c.innerHTML = `
+    <div class="wrap">
+      <div class="view-title">
+        <div><h1>${esc(cfg.title)}</h1><p>${cfg.subtitle}</p></div>
+        <button class="btn btn-primary" onclick="openDrawer('${view}', null)">+ Add ${esc(cfg.title.replace(/s$/,''))}</button>
+      </div>
+      <div class="toolbar">
+        <input class="grow" id="tb-search" placeholder="Search ${esc(cfg.label)}…" value="${esc(st.search)}" oninput="onSearch('${view}', this.value)" />
+        ${cfg.filters.map(fl=>`<select onchange="onFilter('${view}','${esc(fl.f)}',this.value)">
+          <option value="">${esc(fl.f)}: all</option>
+          ${fl.opts.map(o=>`<option ${st.filters[fl.f]===o?'selected':''}>${esc(o)}</option>`).join('')}
+        </select>`).join('')}
+      </div>
+      <div class="tbl-wrap" id="tbl"></div>
+      <div class="pager" id="pager"></div>
+    </div>`;
+  fetchPage(view);
+}
+
+function buildKQL(view){
+  const st = listState[view]; const parts = [];
+  for (const [f,val] of Object.entries(st.filters)) { if (val) parts.push(`values[${f}] = "${val.replace(/"/g,'\\"')}"`); }
+  if (st.search) { const cfg=FORMS[view]; parts.push(`values[${cfg.label}] =* "${st.search.replace(/"/g,'\\"')}"`); }
+  return parts.join(' AND ');
+}
+async function fetchPage(view){
+  const cfg = FORMS[view]; const st = listState[view];
+  const tbl = document.getElementById('tbl'); if(!tbl) return;
+  tbl.innerHTML = `<div class="loading"><div class="spin"></div></div>`;
+  const kql = buildKQL(view);
+  let url = `/app/api/v1/kapps/${KAPP}/forms/${cfg.slug}/submissions?include=values&limit=25`;
+  if (kql) url += `&q=${encodeURIComponent(kql)}`;
+  const tok = st.tokens[st.page];
+  if (tok) url += `&pageToken=${encodeURIComponent(tok)}`;
+  const r = await api('GET', url);
+  if (!r.ok) { tbl.innerHTML = `<div class="empty">Could not load (${r.status})</div>`; return; }
+  st.rows = r.data.submissions || [];
+  st.nextToken = r.data.nextPageToken || null;
+  if (st.nextToken && st.tokens.length === st.page+1) st.tokens.push(st.nextToken);
+  drawTable(view);
+}
+function drawTable(view){
+  const cfg = FORMS[view]; const st = listState[view];
+  const tbl = document.getElementById('tbl');
+  if (!st.rows.length) { tbl.innerHTML = `<div class="empty">No records match.</div>`; document.getElementById('pager').innerHTML=''; return; }
+  const head = cfg.columns.map(col=>`<th>${esc(col.f)}</th>`).join('');
+  const body = st.rows.map((sub,i)=>{
+    const cells = cfg.columns.map(col=>{
+      const val = v(sub, col.f);
+      if (col.main) return `<td><span class="strong">${esc(val)}</span>${col.sub?`<div class="sub">${esc(v(sub,col.sub))}</div>`:''}</td>`;
+      if (col.pill) return `<td>${val?`<span class="pill ${pillClass(col.pill,val)}">${esc(val)}</span>`:'—'}</td>`;
+      if (col.pct) { const p=Number(val)||0; return `<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--border)"><i style="display:block;height:100%;width:${p}%;background:linear-gradient(90deg,var(--kinetic-2),var(--kinetic))"></i></div><span style="font-size:11px;color:var(--muted)">${p}%</span></div></td>`; }
+      if (col.num) return `<td>${numfmt(val)}</td>`;
+      return `<td>${esc(val)||'—'}</td>`;
+    }).join('');
+    return `<tr onclick="openDrawer('${view}', ${i})">${cells}</tr>`;
+  }).join('');
+  tbl.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  const pager = document.getElementById('pager');
+  pager.innerHTML = `
+    <span>Page ${st.page+1}${st.rows.length<25 && st.page===0?' · '+st.rows.length+' records':''}</span>
+    <button class="btn btn-ghost" ${st.page===0?'disabled':''} onclick="pageMove('${view}',-1)">‹ Prev</button>
+    <button class="btn btn-ghost" ${!st.nextToken?'disabled':''} onclick="pageMove('${view}',1)">Next ›</button>`;
+}
+function pageMove(view, dir){ const st=listState[view]; st.page = Math.max(0, st.page+dir); fetchPage(view); }
+let searchTimer=null;
+function onSearch(view, val){ const st=listState[view]; st.search=val; st.page=0; st.tokens=[null]; clearTimeout(searchTimer); searchTimer=setTimeout(()=>fetchPage(view), 300); }
+function onFilter(view, f, val){ const st=listState[view]; if(val) st.filters[f]=val; else delete st.filters[f]; st.page=0; st.tokens=[null]; fetchPage(view); }
+
+/* ───────── Drawer (view / edit / create) ───────── */
+let drawerCtx = null;
+function openDrawer(view, rowIndex){
+  const cfg = FORMS[view];
+  const isNew = rowIndex===null;
+  const sub = isNew ? null : listState[view].rows[rowIndex];
+  drawerCtx = { view, isNew, id: sub ? sub.id : null };
+  document.getElementById('drawer-title').textContent = isNew ? ('New '+cfg.title.replace(/s$/,'')) : (v(sub, cfg.label) || 'Record');
+  document.getElementById('drawer-sub').textContent = isNew ? cfg.subtitle.split('.')[0] : (v(sub, cfg.idField) || '');
+  document.getElementById('drawer-msg').textContent = '';
+  document.getElementById('drawer-body').innerHTML = cfg.fields.map(fd=>{
+    const val = sub ? v(sub, fd.f) : '';
+    let input;
+    if (fd.opts) {
+      input = `<select data-f="${esc(fd.f)}"><option value=""></option>${fd.opts.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    } else if (fd.ta) {
+      input = `<textarea data-f="${esc(fd.f)}" placeholder="${esc(fd.ph||'')}">${esc(val)}</textarea>`;
+    } else {
+      input = `<input data-f="${esc(fd.f)}" value="${esc(val)}" placeholder="${esc(fd.ph||'')}" />`;
+    }
+    return `<div class="fld"><label>${esc(fd.f)}${fd.req?'<span class="req">*</span>':''}</label>${input}</div>`;
+  }).join('');
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('scrim').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  drawerCtx = null;
+}
+async function saveDrawer(){
+  if (!drawerCtx) return;
+  const { view, isNew, id } = drawerCtx;
+  const cfg = FORMS[view];
+  const values = {};
+  document.querySelectorAll('#drawer-body [data-f]').forEach(el=>{ values[el.dataset.f] = el.value; });
+  // required check
+  for (const fd of cfg.fields) { if (fd.req && !String(values[fd.f]||'').trim()) { setMsg('bad', fd.f+' is required'); return; } }
+  const btn = document.getElementById('drawer-save'); btn.disabled=true; setMsg('', 'Saving…');
+  let r;
+  if (isNew) r = await api('POST', `/app/api/v1/kapps/${KAPP}/forms/${cfg.slug}/submissions`, { values, coreState:'Submitted' });
+  else r = await api('PUT', `/app/api/v1/submissions/${id}`, { values });
+  btn.disabled=false;
+  if (!r.ok) { setMsg('bad', 'Save failed ('+r.status+') '+esc((r.data&&r.data.message)||'')); return; }
+  setMsg('ok', 'Saved ✓');
+  loadCounts();
+  setTimeout(()=>{ closeDrawer(); fetchPage(view); }, 500);
+}
+function setMsg(cls, txt){ const el=document.getElementById('drawer-msg'); el.className='drawer-msg '+cls; el.textContent=txt; }
+
+/* ───────── Story ───────── */
+function renderStory(c){
+  c.innerHTML = `<div class="wrap"><div class="story">
+    <div class="view-title"><div><h1>The CLA + Digits Story</h1><p>Why the announcement creates a problem — and why that problem is orchestration.</p></div></div>
+
+    <div class="story-block" style="margin-top:14px">
+      <p><b>CLA has committed to a three-year rollout of an AI-native ledger across its CAAS client base.</b> That solves how transactions get coded. It doesn't touch how clients get onboarded, how exceptions route across practices, how documents get collected, or how thousands of clients actually get moved onto the new system. That work is orchestration, and it is what Kinetic does.</p>
+    </div>
+
+    <div class="split">
+      <div class="story-block">
+        <h3>Before the ledger</h3>
+        <ul>
+          <li><b>Client intake</b>, engagement setup, KYC document collection</li>
+          <li><b>Provisioning</b> across Digits, Intacct, and practice systems</li>
+          <li>Vendor and supplier onboarding</li>
+          <li><b>Migration sequencing</b> for clients moving onto the new ledger</li>
+        </ul>
+      </div>
+      <div class="story-block">
+        <h3>After the ledger</h3>
+        <ul>
+          <li><b>Exception &amp; approval routing</b> spanning tax, audit, wealth</li>
+          <li><b>PBC request tracking</b> and client follow-up</li>
+          <li>Advisory deliverable assembly and review sign-off</li>
+          <li>Clients who <b>stay on Intacct, QBO, or NetSuite</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <h3>The problem the announcement creates</h3>
+      <p><b>Migration at scale.</b> A three-year rollout across a CAAS base means thousands of client onboardings — each with document collection, chart-of-accounts mapping, historical reconciliation, and sign-off. Digits automates the accounting. It does not run the program.</p>
+      <p><b>The clients who don't move.</b> Not every client migrates. CLA will run a mixed estate for years. Process that only works for Digits clients creates two operating models inside one practice.</p>
+      <p><b>Work that crosses practices.</b> A ledger is scoped to accounting. CLA's value is that tax, audit, wealth, and advisory touch the same client. Nothing in a general ledger routes work between them.</p>
+      <p><b>Firm-owned process.</b> Judgment encoded in a vendor's model lives in the vendor's platform. Judgment encoded in Kinetic workflows stays CLA's, portable across whatever systems come next.</p>
+    </div>
+
+    <div class="story-block">
+      <h3>Why we're credible on this</h3>
+      <div class="credible">
+        <div class="cr"><div class="big">1998</div><div class="cap">Founded. Profitable, independent, still shipping.</div></div>
+        <div class="cr"><div class="big">Fortune 2000</div><div class="cap">and DoD production deployments</div></div>
+        <div class="cr"><div class="big">Built</div><div class="cap">Sage Intacct integration &amp; vendor onboarding, already demoed to CLA</div></div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div class="eb">Proposed next step</div>
+      <p>Pick one process inside CAAS that will get harder, not easier, as Digits rolls out — client onboarding is the obvious candidate. Give us the current-state steps and the systems it touches.</p>
+      <p>We'll build the working orchestration on the Kinetic Platform and walk CLA through it, running against real system connections rather than a mockup.</p>
+      <p class="ask">Ask: one process, one working session, one build. No procurement.</p>
+    </div>
+  </div></div>`;
+}
+
+boot();
+</script>
+</body>
+</html>

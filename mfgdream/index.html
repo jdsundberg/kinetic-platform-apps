@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MfgDream</title>
+<style>
+:root{--navy:#17203A;--navy-l:#25325A;--blue:#2E6FD6;--blue-l:#4C8BEE;--orange:#F36C24;--orange-l:#FF8A4C;--gold:#E0A21A;--green:#1F9D6B;--green-d:#157A52;--red:#E04434;--amber:#E8912B;--yellow:#F5B301;--purple:#6E4FB0;--teal:#0E8C86;--gray:#5C6670;--light:#F4F6FA;--border:#E4E8F0;--bg:#EEF1F6;--white:#fff;--shadow:0 1px 3px rgba(23,32,58,.10),0 1px 2px rgba(23,32,58,.06);--shadow-lg:0 12px 30px rgba(23,32,58,.20)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#16202E;font-size:14px}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:8px 16px;transition:background .15s,opacity .15s}
+button:hover{opacity:.92}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .15s;background:var(--white)}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(243,108,36,.14)}
+textarea{resize:vertical}
+.login-box input,.modal-content input,.modal-content select,.modal-content textarea{width:100%}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);border-bottom:2px solid var(--border);background:var(--light)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.clickable-row{cursor:pointer}tr.clickable-row:hover{background:#EFF3FB}
+
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0C1225 0%,#17203A 55%,#25325A 100%)}
+#login-screen,#app{display:none}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:420px;box-shadow:var(--shadow-lg)}
+.login-box h1{color:var(--navy);font-size:25px;margin-bottom:4px;letter-spacing:-.5px}
+.login-box h1 span{color:var(--orange)}
+.login-box .sub{color:var(--gray);font-size:13px;margin-bottom:24px}
+.login-box .accent-bar{width:40px;height:3px;background:var(--orange);border-radius:2px;margin-bottom:24px}
+.login-box label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;margin-bottom:4px;letter-spacing:.3px}
+.login-box input{width:100%;margin-bottom:16px}
+.login-box button{width:100%;padding:12px;background:var(--orange);color:white;font-weight:600;font-size:15px}
+.login-box button:hover{background:var(--orange-l)}
+.login-box .error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+.topbar{background:var(--navy);color:white;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:700;font-size:17px;white-space:nowrap;margin-right:22px;letter-spacing:-.2px}
+.topbar .logo span{color:var(--orange)}
+.topbar nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.topbar nav button{background:transparent;color:rgba(255,255,255,.74);padding:8px 12px;font-size:12px;font-weight:500;border-radius:8px;white-space:nowrap}
+.topbar nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.topbar nav button.active{background:var(--orange);color:#fff;font-weight:700}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.74);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:white}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.74);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--orange);color:white}
+
+.console{display:none;padding:22px;max-width:1520px;margin:0 auto}
+.console.active{display:block}
+.page-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.card{background:white;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;letter-spacing:.4px}
+.card h3 .hint{float:right;font-weight:600;color:var(--blue);text-transform:none;letter-spacing:0;font-size:11px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;border-top:3px solid var(--gray)}
+.kpi .val{font-size:21px;font-weight:700;margin:4px 0;color:var(--navy)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.kpi .sub{font-size:11px;color:var(--gray)}
+.kpi.orange .val{color:var(--orange)}.kpi.orange{border-top-color:var(--orange)}
+.kpi.green .val{color:var(--green)}.kpi.green{border-top-color:var(--green)}
+.kpi.red .val{color:var(--red)}.kpi.red{border-top-color:var(--red)}
+.kpi.amber .val{color:var(--amber)}.kpi.amber{border-top-color:var(--amber)}
+.kpi.purple .val{color:var(--purple)}.kpi.purple{border-top-color:var(--purple)}
+.kpi.blue .val{color:var(--blue)}.kpi.blue{border-top-color:var(--blue)}
+.kpi.teal .val{color:var(--teal)}.kpi.teal{border-top-color:var(--teal)}
+.kpi.navy .val{color:var(--navy)}.kpi.navy{border-top-color:var(--navy)}
+
+.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.pill-green{background:#E1F2EA;color:#157A52}
+.pill-amber{background:#FBF1DC;color:#9A6710}
+.pill-red{background:#FBE6E4;color:#B63528}
+.pill-blue{background:#E3EEFB;color:#255CB0}
+.pill-gray{background:var(--light);color:var(--gray)}
+.pill-purple{background:#EFE7F8;color:#5A3E93}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
+.toolbar input[type="text"]{flex:1;min-width:200px}
+.toolbar select{min-width:130px}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.pagination .page-info{color:var(--gray);font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px}
+.btn-outline:hover{background:var(--light)}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-small{padding:4px 10px;font-size:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1000px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+
+.stat-box{background:var(--light);border-radius:8px;padding:12px;text-align:center}
+.stat-box .v{font-size:18px;font-weight:700}
+.stat-box .l{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;letter-spacing:.3px}
+.subtabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.subtab{background:var(--light);border:1px solid var(--border);color:var(--gray);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500}
+.subtab.active{background:var(--navy);color:white;border-color:var(--navy)}
+.subtab-panel{display:none}.subtab-panel.active{display:block}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.bar-row .bl{min-width:150px;text-align:right;color:var(--gray)}
+.bar-row .bt{flex:1;background:var(--light);border-radius:5px;height:18px;overflow:hidden}
+.bar-row .bf{height:100%;border-radius:5px;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700}
+.bar-row .bv{min-width:56px;font-weight:700;color:var(--navy);text-align:right}
+
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:7px;cursor:pointer}
+.funnel-row:hover .funnel-bar{filter:brightness(1.06)}
+.funnel-lab{min-width:110px;text-align:right;font-size:12px;font-weight:600;color:var(--navy)}
+.funnel-track{flex:1;display:flex;align-items:center}
+.funnel-bar{height:40px;border-radius:7px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font-weight:700;font-size:13px;box-shadow:var(--shadow);min-width:120px}
+.funnel-meta{min-width:120px;font-size:11px;color:var(--gray)}
+
+svg.viz{width:100%;height:auto;display:block;font-family:inherit}
+.flow-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-top:8px}
+.flow-leg span{display:inline-flex;align-items:center;gap:5px}
+.flow-leg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.note{font-size:11px;color:var(--gray);margin-top:6px;line-height:1.5}
+
+.health-hero{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.health-subs{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;flex:1;min-width:280px}
+@media(max-width:900px){.health-subs{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:560px){.health-subs{grid-template-columns:repeat(2,1fr)}}
+.health-sub{text-align:center}
+.health-sub .hl{font-size:9px;color:var(--gray);text-transform:uppercase;font-weight:600;margin-top:4px}
+
+.heat{border-collapse:separate;border-spacing:4px}
+.heat td{border:none;text-align:center;border-radius:6px;font-weight:700;font-size:14px;padding:0}
+.heat .hc{width:66px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#fff}
+.heat .hh{font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;background:none}
+
+.gate-flow{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:6px}
+.gate-node{flex:1;min-width:112px;background:var(--light);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;position:relative;margin-right:18px}
+.gate-node:last-child{margin-right:0}
+.gate-node::after{content:"▶";position:absolute;right:-15px;top:50%;transform:translateY(-50%);color:var(--border);font-size:13px}
+.gate-node:last-child::after{content:""}
+.gate-node .gn{font-size:11px;font-weight:700;color:var(--navy)}
+.gate-node .gc{font-size:20px;font-weight:700;margin:4px 0}
+.gate-bars{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:6px}
+.gate-lab{font-size:9px;color:var(--gray);margin-top:3px}
+
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.prog{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .15s;border-left:4px solid var(--gray)}
+.prog:hover{box-shadow:var(--shadow-lg)}
+.prog.g-blocked{border-left-color:var(--red)}.prog.g-atrisk{border-left-color:var(--amber)}.prog.g-ontrack{border-left-color:var(--green)}.prog.g-approved{border-left-color:var(--green)}
+.prog .pt{font-weight:700;color:var(--navy);font-size:14px;margin-bottom:2px}
+.prog .pm{font-size:11px;color:var(--gray);margin-bottom:8px}
+.prog-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px;color:var(--gray)}
+
+/* control bar (picture mode + role) */
+.ctl-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.ctl-bar .grow{flex:1}
+.ctl-bar label{font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+.btn-pic{background:var(--navy);color:#fff;font-weight:600}
+.btn-pic.on{background:var(--orange)}
+
+/* picture mode big tiles */
+.pic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.pic-tile{background:#fff;border-radius:16px;padding:24px;box-shadow:var(--shadow);text-align:center;border-top:5px solid var(--gray)}
+.pic-tile.green{border-top-color:var(--green)}.pic-tile.amber{border-top-color:var(--amber)}.pic-tile.red{border-top-color:var(--red)}.pic-tile.blue{border-top-color:var(--blue)}.pic-tile.navy{border-top-color:var(--navy)}
+.pic-tile .pv{font-size:40px;font-weight:800;color:var(--navy);line-height:1.1}
+.pic-tile .pl{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-top:6px}
+.pic-tile .ps{font-size:12px;color:var(--gray);margin-top:2px}
+.pic-tile.red .pv{color:var(--red)}.pic-tile.amber .pv{color:var(--amber)}.pic-tile.green .pv{color:var(--green)}.pic-tile.blue .pv{color:var(--blue)}
+
+/* portal */
+.portal-frame{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.portal-head{background:linear-gradient(135deg,var(--navy),var(--navy-l));color:#fff;padding:18px 20px}
+.portal-head .pn{font-size:18px;font-weight:700}
+.portal-head .pd{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px}
+.portal-body{padding:18px 20px}
+.portal-note{font-size:11px;color:var(--gray);background:var(--light);border-radius:8px;padding:8px 12px;margin-bottom:14px}
+
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+#modal.show{display:flex}
+.modal-content{background:var(--white);border-radius:16px;padding:26px;max-width:980px;width:95%;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-content h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:14px}
+.modal-content label{display:block;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;margin-top:12px}
+.modal-content label:first-of-type{margin-top:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap}
+.meta-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-bottom:14px;align-items:center}
+.banner{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5;background:var(--light);color:var(--gray)}
+.banner.warn{background:#FBE6E4;color:#B63528}
+.banner.ok{background:#E1F2EA;color:#157A52}
+
+#toast{position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;transition:bottom .3s;box-shadow:var(--shadow-lg)}
+#toast.show{bottom:24px}
+.empty{text-align:center;color:var(--gray);padding:24px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Mfg<span>Dream</span></h1>
+    <p class="sub">The connected manufacturing operating system — order to launch to shipment</p>
+    <div class="accent-bar"></div>
+    <label>Server URL</label><input type="text" id="login-url" placeholder="https://first.kinetics.com">
+    <label>Username</label><input type="text" id="login-user" placeholder="username">
+    <label>Password</label><input type="password" id="login-pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Mfg<span>Dream</span></div>
+    <nav id="main-nav">
+      <button class="active" onclick="switchTab('dashboard')">Command Center</button>
+      <button onclick="switchTab('crm')">CRM &amp; Orders</button>
+      <button onclick="switchTab('npi')">NPI</button>
+      <button onclick="switchTab('engineering')">Engineering</button>
+      <button onclick="switchTab('supply')">Supply Chain</button>
+      <button onclick="switchTab('production')">Production</button>
+      <button onclick="switchTab('quality')">Quality</button>
+      <button onclick="switchTab('shipping')">Shipping</button>
+      <button onclick="switchTab('finance')">Finance</button>
+      <button onclick="switchTab('portals')">Portals</button>
+      <button onclick="switchTab('reports')">Reports</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="user-info"><strong id="user-display"></strong><button class="logout-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+
+  <!-- ===== EXECUTIVE COMMAND CENTER ===== -->
+  <div class="console active" id="tab-dashboard">
+    <div class="page-title">Executive Command Center</div>
+    <div class="page-sub">The health of the business at a glance — order to launch to shipment</div>
+    <div class="ctl-bar">
+      <label>Role</label>
+      <select id="db-role" onchange="renderMyWork()">
+        <option value="Executive">Executive</option>
+        <option value="Program Manager">Program Manager</option>
+        <option value="Quality Engineer">Quality Engineer</option>
+        <option value="Buyer">Buyer</option>
+        <option value="Production Supervisor">Production Supervisor</option>
+        <option value="Shipping">Shipping Employee</option>
+        <option value="Finance">Finance</option>
+      </select>
+      <div class="grow"></div>
+      <button class="btn-pic" id="pic-btn" onclick="togglePicture()">🖼 Picture Mode</button>
+    </div>
+    <div id="db-normal">
+      <div class="card"><h3>Business Health<span class="hint" id="db-health-status"></span></h3><div class="health-hero" id="db-health"></div></div>
+      <div id="db-mywork"></div>
+      <div class="kpi-row" id="db-kpis"></div>
+      <div class="card"><h3>Lifecycle Money Flow<span class="hint">customer order value moving through the plant</span></h3><div id="db-flow"></div></div>
+      <div class="grid-2">
+        <div class="card"><h3>NPI Phase Funnel<span class="hint">click a phase</span></h3><div id="db-funnel"></div></div>
+        <div class="card"><h3>Gate Status Mix<span class="hint">program go / hold health</span></h3><div id="db-gate"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h3>NPI Risk Heat Map<span class="hint">risk level × gate status</span></h3><div id="db-heat"></div></div>
+        <div class="card"><h3>Material Shortage Heat<span class="hint">MRP exceptions</span></h3><div id="db-short"></div></div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h3>Quality<span class="hint">first-pass yield</span></h3><div id="db-quality"></div></div>
+        <div class="card"><h3>On-Time Delivery</h3><div id="db-otd" style="text-align:center"></div></div>
+        <div class="card"><h3>Revenue &amp; Margin</h3><div id="db-finance"></div></div>
+      </div>
+      <div class="grid-2">
+        <div id="db-ex-npi"></div>
+        <div id="db-ex-orders"></div>
+      </div>
+      <div class="grid-2">
+        <div id="db-suppliers"></div>
+        <div id="db-production"></div>
+      </div>
+    </div>
+    <div id="db-picture" style="display:none"></div>
+  </div>
+
+  <!-- ===== CRM & ORDERS ===== -->
+  <div class="console" id="tab-crm">
+    <div class="page-title">CRM &amp; Order Intake</div>
+    <div class="page-sub">Accounts and the new-product orders that feed the NPI pipeline</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="crmTab(this,'orders')">Orders</button>
+      <button class="subtab" onclick="crmTab(this,'customers')">Customers</button>
+    </div>
+    <div id="crm-orders" class="subtab-panel active">
+      <div id="ord-funnel"></div>
+      <div class="toolbar">
+        <input type="text" id="s-orders" placeholder="Search order, customer, product..." oninput="loadTable('orders')">
+        <select id="f-orders-Stage" onchange="loadTable('orders')"><option value="">All Stages</option><option>In NPI</option><option>In Production</option><option>Shipped</option></select>
+        <select id="f-orders-Priority" onchange="loadTable('orders')"><option value="">All Priority</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <button class="btn-primary" onclick="showForm('orders')">+ New Order</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Category</th><th class="num">Qty</th><th class="num">Value</th><th>Requested</th><th>NPI</th><th>Priority</th><th>Stage</th></tr></thead><tbody id="b-orders"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('orders',-1)" id="p-orders-prev" disabled>Prev</button><span class="page-info" id="p-orders-info">Page 1</span><button class="btn-outline" onclick="pageTable('orders',1)" id="p-orders-next" disabled>Next</button></div>
+    </div>
+    <div id="crm-customers" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-customers" placeholder="Search company, contact..." oninput="loadTable('customers')">
+        <select id="f-customers-Tier" onchange="loadTable('customers')"><option value="">All Tiers</option><option>Strategic</option><option>Key</option><option>Standard</option></select>
+        <select id="f-customers-Region" onchange="loadTable('customers')"><option value="">All Regions</option><option>West</option><option>Midwest</option><option>Northeast</option><option>Southeast</option><option>APAC</option><option>EMEA</option></select>
+        <button class="btn-primary" onclick="showForm('customers')">+ New Customer</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Company</th><th>Contact</th><th>Industry</th><th>Region</th><th>Tier</th><th>Owner</th><th class="num">Annual Rev</th><th>Status</th></tr></thead><tbody id="b-customers"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('customers',-1)" id="p-customers-prev" disabled>Prev</button><span class="page-info" id="p-customers-info">Page 1</span><button class="btn-outline" onclick="pageTable('customers',1)" id="p-customers-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- ===== NPI ===== -->
+  <div class="console" id="tab-npi">
+    <div class="page-title">New Product Introduction</div>
+    <div class="page-sub">Stage-gate programs from concept to launch — click any program for its 360</div>
+    <div class="card"><h3>Phase-Gate Pipeline<span class="hint">Go / Conditional / Hold per gate</span></h3><div id="npi-gateflow"></div></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="npiTab(this,'programs')">Programs</button>
+      <button class="subtab" onclick="npiTab(this,'reviews')">Gate Reviews</button>
+    </div>
+    <div id="npi-programs" class="subtab-panel active">
+      <div class="toolbar">
+        <input type="text" id="s-npi-search" placeholder="Search program, product, customer..." oninput="renderPrograms()">
+        <select id="f-npi-gate" onchange="renderPrograms()"><option value="">All Gate Status</option><option>Blocked</option><option>At Risk</option><option>On Track</option><option>Approved</option></select>
+        <select id="f-npi-risk" onchange="renderPrograms()"><option value="">All Risk</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <button class="btn-primary" onclick="showForm('npi-projects')">+ New Program</button>
+      </div>
+      <div id="npi-cards" class="prog-grid"></div>
+    </div>
+    <div id="npi-reviews" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-gate-reviews" placeholder="Search review, NPI, reviewer..." oninput="loadTable('gate-reviews')">
+        <select id="f-gate-reviews-Gate" onchange="loadTable('gate-reviews')"><option value="">All Gates</option><option>G0 Concept</option><option>G1 Feasibility</option><option>G2 Design</option><option>G3 Prototype</option><option>G4 Validation</option><option>G5 Launch</option></select>
+        <select id="f-gate-reviews-Decision" onchange="loadTable('gate-reviews')"><option value="">All Decisions</option><option>Go</option><option>Conditional Go</option><option>Hold</option></select>
+        <button class="btn-primary" onclick="showForm('gate-reviews')">+ New Review</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Review</th><th>NPI</th><th>Product</th><th>Gate</th><th>Date</th><th>Reviewer</th><th class="num">Score</th><th>Decision</th></tr></thead><tbody id="b-gate-reviews"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('gate-reviews',-1)" id="p-gate-reviews-prev" disabled>Prev</button><span class="page-info" id="p-gate-reviews-info">Page 1</span><button class="btn-outline" onclick="pageTable('gate-reviews',1)" id="p-gate-reviews-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- ===== ENGINEERING ===== -->
+  <div class="console" id="tab-engineering">
+    <div class="page-title">Product &amp; Engineering</div>
+    <div class="page-sub">The product master, bills of material and engineering change control</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="engTab(this,'products')">Products</button>
+      <button class="subtab" onclick="engTab(this,'engineering-changes')">Engineering Changes</button>
+    </div>
+    <div id="eng-products" class="subtab-panel active">
+      <div class="toolbar">
+        <input type="text" id="s-products" placeholder="Search product, SKU..." oninput="loadTable('products')">
+        <select id="f-products-Lifecycle" onchange="loadTable('products')"><option value="">All Lifecycle</option><option>Concept</option><option>Development</option><option>Pilot</option><option>Production</option></select>
+        <select id="f-products-Category" onchange="loadTable('products')"><option value="">All Categories</option></select>
+        <button class="btn-primary" onclick="showForm('products')">+ New Product</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Lifecycle</th><th class="num">Unit Cost</th><th class="num">Target Price</th><th class="num">Margin</th><th class="num">Lead</th><th>Status</th></tr></thead><tbody id="b-products"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('products',-1)" id="p-products-prev" disabled>Prev</button><span class="page-info" id="p-products-info">Page 1</span><button class="btn-outline" onclick="pageTable('products',1)" id="p-products-next" disabled>Next</button></div>
+    </div>
+    <div id="eng-engineering-changes" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-engineering-changes" placeholder="Search ECO, product..." oninput="loadTable('engineering-changes')">
+        <select id="f-engineering-changes-Type" onchange="loadTable('engineering-changes')"><option value="">All Types</option><option>ECR</option><option>ECO</option><option>Deviation</option><option>Waiver</option></select>
+        <select id="f-engineering-changes-Status" onchange="loadTable('engineering-changes')"><option value="">All Status</option><option>Draft</option><option>Under Review</option><option>Approved</option><option>Implemented</option><option>Rejected</option></select>
+        <select id="f-engineering-changes-Priority" onchange="loadTable('engineering-changes')"><option value="">All Priority</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+        <button class="btn-primary" onclick="showForm('engineering-changes')">+ New ECR/ECO</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ECO</th><th>Type</th><th>Product</th><th>Reason</th><th>Requested By</th><th class="num">Cost Impact</th><th>Effective</th><th>Priority</th><th>Status</th></tr></thead><tbody id="b-engineering-changes"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('engineering-changes',-1)" id="p-engineering-changes-prev" disabled>Prev</button><span class="page-info" id="p-engineering-changes-info">Page 1</span><button class="btn-outline" onclick="pageTable('engineering-changes',1)" id="p-engineering-changes-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- ===== SUPPLY CHAIN ===== -->
+  <div class="console" id="tab-supply">
+    <div class="page-title">Supply Chain &amp; MRP</div>
+    <div class="page-sub">Parts, suppliers and procurement keeping the floor fed</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="supTab(this,'parts')">Parts &amp; Inventory</button>
+      <button class="subtab" onclick="supTab(this,'suppliers')">Suppliers</button>
+      <button class="subtab" onclick="supTab(this,'purchase-orders')">Purchase Orders</button>
+    </div>
+    <div id="sup-parts" class="subtab-panel active">
+      <div class="toolbar">
+        <input type="text" id="s-parts" placeholder="Search part, name..." oninput="loadTable('parts')">
+        <select id="f-parts-Stock Status" onchange="loadTable('parts')"><option value="">All Stock Status</option><option>Stockout</option><option>Reorder</option><option>Low</option><option>In Stock</option></select>
+        <select id="f-parts-Category" onchange="loadTable('parts')"><option value="">All Categories</option></select>
+        <button class="btn-primary" onclick="showForm('parts')">+ New Part</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Part #</th><th>Name</th><th>Category</th><th>Supplier</th><th class="num">On Hand</th><th class="num">On Order</th><th class="num">Reorder Pt</th><th class="num">Lead</th><th>Stock</th></tr></thead><tbody id="b-parts"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('parts',-1)" id="p-parts-prev" disabled>Prev</button><span class="page-info" id="p-parts-info">Page 1</span><button class="btn-outline" onclick="pageTable('parts',1)" id="p-parts-next" disabled>Next</button></div>
+    </div>
+    <div id="sup-suppliers" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-suppliers" placeholder="Search supplier..." oninput="loadTable('suppliers')">
+        <select id="f-suppliers-Region" onchange="loadTable('suppliers')"><option value="">All Regions</option><option>West</option><option>Midwest</option><option>Northeast</option><option>Southeast</option><option>APAC</option><option>EMEA</option><option>North America</option><option>LATAM</option></select>
+        <button class="btn-primary" onclick="showForm('suppliers')">+ New Supplier</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Supplier</th><th>Category</th><th>Region</th><th>Contact</th><th class="num">Lead</th><th class="num">On-Time</th><th class="num">Quality</th><th>Status</th></tr></thead><tbody id="b-suppliers"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('suppliers',-1)" id="p-suppliers-prev" disabled>Prev</button><span class="page-info" id="p-suppliers-info">Page 1</span><button class="btn-outline" onclick="pageTable('suppliers',1)" id="p-suppliers-next" disabled>Next</button></div>
+    </div>
+    <div id="sup-purchase-orders" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-purchase-orders" placeholder="Search PO, supplier, part..." oninput="loadTable('purchase-orders')">
+        <select id="f-purchase-orders-Status" onchange="loadTable('purchase-orders')"><option value="">All Status</option><option>Open</option><option>Confirmed</option><option>In Transit</option><option>Received</option><option>Late</option></select>
+        <button class="btn-primary" onclick="showForm('purchase-orders')">+ New PO</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>PO #</th><th>Supplier</th><th>Part</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Value</th><th>Ordered</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-purchase-orders"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('purchase-orders',-1)" id="p-purchase-orders-prev" disabled>Prev</button><span class="page-info" id="p-purchase-orders-info">Page 1</span><button class="btn-outline" onclick="pageTable('purchase-orders',1)" id="p-purchase-orders-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- ===== PRODUCTION ===== -->
+  <div class="console" id="tab-production">
+    <div class="page-title">Production Control</div>
+    <div class="page-sub">Work orders on the floor by work center and status</div>
+    <div class="kpi-row" id="prod-kpis"></div>
+    <div class="grid-2"><div class="card"><h3>Work Center Load</h3><div id="prod-wc"></div></div><div class="card"><h3>Work Orders by Status</h3><div id="prod-status"></div></div></div>
+    <div class="toolbar">
+      <input type="text" id="s-work-orders" placeholder="Search WO, product..." oninput="loadTable('work-orders')">
+      <select id="f-work-orders-Status" onchange="loadTable('work-orders')"><option value="">All Status</option><option>Planned</option><option>Released</option><option>In Progress</option><option>Complete</option></select>
+      <select id="f-work-orders-Work Center" onchange="loadTable('work-orders')"><option value="">All Work Centers</option><option>SMT Line 1</option><option>SMT Line 2</option><option>Final Assembly</option><option>Test &amp; QA</option><option>Machining</option><option>Injection Molding</option></select>
+      <button class="btn-primary" onclick="showForm('work-orders')">+ New Work Order</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>WO #</th><th>Product</th><th>Order</th><th class="num">Qty</th><th class="num">% Done</th><th>Work Center</th><th>Start</th><th>End</th><th>Priority</th><th>Status</th></tr></thead><tbody id="b-work-orders"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('work-orders',-1)" id="p-work-orders-prev" disabled>Prev</button><span class="page-info" id="p-work-orders-info">Page 1</span><button class="btn-outline" onclick="pageTable('work-orders',1)" id="p-work-orders-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ===== QUALITY ===== -->
+  <div class="console" id="tab-quality">
+    <div class="page-title">Quality Management</div>
+    <div class="page-sub">Inspections, nonconformances and corrective actions across the plant</div>
+    <div class="kpi-row" id="qa-kpis"></div>
+    <div class="grid-2"><div class="card"><h3>NCRs by Severity</h3><div id="qa-sev"></div></div><div class="card"><h3>Top Defect Types</h3><div id="qa-def"></div></div></div>
+    <div class="card"><h3>Defects by Supplier<span class="hint">quality escapes into receiving</span></h3><div id="qa-sup"></div></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="qaTab(this,'nonconformances')">Nonconformances</button>
+      <button class="subtab" onclick="qaTab(this,'inspections')">Inspections</button>
+      <button class="subtab" onclick="qaTab(this,'corrective-actions')">Corrective Actions</button>
+    </div>
+    <div id="qa-nonconformances" class="subtab-panel active">
+      <div class="toolbar">
+        <input type="text" id="s-nonconformances" placeholder="Search NCR, product, supplier..." oninput="loadTable('nonconformances')">
+        <select id="f-nonconformances-Severity" onchange="loadTable('nonconformances')"><option value="">All Severity</option><option>Critical</option><option>Major</option><option>Minor</option></select>
+        <select id="f-nonconformances-Status" onchange="loadTable('nonconformances')"><option value="">All Status</option><option>Open</option><option>In Review</option><option>Closed</option></select>
+        <button class="btn-primary" onclick="showForm('nonconformances')">+ New NCR</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>NCR</th><th>Source</th><th>Product / Part</th><th>Supplier</th><th>Defect</th><th class="num">Qty</th><th>Disposition</th><th class="num">Cost</th><th>Severity</th><th>Status</th></tr></thead><tbody id="b-nonconformances"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('nonconformances',-1)" id="p-nonconformances-prev" disabled>Prev</button><span class="page-info" id="p-nonconformances-info">Page 1</span><button class="btn-outline" onclick="pageTable('nonconformances',1)" id="p-nonconformances-next" disabled>Next</button></div>
+    </div>
+    <div id="qa-inspections" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-inspections" placeholder="Search inspection, product..." oninput="loadTable('inspections')">
+        <select id="f-inspections-Type" onchange="loadTable('inspections')"><option value="">All Types</option><option>Incoming</option><option>In-Process</option><option>Final</option><option>First Article</option></select>
+        <select id="f-inspections-Result" onchange="loadTable('inspections')"><option value="">All Results</option><option>Pass</option><option>Conditional</option><option>Fail</option></select>
+        <button class="btn-primary" onclick="showForm('inspections')">+ New Inspection</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>ID</th><th>Type</th><th>Product / Part</th><th>Supplier</th><th>Inspector</th><th>Date</th><th class="num">Insp</th><th class="num">Rej</th><th>Result</th></tr></thead><tbody id="b-inspections"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('inspections',-1)" id="p-inspections-prev" disabled>Prev</button><span class="page-info" id="p-inspections-info">Page 1</span><button class="btn-outline" onclick="pageTable('inspections',1)" id="p-inspections-next" disabled>Next</button></div>
+    </div>
+    <div id="qa-corrective-actions" class="subtab-panel">
+      <div class="toolbar">
+        <input type="text" id="s-corrective-actions" placeholder="Search CAPA, title..." oninput="loadTable('corrective-actions')">
+        <select id="f-corrective-actions-Type" onchange="loadTable('corrective-actions')"><option value="">All Types</option><option>Corrective</option><option>Preventive</option><option>SCAR</option></select>
+        <select id="f-corrective-actions-Status" onchange="loadTable('corrective-actions')"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Verify</option><option>Closed</option><option>Overdue</option></select>
+        <button class="btn-primary" onclick="showForm('corrective-actions')">+ New CAPA</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>CAPA</th><th>NCR</th><th>Title</th><th>Type</th><th>Supplier</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-corrective-actions"></tbody></table></div>
+      <div class="pagination"><button class="btn-outline" onclick="pageTable('corrective-actions',-1)" id="p-corrective-actions-prev" disabled>Prev</button><span class="page-info" id="p-corrective-actions-info">Page 1</span><button class="btn-outline" onclick="pageTable('corrective-actions',1)" id="p-corrective-actions-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <!-- ===== SHIPPING ===== -->
+  <div class="console" id="tab-shipping">
+    <div class="page-title">Shipping &amp; Fulfillment</div>
+    <div class="page-sub">Shipments against customer orders with on-time delivery tracking</div>
+    <div class="kpi-row" id="sh-kpis"></div>
+    <div class="grid-2"><div class="card"><h3>On-Time Delivery</h3><div id="sh-otd" style="text-align:center"></div></div><div class="card"><h3>Shipments by Status</h3><div id="sh-status"></div></div></div>
+    <div class="toolbar">
+      <input type="text" id="s-shipments" placeholder="Search shipment, order, customer..." oninput="loadTable('shipments')">
+      <select id="f-shipments-Status" onchange="loadTable('shipments')"><option value="">All Status</option><option>Staged</option><option>Packed</option><option>Shipped</option><option>Delivered</option><option>Returned</option></select>
+      <select id="f-shipments-On Time" onchange="loadTable('shipments')"><option value="">All</option><option>Yes</option><option>No</option></select>
+      <button class="btn-primary" onclick="showForm('shipments')">+ New Shipment</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Shipment</th><th>Order</th><th>Customer</th><th>Product</th><th class="num">Qty</th><th>Requested</th><th>Shipped</th><th>Carrier</th><th class="num">Freight</th><th>On-Time</th><th>Status</th></tr></thead><tbody id="b-shipments"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('shipments',-1)" id="p-shipments-prev" disabled>Prev</button><span class="page-info" id="p-shipments-info">Page 1</span><button class="btn-outline" onclick="pageTable('shipments',1)" id="p-shipments-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ===== FINANCE ===== -->
+  <div class="console" id="tab-finance">
+    <div class="page-title">Finance</div>
+    <div class="page-sub">Revenue, cost, margin and receivables tied to shipped orders</div>
+    <div class="kpi-row" id="fi-kpis"></div>
+    <div class="grid-2"><div class="card"><h3>Revenue → Margin<span class="hint">on invoiced orders</span></h3><div id="fi-waterfall"></div></div><div class="card"><h3>Invoices by Status</h3><div id="fi-status"></div></div></div>
+    <div class="toolbar">
+      <input type="text" id="s-invoices" placeholder="Search invoice, order, customer..." oninput="loadTable('invoices')">
+      <select id="f-invoices-Status" onchange="loadTable('invoices')"><option value="">All Status</option><option>Sent</option><option>Paid</option><option>Overdue</option></select>
+      <button class="btn-primary" onclick="showForm('invoices')">+ New Invoice</button>
+    </div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Invoice</th><th>Order</th><th>Customer</th><th class="num">Amount</th><th class="num">Cost</th><th class="num">Margin</th><th>Invoice Date</th><th>Due</th><th>Status</th></tr></thead><tbody id="b-invoices"></tbody></table></div>
+    <div class="pagination"><button class="btn-outline" onclick="pageTable('invoices',-1)" id="p-invoices-prev" disabled>Prev</button><span class="page-info" id="p-invoices-info">Page 1</span><button class="btn-outline" onclick="pageTable('invoices',1)" id="p-invoices-next" disabled>Next</button></div>
+  </div>
+
+  <!-- ===== PORTALS ===== -->
+  <div class="console" id="tab-portals">
+    <div class="page-title">Partner Portals</div>
+    <div class="page-sub">Role-scoped external views — internal costs, margins and confidential comments are hidden</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="portalTab(this,'customer')">Customer Portal</button>
+      <button class="subtab" onclick="portalTab(this,'supplier')">Supplier Portal</button>
+    </div>
+    <div id="portal-customer" class="subtab-panel active">
+      <div class="toolbar"><label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase">Viewing as customer</label><select id="portal-cust-sel" onchange="loadCustomerPortal()"><option value="">Select a customer…</option></select></div>
+      <div id="portal-cust-body"><p class="empty">Choose a customer to preview their portal.</p></div>
+    </div>
+    <div id="portal-supplier" class="subtab-panel">
+      <div class="toolbar"><label style="font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase">Viewing as supplier</label><select id="portal-sup-sel" onchange="loadSupplierPortal()"><option value="">Select a supplier…</option></select></div>
+      <div id="portal-sup-body"><p class="empty">Choose a supplier to preview their portal.</p></div>
+    </div>
+  </div>
+
+  <!-- ===== REPORTS ===== -->
+  <div class="console" id="tab-reports">
+    <div class="page-title">Reports</div>
+    <div class="page-sub">Supplier performance and material planning</div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="showReport('supplier-scorecard')">Supplier Scorecard</button>
+      <button class="subtab" onclick="showReport('mrp')">MRP Shortages</button>
+    </div>
+    <div id="report-content"></div>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='mfgdream';
+let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
+
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function v(sub,f){return sub.values?.[f]||''}
+function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
+function fmt$(x){return '$'+Math.round(n_(x)).toLocaleString('en-US')}
+function fmtM(x){const f=n_(x);if(Math.abs(f)>=1e6)return '$'+(f/1e6).toFixed(2)+'M';if(Math.abs(f)>=1e3)return '$'+(f/1e3).toFixed(0)+'K';return '$'+Math.round(f)}
+function pctv(x){return (Math.round(n_(x)*10)/10)+'%'}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function colorFor(kind,val){const s=String(val||'');const M={
+  gate:{Blocked:'red','At Risk':'amber','On Track':'green',Approved:'green'},
+  risk:{Low:'green',Medium:'amber',High:'red',Critical:'red'},
+  stock:{'In Stock':'green',Low:'amber',Reorder:'amber',Stockout:'red'},
+  po:{Open:'gray',Confirmed:'blue','In Transit':'blue',Received:'green',Late:'red'},
+  wo:{Planned:'gray',Released:'blue','In Progress':'blue',Complete:'green'},
+  decision:{Go:'green','Conditional Go':'amber',Hold:'red'},
+  priority:{Low:'gray',Medium:'amber',High:'amber',Critical:'red'},
+  stage:{'In NPI':'blue','In Production':'amber',Shipped:'green'},
+  cust:{Active:'green',Prospect:'blue',Inactive:'gray',Approved:'green',Probation:'amber'},
+  life:{Concept:'gray',Development:'blue',Pilot:'amber',Production:'green'},
+  sev:{Minor:'gray',Major:'amber',Critical:'red'},
+  ncr:{Open:'red','In Review':'amber',Closed:'green'},
+  result:{Pass:'green',Conditional:'amber',Fail:'red'},
+  capa:{Open:'red','In Progress':'blue',Verify:'amber',Closed:'green',Overdue:'red'},
+  disp:{'Use As Is':'gray',Rework:'amber',Scrap:'red','Return to Supplier':'amber'},
+  ship:{Staged:'gray',Packed:'blue',Shipped:'blue',Delivered:'green',Returned:'red'},
+  ontime:{Yes:'green',No:'red'},
+  inv:{Draft:'gray',Sent:'blue',Paid:'green',Overdue:'red'},
+  eco:{Draft:'gray','Under Review':'amber',Approved:'blue',Implemented:'green',Rejected:'red'},
+  ectype:{ECR:'amber',ECO:'blue',Deviation:'gray',Waiver:'purple'}};
+  return (M[kind]&&M[kind][s])||'gray'}
+function pill(val,kind){return`<span class="pill pill-${colorFor(kind,val)}">${esc(val||'—')}</span>`}
+
+async function api(path,opts={}){const res=await fetch(`${API.url}/app/api/v1${path}`,{...opts,headers:{'Authorization':'Basic '+API.auth,'Content-Type':'application/json',...opts.headers}});if(!res.ok)throw new Error(`${res.status} ${res.statusText}`);return res.json()}
+async function sapi(path){const res=await fetch(path,{headers:{'Authorization':'Basic '+API.auth}});if(!res.ok)throw new Error(`${res.status}`);return res.json()}
+
+async function doLogin(){const url=document.getElementById('login-url').value.replace(/\/+$/,''),user=document.getElementById('login-user').value,pass=document.getElementById('login-pass').value;const errEl=document.getElementById('login-error');errEl.style.display='none';try{API.url=url;API.auth=btoa(user+':'+pass);const me=await api('/me');API.user=me.username;API.displayName=me.displayName||me.username;try{const sp=await api('/space');API.spaceSlug=sp.space?.slug||''}catch(e){}enterApp()}catch(e){errEl.textContent='Login failed: '+e.message;errEl.style.display='block'}}
+function enterApp(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('user-display').textContent=API.displayName+(API.spaceSlug?' · '+API.spaceSlug:'');requestAnimationFrame(()=>switchTab('dashboard'))}
+function doLogout(){API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pass').value='';sessionStorage.removeItem('kinetic_session')}
+(function(){const sess=sessionStorage.getItem('kinetic_session');if(sess){try{const s=JSON.parse(sess);API.url=s.url||'';API.auth=s.auth;API.user=s.user||'';API.displayName=s.displayName||s.user||'';API.spaceSlug=s.spaceSlug||'';enterApp();return}catch(e){}}document.getElementById('login-screen').style.display='flex'})();
+
+let activeTab='dashboard';
+const TAB_MAP={dashboard:'Command Center',crm:'CRM & Orders',npi:'NPI',engineering:'Engineering',supply:'Supply Chain',production:'Production',quality:'Quality',shipping:'Shipping',finance:'Finance',portals:'Portals',reports:'Reports'};
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.querySelectorAll('#main-nav button').forEach(b=>b.classList.toggle('active',b.textContent===TAB_MAP[tab]));
+  if(tab==='dashboard')loadDashboard();
+  else if(tab==='crm'){loadOrderFunnel();loadTable('orders')}
+  else if(tab==='npi'){loadGateFlow();loadPrograms()}
+  else if(tab==='engineering'){fillRefSelects();loadTable('products')}
+  else if(tab==='supply'){fillRefSelects();loadTable('parts')}
+  else if(tab==='production'){loadProduction();loadTable('work-orders')}
+  else if(tab==='quality'){loadQuality();loadTable('nonconformances')}
+  else if(tab==='shipping'){loadShipping();loadTable('shipments')}
+  else if(tab==='finance'){loadFinance();loadTable('invoices')}
+  else if(tab==='portals'){fillPortalSelects()}
+  else if(tab==='reports')showReport('supplier-scorecard');
+}
+function crmTab(btn,slug){subSwitch('tab-crm','crm-',btn,slug);loadTable(slug==='orders'?'orders':'customers')}
+function npiTab(btn,slug){subSwitch('tab-npi','npi-',btn,slug);if(slug==='programs')loadPrograms();else loadTable('gate-reviews')}
+function engTab(btn,slug){subSwitch('tab-engineering','eng-',btn,slug);loadTable(slug)}
+function supTab(btn,slug){subSwitch('tab-supply','sup-',btn,slug);loadTable(slug)}
+function qaTab(btn,slug){subSwitch('tab-quality','qa-',btn,slug);loadTable(slug)}
+function portalTab(btn,slug){subSwitch('tab-portals','portal-',btn,slug)}
+function subSwitch(tabId,prefix,btn,slug){document.querySelectorAll('#'+tabId+' .subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('#'+tabId+' .subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(prefix+slug).classList.add('active')}
+
+let _cats=null,_pcats=null;
+async function fillRefSelects(){
+  try{if(!_cats){const r=await api(`/kapps/${KAPP}/forms/products/submissions?include=values&limit=25`);_cats=[...new Set((r.submissions||[]).map(s=>v(s,'Category')).filter(Boolean))].sort()}}catch(e){}
+  const sel=document.getElementById('f-products-Category');if(sel&&_cats&&sel.options.length<=1)_cats.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o)});
+  try{if(!_pcats){const r=await api(`/kapps/${KAPP}/forms/parts/submissions?include=values&limit=25`);_pcats=[...new Set((r.submissions||[]).map(s=>v(s,'Category')).filter(Boolean))].sort()}}catch(e){}
+  const psel=document.getElementById('f-parts-Category');if(psel&&_pcats&&psel.options.length<=1)_pcats.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;psel.appendChild(o)});
+}
+
+/* ===== generic table driver (keyset pagination, 25/page) ===== */
+const TABLES={
+  orders:{form:'orders',filters:['Stage','Priority'],search:['Order ID','Customer','Product Name'],onRow:s=>`showEditForm('orders','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Order ID'))}</td><td>${esc(v(s,'Customer'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Category'))}</td><td class="num">${esc(v(s,'Quantity'))}</td><td class="num">${fmt$(v(s,'Order Value'))}</td><td>${esc(v(s,'Requested Delivery'))}</td><td>${esc(v(s,'NPI ID'))}</td><td>${pill(v(s,'Priority'),'priority')}</td><td>${pill(v(s,'Stage'),'stage')}</td>`},
+  customers:{form:'customers',filters:['Tier','Region'],search:['Company','Contact Name','Industry'],onRow:s=>`openCustomer('${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Company'))}</td><td>${esc(v(s,'Contact Name'))}</td><td>${esc(v(s,'Industry'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Tier'))}</td><td>${esc(v(s,'Account Owner'))}</td><td class="num">${fmtM(v(s,'Annual Revenue'))}</td><td>${pill(v(s,'Status'),'cust')}</td>`},
+  'gate-reviews':{form:'gate-reviews',filters:['Gate','Decision'],search:['Review ID','NPI ID','Reviewer','Product Name'],onRow:s=>`showEditForm('gate-reviews','${s.id}')`,row:s=>`<td>${esc(v(s,'Review ID'))}</td><td style="font-weight:600">${esc(v(s,'NPI ID'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Gate'))}</td><td>${esc(v(s,'Review Date'))}</td><td>${esc(v(s,'Reviewer'))}</td><td class="num">${esc(v(s,'Score'))}</td><td>${pill(v(s,'Decision'),'decision')}</td>`},
+  products:{form:'products',filters:['Lifecycle','Category'],search:['SKU','Product Name'],onRow:s=>`openProduct('${s.id}')`,row:s=>{const c=n_(v(s,'Unit Cost')),p=n_(v(s,'Target Price')),m=p?Math.round((p-c)/p*100):0;return`<td style="font-weight:600">${esc(v(s,'SKU'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Category'))}</td><td>${pill(v(s,'Lifecycle'),'life')}</td><td class="num">${fmt$(c)}</td><td class="num">${fmt$(p)}</td><td class="num" style="color:${m<25?'var(--red)':'var(--green)'};font-weight:700">${m}%</td><td class="num">${esc(v(s,'Lead Time Days'))}d</td><td>${pill(v(s,'Status'),'cust')}</td>`}},
+  parts:{form:'parts',filters:['Stock Status','Category'],search:['Part Number','Part Name','Supplier'],onRow:s=>`showEditForm('parts','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Part Number'))}</td><td>${esc(v(s,'Part Name'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Supplier'))}</td><td class="num">${esc(v(s,'On Hand'))}</td><td class="num">${esc(v(s,'On Order'))}</td><td class="num">${esc(v(s,'Reorder Point'))}</td><td class="num">${esc(v(s,'Lead Time Days'))}d</td><td>${pill(v(s,'Stock Status'),'stock')}</td>`},
+  suppliers:{form:'suppliers',filters:['Region'],search:['Supplier Name','Category','Contact'],onRow:s=>`openSupplier('${s.id}')`,row:s=>{const ot=n_(v(s,'On Time Percent'));return`<td style="font-weight:600">${esc(v(s,'Supplier Name'))}</td><td>${esc(v(s,'Category'))}</td><td>${esc(v(s,'Region'))}</td><td>${esc(v(s,'Contact'))}</td><td class="num">${esc(v(s,'Lead Time Days'))}d</td><td class="num" style="color:${ot<85?'var(--red)':'var(--green)'};font-weight:700">${ot}%</td><td class="num">${esc(v(s,'Quality Score'))}★</td><td>${pill(v(s,'Status'),'cust')}</td>`}},
+  'purchase-orders':{form:'purchase-orders',filters:['Status'],search:['PO Number','Supplier','Part Name'],onRow:s=>`showEditForm('purchase-orders','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'PO Number'))}</td><td>${esc(v(s,'Supplier'))}</td><td>${esc(v(s,'Part Name'))}</td><td class="num">${esc(v(s,'Quantity'))}</td><td class="num">${fmt$(v(s,'Unit Cost'))}</td><td class="num">${fmt$(v(s,'PO Value'))}</td><td>${esc(v(s,'Order Date'))}</td><td>${esc(v(s,'Due Date'))}</td><td>${pill(v(s,'Status'),'po')}</td>`},
+  'work-orders':{form:'work-orders',filters:['Status','Work Center'],search:['WO Number','Product Name','Order'],onRow:s=>`showEditForm('work-orders','${s.id}')`,row:s=>{const p=n_(v(s,'Percent Complete'));return`<td style="font-weight:600">${esc(v(s,'WO Number'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Order'))}</td><td class="num">${esc(v(s,'Quantity'))}</td><td class="num" style="font-weight:700">${p}%</td><td>${esc(v(s,'Work Center'))}</td><td>${esc(v(s,'Scheduled Start'))}</td><td>${esc(v(s,'Scheduled End'))}</td><td>${pill(v(s,'Priority'),'priority')}</td><td>${pill(v(s,'Status'),'wo')}</td>`}},
+  inspections:{form:'inspections',filters:['Type','Result'],search:['Inspection ID','Product Name','Supplier','Inspector'],onRow:s=>`showEditForm('inspections','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Inspection ID'))}</td><td>${esc(v(s,'Type'))}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Supplier'))}</td><td>${esc(v(s,'Inspector'))}</td><td>${esc(v(s,'Inspection Date'))}</td><td class="num">${esc(v(s,'Qty Inspected'))}</td><td class="num" style="color:${n_(v(s,'Qty Rejected'))>0?'var(--red)':'inherit'}">${esc(v(s,'Qty Rejected'))}</td><td>${pill(v(s,'Result'),'result')}</td>`},
+  nonconformances:{form:'nonconformances',filters:['Severity','Status'],search:['NCR ID','Product Name','Supplier','Defect Type'],onRow:s=>`showEditForm('nonconformances','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'NCR ID'))}</td><td>${esc(v(s,'Source'))}</td><td>${esc(v(s,'Product Name')||v(s,'Part Number'))}</td><td>${esc(v(s,'Supplier'))}</td><td>${esc(v(s,'Defect Type'))}</td><td class="num">${esc(v(s,'Qty Affected'))}</td><td>${pill(v(s,'Disposition'),'disp')}</td><td class="num">${fmt$(v(s,'Cost Impact'))}</td><td>${pill(v(s,'Severity'),'sev')}</td><td>${pill(v(s,'Status'),'ncr')}</td>`},
+  'corrective-actions':{form:'corrective-actions',filters:['Type','Status'],search:['CAPA ID','NCR ID','Title','Supplier'],onRow:s=>`showEditForm('corrective-actions','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'CAPA ID'))}</td><td>${esc(v(s,'NCR ID'))}</td><td>${esc(v(s,'Title'))}</td><td>${esc(v(s,'Type'))}</td><td>${esc(v(s,'Supplier'))}</td><td>${esc(v(s,'Owner'))}</td><td style="color:${v(s,'Status')==='Overdue'?'var(--red)':'inherit'}">${esc(v(s,'Due Date'))}</td><td>${pill(v(s,'Status'),'capa')}</td>`},
+  shipments:{form:'shipments',filters:['Status','On Time'],search:['Shipment ID','Order','Customer','Product Name'],onRow:s=>`showEditForm('shipments','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Shipment ID'))}</td><td>${esc(v(s,'Order'))}</td><td>${esc(v(s,'Customer'))}</td><td>${esc(v(s,'Product Name'))}</td><td class="num">${esc(v(s,'Quantity'))}</td><td>${esc(v(s,'Requested Date'))}</td><td>${esc(v(s,'Ship Date')||'—')}</td><td>${esc(v(s,'Carrier'))}</td><td class="num">${fmt$(v(s,'Freight Cost'))}</td><td>${v(s,'On Time')?pill(v(s,'On Time'),'ontime'):'—'}</td><td>${pill(v(s,'Status'),'ship')}</td>`},
+  invoices:{form:'invoices',filters:['Status'],search:['Invoice ID','Order','Customer'],onRow:s=>`showEditForm('invoices','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'Invoice ID'))}</td><td>${esc(v(s,'Order'))}</td><td>${esc(v(s,'Customer'))}</td><td class="num">${fmt$(v(s,'Amount'))}</td><td class="num">${fmt$(v(s,'Cost'))}</td><td class="num" style="color:var(--green);font-weight:700">${fmt$(v(s,'Margin'))}</td><td>${esc(v(s,'Invoice Date'))}</td><td style="color:${v(s,'Status')==='Overdue'?'var(--red)':'inherit'}">${esc(v(s,'Due Date'))}</td><td>${pill(v(s,'Status'),'inv')}</td>`},
+  'engineering-changes':{form:'engineering-changes',filters:['Type','Status','Priority'],search:['ECO ID','Product Name','Reason'],onRow:s=>`showEditForm('engineering-changes','${s.id}')`,row:s=>`<td style="font-weight:600">${esc(v(s,'ECO ID'))}</td><td>${pill(v(s,'Type'),'ectype')}</td><td>${esc(v(s,'Product Name'))}</td><td>${esc(v(s,'Reason'))}</td><td>${esc(v(s,'Requested By'))}</td><td class="num">${fmt$(v(s,'Cost Impact'))}</td><td>${esc(v(s,'Effective Date'))}</td><td>${pill(v(s,'Priority'),'priority')}</td><td>${pill(v(s,'Status'),'eco')}</td>`},
+};
+const PAGERS={};
+function pager(k){if(!PAGERS[k])PAGERS[k]={page:1,keys:{1:null},hasNext:false};return PAGERS[k]}
+function loadTable(k){const p=pager(k);p.page=1;p.keys={1:null};fetchTable(k)}
+function pageTable(k,dir){const p=pager(k);if(dir>0&&p.hasNext)p.page++;else if(dir<0&&p.page>1)p.page--;else return;fetchTable(k)}
+async function fetchTable(k){
+  const cfg=TABLES[k],p=pager(k);
+  try{
+    let kql='';
+    (cfg.filters||[]).forEach(f=>{const el=document.getElementById('f-'+k+'-'+f);const val=el&&el.value;if(val)kql=kql?`${kql} AND values[${f}]="${val.replace(/"/g,'\\"')}"`:`values[${f}]="${val.replace(/"/g,'\\"')}"`});
+    const last=p.keys[p.page];if(last)kql=kql?`(${kql}) AND createdAt<"${last}"`:`createdAt<"${last}"`;
+    let path=`/kapps/${KAPP}/forms/${cfg.form}/submissions?include=details,values&limit=25`;if(kql)path+='&q='+encodeURIComponent(kql);
+    const res=await api(path);let data=res.submissions||[];p.hasNext=!!res.nextPageToken;
+    if(p.hasNext&&data.length)p.keys[p.page+1]=data[data.length-1].createdAt;
+    const sEl=document.getElementById('s-'+k);const term=sEl?sEl.value.toLowerCase().trim():'';
+    if(term)data=data.filter(s=>(cfg.search||[]).some(f=>String(v(s,f)).toLowerCase().includes(term)));
+    const body=document.getElementById('b-'+k);
+    if(body)body.innerHTML=data.length?data.map(s=>`<tr class="clickable-row" onclick="${cfg.onRow(s)}">${cfg.row(s)}</tr>`).join(''):`<tr><td colspan="14" class="empty">No records found</td></tr>`;
+    const info=document.getElementById('p-'+k+'-info');if(info)info.textContent='Page '+p.page;
+    const pv=document.getElementById('p-'+k+'-prev');if(pv)pv.disabled=p.page<=1;
+    const nx=document.getElementById('p-'+k+'-next');if(nx)nx.disabled=!p.hasNext;
+  }catch(e){const body=document.getElementById('b-'+k);if(body)body.innerHTML=`<tr><td colspan="14" style="color:var(--red);padding:16px">${esc(e.message)}</td></tr>`}
+}
+
+/* ===== shared chart helpers ===== */
+function barList(arr,color,fmt){if(!arr||!arr.length)return'<p class="empty">No data</p>';const max=Math.max(...arr.map(a=>a.value!=null?a.value:a.count),1);return arr.map(a=>{const val=a.value!=null?a.value:a.count;return`<div class="bar-row"><span class="bl">${esc(a.name||a.bucket)}</span><div class="bt"><div class="bf" style="width:${Math.max(2,Math.round(val/max*100))}%${color?';background:'+color:''}"></div></div><span class="bv">${fmt?fmt(val):val}</span></div>`}).join('')}
+function flowDiagram(steps,leaks,opt){
+  opt=opt||{};const W=980,H=opt.h||260,topY=44,maxBarH=opt.maxBarH||150,nodeW=15;
+  const maxV=Math.max(...steps.map(s=>s.value),1);const scale=maxBarH/maxV;
+  const n=steps.length;const xStep=(W-nodeW-40)/(n-1);const x=i=>20+i*xStep;
+  const colors=opt.colors||['#17203A','#2E6FD6','#1F9D6B'];
+  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(let i=0;i<n-1;i++){
+    const carried=steps[i+1].value*scale;const x0=x(i)+nodeW,x1=x(i+1);
+    svg+=`<path d="M${x0},${topY} L${x1},${topY} L${x1},${topY+carried} L${x0},${topY+carried} Z" fill="${colors[(i+1)%colors.length]}" opacity="0.22"/>`;
+    if(leaks&&leaks[i]&&leaks[i].value>0){
+      const lk=leaks[i];const ly0=topY+carried,ly1=topY+steps[i].value*scale;
+      const dropY=topY+maxBarH+46;const cx=x0+(x1-x0)*0.42;
+      svg+=`<path d="M${x0},${ly0} L${x0+18},${ly0} L${cx+30},${dropY} L${cx-30},${dropY} L${x0},${ly1} Z" fill="${lk.color||'#E04434'}" opacity="0.30"/>`;
+      svg+=`<rect x="${cx-80}" y="${dropY}" width="160" height="34" rx="6" fill="${lk.color||'#E04434'}" opacity="0.12"/>`;
+      svg+=`<text x="${cx}" y="${dropY+14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${lk.color||'#B63528'}">${esc(lk.label)}</text>`;
+      svg+=`<text x="${cx}" y="${dropY+28}" text-anchor="middle" font-size="11" font-weight="700" fill="${lk.color||'#B63528'}">${fmtM(lk.value)}</text>`;
+    }
+  }
+  steps.forEach((s,i)=>{const h=s.value*scale;svg+=`<rect x="${x(i)}" y="${topY}" width="${nodeW}" height="${h}" rx="3" fill="${colors[i%colors.length]}"/>`;
+    svg+=`<text x="${x(i)+nodeW/2}" y="${topY-18}" text-anchor="middle" font-size="11" font-weight="700" fill="#17203A">${esc(s.label)}</text>`;
+    svg+=`<text x="${x(i)+nodeW/2}" y="${topY-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#2E6FD6">${fmtM(s.value)}</text>`;});
+  svg+=`</svg>`;return svg;
+}
+function donut(segs,center){
+  const total=segs.reduce((s,x)=>s+x.value,0)||1;const R=64,r=40,cx=80,cy=80;let a0=-Math.PI/2;
+  let svg=`<svg class="viz" viewBox="0 0 320 168" preserveAspectRatio="xMidYMid meet" style="max-width:340px;margin:0 auto">`;
+  segs.forEach(s=>{const frac=s.value/total;const a1=a0+frac*2*Math.PI;const large=frac>0.5?1:0;
+    const x0=cx+R*Math.cos(a0),y0=cy+R*Math.sin(a0),x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1);
+    const xi0=cx+r*Math.cos(a1),yi0=cy+r*Math.sin(a1),xi1=cx+r*Math.cos(a0),yi1=cy+r*Math.sin(a0);
+    if(s.value>0)svg+=`<path d="M${x0},${y0} A${R},${R} 0 ${large} 1 ${x1},${y1} L${xi0},${yi0} A${r},${r} 0 ${large} 0 ${xi1},${yi1} Z" fill="${s.color}"/>`;
+    a0=a1;});
+  svg+=`<text x="${cx}" y="${cy-2}" text-anchor="middle" font-size="24" font-weight="700" fill="#17203A">${center!=null?center:total}</text>`;
+  svg+=`<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="10" fill="#5C6670">${center!=null?'':'TOTAL'}</text>`;
+  let ly=30;segs.forEach(s=>{svg+=`<rect x="176" y="${ly-9}" width="11" height="11" rx="2" fill="${s.color}"/><text x="194" y="${ly}" font-size="12" fill="#16202E">${esc(s.label)}</text><text x="300" y="${ly}" font-size="12" font-weight="700" text-anchor="end" fill="#17203A">${s.value}</text>`;ly+=25;});
+  svg+=`</svg>`;return svg;
+}
+function ring(pct,color,size){size=size||70;const R=size/2-6,C=size/2,circ=2*Math.PI*R;const off=circ*(1-clampp(pct,0,100)/100);
+  return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#E4E8F0" stroke-width="7"/><circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 ${C} ${C})"/><text x="${C}" y="${C+4}" text-anchor="middle" font-size="${size*0.26}" font-weight="700" fill="#17203A">${Math.round(pct)}%</text></svg>`}
+function clampp(n,lo,hi){return Math.max(lo,Math.min(hi,n))}
+function gauge(pct,label){const p=clampp(pct,0,100);const col=p>=80?'#1F9D6B':p>=60?'#E8912B':'#E04434';
+  const R=52,cx=64,cy=64;const a=Math.PI*(1-p/100);const x=cx+R*Math.cos(a),y=cy-R*Math.sin(a);const large=0;
+  return`<svg width="128" height="82" viewBox="0 0 128 82"><path d="M12,64 A52,52 0 0 1 116,64" fill="none" stroke="#E4E8F0" stroke-width="11" stroke-linecap="round"/><path d="M12,64 A52,52 0 ${large} 1 ${x},${y}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round"/><text x="64" y="58" text-anchor="middle" font-size="26" font-weight="700" fill="${col}">${Math.round(p)}</text><text x="64" y="74" text-anchor="middle" font-size="9" font-weight="600" fill="#5C6670">${esc(label||'')}</text></svg>`}
+function renderPhaseFunnel(funnel){
+  const max=Math.max(...funnel.map(p=>p.count),1);
+  return funnel.map(p=>{const w=Math.max(16,Math.round(p.count/max*100));
+    return`<div class="funnel-row" onclick="switchTab('npi')"><div class="funnel-lab">${esc(p.name)}</div><div class="funnel-track"><div class="funnel-bar" style="width:${w}%;background:linear-gradient(90deg,var(--navy),var(--blue))"><span>${p.count}</span><span>${fmtM(p.value)}</span></div></div><div class="funnel-meta">${p.count} program${p.count!==1?'s':''}</div></div>`}).join('');
+}
+function miniWaterfall(rev,cost,margin){
+  const W=520,H=210,base=160,top=20,chartH=base-top,nodeW=90,gap=40;const max=Math.max(rev,1);const sc=chartH/max;const x=i=>30+i*(nodeW+gap);const yOf=val=>base-val*sc;
+  let svg=`<svg class="viz" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  const bar=(i,yTop,h,fill,lab,val,lc)=>{svg+=`<rect x="${x(i)}" y="${yTop}" width="${nodeW}" height="${Math.max(1,h)}" rx="3" fill="${fill}"/><text x="${x(i)+nodeW/2}" y="${yTop-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#16202E">${fmtM(val)}</text><text x="${x(i)+nodeW/2}" y="${base+16}" text-anchor="middle" font-size="10" font-weight="600" fill="${lc||'#5C6670'}">${esc(lab)}</text>`};
+  bar(0,yOf(rev),rev*sc,'#2E6FD6','Revenue',rev);
+  svg+=`<rect x="${x(1)}" y="${yOf(rev)}" width="${nodeW}" height="${Math.max(1,cost*sc)}" rx="3" fill="#E8912B"/><text x="${x(1)+nodeW/2}" y="${yOf(rev)-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#9A6710">-${fmtM(cost)}</text><text x="${x(1)+nodeW/2}" y="${base+16}" text-anchor="middle" font-size="10" font-weight="600" fill="#9A6710">COGS</text>`;
+  bar(2,yOf(margin),margin*sc,'#1F9D6B','Gross Margin',margin,'#157A52');
+  svg+=`</svg>`;return svg;
+}
+
+/* ===== EXECUTIVE COMMAND CENTER ===== */
+let _dash=null,_pictureOn=false;
+async function loadDashboard(){
+  document.getElementById('db-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading command center…</div>';
+  try{
+    const d=await sapi('/api/mfgdream/dashboard');_dash=d;const k=d.kpis,h=d.health;
+
+    document.getElementById('db-health-status').textContent=(h.score>=80?'HEALTHY':h.score>=60?'NEEDS ATTENTION':'AT RISK');
+    document.getElementById('db-health-status').style.color=h.color==='green'?'var(--green)':h.color==='amber'?'var(--amber)':'var(--red)';
+    document.getElementById('db-health').innerHTML=`
+      <div style="text-align:center;min-width:150px">${gauge(h.score,'HEALTH SCORE')}<div style="font-size:11px;color:var(--gray);margin-top:2px">composite index</div></div>
+      <div class="health-subs">${h.subs.map(s=>`<div class="health-sub">${ring(s.score,s.score>=80?'var(--green)':s.score>=60?'var(--amber)':'var(--red)',64)}<div class="hl">${esc(s.label)}</div></div>`).join('')}</div>`;
+
+    document.getElementById('db-kpis').innerHTML=`
+      <div class="kpi navy"><div class="val">${fmtM(k.backlog)}</div><div class="label">Order Backlog</div><div class="sub">${k.orderCount} orders · ${k.customerCount} customers</div></div>
+      <div class="kpi blue"><div class="val">${k.activeNpi}</div><div class="label">Active NPI</div><div class="sub">${k.blockedNpi} blocked · ${k.atRiskNpi} at risk</div></div>
+      <div class="kpi ${k.otdPct>=90?'green':'amber'}"><div class="val">${k.otdPct}%</div><div class="label">On-Time Delivery</div><div class="sub">${k.lateShip} late shipments</div></div>
+      <div class="kpi ${k.fpy>=90?'green':'amber'}"><div class="val">${k.fpy}%</div><div class="label">First-Pass Yield</div><div class="sub">${k.openNcrs} open NCRs · ${k.critNcrs} crit</div></div>
+      <div class="kpi ${k.stockouts>0?'red':'green'}"><div class="val">${k.stockouts}</div><div class="label">Stockouts</div><div class="sub">${k.shortParts} parts short</div></div>
+      <div class="kpi green"><div class="val">${fmtM(k.revenue)}</div><div class="label">Revenue</div><div class="sub">${k.marginPct}% gross margin</div></div>
+      <div class="kpi ${k.arOverdue>0?'red':'teal'}"><div class="val">${fmtM(k.arOutstanding)}</div><div class="label">AR Outstanding</div><div class="sub">${fmtM(k.arOverdue)} overdue</div></div>
+      <div class="kpi ${k.critEco>0?'amber':'navy'}"><div class="val">${k.openEco}</div><div class="label">Open Eng Changes</div><div class="sub">${k.critEco} critical</div></div>`;
+
+    const lc=d.lifecycle;
+    document.getElementById('db-flow').innerHTML=flowDiagram(
+      [{label:'Booked Orders',value:lc.booked},{label:'Released to Floor',value:lc.released},{label:'Shipped',value:lc.shipped}],
+      [{label:'Held in NPI',value:lc.heldNpi,color:'#2E6FD6'},{label:'WIP on floor',value:lc.wip,color:'#E8912B'}],
+      {colors:['#17203A','#6E4FB0','#1F9D6B'],h:300}
+    )+`<div class="flow-leg"><span><i style="background:#6E4FB0"></i>carried to production</span><span><i style="background:#2E6FD6"></i>held in NPI (pre-production)</span><span><i style="background:#E8912B"></i>work-in-process on the floor</span></div><p class="note">Of <b>${fmtM(lc.booked)}</b> in booked customer orders, <b>${fmtM(lc.heldNpi)}</b> is still in NPI development and <b>${fmtM(lc.wip)}</b> is work-in-process — <b>${fmtM(lc.shipped)}</b> has shipped.</p>`;
+
+    document.getElementById('db-funnel').innerHTML=renderPhaseFunnel(d.phaseFunnel);
+    const gs=d.npiGate;
+    document.getElementById('db-gate').innerHTML=donut([
+      {label:'On Track',value:gs['On Track']||0,color:'#1F9D6B'},{label:'Approved',value:gs['Approved']||0,color:'#0E8C86'},
+      {label:'At Risk',value:gs['At Risk']||0,color:'#E8912B'},{label:'Blocked',value:gs['Blocked']||0,color:'#E04434'},
+    ],k.activeNpi);
+
+    const GST=['On Track','At Risk','Blocked'];const hcol=(g,c)=>{const base={'On Track':'#1F9D6B','At Risk':'#E8912B','Blocked':'#E04434'}[g];return c===0?'#EDF0F5':base};
+    document.getElementById('db-heat').innerHTML=`<table class="heat"><tr><td class="hh"></td>${GST.map(g=>`<td class="hh">${g}</td>`).join('')}</tr>${d.heat.map(r=>`<tr><td class="hh" style="text-align:right;padding-right:6px">${r.risk} risk</td>${r.cells.map(c=>`<td><div class="hc" style="background:${hcol(c.gate,c.count)};color:${c.count===0?'#B4BAC6':'#fff'}">${c.count}</div></td>`).join('')}</tr>`).join('')}</table><p class="note">High-risk blocked programs (top-right red) demand executive attention first.</p>`;
+
+    const ss=d.inventory.stockStatus;
+    document.getElementById('db-short').innerHTML=`<div style="display:flex;gap:8px;margin-bottom:12px">
+      <div class="stat-box" style="flex:1;background:#FBE6E4"><div class="v" style="color:#B63528">${ss.Stockout||0}</div><div class="l">Stockout</div></div>
+      <div class="stat-box" style="flex:1;background:#FBF1DC"><div class="v" style="color:#9A6710">${ss.Reorder||0}</div><div class="l">Reorder</div></div>
+      <div class="stat-box" style="flex:1;background:#FBF1DC"><div class="v" style="color:#9A6710">${ss.Low||0}</div><div class="l">Low</div></div>
+      <div class="stat-box" style="flex:1;background:#E1F2EA"><div class="v" style="color:#157A52">${ss['In Stock']||0}</div><div class="l">In Stock</div></div></div>
+      ${d.inventory.shortList.length?`<table><thead><tr><th>Part</th><th>Supplier</th><th class="num">On Hand</th><th class="num">Lead</th><th>Status</th></tr></thead><tbody>${d.inventory.shortList.slice(0,6).map(p=>`<tr><td style="font-weight:600">${esc(p.name)}</td><td>${esc(p.supplier)}</td><td class="num">${p.onHand}</td><td class="num">${p.lead}d</td><td>${pill(p.status,'stock')}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No shortages 🎉</p>'}`;
+
+    // quality / OTD / finance mini-cards
+    const q=d.quality;
+    document.getElementById('db-quality').innerHTML=`<div style="text-align:center">${gauge(q.fpy,'FPY')}</div><div class="grid-2" style="margin-top:6px"><div class="stat-box"><div class="v" style="color:${q.critNcrs?'var(--red)':'var(--navy)'}">${q.openNcrs}</div><div class="l">Open NCRs (${q.critNcrs} crit)</div></div><div class="stat-box"><div class="v" style="color:${q.overdueCapa?'var(--red)':'var(--navy)'}">${q.overdueCapa}</div><div class="l">Overdue CAPAs</div></div></div><p class="note">Cost of poor quality: <b>${fmtM(q.copq)}</b> (scrap ${fmtM(q.scrapCost)}).</p>`;
+    const sh=d.shipping;
+    document.getElementById('db-otd').innerHTML=`${gauge(sh.otdPct,'ON-TIME %')}<div class="grid-2" style="margin-top:6px"><div class="stat-box"><div class="v" style="color:var(--green)">${sh.onTimeShip}</div><div class="l">On Time</div></div><div class="stat-box"><div class="v" style="color:${sh.lateShip?'var(--red)':'var(--navy)'}">${sh.lateShip}</div><div class="l">Late</div></div></div>`;
+    const fi=d.finance;
+    document.getElementById('db-finance').innerHTML=miniWaterfall(fi.revenue,fi.cost,fi.margin)+`<p class="note">${fmtM(fi.revenue)} revenue → ${fmtM(fi.margin)} margin (${fi.marginPct}%). AR: <b>${fmtM(fi.arOutstanding)}</b> outstanding, <b style="color:var(--red)">${fmtM(fi.arOverdue)}</b> overdue.</p>`;
+
+    document.getElementById('db-ex-npi').innerHTML=`<div class="card"><h3>Programs Needing Attention<span class="hint">${d.exceptions.npi.length} flagged</span></h3>${d.exceptions.npi.length?`<table><thead><tr><th>Program</th><th>Customer</th><th>Phase</th><th class="num">%</th><th>Launch</th><th>Gate</th></tr></thead><tbody>${d.exceptions.npi.map(n=>`<tr class="clickable-row" onclick="openNpi('${n.id}')"><td style="font-weight:600">${esc(n.name)}${n.overBudget?' <span class="pill pill-red">over budget</span>':''}</td><td>${esc(n.customer)}</td><td>${esc(n.phase)}</td><td class="num">${n.pct}%</td><td style="color:${n.launchIn<0?'var(--red)':'inherit'}">${esc(n.launch)}${n.launchIn<0?' ⚠':''}</td><td>${pill(n.gate,'gate')}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">All programs on track 🎉</p>'}</div>`;
+    document.getElementById('db-ex-orders').innerHTML=`<div class="card"><h3>Customer Orders at Risk<span class="hint">critical / blocked</span></h3>${d.exceptions.orders.length?`<table><thead><tr><th>Order</th><th>Customer</th><th>Product</th><th class="num">Value</th><th>Due</th><th>Priority</th></tr></thead><tbody>${d.exceptions.orders.map(o=>`<tr class="clickable-row" onclick="showEditForm('orders','${o.id}')"><td style="font-weight:600">${esc(o.order)}</td><td>${esc(o.customer)}</td><td>${esc(o.product)}</td><td class="num">${fmtM(o.value)}</td><td style="color:${o.dueIn<0?'var(--red)':'inherit'}">${esc(o.due)}</td><td>${pill(o.priority,'priority')}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No orders at risk 🎉</p>'}</div>`;
+    document.getElementById('db-suppliers').innerHTML=`<div class="card"><h3>Supplier Delivery Risk<span class="hint">lowest on-time first</span></h3>${barList(d.suppliers.scores.slice(0,6).map(s=>({name:s.name,value:s.onTime})),'var(--blue)',x=>x+'%')}<p class="note">${d.suppliers.latePOs} purchase orders currently running late.</p></div>`;
+    document.getElementById('db-production').innerHTML=`<div class="card"><h3>Work Center Load</h3>${barList(d.production.byWorkCenter.map(w=>({name:w.name+' ('+w.avg+'%)',value:w.count})),'var(--orange)')}<p class="note">${d.production.done} of ${d.production.units} scheduled units complete.</p></div>`;
+
+    renderMyWork();
+    if(_pictureOn)renderPicture();
+  }catch(e){document.getElementById('db-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">Error: ${esc(e.message)}</p>`}
+}
+
+/* ===== ROLE-BASED MY WORK ===== */
+function renderMyWork(){
+  if(!_dash)return;const role=document.getElementById('db-role').value;const d=_dash,k=d.kpis;const el=document.getElementById('db-mywork');
+  const tile=(v,l,cls,onclick)=>`<div class="stat-box" style="cursor:pointer${cls==='red'?';background:#FBE6E4':cls==='amber'?';background:#FBF1DC':''}" onclick="${onclick||''}"><div class="v" style="color:${cls==='red'?'var(--red)':cls==='amber'?'var(--amber)':'var(--navy)'}">${v}</div><div class="l">${esc(l)}</div></div>`;
+  const queues={
+    'Executive':[tile(d.exceptions.npi.length,'Programs at risk','red',"switchTab('npi')"),tile(k.stockouts,'Stockouts','red',"switchTab('supply')"),tile(k.critNcrs,'Critical NCRs','red',"switchTab('quality')"),tile(k.lateShip,'Late shipments','amber',"switchTab('shipping')"),tile(fmtM(k.arOverdue),'AR overdue','amber',"switchTab('finance')"),tile(k.critEco,'Urgent ECRs','amber',"switchTab('engineering')")],
+    'Program Manager':[tile(k.blockedNpi,'Blocked programs','red',"switchTab('npi')"),tile(k.atRiskNpi,'At-risk programs','amber',"switchTab('npi')"),tile(k.lateLaunch,'Late launches','red',"switchTab('npi')"),tile(k.overBudget,'Over budget','amber',"switchTab('npi')")],
+    'Quality Engineer':[tile(k.openNcrs,'Open NCRs','red',"switchTab('quality')"),tile(k.critNcrs,'Critical NCRs','red',"switchTab('quality')"),tile(k.overdueCapa,'Overdue CAPAs','red',"switchTab('quality')"),tile(k.fpy+'%','First-pass yield','amber',"switchTab('quality')")],
+    'Buyer':[tile(k.latePOs,'Late POs','red',"switchTab('supply')"),tile(k.stockouts,'Stockouts','red',"switchTab('supply')"),tile(k.shortParts,'Parts short','amber',"switchTab('supply')"),tile(fmtM(k.poCommitted),'PO commitment','',"switchTab('supply')")],
+    'Production Supervisor':[tile(k.woActive,'Active work orders','',"switchTab('production')"),tile(k.woDoneUnits+'/'+k.woUnits,'Units complete','',"switchTab('production')"),tile(d.exceptions.orders.length,'Orders at risk','amber',"switchTab('crm')")],
+    'Shipping':[tile(d.shipping.posted,'Shipments posted','',"switchTab('shipping')"),tile(k.lateShip,'Late shipments','red',"switchTab('shipping')"),tile(k.otdPct+'%','On-time delivery','amber',"switchTab('shipping')"),tile(fmtM(d.shipping.freightCost),'Freight spend','',"switchTab('shipping')")],
+    'Finance':[tile(fmtM(k.revenue),'Revenue','',"switchTab('finance')"),tile(k.marginPct+'%','Gross margin','',"switchTab('finance')"),tile(fmtM(k.arOutstanding),'AR outstanding','amber',"switchTab('finance')"),tile(fmtM(k.arOverdue),'AR overdue','red',"switchTab('finance')")],
+  };
+  const q=queues[role]||queues['Executive'];
+  el.innerHTML=`<div class="card"><h3>My Work — ${esc(role)}<span class="hint">role-tailored queue · click to drill in</span></h3><div class="kpi-row" style="margin-bottom:0">${q.join('')}</div></div>`;
+}
+
+/* ===== PICTURE MODE ===== */
+function togglePicture(){_pictureOn=!_pictureOn;document.getElementById('pic-btn').classList.toggle('on',_pictureOn);document.getElementById('db-normal').style.display=_pictureOn?'none':'block';document.getElementById('db-picture').style.display=_pictureOn?'block':'none';if(_pictureOn)renderPicture()}
+function renderPicture(){
+  if(!_dash){document.getElementById('db-picture').innerHTML='<p class="empty">Loading…</p>';return}
+  const d=_dash,k=d.kpis,h=d.health;
+  const t=(v,l,s,cls)=>`<div class="pic-tile ${cls||'navy'}"><div class="pv">${v}</div><div class="pl">${esc(l)}</div><div class="ps">${esc(s||'')}</div></div>`;
+  const hc=h.color==='green'?'green':h.color==='amber'?'amber':'red';
+  document.getElementById('db-picture').innerHTML=`
+    <div class="card" style="text-align:center;padding:28px"><div style="transform:scale(1.4);display:inline-block;margin:6px 0">${gauge(h.score,'BUSINESS HEALTH')}</div>
+      <div style="font-size:16px;font-weight:700;margin-top:8px;color:${hc==='green'?'var(--green)':hc==='amber'?'var(--amber)':'var(--red)'}">${h.score>=80?'HEALTHY':h.score>=60?'NEEDS ATTENTION':'AT RISK'}</div></div>
+    <div class="pic-grid">
+      ${t(fmtM(k.backlog),'Order Backlog',k.orderCount+' orders','navy')}
+      ${t(fmtM(k.revenue),'Revenue',k.marginPct+'% margin','green')}
+      ${t(k.otdPct+'%','On-Time Delivery',k.lateShip+' late',k.otdPct>=90?'green':'amber')}
+      ${t(k.fpy+'%','First-Pass Yield',k.openNcrs+' open NCRs',k.fpy>=90?'green':'amber')}
+      ${t(k.activeNpi,'NPI Programs',k.blockedNpi+' blocked','blue')}
+      ${t(k.stockouts,'Stockouts',k.shortParts+' short',k.stockouts>0?'red':'green')}
+      ${t(k.woActive,'Active Work Orders',k.woDoneUnits+'/'+k.woUnits+' units','navy')}
+      ${t(fmtM(k.arOutstanding),'AR Outstanding',fmtM(k.arOverdue)+' overdue',k.arOverdue>0?'red':'green')}
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Decisions Required</h3><div class="pic-grid">
+      ${t(k.blockedNpi,'Blocked Programs','need executive unblock',k.blockedNpi?'red':'green')}
+      ${t(k.critNcrs,'Critical Quality Issues','open nonconformances',k.critNcrs?'red':'green')}
+      ${t(k.overdueCapa,'Overdue Corrective Actions','past due date',k.overdueCapa?'red':'green')}
+      ${t(k.critEco,'Urgent Engineering Changes','awaiting review',k.critEco?'amber':'green')}
+    </div></div>`;
+}
+
+/* ===== CRM ORDER FUNNEL ===== */
+async function loadOrderFunnel(){
+  const el=document.getElementById('ord-funnel');el.innerHTML='<div class="card"><p class="empty">Loading…</p></div>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;const lc=d.lifecycle;const vals={'In NPI':lc.heldNpi,'In Production':lc.wip,'Shipped':lc.shipped};const max=Math.max(...Object.values(vals),1);
+    el.innerHTML=`<div class="card"><h3>Order Value by Lifecycle Stage</h3>${['In NPI','In Production','Shipped'].map(s=>{const w=Math.max(16,Math.round(vals[s]/max*100));const col=colorFor('stage',s);return`<div class="funnel-row" onclick="document.getElementById('f-orders-Stage').value='${s}';loadTable('orders')"><div class="funnel-lab">${s}</div><div class="funnel-track"><div class="funnel-bar" style="width:${w}%;background:var(--${col==='green'?'green':col==='amber'?'amber':'blue'})">${fmtM(vals[s])}</div></div></div>`}).join('')}<p class="note">Booked backlog <b>${fmtM(lc.booked)}</b>. Click a stage to filter the order list.</p></div>`;
+  }catch(e){el.innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}
+}
+
+/* ===== NPI ===== */
+async function loadGateFlow(){
+  const el=document.getElementById('npi-gateflow');el.innerHTML='<p class="empty">Loading…</p>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;
+    el.innerHTML=`<div class="gate-flow">${d.gateByGate.map(g=>{const tot=g.count||1;return`<div class="gate-node"><div class="gn">${esc(g.name)}</div><div class="gc">${g.count}</div><div class="gate-bars"><div style="width:${g.go/tot*100}%;background:var(--green)"></div><div style="width:${g.cond/tot*100}%;background:var(--amber)"></div><div style="width:${g.hold/tot*100}%;background:var(--red)"></div></div><div class="gate-lab">${g.go}✓ ${g.cond}~ ${g.hold}✕</div></div>`}).join('')}</div><div class="flow-leg" style="margin-top:12px"><span><i style="background:var(--green)"></i>Go</span><span><i style="background:var(--amber)"></i>Conditional Go</span><span><i style="background:var(--red)"></i>Hold</span></div>`;
+  }catch(e){el.innerHTML=`<p style="color:var(--red)">${esc(e.message)}</p>`}
+}
+let _npiAll=null;
+async function loadPrograms(){
+  const el=document.getElementById('npi-cards');el.innerHTML='<p class="empty">Loading programs…</p>';
+  try{const r=await api(`/kapps/${KAPP}/forms/npi-projects/submissions?include=values&limit=25`);_npiAll=r.submissions||[];renderPrograms();
+  }catch(e){el.innerHTML=`<p style="color:var(--red)">${esc(e.message)}</p>`}
+}
+function renderPrograms(){
+  if(!_npiAll)return;const el=document.getElementById('npi-cards');
+  const term=(document.getElementById('s-npi-search')?.value||'').toLowerCase().trim();
+  const fg=document.getElementById('f-npi-gate')?.value||'';const fr=document.getElementById('f-npi-risk')?.value||'';
+  let rows=_npiAll.filter(n=>(!fg||v(n,'Gate Status')===fg)&&(!fr||v(n,'Risk Level')===fr));
+  if(term)rows=rows.filter(n=>[v(n,'Product Name'),v(n,'NPI ID'),v(n,'Customer'),v(n,'Owner')].some(x=>String(x).toLowerCase().includes(term)));
+  if(!rows.length){el.innerHTML='<p class="empty">No programs match</p>';return}
+  el.innerHTML=rows.map(n=>{const gate=v(n,'Gate Status');const cls='g-'+gate.toLowerCase().replace(/\s+/g,'');const pct=n_(v(n,'Percent Complete'));const budget=n_(v(n,'Budget')),spend=n_(v(n,'Spend'));const ob=spend>budget;const rc=pct>=66?'var(--green)':pct>=33?'var(--amber)':'var(--red)';
+    return`<div class="prog ${cls}" onclick="openNpi('${n.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div><div class="pt">${esc(v(n,'Product Name'))}</div><div class="pm">${esc(v(n,'NPI ID'))} · ${esc(v(n,'Customer'))}</div></div>${ring(pct,rc,58)}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">${pill(gate,'gate')}${pill(v(n,'Risk Level')+' risk','risk')}<span class="pill pill-gray">${esc(v(n,'Phase'))}</span></div>
+      <div class="prog-foot"><span>Owner: <b>${esc(v(n,'Owner'))}</b></span><span style="color:${ob?'var(--red)':'var(--gray)'}">${fmtM(spend)}/${fmtM(budget)}${ob?' ⚠':''}</span></div>
+      <div class="prog-foot"><span>Launch: ${esc(v(n,'Target Launch'))}</span></div>
+    </div>`}).join('');
+}
+
+/* ===== PRODUCTION ===== */
+async function loadProduction(){
+  document.getElementById('prod-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;const p=d.production;const wb=p.woByStatus;
+    document.getElementById('prod-kpis').innerHTML=`
+      <div class="kpi navy"><div class="val">${(wb.Planned||0)+(wb.Released||0)+(wb['In Progress']||0)+(wb.Complete||0)}</div><div class="label">Total Work Orders</div></div>
+      <div class="kpi blue"><div class="val">${wb['In Progress']||0}</div><div class="label">In Progress</div></div>
+      <div class="kpi green"><div class="val">${wb.Complete||0}</div><div class="label">Complete</div></div>
+      <div class="kpi orange"><div class="val">${p.done}/${p.units}</div><div class="label">Units Done</div></div>`;
+    document.getElementById('prod-wc').innerHTML=barList(p.byWorkCenter.map(w=>({name:w.name+' ('+w.avg+'% avg)',value:w.count})),'var(--orange)');
+    document.getElementById('prod-status').innerHTML=donut([
+      {label:'Planned',value:wb.Planned||0,color:'#5C6670'},{label:'Released',value:wb.Released||0,color:'#2E6FD6'},
+      {label:'In Progress',value:wb['In Progress']||0,color:'#6E4FB0'},{label:'Complete',value:wb.Complete||0,color:'#1F9D6B'},
+    ],(wb.Planned||0)+(wb.Released||0)+(wb['In Progress']||0)+(wb.Complete||0));
+  }catch(e){document.getElementById('prod-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== QUALITY ===== */
+async function loadQuality(){
+  document.getElementById('qa-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;const q=d.quality;
+    document.getElementById('qa-kpis').innerHTML=`
+      <div class="kpi ${q.fpy>=90?'green':'amber'}"><div class="val">${q.fpy}%</div><div class="label">First-Pass Yield</div><div class="sub">${q.insPass}/${q.insTotal} inspections</div></div>
+      <div class="kpi red"><div class="val">${q.openNcrs}</div><div class="label">Open NCRs</div><div class="sub">${q.critNcrs} critical</div></div>
+      <div class="kpi ${q.overdueCapa?'red':'green'}"><div class="val">${q.overdueCapa}</div><div class="label">Overdue CAPAs</div></div>
+      <div class="kpi amber"><div class="val">${fmtM(q.scrapCost)}</div><div class="label">Scrap Cost</div></div>
+      <div class="kpi navy"><div class="val">${fmtM(q.copq)}</div><div class="label">Cost of Poor Quality</div></div>`;
+    document.getElementById('qa-sev').innerHTML=donut([
+      {label:'Critical',value:q.bySeverity.Critical||0,color:'#E04434'},{label:'Major',value:q.bySeverity.Major||0,color:'#E8912B'},{label:'Minor',value:q.bySeverity.Minor||0,color:'#5C6670'},
+    ],(q.bySeverity.Critical||0)+(q.bySeverity.Major||0)+(q.bySeverity.Minor||0));
+    document.getElementById('qa-def').innerHTML=barList(q.defectsByType,'var(--red)');
+    document.getElementById('qa-sup').innerHTML=q.ncrBySupplier.length?barList(q.ncrBySupplier,'var(--amber)'):'<p class="empty">No supplier-attributed defects</p>';
+  }catch(e){document.getElementById('qa-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== SHIPPING ===== */
+async function loadShipping(){
+  document.getElementById('sh-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;const s=d.shipping;
+    document.getElementById('sh-kpis').innerHTML=`
+      <div class="kpi ${s.otdPct>=90?'green':'amber'}"><div class="val">${s.otdPct}%</div><div class="label">On-Time Delivery</div></div>
+      <div class="kpi navy"><div class="val">${s.posted}</div><div class="label">Shipments Posted</div></div>
+      <div class="kpi green"><div class="val">${s.onTimeShip}</div><div class="label">On Time</div></div>
+      <div class="kpi ${s.lateShip?'red':'green'}"><div class="val">${s.lateShip}</div><div class="label">Late</div></div>
+      <div class="kpi blue"><div class="val">${fmtM(s.freightCost)}</div><div class="label">Freight Spend</div></div>`;
+    document.getElementById('sh-otd').innerHTML=`${gauge(s.otdPct,'ON-TIME %')}<p class="note">${s.onTimeShip} of ${s.onTimeShip+s.lateShip} posted shipments delivered on time.</p>`;
+    const sb=s.byStatus;
+    document.getElementById('sh-status').innerHTML=donut([
+      {label:'Staged',value:sb.Staged||0,color:'#5C6670'},{label:'Packed',value:sb.Packed||0,color:'#2E6FD6'},{label:'Shipped',value:sb.Shipped||0,color:'#4C8BEE'},{label:'Delivered',value:sb.Delivered||0,color:'#1F9D6B'},{label:'Returned',value:sb.Returned||0,color:'#E04434'},
+    ],(sb.Staged||0)+(sb.Packed||0)+(sb.Shipped||0)+(sb.Delivered||0)+(sb.Returned||0));
+  }catch(e){document.getElementById('sh-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== FINANCE ===== */
+async function loadFinance(){
+  document.getElementById('fi-kpis').innerHTML='<div class="empty" style="grid-column:1/-1">Loading…</div>';
+  try{const d=_dash||await sapi('/api/mfgdream/dashboard');_dash=d;const f=d.finance;
+    document.getElementById('fi-kpis').innerHTML=`
+      <div class="kpi green"><div class="val">${fmtM(f.revenue)}</div><div class="label">Revenue</div><div class="sub">invoiced</div></div>
+      <div class="kpi navy"><div class="val">${fmtM(f.margin)}</div><div class="label">Gross Margin</div><div class="sub">${f.marginPct}%</div></div>
+      <div class="kpi amber"><div class="val">${fmtM(f.cost)}</div><div class="label">Cost of Goods</div></div>
+      <div class="kpi teal"><div class="val">${fmtM(f.arOutstanding)}</div><div class="label">AR Outstanding</div></div>
+      <div class="kpi ${f.arOverdue?'red':'green'}"><div class="val">${fmtM(f.arOverdue)}</div><div class="label">AR Overdue</div></div>`;
+    document.getElementById('fi-waterfall').innerHTML=miniWaterfall(f.revenue,f.cost,f.margin);
+    const ib=f.byStatus;
+    document.getElementById('fi-status').innerHTML=donut([
+      {label:'Paid',value:ib.Paid||0,color:'#1F9D6B'},{label:'Sent',value:ib.Sent||0,color:'#2E6FD6'},{label:'Overdue',value:ib.Overdue||0,color:'#E04434'},
+    ],(ib.Paid||0)+(ib.Sent||0)+(ib.Overdue||0));
+  }catch(e){document.getElementById('fi-kpis').innerHTML=`<p style="color:var(--red);grid-column:1/-1">${esc(e.message)}</p>`}
+}
+
+/* ===== PORTALS ===== */
+let _portalFilled=false;
+async function fillPortalSelects(){
+  if(_portalFilled)return;
+  try{const [cr,sr]=await Promise.all([api(`/kapps/${KAPP}/forms/customers/submissions?include=values&limit=25`),api(`/kapps/${KAPP}/forms/suppliers/submissions?include=values&limit=25`)]);
+    const cs=document.getElementById('portal-cust-sel');(cr.submissions||[]).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=v(c,'Company');cs.appendChild(o)});
+    const sp=document.getElementById('portal-sup-sel');(sr.submissions||[]).forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=v(s,'Supplier Name');sp.appendChild(o)});
+    _portalFilled=true;
+  }catch(e){}
+}
+async function loadCustomerPortal(){
+  const id=document.getElementById('portal-cust-sel').value;const body=document.getElementById('portal-cust-body');
+  if(!id){body.innerHTML='<p class="empty">Choose a customer to preview their portal.</p>';return}
+  body.innerHTML='<p class="empty">Loading…</p>';
+  try{const d=await sapi(`/api/mfgdream/customer/${id}`);const c=d.customer;const s=d.summary;
+    body.innerHTML=`<div class="portal-frame"><div class="portal-head"><div class="pn">${esc(v(c,'Company'))} — Customer Portal</div><div class="pd">Order status, NPI progress, shipments and invoices for your account</div></div>
+    <div class="portal-body"><div class="portal-note">🔒 This is the customer-facing view. Internal costs, margins, supplier names and confidential comments are hidden.</div>
+      <div class="grid-3" style="margin-bottom:12px"><div class="stat-box"><div class="v" style="color:var(--navy)">${s.orders}</div><div class="l">Active Orders</div></div><div class="stat-box"><div class="v" style="color:var(--blue)">${s.npis}</div><div class="l">Products in Development</div></div><div class="stat-box"><div class="v" style="color:var(--green)">${s.shipments}</div><div class="l">Shipments</div></div></div>
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:10px 0 6px">Your Orders</h3>${mtbl(d.orders,[['Order',r=>esc(r.oid)],['Product',r=>esc(r.product)],['Requested',r=>esc(r.due)],['Stage',r=>pill(r.stage,'stage')]])}
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:14px 0 6px">Product Development (NPI) Progress</h3>${mtbl(d.npis,[['Product',r=>esc(r.name)],['Phase',r=>esc(r.phase)],['% Complete',r=>esc(r.pct)+'%','num'],['Target Launch',r=>esc(r.launch)]])}
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:14px 0 6px">Shipments</h3>${mtbl(d.shipments,[['Shipment',r=>esc(r.id)],['Order',r=>esc(r.order)],['Ship Date',r=>esc(r.ship||'pending')],['Carrier',r=>esc(r.carrier)],['Status',r=>pill(r.status,'ship')]])}
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:14px 0 6px">Invoices</h3>${mtbl(d.invoices,[['Invoice',r=>esc(r.id)],['Order',r=>esc(r.order)],['Amount',r=>fmt$(r.amount),'num'],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'inv')]])}
+    </div></div>`;
+  }catch(e){body.innerHTML=`<p style="color:var(--red)">${esc(e.message)}</p>`}
+}
+async function loadSupplierPortal(){
+  const id=document.getElementById('portal-sup-sel').value;const body=document.getElementById('portal-sup-body');
+  if(!id){body.innerHTML='<p class="empty">Choose a supplier to preview their portal.</p>';return}
+  body.innerHTML='<p class="empty">Loading…</p>';
+  try{const d=await sapi(`/api/mfgdream/supplier/${id}`);const su=d.supplier;const s=d.summary;
+    body.innerHTML=`<div class="portal-frame"><div class="portal-head"><div class="pn">${esc(v(su,'Supplier Name'))} — Supplier Portal</div><div class="pd">Your purchase orders, delivery scorecard and open corrective actions</div></div>
+    <div class="portal-body"><div class="portal-note">🔒 This is the supplier-facing view. Other suppliers' data, internal margins and confidential notes are hidden.</div>
+      <div class="grid-3" style="margin-bottom:12px"><div class="stat-box"><div class="v" style="color:${s.onTime<85?'var(--red)':'var(--green)'}">${s.onTime}%</div><div class="l">Your On-Time Rating</div></div><div class="stat-box"><div class="v" style="color:var(--navy)">${s.openPOs}</div><div class="l">Open POs</div></div><div class="stat-box"><div class="v" style="color:${s.openScars?'var(--red)':'var(--green)'}">${s.openScars}</div><div class="l">Open Corrective Actions</div></div></div>
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:10px 0 6px">Purchase Orders</h3>${mtbl(d.pos,[['PO',r=>esc(r.po)],['Part',r=>esc(r.part)],['Qty',r=>esc(r.qty),'num'],['Value',r=>fmt$(r.value),'num'],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'po')]])}
+      <h3 style="font-size:12px;color:var(--gray);text-transform:uppercase;margin:14px 0 6px">Supplier Corrective Actions (SCAR)</h3>${mtbl(d.capas,[['CAPA',r=>esc(r.id)],['Title',r=>esc(r.title)],['Type',r=>esc(r.type)],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'capa')]])}
+    </div></div>`;
+  }catch(e){body.innerHTML=`<p style="color:var(--red)">${esc(e.message)}</p>`}
+}
+
+/* ===== DRILL-DOWNS ===== */
+const mtbl=(rows,cols,onRow)=>rows.length?`<table><thead><tr>${cols.map(c=>`<th class="${c[2]||''}">${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr ${onRow&&onRow(r)?`class="clickable-row" onclick="${onRow(r)}"`:''}>${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<p class="empty">None</p>';
+function lTab(btn,id){btn.closest('.modal-content').querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.closest('.modal-content').querySelectorAll('.subtab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+async function openNpi(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading program…</h2>';document.getElementById('modal').classList.add('show');
+  try{const d=await sapi(`/api/mfgdream/npi/${id}`);const n=d.npi;const s=d.summary;
+    const rc=s.pct>=66?'var(--green)':s.pct>=33?'var(--amber)':'var(--red)';
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(n,'Product Name'))} <span style="font-weight:400;color:var(--gray);font-size:14px">${esc(v(n,'NPI ID'))}</span></h2>
+      <div class="meta-row">${pill(s.gate,'gate')}${pill(s.risk,'risk')}<span class="pill pill-gray">${esc(s.phase)}</span><span>Owner: <b>${esc(s.owner)}</b></span><span>Customer: <b>${esc(v(n,'Customer'))}</b></span></div>
+      ${s.gate==='Blocked'?`<div class="banner warn">⚠ Program is <b>blocked</b> at the ${esc(s.phase)} gate. ${esc(v(n,'Notes')||'')}</div>`:s.overBudget?`<div class="banner warn">⚠ Over budget — ${fmtM(s.spend)} spent of ${fmtM(s.budget)} (${s.budgetPct}%).</div>`:''}
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <div style="text-align:center">${ring(s.pct,rc,84)}<div style="font-size:10px;color:var(--gray);text-transform:uppercase;font-weight:600;margin-top:2px">Complete</div></div>
+        <div class="grid-3" style="flex:1;min-width:260px">
+          <div class="stat-box"><div class="v" style="color:${s.overBudget?'var(--red)':'var(--navy)'}">${fmtM(s.spend)}</div><div class="l">Spend of ${fmtM(s.budget)}</div></div>
+          <div class="stat-box"><div class="v" style="color:${s.launchIn<0?'var(--red)':'var(--blue)'}">${s.launchIn!=null?(s.launchIn<0?Math.abs(s.launchIn)+'d late':s.launchIn+'d'):'—'}</div><div class="l">${s.launchIn<0?'Past Launch':'To Launch'}</div></div>
+          <div class="stat-box"><div class="v">${esc(s.launch)}</div><div class="l">Target Launch</div></div>
+        </div>
+      </div>
+      ${d.order||d.product?`<div class="meta-row">${d.order?`<span>Order: <b>${esc(d.order.oid)}</b> (${fmtM(d.order.value)}, qty ${esc(d.order.qty)}) ${pill(d.order.stage,'stage')}</span>`:''}${d.product?`<span>Product: <b>${esc(d.product.sku)}</b> ${pill(d.product.lifecycle,'life')}</span>`:''}</div>`:''}
+      <div class="subtabs">
+        <button class="subtab active" onclick="lTab(this,'n-gates')">Gate Reviews (${d.gates.length})</button>
+        <button class="subtab" onclick="lTab(this,'n-bom')">BOM (${d.boms.length})</button>
+        <button class="subtab" onclick="lTab(this,'n-po')">Purchasing (${d.pos.length})</button>
+        <button class="subtab" onclick="lTab(this,'n-wo')">Work Orders (${d.wos.length})</button>
+      </div>
+      <div id="n-gates" class="subtab-panel active">${mtbl(d.gates,[['Gate',r=>esc(r.gate)],['Date',r=>esc(r.date)],['Reviewer',r=>esc(r.reviewer)],['Score',r=>esc(r.score),'num'],['Decision',r=>pill(r.decision,'decision')],['Action Items',r=>esc(r.actions||'—')]])}</div>
+      <div id="n-bom" class="subtab-panel">${mtbl(d.boms,[['Part #',r=>esc(r.part)],['Name',r=>esc(r.name)],['Qty',r=>esc(r.qty),'num'],['Unit',r=>fmt$(r.cost),'num'],['Ext',r=>fmt$(r.ext),'num'],['Make/Buy',r=>esc(r.makeBuy)]])}</div>
+      <div id="n-po" class="subtab-panel">${mtbl(d.pos,[['PO',r=>esc(r.po)],['Supplier',r=>esc(r.supplier)],['Part',r=>esc(r.part)],['Value',r=>fmt$(r.value),'num'],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'po')]])}</div>
+      <div id="n-wo" class="subtab-panel">${mtbl(d.wos,[['WO',r=>esc(r.wo)],['Qty',r=>esc(r.qty),'num'],['% Done',r=>esc(r.pct)+'%','num'],['Work Center',r=>esc(r.wc)],['Status',r=>pill(r.status,'wo')]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('npi-projects','${n.id}')">Edit Program</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+async function openCustomer(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading customer…</h2>';document.getElementById('modal').classList.add('show');
+  try{const d=await sapi(`/api/mfgdream/customer/${id}`);const c=d.customer;const s=d.summary;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(c,'Company'))}</h2>
+      <div class="meta-row"><span>${esc(v(c,'Industry'))} · ${esc(v(c,'Region'))}</span><span>Tier: <b>${esc(v(c,'Tier'))}</b></span><span>Owner: <b>${esc(v(c,'Account Owner'))}</b></span>${pill(v(c,'Status'),'cust')}</div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="stat-box"><div class="v" style="color:var(--navy)">${fmtM(s.backlog)}</div><div class="l">Order Backlog (${s.orders})</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${s.npis}</div><div class="l">NPI Programs</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.outstanding?'var(--amber)':'var(--green)'}">${fmtM(s.outstanding)}</div><div class="l">AR Outstanding</div></div>
+      </div>
+      <div class="meta-row"><span>Contact: <b>${esc(v(c,'Contact Name'))}</b></span><span>${esc(v(c,'Email'))}</span><span>${esc(v(c,'Phone'))}</span></div>
+      <div class="subtabs"><button class="subtab active" onclick="lTab(this,'c-orders')">Orders (${d.orders.length})</button><button class="subtab" onclick="lTab(this,'c-npi')">NPI (${d.npis.length})</button><button class="subtab" onclick="lTab(this,'c-ship')">Shipments (${d.shipments.length})</button><button class="subtab" onclick="lTab(this,'c-inv')">Invoices (${d.invoices.length})</button></div>
+      <div id="c-orders" class="subtab-panel active">${mtbl(d.orders,[['Order',r=>esc(r.oid)],['Product',r=>esc(r.product)],['Value',r=>fmt$(r.value),'num'],['Priority',r=>pill(r.priority,'priority')],['Due',r=>esc(r.due)],['Stage',r=>pill(r.stage,'stage')]],r=>`showEditForm('orders','${r.id}')`)}</div>
+      <div id="c-npi" class="subtab-panel">${mtbl(d.npis,[['NPI',r=>esc(r.npi)],['Product',r=>esc(r.name)],['Phase',r=>esc(r.phase)],['%',r=>esc(r.pct)+'%','num'],['Gate',r=>pill(r.gate,'gate')],['Launch',r=>esc(r.launch)]],r=>`openNpi('${r.id}')`)}</div>
+      <div id="c-ship" class="subtab-panel">${mtbl(d.shipments,[['Shipment',r=>esc(r.id)],['Order',r=>esc(r.order)],['Ship Date',r=>esc(r.ship||'—')],['On-Time',r=>r.onTime?pill(r.onTime,'ontime'):'—'],['Status',r=>pill(r.status,'ship')]])}</div>
+      <div id="c-inv" class="subtab-panel">${mtbl(d.invoices,[['Invoice',r=>esc(r.id)],['Order',r=>esc(r.order)],['Amount',r=>fmt$(r.amount),'num'],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'inv')]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('customers','${c.id}')">Edit Customer</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+async function openSupplier(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading supplier…</h2>';document.getElementById('modal').classList.add('show');
+  try{const d=await sapi(`/api/mfgdream/supplier/${id}`);const su=d.supplier;const s=d.summary;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(su,'Supplier Name'))}</h2>
+      <div class="meta-row"><span>${esc(v(su,'Category'))} · ${esc(v(su,'Region'))}</span><span>Contact: <b>${esc(v(su,'Contact'))}</b></span><span>${esc(v(su,'Email'))}</span>${pill(v(su,'Status'),'cust')}</div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="stat-box"><div class="v" style="color:${s.onTime<85?'var(--red)':'var(--green)'}">${s.onTime}%</div><div class="l">On-Time Delivery</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.quality<4?'var(--amber)':'var(--green)'}">${s.quality}★</div><div class="l">Quality Score</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.ncrs?'var(--red)':'var(--green)'}">${s.ncrs}</div><div class="l">NCRs · ${s.openScars} open SCAR</div></div>
+      </div>
+      <div class="meta-row"><span>Lead time: <b>${s.lead}d</b></span><span>Parts: <b>${s.parts}</b> (${s.shortParts} short)</span><span>Open POs: <b>${s.openPOs}</b> (${s.latePOs} late)</span><span>PO value: <b>${fmtM(s.poValue)}</b></span></div>
+      <div class="subtabs"><button class="subtab active" onclick="lTab(this,'s-pos')">POs (${d.pos.length})</button><button class="subtab" onclick="lTab(this,'s-parts')">Parts (${d.parts.length})</button><button class="subtab" onclick="lTab(this,'s-ncr')">NCRs (${d.ncrs.length})</button><button class="subtab" onclick="lTab(this,'s-capa')">CAPAs (${d.capas.length})</button></div>
+      <div id="s-pos" class="subtab-panel active">${mtbl(d.pos,[['PO',r=>esc(r.po)],['Part',r=>esc(r.part)],['Qty',r=>esc(r.qty),'num'],['Value',r=>fmt$(r.value),'num'],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'po')]])}</div>
+      <div id="s-parts" class="subtab-panel">${mtbl(d.parts,[['Part #',r=>esc(r.pn)],['Name',r=>esc(r.name)],['On Hand',r=>esc(r.onHand),'num'],['Reorder Pt',r=>esc(r.rop),'num'],['Lead',r=>esc(r.lead)+'d','num'],['Stock',r=>pill(r.status,'stock')]])}</div>
+      <div id="s-ncr" class="subtab-panel">${mtbl(d.ncrs,[['NCR',r=>esc(r.id)],['Product',r=>esc(r.product)],['Defect',r=>esc(r.defect)],['Disposition',r=>pill(r.disposition,'disp')],['Cost',r=>fmt$(r.cost),'num'],['Severity',r=>pill(r.severity,'sev')],['Status',r=>pill(r.status,'ncr')]])}</div>
+      <div id="s-capa" class="subtab-panel">${mtbl(d.capas,[['CAPA',r=>esc(r.id)],['Title',r=>esc(r.title)],['Type',r=>esc(r.type)],['Due',r=>esc(r.due)],['Status',r=>pill(r.status,'capa')]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('suppliers','${su.id}')">Edit Supplier</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+async function openProduct(id){
+  document.getElementById('modal-inner').innerHTML='<h2>Loading product…</h2>';document.getElementById('modal').classList.add('show');
+  try{const d=await sapi(`/api/mfgdream/product/${id}`);const p=d.product;const s=d.summary;
+    document.getElementById('modal-inner').innerHTML=`
+      <h2>${esc(v(p,'Product Name'))} <span style="font-weight:400;color:var(--gray);font-size:14px">${esc(v(p,'SKU'))}</span></h2>
+      <div class="meta-row">${pill(v(p,'Lifecycle'),'life')}<span>${esc(v(p,'Category'))}</span><span>NPI: <b>${esc(v(p,'NPI ID')||'—')}</b></span><span>Lead: <b>${esc(v(p,'Lead Time Days'))}d</b></span></div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="stat-box"><div class="v" style="color:var(--navy)">${fmt$(s.cost)}</div><div class="l">Unit Cost</div></div>
+        <div class="stat-box"><div class="v" style="color:var(--blue)">${fmt$(s.price)}</div><div class="l">Target Price</div></div>
+        <div class="stat-box"><div class="v" style="color:${s.margin<25?'var(--red)':'var(--green)'}">${s.margin}%</div><div class="l">Gross Margin</div></div>
+      </div>
+      <div class="meta-row"><span>BOM lines: <b>${s.bomLines}</b></span><span>Make: <b>${s.make}</b> · Buy: <b>${s.buy}</b></span><span>Rolled BOM cost: <b>${fmt$(s.bomCost)}</b></span></div>
+      <div class="subtabs"><button class="subtab active" onclick="lTab(this,'pr-bom')">BOM (${d.boms.length})</button><button class="subtab" onclick="lTab(this,'pr-wo')">Work Orders (${d.wos.length})</button><button class="subtab" onclick="lTab(this,'pr-eco')">Eng Changes (${d.ecos.length})</button><button class="subtab" onclick="lTab(this,'pr-insp')">Inspections (${d.inspections.length})</button></div>
+      <div id="pr-bom" class="subtab-panel active">${mtbl(d.boms,[['Part #',r=>esc(r.part)],['Component',r=>esc(r.name)],['Qty/Assy',r=>esc(r.qty),'num'],['Unit',r=>fmt$(r.cost),'num'],['Ext Cost',r=>fmt$(r.ext),'num'],['Make/Buy',r=>`<span class="pill pill-${r.makeBuy==='Make'?'blue':'gray'}">${esc(r.makeBuy)}</span>`]])}</div>
+      <div id="pr-wo" class="subtab-panel">${mtbl(d.wos,[['WO',r=>esc(r.wo)],['Qty',r=>esc(r.qty),'num'],['% Done',r=>esc(r.pct)+'%','num'],['Work Center',r=>esc(r.wc)],['Status',r=>pill(r.status,'wo')]])}</div>
+      <div id="pr-eco" class="subtab-panel">${mtbl(d.ecos,[['ECO',r=>esc(r.id)],['Type',r=>pill(r.type,'ectype')],['Reason',r=>esc(r.reason)],['Cost',r=>fmt$(r.cost),'num'],['Priority',r=>pill(r.priority,'priority')],['Status',r=>pill(r.status,'eco')]])}</div>
+      <div id="pr-insp" class="subtab-panel">${mtbl(d.inspections,[['ID',r=>esc(r.id)],['Type',r=>esc(r.type)],['Rejected',r=>esc(r.qtyRej),'num'],['Date',r=>esc(r.date)],['Result',r=>pill(r.result,'result')]])}</div>
+      <div class="modal-actions"><button class="btn-outline" onclick="showEditForm('products','${p.id}')">Edit Product</button><button class="btn-outline" onclick="closeModal()">Close</button></div>`;
+  }catch(e){document.getElementById('modal-inner').innerHTML=`<h2>Error</h2><p style="color:var(--red)">${esc(e.message)}</p><div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Close</button></div>`}
+}
+
+/* ===== REPORTS ===== */
+async function showReport(type){
+  document.querySelectorAll('#tab-reports .subtab').forEach(b=>b.classList.toggle('active',(type==='supplier-scorecard'&&b.textContent.includes('Scorecard'))||(type==='mrp'&&b.textContent.includes('MRP'))));
+  document.getElementById('report-content').innerHTML='<div class="card"><p class="empty">Loading report…</p></div>';
+  try{
+    if(type==='supplier-scorecard'){
+      const r=await sapi('/api/mfgdream/reports/supplier-scorecard');
+      document.getElementById('report-content').innerHTML=`<div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Supplier</th><th>Category</th><th>Region</th><th class="num">On-Time</th><th class="num">Quality</th><th class="num">Lead</th><th class="num">POs</th><th class="num">Late</th><th class="num">NCRs</th><th class="num">PO Value</th><th class="num">Rating</th><th>Risk</th></tr></thead><tbody>${
+        r.suppliers.map(s=>`<tr class="clickable-row" onclick="openSupplier('${s.id}')"><td style="font-weight:600">${esc(s.name)}</td><td>${esc(s.category)}</td><td>${esc(s.region)}</td><td class="num" style="color:${s.onTime<85?'var(--red)':'var(--green)'};font-weight:700">${s.onTime}%</td><td class="num">${s.quality}★</td><td class="num">${s.lead}d</td><td class="num">${s.pos}</td><td class="num" style="color:${s.late?'var(--red)':'var(--gray)'};font-weight:700">${s.late||'—'}</td><td class="num" style="color:${s.ncr?'var(--red)':'var(--gray)'};font-weight:700">${s.ncr||'—'}</td><td class="num">${fmtM(s.poValue)}</td><td class="num" style="font-weight:700">${s.rating}</td><td>${pill(s.risk,'risk')}</td></tr>`).join('')||'<tr><td colspan="12" class="empty">No suppliers</td></tr>'
+      }</tbody></table></div>`;
+    }else{
+      const r=await sapi('/api/mfgdream/reports/mrp');
+      document.getElementById('report-content').innerHTML=`<div class="banner ${r.total?'warn':'ok'}">${r.total?`⚠ <b>${r.total}</b> parts below plan — expedite the negatives below.`:'No material shortages 🎉'}</div><div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Part #</th><th>Name</th><th>Category</th><th>Supplier</th><th class="num">On Hand</th><th class="num">On Order</th><th class="num">Reorder Pt</th><th class="num">Net</th><th class="num">Lead</th><th>Status</th></tr></thead><tbody>${
+        r.parts.map(p=>`<tr><td style="font-weight:600">${esc(p.pn)}</td><td>${esc(p.name)}</td><td>${esc(p.category)}</td><td>${esc(p.supplier)}</td><td class="num">${p.onHand}</td><td class="num">${p.onOrder}</td><td class="num">${p.rop}</td><td class="num" style="color:${p.net>0?'var(--red)':'var(--gray)'};font-weight:700">${p.net>0?'-'+p.net:'ok'}</td><td class="num">${p.lead}d</td><td>${pill(p.status,'stock')}</td></tr>`).join('')||'<tr><td colspan="10" class="empty">No shortages 🎉</td></tr>'
+      }</tbody></table></div>`;
+    }
+  }catch(e){document.getElementById('report-content').innerHTML=`<div class="card"><p style="color:var(--red)">${esc(e.message)}</p></div>`}
+}
+
+/* ===== GENERIC FORM MODAL (create/edit) ===== */
+const REGION='West,Midwest,Northeast,Southeast,APAC,EMEA,North America,LATAM';
+const FORM_DEFS={
+  customers:{title:'Customer',fields:[{r:['Customer ID','Company']},{r:['Contact Name','Status|select:Active,Prospect,Inactive']},{r:['Email','Phone']},{r:['Industry','Region|select:'+REGION]},{r:['Tier|select:Strategic,Key,Standard','Account Owner']},{r:['Annual Revenue|number','']},'Notes|textarea']},
+  orders:{title:'Order',fields:[{r:['Order ID','Customer']},{r:['Product Name','Category']},{r:['Quantity|number','Unit Price|number']},{r:['Order Value|number','Order Date|date']},{r:['Requested Delivery|date','NPI ID']},{r:['Priority|select:Critical,High,Medium,Low','Stage|select:In NPI,In Production,Shipped']},{r:['Status|select:Open,Closed','']},'Notes|textarea']},
+  'npi-projects':{title:'NPI Program',fields:[{r:['NPI ID','Product Name']},{r:['Order','Customer']},{r:['Category','Phase|select:Concept,Feasibility,Design,Prototype,Validation,Launch']},{r:['Gate Status|select:On Track,At Risk,Blocked,Approved','Owner']},{r:['Start Date|date','Target Launch|date']},{r:['Percent Complete|number','Risk Level|select:Low,Medium,High']},{r:['Budget|number','Spend|number']},{r:['Status|select:Active,On Hold,Closed','']},'Notes|textarea']},
+  'gate-reviews':{title:'Gate Review',fields:[{r:['Review ID','NPI ID']},{r:['Product Name','Gate|select:G0 Concept,G1 Feasibility,G2 Design,G3 Prototype,G4 Validation,G5 Launch']},{r:['Review Date|date','Reviewer']},{r:['Decision|select:Go,Conditional Go,Hold','Score|number']},'Risk Notes|textarea','Action Items|textarea',{r:['Status|select:Complete,Open','']}]},
+  products:{title:'Product',fields:[{r:['SKU','Product Name']},{r:['Category','NPI ID']},{r:['Lifecycle|select:Concept,Development,Pilot,Production','Status|select:Active,Inactive']},{r:['Unit Cost|number','Target Price|number']},{r:['Lead Time Days|number','']},'Notes|textarea']},
+  parts:{title:'Part',fields:[{r:['Part Number','Part Name']},{r:['Category','Supplier']},{r:['On Hand|number','On Order|number']},{r:['Reorder Point|number','Lead Time Days|number']},{r:['Unit Cost|number','Stock Status|select:In Stock,Low,Reorder,Stockout']},{r:['Status|select:Active,Inactive','']}]},
+  suppliers:{title:'Supplier',fields:[{r:['Supplier ID','Supplier Name']},{r:['Category','Region|select:'+REGION]},{r:['Contact','Email']},{r:['Lead Time Days|number','On Time Percent|number']},{r:['Quality Score|number','Status|select:Approved,Probation,Inactive']}]},
+  'purchase-orders':{title:'Purchase Order',fields:[{r:['PO Number','Supplier']},{r:['Part Number','Part Name']},{r:['Quantity|number','Unit Cost|number']},{r:['PO Value|number','NPI ID']},{r:['Order Date|date','Due Date|date']},{r:['Status|select:Open,Confirmed,In Transit,Received,Late','']},'Notes|textarea']},
+  'work-orders':{title:'Work Order',fields:[{r:['WO Number','Product SKU']},{r:['Product Name','Order']},{r:['NPI ID','Quantity|number']},{r:['Scheduled Start|date','Scheduled End|date']},{r:['Percent Complete|number','Work Center|select:SMT Line 1,SMT Line 2,Final Assembly,Test & QA,Machining,Injection Molding']},{r:['Priority|select:Critical,High,Medium,Low','Status|select:Planned,Released,In Progress,Complete']},'Notes|textarea']},
+  inspections:{title:'Inspection',fields:[{r:['Inspection ID','Type|select:Incoming,In-Process,Final,First Article']},{r:['Product SKU','Product Name']},{r:['Supplier','Work Order']},{r:['PO Number','Inspector']},{r:['Inspection Date|date','Result|select:Pass,Conditional,Fail']},{r:['Qty Inspected|number','Qty Rejected|number']},{r:['NCR ID','Status|select:Open,Complete']},'Notes|textarea']},
+  nonconformances:{title:'Nonconformance',fields:[{r:['NCR ID','Source|select:Incoming,In-Process,Final,Customer,Supplier']},{r:['Product SKU','Product Name']},{r:['Part Number','Supplier']},{r:['Work Order','Severity|select:Minor,Major,Critical']},{r:['Defect Type','Qty Affected|number']},{r:['Disposition|select:Use As Is,Rework,Scrap,Return to Supplier','Cost Impact|number']},{r:['CAPA ID','Owner']},{r:['Opened Date|date','Status|select:Open,In Review,Closed']},'Description|textarea']},
+  'corrective-actions':{title:'Corrective Action',fields:[{r:['CAPA ID','NCR ID']},'Title',{r:['Type|select:Corrective,Preventive,SCAR','Supplier']},{r:['Owner','Status|select:Open,In Progress,Verify,Closed,Overdue']},{r:['Opened Date|date','Due Date|date']},'Root Cause|textarea','Action Plan|textarea',{r:['Effectiveness|select:,Verified Effective,Monitoring','']}]},
+  shipments:{title:'Shipment',fields:[{r:['Shipment ID','Order']},{r:['Customer','Product Name']},{r:['Quantity|number','Carrier|select:FedEx Freight,UPS Ground,XPO Logistics,Old Dominion,R+L Carriers,FedEx Express']},{r:['Requested Date|date','Ship Date|date']},{r:['Tracking','Freight Cost|number']},{r:['On Time|select:,Yes,No','Status|select:Staged,Packed,Shipped,Delivered,Returned']},'Notes|textarea']},
+  invoices:{title:'Invoice',fields:[{r:['Invoice ID','Order']},{r:['Shipment ID','Customer']},{r:['Amount|number','Cost|number']},{r:['Margin|number','Invoice Date|date']},{r:['Due Date|date','Paid Date|date']},{r:['Status|select:Sent,Paid,Overdue','']},'Notes|textarea']},
+  'engineering-changes':{title:'Engineering Change',fields:[{r:['ECO ID','Type|select:ECR,ECO,Deviation,Waiver']},{r:['Product SKU','Product Name']},{r:['Reason','Requested By']},{r:['Priority|select:Critical,High,Medium,Low','Cost Impact|number']},{r:['Affected Orders|number','Effective Date|date']},{r:['Owner','Opened Date|date']},{r:['Status|select:Draft,Under Review,Approved,Implemented,Rejected','']},'Description|textarea']},
+};
+function showForm(formSlug,sub){
+  const def=FORM_DEFS[formSlug];if(!def)return;const isEdit=!!sub;
+  let html=`<h2>${isEdit?'Edit':'New'} ${def.title}</h2>`;
+  for(const field of def.fields){if(typeof field==='string')html+=renderField(field,sub);else if(field.r)html+='<div class="field-row">'+field.r.map(f=>f?'<div>'+renderField(f,sub)+'</div>':'<div></div>').join('')+'</div>'}
+  html+=`<div class="modal-actions"><button class="btn-outline" onclick="closeModal()">Cancel</button>${isEdit?`<button class="btn-danger btn-small" onclick="deleteSub('${formSlug}','${sub.id}')">Delete</button>`:''}<button class="btn-primary" onclick="saveSub('${formSlug}','${isEdit?sub.id:''}')">${isEdit?'Update':'Create'}</button></div>`;
+  document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('show');
+}
+function renderField(spec,sub){const parts=spec.split('|');const name=parts[0];const type=parts[1]||'text';const id='m-'+name.replace(/\s+/g,'-').toLowerCase();const val=sub?v(sub,name):'';let input;
+  if(type.startsWith('select:')){const opts=type.replace('select:','').split(',');input=`<select id="${id}"><option value=""></option>${opts.map(o=>`<option ${val===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`}
+  else if(type==='textarea')input=`<textarea id="${id}" rows="3">${esc(val)}</textarea>`;
+  else if(type==='date')input=`<input id="${id}" type="date" value="${esc(val)}">`;
+  else if(type==='number')input=`<input id="${id}" type="number" step="any" value="${esc(val)}">`;
+  else input=`<input id="${id}" type="text" value="${esc(val)}">`;
+  return`<label>${esc(name)}</label>${input}`}
+async function saveSub(formSlug,id){const def=FORM_DEFS[formSlug];const vals={};for(const field of def.fields){const names=typeof field==='string'?[field]:(field.r||[]);for(const spec of names){if(!spec)continue;const name=spec.split('|')[0];const el=document.getElementById('m-'+name.replace(/\s+/g,'-').toLowerCase());if(el)vals[name]=el.value}}
+  try{if(id){await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values:vals})});toast('Updated')}else{await api(`/kapps/${KAPP}/forms/${formSlug}/submissions`,{method:'POST',body:JSON.stringify({values:vals,coreState:'Submitted'})});toast('Created')}closeModal();_cats=null;_pcats=null;_dash=null;_npiAll=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+async function showEditForm(formSlug,id){try{const r=await api(`/submissions/${id}?include=values`);showForm(formSlug,r.submission)}catch(e){alert('Error: '+e.message)}}
+async function deleteSub(formSlug,id){if(!confirm('Delete this record?'))return;try{await api(`/submissions/${id}`,{method:'DELETE'});toast('Deleted');closeModal();_dash=null;_npiAll=null;refreshActive(formSlug)}catch(e){alert('Error: '+e.message)}}
+function refreshActive(formSlug){closeModal();switchTab(activeTab)}
+</script>
+</body>
+</html>
