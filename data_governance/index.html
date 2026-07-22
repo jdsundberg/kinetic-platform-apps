@@ -712,14 +712,15 @@ async function openAssetDetail(assetId) {
 /* =============== RECORD DETAIL MODAL =============== */
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-async function showRecord(form, idField, idVal, title) {
+async function showRecord(subId, title) {
   openModal('record-modal');
   document.getElementById('rec-modal-title').textContent = title || 'Details';
   const body = document.getElementById('rec-modal-body');
   body.innerHTML = '<div class="loading">Loading...</div>';
   try {
-    const d = await kqlFetch(form, 'values[' + idField + '] = "' + idVal + '"');
-    const s = (d.submissions || [])[0];
+    // Look up by submission id — needs no index, unlike a values[<ID>] KQL query.
+    const d = await apiFetch('/app/api/v1/submissions/' + subId + '?include=values,details');
+    const s = d.submission;
     if (!s) { body.innerHTML = '<p style="padding:20px;color:var(--red)">Not found</p>'; return; }
     const v = s.values || {};
     let h = '<div class="detail-grid">';
@@ -860,7 +861,7 @@ async function loadIssues() {
           if (st === 'Open') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionIssue('${iid}','In Progress')">Start</button>`;
           else if (st === 'In Progress') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionIssue('${iid}','Resolved')">Resolve</button> <button class="act-btn act-btn-orange" onclick="event.stopPropagation(); transitionIssue('${iid}','Deferred')">Defer</button>`;
           else if (st === 'Deferred') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionIssue('${iid}','Open')">Reopen</button>`;
-          return `<tr onclick="showRecord('quality-issues','Issue ID','${iid}','Quality Issue Details')">
+          return `<tr onclick="showRecord('${s.id}','Quality Issue Details')">
             <td>${iid}</td>
             <td>${vf(s, 'Asset Name')}</td>
             <td>${vf(s, 'Issue Type')}</td>
@@ -915,7 +916,7 @@ async function loadPolicies() {
     document.getElementById('policies-table').innerHTML = subs.length === 0
       ? '<div class="loading">No policies found</div>'
       : `<table class="data-table"><thead><tr><th>ID</th><th>Policy Name</th><th>Type</th><th>Compliance</th><th>Version</th><th>Status</th><th>Review Date</th></tr></thead><tbody>${
-        subs.map(s => `<tr onclick="showRecord('policies','Policy ID','${vf(s, 'Policy ID')}','Policy Details')">
+        subs.map(s => `<tr onclick="showRecord('${s.id}','Policy Details')">
           <td>${vf(s, 'Policy ID')}</td>
           <td>${vf(s, 'Policy Name')}</td>
           <td>${vf(s, 'Policy Type')}</td>
@@ -968,7 +969,7 @@ async function loadAccess() {
           else if (st === 'Under Review') actions = `<button class="act-btn act-btn-green" onclick="event.stopPropagation(); transitionAccess('${rid}','Approved')">Approve</button> <button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionAccess('${rid}','Denied')">Deny</button>`;
           else if (st === 'Approved') actions = `<button class="act-btn act-btn-red" onclick="event.stopPropagation(); transitionAccess('${rid}','Revoked')">Revoke</button>`;
           else if (st === 'Denied') actions = `<button class="act-btn act-btn-indigo" onclick="event.stopPropagation(); transitionAccess('${rid}','Submitted')">Resubmit</button>`;
-          return `<tr onclick="showRecord('access-requests','Request ID','${rid}','Access Request Details')">
+          return `<tr onclick="showRecord('${s.id}','Access Request Details')">
             <td>${rid}</td>
             <td>${vf(s, 'Asset Name')}</td>
             <td>${vf(s, 'Requestor')}</td>
