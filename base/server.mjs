@@ -421,7 +421,7 @@ function injectScripts(html, appSlug) {
       var doRefresh = function() {
         if (!_tok.refresh) return Promise.resolve(false);
         if (_refreshing) return _refreshing;
-        _refreshing = _origFetch('/api/base/oauth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ server: server, refresh_token: _tok.refresh }) })
+        _refreshing = _origFetch('/api/base/oauth/refresh', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ server: server, refresh_token: _tok.refresh, client_id: _tok.clientId, client_secret: _tok.clientSecret, token_endpoint: _tok.tokenEndpoint }) })
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(d){ _refreshing = null; if (!d || !d.access_token) return false; _tok.access = d.access_token; if (d.refresh_token) _tok.refresh = d.refresh_token; persistToken(); return true; })
           .catch(function(){ _refreshing = null; return false; });
@@ -910,7 +910,7 @@ const server = http.createServer((req, res) => {
           client_id: pend.clientId, client_secret: pend.clientSecret, code_verifier: pend.verifier,
         }});
         if (tok.status < 400 && tok.data && tok.data.access_token) {
-          ssoResults.set(state, { ...tok.data, server: pend.server, createdAt: Date.now() });
+          ssoResults.set(state, { ...tok.data, server: pend.server, clientId: pend.clientId, clientSecret: pend.clientSecret, tokenEndpoint: pend.tokenEndpoint, createdAt: Date.now() });
           ssoPending.delete(state);
           ok = true;
         } else {
@@ -945,6 +945,7 @@ const server = http.createServer((req, res) => {
       access_token: r.access_token, refresh_token: r.refresh_token || null,
       token_type: r.token_type || "Bearer", expires_in: r.expires_in || null,
       scope: r.scope || null, server: r.server,
+      client_id: r.clientId || null, client_secret: r.clientSecret || null, token_endpoint: r.tokenEndpoint || null,
     });
     return;
   }
@@ -956,9 +957,12 @@ const server = http.createServer((req, res) => {
       let server = (body.server || "").trim().replace(/\/+$/, "");
       const refreshToken = body.refresh_token;
       if (!server || !refreshToken) { jsonResp(res, 400, { error: "server and refresh_token required" }); return; }
-      const client = ssoClients.get(server);
-      if (!client) { jsonResp(res, 409, { error: "No registered client for server (launcher restarted) — please sign in again." }); return; }
-      let tokenEndpoint = client.tokenEndpoint;
+      let clientId = body.client_id, clientSecret = body.client_secret, tokenEndpoint = body.token_endpoint;
+      if (!clientId || !clientSecret) {
+        const client = ssoClients.get(server);
+        if (client) { clientId = clientId || client.clientId; clientSecret = clientSecret || client.clientSecret; tokenEndpoint = tokenEndpoint || client.tokenEndpoint; }
+      }
+      if (!clientId || !clientSecret) { jsonResp(res, 409, { error: "Missing client credentials for refresh — please sign in again." }); return; }
       if (!tokenEndpoint) {
         const disc = await outboundRequest("GET", server + "/.well-known/oauth-authorization-server");
         tokenEndpoint = disc.data && disc.data.token_endpoint;
@@ -966,7 +970,7 @@ const server = http.createServer((req, res) => {
       if (!tokenEndpoint) { jsonResp(res, 502, { error: "Could not resolve token endpoint." }); return; }
       const tok = await outboundRequest("POST", tokenEndpoint, { form: {
         grant_type: "refresh_token", refresh_token: refreshToken,
-        client_id: client.clientId, client_secret: client.clientSecret,
+        client_id: clientId, client_secret: clientSecret,
       }});
       if (tok.status >= 400 || !tok.data || !tok.data.access_token) {
         jsonResp(res, 401, { error: "Refresh failed: " + ((tok.data && (tok.data.error_description || tok.data.error)) || tok.text || "").slice(0, 200) });
