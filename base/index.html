@@ -315,6 +315,49 @@ function svgIcon(name, color) {
 
 let API = { url: '', auth: '', user: '', displayName: '' };
 
+// The launcher page isn't injected with the app pages' refresh-on-401 wrapper, so after
+// the tab sits idle and the ~5-min access token expires, the launcher's own calls would
+// 401 with no recovery. Wrap fetch to force the current Bearer token on every /app|/api
+// call and, on 401, refresh statelessly (session's own client creds) and retry once.
+(function(){
+  var _origFetch = window.fetch.bind(window);
+  var _refreshing = null;
+  window._launcherRefresh = function(){
+    if (!API.refreshToken) return Promise.resolve(false);
+    if (_refreshing) return _refreshing;
+    _refreshing = _origFetch('/api/base/oauth/refresh', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ server: API.server || API.url, refresh_token: API.refreshToken, client_id: API.clientId, client_secret: API.clientSecret, token_endpoint: API.tokenEndpoint }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ _refreshing = null; if (!d || !d.access_token) return false;
+        API.token = d.access_token; if (d.refresh_token) API.refreshToken = d.refresh_token;
+        try { ['base_session','kinetic_session','atlas_session'].forEach(function(k){ var raw=localStorage.getItem(k)||sessionStorage.getItem(k); if(!raw) return; var o=JSON.parse(raw); o.token=API.token; o.refreshToken=API.refreshToken; localStorage.setItem(k, JSON.stringify(o)); sessionStorage.setItem(k, JSON.stringify(o)); }); } catch(e){}
+        return true; })
+      .catch(function(){ _refreshing = null; return false; });
+    return _refreshing;
+  };
+  function withAuth(i){
+    i = Object.assign({}, i || {});
+    var h = {};
+    if (i.headers instanceof Headers) { i.headers.forEach(function(v,k){ h[k]=v; }); }
+    else { Object.assign(h, i.headers || {}); }
+    h['Authorization'] = 'Bearer ' + API.token;
+    if (API.url && !h['X-Kinetic-Server']) h['X-Kinetic-Server'] = API.url;
+    i.headers = h;
+    return i;
+  }
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+    var path = url; try { if (/^https?:\/\//i.test(path)) path = new URL(path).pathname; } catch(e){}
+    var isApi = path.indexOf('/app/') === 0 || path.indexOf('/api/') === 0;
+    if (!isApi || !API.token || path.indexOf('/api/base/oauth/') === 0) return _origFetch(input, init);
+    init = withAuth(init);
+    return _origFetch(input, init).then(function(resp){
+      if (resp.status !== 401 || !API.refreshToken) return resp;
+      return window._launcherRefresh().then(function(ok){ return ok ? _origFetch(input, withAuth(init)) : resp; });
+    });
+  };
+})();
+
 // Wrapper that adds X-Kinetic-Server header for per-tab proxy routing
 function proxyFetch(url, opts) {
   opts = opts || {};
