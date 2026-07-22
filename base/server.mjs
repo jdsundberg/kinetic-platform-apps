@@ -428,6 +428,29 @@ function injectScripts(html, appSlug) {
         return _refreshing;
       };
 
+      // Unrecoverable 401 (both tokens dead after long idle): show one global re-auth
+      // overlay rather than letting each app swallow the 401 into an eternal spinner.
+      var _expiredShown = false;
+      var _authExpired = function() {
+        if (_expiredShown) return;
+        _expiredShown = true;
+        try {
+          var ov = document.createElement('div');
+          ov.setAttribute('role','alertdialog');
+          ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+          var card = document.createElement('div');
+          card.style.cssText = 'background:#fff;max-width:380px;width:90%;padding:28px 26px;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center';
+          card.innerHTML = '<div style="font-size:34px;line-height:1;margin-bottom:12px">\\uD83D\\uDD12</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:8px">Session expired</div>'
+            + '<div style="font-size:14px;color:#475569;margin-bottom:20px">You were idle too long and your sign-in expired. Sign in again to pick up where you left off.</div>'
+            + '<button id="_reauthBtn" style="background:#0f766e;color:#fff;border:0;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Sign in again</button>';
+          ov.appendChild(card);
+          document.body.appendChild(ov);
+          var btn = document.getElementById('_reauthBtn');
+          if (btn) btn.onclick = function(){ window.location.replace('/'); };
+        } catch(e) { window.location.replace('/'); }
+      };
+
       // Proactive refresh ~45s before expiry (first's refresh tokens are short-lived,
       // so a purely reactive on-401 refresh arrives too late). Reschedule on success.
       var _refreshTimer = null;
@@ -453,7 +476,7 @@ function injectScripts(html, appSlug) {
         if (!_tok.access || !_tok.refresh || _path.indexOf('/api/base/oauth/') === 0) return _origFetch.call(self, input, init);
         return _origFetch.call(self, input, init).then(function(resp){
           if (resp.status !== 401) return resp;
-          return doRefresh().then(function(ok){ if (!ok) return resp; init = applyAuth(init); return _origFetch.call(self, input, init); });
+          return doRefresh().then(function(ok){ if (!ok) { _authExpired(); return resp; } init = applyAuth(init); return _origFetch.call(self, input, init); });
         });
       };
     }
