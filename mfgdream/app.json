@@ -1,0 +1,405 @@
+{
+  "name": "MfgDream",
+  "slug": "mfgdream",
+  "description": "End-to-end manufacturing command center — CRM order intake for new products flows into an NPI (New Product Introduction) stage-gate system, coordinated with a mocked ERP/MRP layer (products, BOMs, parts, suppliers, purchase orders and production work orders). Executive dashboard is heavy on graphical status: NPI funnel, money-flow Sankey, gate-status donut, on-time gauge, production and inventory health.",
+  "category": "Manufacturing",
+  "icon": "factory",
+  "color": "#17203A",
+  "bg": "#EEF1F6",
+  "forms": [
+    {
+      "slug": "customers",
+      "name": "Customers",
+      "description": "CRM accounts placing new-product orders",
+      "submissionLabelExpression": "${values('Company')}",
+      "fields": [
+        { "name": "Customer ID", "required": true },
+        { "name": "Company", "required": true },
+        { "name": "Contact Name" },
+        { "name": "Email" },
+        { "name": "Phone" },
+        { "name": "Industry" },
+        { "name": "Region" },
+        { "name": "Tier" },
+        { "name": "Account Owner" },
+        { "name": "Annual Revenue" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Company]", "values[Industry]", "values[Region]", "values[Tier]", "values[Status]"],
+        "compound": [["values[Region]", "values[Status]"], ["values[Tier]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "orders",
+      "name": "Orders",
+      "description": "CRM orders for new products — the front door into NPI",
+      "submissionLabelExpression": "${values('Order ID')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "Order ID", "required": true },
+        { "name": "Customer", "required": true },
+        { "name": "Product Name" },
+        { "name": "Category" },
+        { "name": "Quantity" },
+        { "name": "Unit Price" },
+        { "name": "Order Value" },
+        { "name": "Order Date" },
+        { "name": "Requested Delivery" },
+        { "name": "NPI ID" },
+        { "name": "Priority" },
+        { "name": "Stage" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Customer]", "values[Category]", "values[Stage]", "values[Status]", "values[Priority]", "values[Order Date]", "values[NPI ID]"],
+        "compound": [["values[Stage]", "values[Status]"], ["values[Category]", "values[Stage]"]]
+      }
+    },
+    {
+      "slug": "npi-projects",
+      "name": "NPI Projects",
+      "description": "New Product Introduction stage-gate projects",
+      "submissionLabelExpression": "${values('NPI ID')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "NPI ID", "required": true },
+        { "name": "Product Name", "required": true },
+        { "name": "Order" },
+        { "name": "Customer" },
+        { "name": "Category" },
+        { "name": "Phase" },
+        { "name": "Gate Status" },
+        { "name": "Owner" },
+        { "name": "Start Date" },
+        { "name": "Target Launch" },
+        { "name": "Percent Complete" },
+        { "name": "Budget" },
+        { "name": "Spend" },
+        { "name": "Risk Level" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Product Name]", "values[Customer]", "values[Phase]", "values[Gate Status]", "values[Owner]", "values[Risk Level]", "values[Status]"],
+        "compound": [["values[Phase]", "values[Gate Status]"], ["values[Status]", "values[Target Launch]"]]
+      }
+    },
+    {
+      "slug": "gate-reviews",
+      "name": "Gate Reviews",
+      "description": "NPI stage-gate review decisions (Go / Hold / Kill)",
+      "submissionLabelExpression": "${values('NPI ID')} - ${values('Gate')} (${values('Decision')})",
+      "fields": [
+        { "name": "Review ID", "required": true },
+        { "name": "NPI ID", "required": true },
+        { "name": "Product Name" },
+        { "name": "Gate" },
+        { "name": "Review Date" },
+        { "name": "Decision" },
+        { "name": "Reviewer" },
+        { "name": "Score" },
+        { "name": "Risk Notes", "rows": 3 },
+        { "name": "Action Items", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[NPI ID]", "values[Gate]", "values[Decision]", "values[Status]"],
+        "compound": [["values[NPI ID]", "values[Gate]"]]
+      }
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Product master — the bridge between NPI and ERP",
+      "submissionLabelExpression": "${values('SKU')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "SKU", "required": true },
+        { "name": "Product Name", "required": true },
+        { "name": "Category" },
+        { "name": "NPI ID" },
+        { "name": "Lifecycle" },
+        { "name": "Unit Cost" },
+        { "name": "Target Price" },
+        { "name": "Lead Time Days" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Product Name]", "values[Category]", "values[Lifecycle]", "values[NPI ID]", "values[Status]"],
+        "compound": [["values[Category]", "values[Lifecycle]"]]
+      }
+    },
+    {
+      "slug": "boms",
+      "name": "Bill of Materials",
+      "description": "BOM lines — components that make up each product",
+      "submissionLabelExpression": "${values('Product SKU')} - ${values('Part Name')}",
+      "fields": [
+        { "name": "BOM Line ID", "required": true },
+        { "name": "Product SKU", "required": true },
+        { "name": "Product Name" },
+        { "name": "Part Number" },
+        { "name": "Part Name" },
+        { "name": "Qty Per" },
+        { "name": "Unit Cost" },
+        { "name": "Ext Cost" },
+        { "name": "Make or Buy" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Product SKU]", "values[Part Number]", "values[Make or Buy]", "values[Status]"],
+        "compound": [["values[Product SKU]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "parts",
+      "name": "Parts",
+      "description": "MRP inventory master — components and raw materials",
+      "submissionLabelExpression": "${values('Part Number')} - ${values('Part Name')}",
+      "fields": [
+        { "name": "Part Number", "required": true },
+        { "name": "Part Name", "required": true },
+        { "name": "Category" },
+        { "name": "Supplier" },
+        { "name": "On Hand" },
+        { "name": "On Order" },
+        { "name": "Reorder Point" },
+        { "name": "Lead Time Days" },
+        { "name": "Unit Cost" },
+        { "name": "Stock Status" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Part Name]", "values[Category]", "values[Supplier]", "values[Stock Status]", "values[Status]"],
+        "compound": [["values[Stock Status]", "values[Status]"], ["values[Supplier]", "values[Stock Status]"]]
+      }
+    },
+    {
+      "slug": "suppliers",
+      "name": "Suppliers",
+      "description": "MRP vendor master with performance scores",
+      "submissionLabelExpression": "${values('Supplier Name')}",
+      "fields": [
+        { "name": "Supplier ID", "required": true },
+        { "name": "Supplier Name", "required": true },
+        { "name": "Category" },
+        { "name": "Region" },
+        { "name": "Contact" },
+        { "name": "Email" },
+        { "name": "Lead Time Days" },
+        { "name": "On Time Percent" },
+        { "name": "Quality Score" },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Supplier Name]", "values[Category]", "values[Region]", "values[Status]"],
+        "compound": [["values[Region]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "purchase-orders",
+      "name": "Purchase Orders",
+      "description": "MRP procurement — buying parts to feed production",
+      "submissionLabelExpression": "${values('PO Number')} - ${values('Supplier')}",
+      "fields": [
+        { "name": "PO Number", "required": true },
+        { "name": "Supplier", "required": true },
+        { "name": "Part Number" },
+        { "name": "Part Name" },
+        { "name": "Quantity" },
+        { "name": "Unit Cost" },
+        { "name": "PO Value" },
+        { "name": "Order Date" },
+        { "name": "Due Date" },
+        { "name": "Status" },
+        { "name": "NPI ID" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Supplier]", "values[Part Number]", "values[Status]", "values[NPI ID]", "values[Due Date]"],
+        "compound": [["values[Status]", "values[Due Date]"], ["values[Supplier]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "work-orders",
+      "name": "Work Orders",
+      "description": "MRP production — building the products",
+      "submissionLabelExpression": "${values('WO Number')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "WO Number", "required": true },
+        { "name": "Product SKU", "required": true },
+        { "name": "Product Name" },
+        { "name": "Order" },
+        { "name": "NPI ID" },
+        { "name": "Quantity" },
+        { "name": "Scheduled Start" },
+        { "name": "Scheduled End" },
+        { "name": "Percent Complete" },
+        { "name": "Work Center" },
+        { "name": "Priority" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Product SKU]", "values[Order]", "values[Status]", "values[Work Center]", "values[Priority]", "values[NPI ID]"],
+        "compound": [["values[Status]", "values[Priority]"], ["values[Work Center]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "inspections",
+      "name": "Inspections",
+      "description": "Quality inspections — incoming, in-process, final, first-article",
+      "submissionLabelExpression": "${values('Inspection ID')} - ${values('Type')}",
+      "fields": [
+        { "name": "Inspection ID", "required": true },
+        { "name": "Type" },
+        { "name": "Product SKU" },
+        { "name": "Product Name" },
+        { "name": "Supplier" },
+        { "name": "Work Order" },
+        { "name": "PO Number" },
+        { "name": "Inspector" },
+        { "name": "Inspection Date" },
+        { "name": "Qty Inspected" },
+        { "name": "Qty Rejected" },
+        { "name": "Result" },
+        { "name": "NCR ID" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Type]", "values[Product SKU]", "values[Supplier]", "values[Result]", "values[Status]", "values[Work Order]"],
+        "compound": [["values[Type]", "values[Result]"], ["values[Result]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "nonconformances",
+      "name": "Nonconformances",
+      "description": "Quality NCRs — defects found in receiving, production or the field",
+      "submissionLabelExpression": "${values('NCR ID')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "NCR ID", "required": true },
+        { "name": "Source" },
+        { "name": "Product SKU" },
+        { "name": "Product Name" },
+        { "name": "Part Number" },
+        { "name": "Supplier" },
+        { "name": "Work Order" },
+        { "name": "Severity" },
+        { "name": "Defect Type" },
+        { "name": "Qty Affected" },
+        { "name": "Disposition" },
+        { "name": "Cost Impact" },
+        { "name": "CAPA ID" },
+        { "name": "Owner" },
+        { "name": "Opened Date" },
+        { "name": "Status" },
+        { "name": "Description", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Source]", "values[Product SKU]", "values[Supplier]", "values[Severity]", "values[Status]", "values[Disposition]", "values[Work Order]"],
+        "compound": [["values[Status]", "values[Severity]"], ["values[Supplier]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "corrective-actions",
+      "name": "Corrective Actions",
+      "description": "CAPA / SCAR — corrective and preventive action tracking",
+      "submissionLabelExpression": "${values('CAPA ID')} - ${values('Title')}",
+      "fields": [
+        { "name": "CAPA ID", "required": true },
+        { "name": "NCR ID" },
+        { "name": "Title" },
+        { "name": "Type" },
+        { "name": "Supplier" },
+        { "name": "Owner" },
+        { "name": "Opened Date" },
+        { "name": "Due Date" },
+        { "name": "Status" },
+        { "name": "Root Cause", "rows": 2 },
+        { "name": "Action Plan", "rows": 2 },
+        { "name": "Effectiveness" }
+      ],
+      "indexes": {
+        "single": ["values[NCR ID]", "values[Type]", "values[Supplier]", "values[Status]", "values[Owner]", "values[Due Date]"],
+        "compound": [["values[Status]", "values[Due Date]"]]
+      }
+    },
+    {
+      "slug": "shipments",
+      "name": "Shipments",
+      "description": "Fulfillment — shipments against customer orders with on-time tracking",
+      "submissionLabelExpression": "${values('Shipment ID')} - ${values('Customer')}",
+      "fields": [
+        { "name": "Shipment ID", "required": true },
+        { "name": "Order" },
+        { "name": "Customer" },
+        { "name": "Product Name" },
+        { "name": "Quantity" },
+        { "name": "Requested Date" },
+        { "name": "Ship Date" },
+        { "name": "Carrier" },
+        { "name": "Tracking" },
+        { "name": "Freight Cost" },
+        { "name": "On Time" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Order]", "values[Customer]", "values[Status]", "values[On Time]", "values[Carrier]", "values[Ship Date]"],
+        "compound": [["values[Status]", "values[On Time]"]]
+      }
+    },
+    {
+      "slug": "invoices",
+      "name": "Invoices",
+      "description": "Finance — billing against shipped orders with margin and AR aging",
+      "submissionLabelExpression": "${values('Invoice ID')} - ${values('Customer')}",
+      "fields": [
+        { "name": "Invoice ID", "required": true },
+        { "name": "Order" },
+        { "name": "Shipment ID" },
+        { "name": "Customer" },
+        { "name": "Amount" },
+        { "name": "Cost" },
+        { "name": "Margin" },
+        { "name": "Invoice Date" },
+        { "name": "Due Date" },
+        { "name": "Paid Date" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 2 }
+      ],
+      "indexes": {
+        "single": ["values[Order]", "values[Customer]", "values[Status]", "values[Due Date]"],
+        "compound": [["values[Status]", "values[Due Date]"]]
+      }
+    },
+    {
+      "slug": "engineering-changes",
+      "name": "Engineering Changes",
+      "description": "ECR / ECO — engineering change requests and orders with impact",
+      "submissionLabelExpression": "${values('ECO ID')} - ${values('Product Name')}",
+      "fields": [
+        { "name": "ECO ID", "required": true },
+        { "name": "Type" },
+        { "name": "Product SKU" },
+        { "name": "Product Name" },
+        { "name": "Reason" },
+        { "name": "Requested By" },
+        { "name": "Priority" },
+        { "name": "Cost Impact" },
+        { "name": "Affected Orders" },
+        { "name": "Effective Date" },
+        { "name": "Owner" },
+        { "name": "Opened Date" },
+        { "name": "Status" },
+        { "name": "Description", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Type]", "values[Product SKU]", "values[Priority]", "values[Status]", "values[Owner]"],
+        "compound": [["values[Status]", "values[Priority]"]]
+      }
+    }
+  ]
+}
