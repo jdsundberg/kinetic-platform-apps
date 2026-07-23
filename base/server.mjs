@@ -428,6 +428,83 @@ function injectScripts(html, appSlug) {
         return _refreshing;
       };
 
+      // Unrecoverable 401 (both tokens dead after long idle): re-auth IN PLACE. An overlay
+      // opens the SSO popup, mints fresh tokens, and resolves a promise so the ORIGINAL
+      // 401'd request retries — the page never reloads and the view is preserved. Returns
+      // Promise<bool> (true = retry; false = cancelled/failed). Deduped across concurrent 401s.
+      var _expiredPromise = null;
+      var _authExpired = function() {
+        if (_expiredPromise) return _expiredPromise;
+        _expiredPromise = new Promise(function(resolve){
+          var ov = null, popup = null, poll = null, state = null, done = false;
+          var onMsg = function(e){
+            var d = e && e.data;
+            if (!d || d.type !== 'kinetic-sso' || !state || d.state !== state) return;
+            if (d.ok) collect(); else setStatus('Sign-in failed. Please try again.');
+          };
+          var finish = function(ok){
+            if (done) return; done = true;
+            try { window.removeEventListener('message', onMsg); } catch(e){}
+            if (poll) { clearInterval(poll); poll = null; }
+            if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+            _expiredPromise = null;
+            resolve(ok);
+          };
+          var setStatus = function(msg){
+            var m = ov && ov.querySelector('#_reauthMsg'); if (m) m.textContent = msg || '';
+            var b = ov && ov.querySelector('#_reauthBtn'); if (b) { b.disabled = false; b.textContent = 'Sign in again'; }
+          };
+          var collect = function(){
+            _origFetch('/api/base/oauth/result?state=' + encodeURIComponent(state), { headers:{ 'Accept':'application/json' } })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(t){
+                if (!t || !t.access_token) { setStatus('Could not retrieve session. Please try again.'); return; }
+                _tok.access = t.access_token;
+                if (t.refresh_token) _tok.refresh = t.refresh_token;
+                if (t.client_id) _tok.clientId = t.client_id;
+                if (t.client_secret) _tok.clientSecret = t.client_secret;
+                if (t.token_endpoint) _tok.tokenEndpoint = t.token_endpoint;
+                persistToken();
+                if (typeof scheduleRefresh === 'function') scheduleRefresh();
+                finish(true);
+              })
+              .catch(function(){ setStatus('Could not retrieve session. Please try again.'); });
+          };
+          var startSso = function(){
+            var b = ov.querySelector('#_reauthBtn'); if (b) { b.disabled = true; b.textContent = 'Opening sign-in\\u2026'; }
+            setStatus('');
+            _origFetch('/api/base/oauth/start', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ server: server }) })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(d){
+                if (!d || !d.authorizeUrl) { setStatus('Could not start sign-in. Use the launcher instead.'); return; }
+                state = d.state;
+                popup = window.open(d.authorizeUrl, 'kinetic-sso', 'width=520,height=680');
+                if (!popup) { setStatus('Popup blocked \\u2014 allow popups, or use the launcher.'); return; }
+                poll = setInterval(function(){ if (popup && popup.closed) { clearInterval(poll); poll = null; setTimeout(collect, 300); } }, 700);
+              })
+              .catch(function(){ setStatus('Could not start sign-in. Use the launcher instead.'); });
+          };
+          try {
+            ov = document.createElement('div');
+            ov.setAttribute('role','alertdialog');
+            ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+            var card = document.createElement('div');
+            card.style.cssText = 'background:#fff;max-width:400px;width:90%;padding:28px 26px;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center';
+            card.innerHTML = '<div style="font-size:34px;line-height:1;margin-bottom:12px">\\uD83D\\uDD12</div>'
+              + '<div style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:8px">Session expired</div>'
+              + '<div style="font-size:14px;color:#475569;margin-bottom:18px">You were idle too long. Sign in again to pick up right where you left off \\u2014 this page will not reload.</div>'
+              + '<button id="_reauthBtn" style="background:#0f766e;color:#fff;border:0;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Sign in again</button>'
+              + '<div id="_reauthMsg" style="font-size:13px;color:#c0392b;margin-top:12px;min-height:16px"></div>'
+              + '<div style="margin-top:8px"><a href="/" style="font-size:12px;color:#64748b">Open the launcher instead</a></div>';
+            ov.appendChild(card);
+            document.body.appendChild(ov);
+            window.addEventListener('message', onMsg);
+            card.querySelector('#_reauthBtn').onclick = startSso;
+          } catch(e) { _expiredPromise = null; resolve(false); }
+        });
+        return _expiredPromise;
+      };
+
       // Proactive refresh ~45s before expiry (first's refresh tokens are short-lived,
       // so a purely reactive on-401 refresh arrives too late). Reschedule on success.
       var _refreshTimer = null;
@@ -453,7 +530,10 @@ function injectScripts(html, appSlug) {
         if (!_tok.access || !_tok.refresh || _path.indexOf('/api/base/oauth/') === 0) return _origFetch.call(self, input, init);
         return _origFetch.call(self, input, init).then(function(resp){
           if (resp.status !== 401) return resp;
-          return doRefresh().then(function(ok){ if (!ok) return resp; init = applyAuth(init); return _origFetch.call(self, input, init); });
+          return doRefresh().then(function(ok){
+            if (ok) { init = applyAuth(init); return _origFetch.call(self, input, init); }
+            return _authExpired().then(function(reauthed){ if (!reauthed) return resp; init = applyAuth(init); return _origFetch.call(self, input, init); });
+          });
         });
       };
     }
