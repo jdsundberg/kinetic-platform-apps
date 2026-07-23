@@ -1,0 +1,66 @@
+{
+  "name": "BDM Affiliate Operations",
+  "slug": "bdm",
+  "description": "Affiliate ownership transitions for Big Deals Media. Tracks each station sale from intake through the gathered Stripe / QuickBooks / Smartsheet account state, a human-authorized financial cutover, and close-out. Dry-run by default; the irreversible money move requires an explicit approval.",
+  "category": "Finance & Operations",
+  "icon": "repeat",
+  "color": "#B4531F",
+  "bg": "#FBEEE6",
+  "forms": [
+    {
+      "slug": "affiliate-transition",
+      "name": "Affiliate Transition",
+      "description": "Affiliate ownership transition request and gathered account state",
+      "submissionLabelExpression": "${values('Affiliate Id')} - ${values('Affiliate Name')}",
+      "fields": [
+        { "name": "Affiliate Id", "required": true },
+        { "name": "Affiliate Name", "required": true },
+        { "name": "Current Owner" },
+        { "name": "New Owner Name", "required": true },
+        { "name": "New Owner Email" },
+        { "name": "New Owner Display Name" },
+        { "name": "Stripe Account Id" },
+        { "name": "Stripe External Account Token" },
+        { "name": "QBO Realm Id" },
+        { "name": "QBO Customer Id" },
+        { "name": "QBO Sync Token" },
+        { "name": "QBO Minor Version" },
+        { "name": "Smartsheet Sheet Id" },
+        { "name": "Smartsheet Row Id" },
+        { "name": "M365 Mailbox" },
+        { "name": "M365 Contact Id" },
+        { "name": "Notify Recipients" },
+        { "name": "Effective Date" },
+        { "name": "Dry Run" },
+        { "name": "Status" },
+        { "name": "Account State Summary", "rows": 6 },
+        { "name": "Cutover Result", "rows": 6 },
+        { "name": "Audit Trail", "rows": 8 },
+        { "name": "Approved By" },
+        { "name": "Approved At" }
+      ],
+      "indexes": {
+        "single": ["values[Affiliate Id]", "values[Status]"],
+        "compound": [["values[Status]", "values[Affiliate Id]"]]
+      }
+    },
+    {
+      "slug": "cutover-approval",
+      "name": "Cutover Approval",
+      "description": "Human authorization for the irreversible financial cutover",
+      "submissionLabelExpression": "${values('Affiliate Id')} - ${values('Decision')}",
+      "fields": [
+        { "name": "Transition Id", "required": true },
+        { "name": "Affiliate Id" },
+        { "name": "Decision", "required": true },
+        { "name": "Approver", "required": true },
+        { "name": "Approval Notes", "rows": 4 },
+        { "name": "Processed" }
+      ],
+      "indexes": {
+        "single": ["values[Transition Id]", "values[Decision]"],
+        "compound": []
+      }
+    }
+  ]
+}

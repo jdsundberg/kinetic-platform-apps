@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BDM Affiliate Operations</title>
+<style>
+:root{
+  --ink:#1B1A19; --ink2:#4A4644; --muted:#8A8380; --line:#E7E1DD; --bg:#FAF8F6;
+  --panel:#fff; --brand:#B4531F; --brand-soft:#FBEEE6;
+  --ok:#1F7A4D; --ok-soft:#E7F4EC; --warn:#9A6B00; --warn-soft:#FDF3DC;
+  --danger:#A32218; --danger-soft:#FBEAE8; --info:#2A5B8C; --info-soft:#E9F1F9;
+}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+.muted{color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+
+/* login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;max-width:380px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.login-card h1{margin:0 0 4px;font-size:20px}
+.login-card p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+.login-card label{display:block;font-size:12.5px;font-weight:600;margin:12px 0 5px}
+.login-card input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.login-card button{width:100%;margin-top:18px;padding:10px;border:0;border-radius:8px;background:var(--brand);color:#fff;font-weight:600}
+#li-err{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px}
+
+/* shell */
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:0 22px;display:flex;align-items:center;gap:18px;height:58px;position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand .dot{width:26px;height:26px;border-radius:7px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.nav-tabs{display:flex;gap:2px;margin-left:14px}
+.nav-tabs button{background:none;border:0;padding:8px 13px;border-radius:8px;color:var(--ink2);font-weight:500}
+.nav-tabs button.active{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.spacer{flex:1}
+.userbox{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+.userbox button{background:none;border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:12.5px;color:var(--ink2)}
+main{padding:22px;max-width:1220px;margin:0 auto}
+.console{display:none}.console.active{display:block}
+
+/* cards + stats */
+.grid{display:grid;gap:14px}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat .n{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+.stat.accent .n{color:var(--brand)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel h2{margin:0;padding:14px 16px;font-size:14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.panel .body{padding:16px}
+
+/* toolbar */
+.toolbar{display:flex;gap:9px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.btn{padding:8px 13px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:500}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);background:#FCFAF9}
+td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:14px}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--brand-soft)}
+.empty{padding:34px;text-align:center;color:var(--muted)}
+
+/* pills */
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill.req{background:var(--info-soft);color:var(--info)}
+.pill.await{background:var(--warn-soft);color:var(--warn)}
+.pill.prog{background:var(--brand-soft);color:var(--brand)}
+.pill.done{background:var(--ok-soft);color:var(--ok)}
+.pill.closed{background:#EFECEA;color:var(--ink2)}
+.pill.fail{background:var(--danger-soft);color:var(--danger)}
+.pill.dry{background:var(--ok-soft);color:var(--ok)}
+.pill.livemode{background:var(--danger-soft);color:var(--danger)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(20,16,14,.34);opacity:0;pointer-events:none;transition:.18s;z-index:40}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(660px,96vw);background:var(--panel);border-left:1px solid var(--line);
+  transform:translateX(100%);transition:.22s cubic-bezier(.4,0,.2,1);z-index:50;display:flex;flex-direction:column;box-shadow:-10px 0 34px rgba(0,0,0,.1)}
+.drawer.show{transform:none}
+.drawer .dh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+.drawer .dh h3{margin:0 0 4px;font-size:17px}
+.drawer .dc{padding:20px;overflow:auto;flex:1}
+.drawer .df{padding:13px 20px;border-top:1px solid var(--line);display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#FCFAF9}
+.x{background:none;border:0;font-size:22px;color:var(--muted);line-height:1;padding:0 4px}
+.sec{margin-bottom:20px}
+.sec h4{margin:0 0 9px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:7px 12px;font-size:13.5px}
+.kv .k{color:var(--muted)}
+.f{margin-bottom:11px}
+.f label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--ink2)}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.f textarea{resize:vertical;min-height:70px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.sys{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.sys .top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.sys .top b{font-size:13.5px}
+pre.raw{background:#FCFAF9;border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;max-height:190px;margin:0;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.warnbox{background:var(--danger-soft);border:1px solid #F0C9C5;color:#7E1B13;border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.okbox{background:var(--ok-soft);border:1px solid #C4E4D2;color:#125C39;border-radius:9px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;
+  padding:10px 18px;border-radius:9px;font-size:13.5px;transition:.24s;z-index:80;max-width:80vw}
+#toast.show{transform:translateX(-50%)}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:11px 14px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h1>BDM Affiliate Operations</h1>
+    <p>Affiliate ownership transitions</p>
+    <label>Server URL</label><input id="li-url" value="https://first.kinetics.com">
+    <label>Username</label><input id="li-user" value="john">
+    <label>Password</label><input id="li-pass" type="password" value="">
+    <button onclick="doLogin()">Sign in</button>
+    <div id="li-err"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<header>
+  <div class="brand"><div class="dot">BDM</div> Affiliate Operations</div>
+  <div class="nav-tabs">
+    <button class="active" onclick="switchTab('dash')">Overview</button>
+    <button onclick="switchTab('transitions')">Transitions</button>
+    <button onclick="switchTab('approvals')">Approvals</button>
+    <button onclick="switchTab('integrations')">Integrations</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="userbox"><span id="user-display"></span><button onclick="doLogout()">Sign out</button></div>
+</header>
+
+<main>
+  <div id="console-dash" class="console active">
+    <div class="grid stats" id="dash-stats"></div>
+    <div class="panel"><h2>Pipeline</h2><div class="body" id="dash-pipeline"></div></div>
+  </div>
+
+  <div id="console-transitions" class="console">
+    <div class="toolbar">
+      <select id="t-status" onchange="resetT();loadTransitions()"></select>
+      <input id="t-search" placeholder="Affiliate id or name" onkeydown="if(event.key==='Enter'){resetT();loadTransitions()}">
+      <button class="btn" onclick="resetT();loadTransitions()">Search</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn primary" onclick="openNew()">+ New transition</button>
+    </div>
+    <div class="panel">
+      <table><thead><tr><th>Affiliate</th><th>New owner</th><th>Status</th><th>Mode</th><th>Effective</th></tr></thead>
+      <tbody id="t-body"></tbody></table>
+      <div class="pager"><span id="t-info"></span>
+        <button class="btn" id="t-prev" onclick="pageT(-1)">Prev</button>
+        <button class="btn" id="t-next" onclick="pageT(1)">Next</button></div>
+    </div>
+  </div>
+
+  <div id="console-approvals" class="console">
+    <div class="panel"><h2>Awaiting authorization</h2>
+      <table><thead><tr><th>Affiliate</th><th>New owner</th><th>Mode</th><th>Requested</th><th></th></tr></thead>
+      <tbody id="a-body"></tbody></table>
+    </div>
+    <div style="height:16px"></div>
+    <div class="panel"><h2>Approval history</h2>
+      <table><thead><tr><th>Affiliate</th><th>Decision</th><th>Approver</th><th>When</th></tr></thead>
+      <tbody id="ah-body"></tbody></table>
+    </div>
+  </div>
+
+  <div id="console-integrations" class="console">
+    <div class="grid stats" id="i-stats"></div>
+    <div class="panel"><h2>Connectors</h2><div class="body" id="i-body"></div></div>
+  </div>
+</main>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dh">
+    <div style="flex:1"><h3 id="d-title">—</h3><div id="d-sub" class="muted" style="font-size:13px"></div></div>
+    <button class="x" onclick="closeDrawer()">&times;</button>
+  </div>
+  <div class="dc" id="d-body"></div>
+  <div class="df" id="d-foot"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const KAPP='bdm';
+const F_T='affiliate-transition', F_A='cutover-approval';
+const STATUSES=['Requested','Awaiting Approval','Cutover In Progress','Cutover Complete','Closed','Failed'];
+const PILL={'Requested':'req','Awaiting Approval':'await','Cutover In Progress':'prog','Cutover Complete':'done','Closed':'closed','Failed':'fail'};
+let API={url:'',auth:'',user:'',displayName:''};
+let CUR=null, EDIT=false, ARM=false;
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const v=(s,f)=>s&&s.values?(s.values[f]||''):'';
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function fmt(d){if(!d)return '—';const x=new Date(d);return isNaN(x)?esc(d):x.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
+
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}
+  const t=await r.text();return t?JSON.parse(t):{}
+}
+async function appApi(path){
+  const r=await fetch(path,{headers:{Authorization:'Basic '+API.auth}});
+  if(!r.ok)throw new Error(String(r.status));
+  return r.json();
+}
+
+// ── auth ──
+function doLogin(){
+  const url=document.getElementById('li-url').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const auth=btoa(user+':'+pass);
+  fetch(`${url}/app/api/v1/me`,{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error('Invalid credentials');return r.json()})
+    .then(d=>{API={url,auth,user:d.username,displayName:d.displayName||d.username};enterApp()})
+    .catch(e=>{document.getElementById('li-err').textContent=e.message});
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;
+  document.getElementById('t-status').innerHTML='<option value="">All statuses</option>'+STATUSES.map(s=>`<option>${s}</option>`).join('');
+  loadDash();
+}
+// Session bootstrap from the launcher. Served through :3011 which proxies
+// /app/api/v1 same-origin, so force url:'' — a direct cross-origin fetch is blocked.
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s)return;
+  try{const ss=JSON.parse(s);API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};enterApp()}catch(e){}
+})();
+
+const TABS=['dash','transitions','approvals','integrations'];
+function switchTab(t){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+t).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(t)].classList.add('active');
+  if(t==='dash')loadDash(); else if(t==='transitions')loadTransitions();
+  else if(t==='approvals')loadApprovals(); else if(t==='integrations')loadIntegrations();
+}
+
+// ── overview ──
+async function loadDash(){
+  try{
+    const d=await appApi('/api/bdm/overview');
+    document.getElementById('dash-stats').innerHTML=[
+      ['Transitions',d.total,''],['Awaiting approval',d.awaitingApproval,'accent'],
+      ['Cutovers complete',d.byStatus['Cutover Complete']||0,''],
+      ['Live mode',d.live,''],['Dry run',d.dryRun,''],
+    ].map(([l,n,c])=>`<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    const max=Math.max(1,...Object.values(d.byStatus));
+    document.getElementById('dash-pipeline').innerHTML=STATUSES.map(s=>{
+      const n=d.byStatus[s]||0;
+      return `<div style="display:flex;align-items:center;gap:11px;margin-bottom:9px">
+        <div style="width:150px"><span class="pill ${PILL[s]}">${s}</span></div>
+        <div style="flex:1;background:#F1ECE9;border-radius:6px;height:9px;overflow:hidden">
+          <div style="width:${n/max*100}%;height:100%;background:var(--brand)"></div></div>
+        <div style="width:34px;text-align:right;font-weight:600">${n}</div></div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('dash-stats').innerHTML=`<div class="stat"><div class="l">Overview unavailable — ${esc(e.message)}</div></div>`;
+  }
+}
+
+// ── transitions (25/page, pageToken) ──
+let tPages={h:[],next:null,i:0};
+function resetT(){tPages={h:[],next:null,i:0}}
+async function loadTransitions(){
+  const st=document.getElementById('t-status').value, q=document.getElementById('t-search').value.trim();
+  let p=`/kapps/${KAPP}/forms/${F_T}/submissions?include=values,details&limit=25`;
+  const kql=[];
+  if(st)kql.push(`values[Status]="${st.replace(/"/g,'')}"`);
+  if(kql.length)p+='&q='+encodeURIComponent(kql.join(' AND '));
+  if(tPages.h.length)p+='&pageToken='+encodeURIComponent(tPages.h[tPages.h.length-1]);
+  try{
+    const d=await api(p);
+    tPages.next=d.nextPageToken||null;
+    let subs=d.submissions||[];
+    if(q){const ql=q.toLowerCase();
+      subs=subs.filter(s=>(v(s,'Affiliate Id')+' '+v(s,'Affiliate Name')).toLowerCase().includes(ql));}
+    document.getElementById('t-body').innerHTML=subs.length?subs.map(s=>`
+      <tr onclick="openTransition('${s.id}')">
+        <td><b>${esc(v(s,'Affiliate Id'))}</b><div class="muted" style="font-size:12.5px">${esc(v(s,'Affiliate Name'))}</div></td>
+        <td>${esc(v(s,'New Owner Name'))||'—'}</td>
+        <td><span class="pill ${PILL[v(s,'Status')]||'closed'}">${esc(v(s,'Status'))||'—'}</span></td>
+        <td>${v(s,'Dry Run')==='No'?'<span class="pill livemode">LIVE</span>':'<span class="pill dry">Dry run</span>'}</td>
+        <td>${fmt(v(s,'Effective Date'))}</td></tr>`).join(''):
+      '<tr><td colspan="5" class="empty">No transitions match.</td></tr>';
+    document.getElementById('t-info').textContent=`Page ${tPages.i+1} · ${subs.length} shown`;
+    document.getElementById('t-prev').disabled=tPages.i===0;
+    document.getElementById('t-next').disabled=!tPages.next;
+  }catch(e){toast('Load failed: '+e.message)}
+}
+function pageT(d){
+  if(d>0&&tPages.next){tPages.h.push(tPages.next);tPages.i++}
+  else if(d<0&&tPages.i>0){tPages.h.pop();tPages.i--}
+  else return;
+  loadTransitions();
+}
+
+// ── approvals ──
+async function loadApprovals(){
+  try{
+    const d=await api(`/kapps/${KAPP}/forms/${F_T}/submissions?include=values,details&limit=25&q=`+
+      encodeURIComponent('values[Status]="Awaiting Approval"'));
+    const subs=d.submissions||[];
+    document.getElementById('a-body').innerHTML=subs.length?subs.map(s=>`
+      <tr onclick="openTransition('${s.id}')">
+        <td><b>${esc(v(s,'Affiliate Id'))}</b><div class="muted" style="font-size:12.5px">${esc(v(s,'Affiliate Name'))}</div></td>
+        <td>${esc(v(s,'New Owner Name'))||'—'}</td>
+        <td>${v(s,'Dry Run')==='No'?'<span class="pill livemode">LIVE</span>':'<span class="pill dry">Dry run</span>'}</td>
+        <td>${fmt(s.createdAt)}</td>
+        <td style="text-align:right"><button class="btn" onclick="event.stopPropagation();openTransition('${s.id}')">Review</button></td></tr>`).join(''):
+      '<tr><td colspan="5" class="empty">Nothing awaiting authorization.</td></tr>';
+    const h=await api(`/kapps/${KAPP}/forms/${F_A}/submissions?include=values,details&limit=25`);
+    const hs=h.submissions||[];
+    document.getElementById('ah-body').innerHTML=hs.length?hs.map(s=>`
+      <tr><td>${esc(v(s,'Affiliate Id'))||'—'}</td>
+        <td><span class="pill ${v(s,'Decision')==='Approve'?'done':'fail'}">${esc(v(s,'Decision'))}</span></td>
+        <td>${esc(v(s,'Approver'))}</td><td>${fmt(s.createdAt)}</td></tr>`).join(''):
+      '<tr><td colspan="4" class="empty">No approvals recorded.</td></tr>';
+  }catch(e){toast('Load failed: '+e.message)}
+}
+
+// ── integrations ──
+// Read the task engine through the launcher's /app/* proxy. (The app's own
+// server helper can't: it hard-prefixes /app/api/v1 onto every path.)
+const SYSTEMS=[
+  {key:'stripe',label:'Stripe',handler:'stripe_connection_v1',prefix:'stripe'},
+  {key:'quickbooks',label:'QuickBooks',handler:'quickbooks_connection_v1',prefix:'quickbooks'},
+  {key:'smartsheet',label:'Smartsheet',handler:'smartsheet_connection_v1',prefix:'smartsheet'},
+  {key:'msgraph',label:'Microsoft 365',handler:'microsoft_graph_connection_v1',prefix:'microsoft graph'},
+];
+async function taskApi(path){
+  const r=await fetch(`${API.url}/app/components/task/app/api/v2${path}`,
+    {headers:{Authorization:'Basic '+API.auth}});
+  if(!r.ok)throw new Error(String(r.status));
+  return r.json();
+}
+async function loadIntegrations(){
+  try{
+    const [h,t]=await Promise.all([taskApi('/handlers?limit=500'),taskApi('/trees?limit=1000')]);
+    const installed=(h.handlers||[]).map(x=>x.definitionId);
+    const routines=(t.trees||[]).filter(x=>x.type==='Global Routine').map(x=>x.name||'');
+    const systems=SYSTEMS.map(s=>({...s,
+      installed:installed.includes(s.handler),
+      routines:routines.filter(n=>n.toLowerCase().startsWith(s.prefix)).length}));
+    const inst=systems.filter(s=>s.installed).length;
+    const totalRoutines=systems.reduce((a,s)=>a+s.routines,0);
+    document.getElementById('i-stats').innerHTML=[
+      ['Connectors installed',`${inst}/${systems.length}`,'accent'],
+      ['Routines available',totalRoutines,''],
+    ].map(([l,n,c])=>`<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    document.getElementById('i-body').innerHTML=systems.map(s=>`
+      <div class="sys"><div class="top">
+        <b>${esc(s.label)}</b>
+        <span class="pill ${s.installed?'done':'fail'}">${s.installed?'Handler installed':'Missing'}</span>
+        <span class="muted" style="font-size:12.5px">${s.routines} routines</span></div>
+        <div class="mono muted">${esc(s.handler)}</div></div>`).join('')+
+      `<div class="warnbox" style="margin-top:14px;margin-bottom:0">Credentials are not configured on any connector.
+        External calls will fail with <span class="mono">URI is not absolute</span> until each handler's
+        info values are set in Space &rarr; Task &rarr; Handlers.</div>`;
+  }catch(e){document.getElementById('i-body').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+
+// ── drawer ──
+function closeDrawer(){document.getElementById('drawer').classList.remove('show');
+  document.getElementById('scrim').classList.remove('show');CUR=null;EDIT=false;ARM=false}
+function showDrawer(){document.getElementById('drawer').classList.add('show');document.getElementById('scrim').classList.add('show')}
+
+async function openTransition(id){
+  try{
+    const d=await api(`/submissions/${id}?include=values,details`);
+    CUR=d.submission;EDIT=false;ARM=false;renderTransition();showDrawer();
+  }catch(e){toast('Could not open: '+e.message)}
+}
+
+function sysCard(label,raw){
+  let inner='<span class="muted">No data gathered.</span>';
+  const empty=raw==null||raw===''||(typeof raw==='object'&&!Object.keys(raw).length);
+  if(!empty){
+    try{
+      // The workflow stores the routine's `outputs` object. Older records may
+      // still hold a raw JSON string, so accept either shape.
+      const o=(typeof raw==='string')?JSON.parse(raw):raw;
+      const out=(o.outputs)||o;
+      const err=out['Handler Error Message'];
+      const rows=Object.entries(out).filter(([k])=>!['description','status'].includes(k))
+        .map(([k,val])=>`<div class="k">${esc(k)}</div><div>${esc(String(val)).slice(0,180)||'<span class="muted">—</span>'}</div>`).join('');
+      inner=(err?`<div class="warnbox" style="margin-bottom:9px">${esc(err)}</div>`:'')+`<div class="kv">${rows}</div>`;
+    }catch(e){inner=`<pre class="raw">${esc(String(raw).slice(0,900))}</pre>`}
+  }
+  return `<div class="sys"><div class="top"><b>${esc(label)}</b></div>${inner}</div>`;
+}
+
+function renderTransition(){
+  const s=CUR, st=v(s,'Status'), dry=v(s,'Dry Run')!=='No';
+  document.getElementById('d-title').textContent=v(s,'Affiliate Id')+' · '+v(s,'Affiliate Name');
+  document.getElementById('d-sub').innerHTML=`<span class="pill ${PILL[st]||'closed'}">${esc(st)||'—'}</span> `+
+    (dry?'<span class="pill dry">Dry run</span>':'<span class="pill livemode">LIVE MODE</span>');
+
+  let summary='';
+  const raw=v(s,'Account State Summary');
+  if(raw){
+    try{
+      const o=JSON.parse(raw);
+      summary=sysCard('Stripe — connected account',o.stripe_account)+
+              sysCard('Stripe — balance',o.stripe_balance)+
+              sysCard('QuickBooks — customer',o.qbo_customer)+
+              sysCard('Smartsheet — tracker',o.smartsheet_tracker);
+    }catch(e){summary=`<pre class="raw">${esc(raw)}</pre>`}
+  } else summary='<div class="muted">Not gathered yet. Runs automatically when the request is submitted.</div>';
+
+  const body=EDIT?editForm(s):`
+    <div class="sec"><h4>Ownership transfer</h4><div class="kv">
+      <div class="k">Current owner</div><div>${esc(v(s,'Current Owner'))||'—'}</div>
+      <div class="k">New owner</div><div>${esc(v(s,'New Owner Name'))||'—'}</div>
+      <div class="k">Billing name</div><div>${esc(v(s,'New Owner Display Name'))||'—'}</div>
+      <div class="k">Contact</div><div>${esc(v(s,'New Owner Email'))||'—'}</div>
+      <div class="k">Effective</div><div>${fmt(v(s,'Effective Date'))}</div>
+    </div></div>
+    <div class="sec"><h4>System identifiers</h4><div class="kv mono">
+      <div class="k">Stripe account</div><div>${esc(v(s,'Stripe Account Id'))||'—'}</div>
+      <div class="k">Payout token</div><div>${esc(v(s,'Stripe External Account Token'))||'—'}</div>
+      <div class="k">QBO realm / cust</div><div>${esc(v(s,'QBO Realm Id'))||'—'} / ${esc(v(s,'QBO Customer Id'))||'—'}</div>
+      <div class="k">Smartsheet</div><div>${esc(v(s,'Smartsheet Sheet Id'))||'—'} row ${esc(v(s,'Smartsheet Row Id'))||'—'}</div>
+      <div class="k">M365 mailbox</div><div>${esc(v(s,'M365 Mailbox'))||'—'}</div>
+    </div></div>
+    <div class="sec"><h4>Gathered account state</h4>${summary}</div>
+    ${v(s,'Cutover Result')?`<div class="sec"><h4>Cutover result</h4><pre class="raw">${esc(v(s,'Cutover Result'))}</pre></div>`:''}
+    ${v(s,'Audit Trail')?`<div class="sec"><h4>Audit trail</h4><pre class="raw">${esc(v(s,'Audit Trail'))}</pre></div>`:''}
+    ${v(s,'Approved By')?`<div class="sec"><h4>Authorization</h4><div class="kv"><div class="k">Approved by</div><div>${esc(v(s,'Approved By'))}</div></div></div>`:''}`;
+  document.getElementById('d-body').innerHTML=body;
+
+  // Footer actions
+  let foot='';
+  if(EDIT){
+    foot=`<button class="btn primary" onclick="saveTransition()">Save changes</button>
+          <button class="btn" onclick="EDIT=false;renderTransition()">Cancel</button>`;
+  }else{
+    foot=`<button class="btn" onclick="EDIT=true;renderTransition()">Edit</button>`;
+    if(st==='Awaiting Approval'){
+      foot+=dry
+        ? `<button class="btn primary" onclick="approve()">Approve (dry run)</button>`
+        : (ARM
+            ? `<button class="btn danger" onclick="approve()">Confirm irreversible cutover</button>
+               <button class="btn" onclick="ARM=false;renderTransition()">Cancel</button>`
+            : `<button class="btn danger" onclick="ARM=true;renderTransition()">Approve LIVE cutover…</button>`);
+      foot+=`<button class="btn" onclick="reject()">Reject</button>`;
+      foot+=dry?`<span class="muted" style="font-size:12.5px">Dry run — logs intent, moves no money.</span>`
+               :`<span class="muted" style="font-size:12.5px">Live mode — redirects real payouts.</span>`;
+    }
+  }
+  document.getElementById('d-foot').innerHTML=foot;
+}
+
+const EDITABLE=['Affiliate Id','Affiliate Name','Current Owner','New Owner Name','New Owner Email',
+  'New Owner Display Name','Stripe Account Id','Stripe External Account Token','QBO Realm Id',
+  'QBO Customer Id','QBO Sync Token','QBO Minor Version','Smartsheet Sheet Id','Smartsheet Row Id',
+  'M365 Mailbox','M365 Contact Id','Notify Recipients','Effective Date'];
+
+function editForm(s){
+  const fields=EDITABLE.map(f=>`<div class="f"><label>${esc(f)}</label>
+    <input id="e-${esc(f)}" value="${esc(v(s,f))}"></div>`).join('');
+  const dry=v(s,'Dry Run')!=='No';
+  return `<div class="sec"><h4>Execution mode</h4>
+    <div class="f"><label>Dry Run</label><select id="e-Dry Run">
+      <option value="Yes" ${dry?'selected':''}>Yes — validate and log only</option>
+      <option value="No" ${dry?'':'selected'}>No — execute real changes</option></select></div>
+    <div class="${dry?'okbox':'warnbox'}">${dry
+      ?'Dry run: the cutover records what it would do and moves no money.'
+      :'Live mode: approving will redirect real payouts and re-point billing.'}</div></div>
+    <div class="sec"><h4>Details</h4><div class="two">${fields}</div></div>`;
+}
+
+async function saveTransition(){
+  const values={};
+  EDITABLE.forEach(f=>{const el=document.getElementById('e-'+f);if(el)values[f]=el.value});
+  const dr=document.getElementById('e-Dry Run');if(dr)values['Dry Run']=dr.value;
+  try{
+    await api(`/submissions/${CUR.id}`,{method:'PUT',body:JSON.stringify({values})});
+    toast('Saved');
+    EDIT=false;await openTransition(CUR.id);
+    loadTransitions();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// Approving creates a cutover-approval submission, which is what actually fires
+// the Financial Cutover workflow. The tree re-checks status server-side, so a
+// stale screen cannot double-execute a completed cutover.
+async function approve(){ await decide('Approve') }
+async function reject(){ await decide('Reject') }
+async function decide(decision){
+  const s=CUR;
+  try{
+    await api(`/kapps/${KAPP}/forms/${F_A}/submissions`,{method:'POST',body:JSON.stringify({
+      coreState:'Submitted',
+      values:{'Transition Id':s.id,'Affiliate Id':v(s,'Affiliate Id'),Decision:decision,
+              Approver:API.user||API.displayName,'Approval Notes':'Submitted from BDM Affiliate Operations'}
+    })});
+    toast(decision==='Approve'?'Authorized — cutover workflow started':'Rejected');
+    ARM=false;
+    setTimeout(async()=>{await openTransition(s.id);loadApprovals();loadDash()},2600);
+  }catch(e){toast('Failed: '+e.message)}
+}
+
+// ── new transition ──
+function openNew(){
+  CUR=null;EDIT=false;
+  document.getElementById('d-title').textContent='New transition';
+  document.getElementById('d-sub').textContent='Creating the request runs the account-state gather automatically';
+  const fields=EDITABLE.map(f=>`<div class="f"><label>${esc(f)}</label><input id="n-${esc(f)}"></div>`).join('');
+  document.getElementById('d-body').innerHTML=`
+    <div class="sec"><h4>Execution mode</h4>
+      <div class="f"><label>Dry Run</label><select id="n-Dry Run">
+        <option value="Yes" selected>Yes — validate and log only</option>
+        <option value="No">No — execute real changes</option></select></div>
+      <div class="okbox">New transitions default to dry run.</div></div>
+    <div class="sec"><h4>Details</h4><div class="two">${fields}</div></div>`;
+  document.getElementById('d-foot').innerHTML=
+    `<button class="btn primary" onclick="createTransition()">Create request</button>
+     <button class="btn" onclick="closeDrawer()">Cancel</button>`;
+  showDrawer();
+}
+async function createTransition(){
+  const values={Status:'Requested'};
+  EDITABLE.forEach(f=>{const el=document.getElementById('n-'+f);if(el&&el.value)values[f]=el.value});
+  values['Dry Run']=document.getElementById('n-Dry Run').value;
+  if(!values['Affiliate Id']||!values['Affiliate Name']||!values['New Owner Name']){
+    toast('Affiliate id, affiliate name and new owner are required');return;
+  }
+  try{
+    await api(`/kapps/${KAPP}/forms/${F_T}/submissions`,{method:'POST',
+      body:JSON.stringify({coreState:'Submitted',values})});
+    toast('Request created — gathering account state');
+    closeDrawer();resetT();
+    setTimeout(()=>{loadTransitions();loadDash()},2600);
+  }catch(e){toast('Create failed: '+e.message)}
+}
+</script>
+</body>
+</html>
