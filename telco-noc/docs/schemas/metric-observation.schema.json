@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/metric-observation.schema.json",
+  "title": "Metric observation (POST /api/noc/ingest/metrics observations[])",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "type": "string"
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "availability_pct",
+        "packet_loss_pct",
+        "latency_ms",
+        "rx_power_dbm",
+        "throughput_mbps"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Source unit; converted to canonical via catalog.metrics[metric].from"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "source": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "subject",
+    "metric",
+    "value",
+    "unit",
+    "observedAt"
+  ],
+  "additionalProperties": false
+}

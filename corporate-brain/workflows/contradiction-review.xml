@@ -1,0 +1,54 @@
+<taskTree schema_version="1.0" version="1">
+  <name>Contradiction Review</name>
+  <author>corporate-brain</author>
+  <notes>New knowledge that contradicts existing entries is routed to review as "disputed" so competing claims are examined side by side; neither claim is overwritten.</notes>
+  <lastID>3</lastID>
+  <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="200" y="50">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters/>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="Route to disputed review" type="Complete" value="">kinetic_core_api_connection_v1_2</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Mark Disputed" x="200" y="200">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">PUT</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; h = (JSON.parse(@values['Review History'].to_s) rescue []); h = [] unless h.is_a?(Array); h &lt;&lt; { 'at' =&gt; Time.now.utc.iso8601, 'by' =&gt; 'kinetic-task', 'actorType' =&gt; 'workflow', 'action' =&gt; 'contradiction-routing', 'from' =&gt; 'proposed', 'to' =&gt; 'disputed', 'comment' =&gt; 'Contradicts ' + @values['Contradicts'].to_s + ' — routed for side-by-side review.' }; { 'values' =&gt; { 'Review Status' =&gt; 'disputed', 'Review History' =&gt; h.to_json } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="then write audit entry" type="Complete" value="">kinetic_core_api_connection_v1_3</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Audit Contradiction" x="200" y="350">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">POST</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/kapps/corporate-brain/forms/audit-log/submissions</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; { 'coreState' =&gt; 'Submitted', 'values' =&gt; { 'Audit ID' =&gt; 'AU-WF-' + @run['Id'].to_s, 'Action' =&gt; 'workflow:contradiction-routed', 'Entity Type' =&gt; 'knowledge', 'Entity ID' =&gt; @values['Knowledge ID'].to_s, 'Actor' =&gt; 'kinetic-task (Contradiction Review)', 'Actor Type' =&gt; 'workflow', 'From Status' =&gt; 'proposed', 'To Status' =&gt; 'disputed', 'Comment' =&gt; 'Contradicts ' + @values['Contradicts'].to_s + '; update result ' + @results['Mark Disputed']['Response Code'].to_s, 'Occurred At' =&gt; Time.now.utc.iso8601 } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents/>
+    </task>
+  </request>
+</taskTree>

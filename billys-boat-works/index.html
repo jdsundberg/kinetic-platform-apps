@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BillysBoatWorks</title>
+<style>
+:root{
+  --ink:#0B2A3B; --ink-2:#14415A; --sky:#0EA5E9; --sky-2:#38BDF8; --deep:#0C4A6E;
+  --sun:#F59E0B; --green:#10B981; --red:#EF4444; --amber:#F59E0B;
+  --gray:#64748B; --line:#E2E8F0; --bg:#F8FAFC; --card:#fff;
+  --sh:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.1);
+  --sh-lg:0 10px 30px rgba(15,23,42,.12); --sh-xl:0 20px 50px rgba(15,23,42,.18);
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+/* ── top nav ── */
+.topbar{background:var(--ink);color:#fff;display:flex;align-items:center;padding:0 22px;height:60px;position:sticky;top:0;z-index:120}
+.topbar .logo{font-weight:800;font-size:19px;letter-spacing:-.3px;white-space:nowrap;margin-right:26px;display:flex;align-items:center;gap:9px}
+.topbar .logo span{color:var(--sky-2)}
+.logo .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--sky) 0%,var(--sun) 100%);display:grid;place-items:center;font-size:14px}
+.nav-tabs{display:flex;gap:3px}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.72);padding:8px 13px;border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tabs button.active{background:var(--sky);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12.5px;color:rgba(255,255,255,.72);display:flex;align-items:center;gap:9px}
+.user-info strong{color:#fff}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.75);padding:5px 11px;border-radius:7px;font-size:11.5px;cursor:pointer;font-family:inherit}
+.logout-btn:hover{border-color:var(--sky-2);color:#fff}
+.console-link{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;padding:5px 11px;border-radius:7px;font-size:11.5px;font-weight:600;text-decoration:none}
+.console-link:hover{background:rgba(255,255,255,.2)}
+/* ── layout ── */
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px 60px}
+.view{display:none}.view.active{display:block}
+h1{font-size:26px;letter-spacing:-.5px;margin-bottom:5px}
+h2{font-size:17px;letter-spacing:-.2px}
+.sub{color:var(--gray);font-size:14px;margin-bottom:20px}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:20px;margin-bottom:16px}
+.muted{color:var(--gray)}
+.right{text-align:right}
+/* ── hero search ── */
+.hero{background:linear-gradient(160deg,#0B2A3B 0%,#0C4A6E 45%,#0EA5E9 100%);color:#fff;padding:58px 20px 74px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:60px;
+  background:radial-gradient(120% 100% at 50% 0,transparent 63%,var(--bg) 64%)}
+.hero-in{max-width:900px;margin:0 auto;position:relative;z-index:2;text-align:center}
+.hero h1{font-size:40px;font-weight:800;letter-spacing:-1px;margin-bottom:10px;line-height:1.1}
+.hero p{color:rgba(255,255,255,.85);font-size:16px;margin-bottom:28px}
+.searchbar{background:#fff;border-radius:16px;box-shadow:var(--sh-xl);display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:0;overflow:hidden;text-align:left}
+.searchbar .fld{padding:13px 16px;border-right:1px solid var(--line)}
+.searchbar .fld:last-of-type{border-right:none}
+.searchbar label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--gray);margin-bottom:3px}
+.searchbar select,.searchbar input{width:100%;border:none;font-size:15px;font-family:inherit;color:var(--ink);font-weight:600;background:none;outline:none}
+.searchbar .go{background:var(--sun);color:#3B2200;border:none;padding:0 30px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.searchbar .go:hover{background:#fbbf24}
+.hero-stats{display:flex;gap:30px;justify-content:center;margin-top:26px;font-size:13px;color:rgba(255,255,255,.85)}
+.hero-stats b{display:block;font-size:22px;font-weight:800;color:#fff}
+/* ── destination cards ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.dest{background:var(--card);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.dest:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+.dest .img{height:132px;background:linear-gradient(135deg,#0C4A6E,#0EA5E9);position:relative;display:grid;place-items:center;color:#fff}
+.dest .img .wave{font-size:40px;opacity:.35}
+.dest .img .badge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.94);color:var(--ink);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800}
+.dest .img .state{position:absolute;bottom:10px;left:12px;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.9}
+.dest .b{padding:14px 16px 16px}
+.dest .b h3{font-size:16.5px;letter-spacing:-.2px;margin-bottom:3px}
+.dest .b .meta{font-size:12.5px;color:var(--gray);margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{background:#F1F5F9;border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--ink-2)}
+.chip.more{background:none;border-color:transparent;color:var(--gray)}
+/* ── equipment result cards ── */
+.eq{display:grid;grid-template-columns:150px 1fr auto;gap:18px;align-items:center;background:var(--card);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:16px;margin-bottom:14px;transition:box-shadow .15s}
+.eq:hover{box-shadow:var(--sh-lg)}
+.eq .photo{height:104px;border-radius:11px;background:linear-gradient(135deg,#0EA5E9,#0C4A6E);display:grid;place-items:center;font-size:36px;color:rgba(255,255,255,.55)}
+.eq .photo.paddle{background:linear-gradient(135deg,#10B981,#047857)}
+.eq .photo.power{background:linear-gradient(135deg,#F59E0B,#B45309)}
+.eq .photo.land{background:linear-gradient(135deg,#8B5CF6,#5B21B6)}
+.eq h3{font-size:17px;letter-spacing:-.2px;margin-bottom:4px}
+.eq .facts{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--gray);margin:7px 0 8px}
+.eq .price{font-size:26px;font-weight:800;letter-spacing:-.6px;line-height:1}
+.eq .per{font-size:11.5px;color:var(--gray);font-weight:600;margin-bottom:9px}
+.avail-pill{display:inline-block;border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:800}
+.avail-pill.ok{background:#DCFCE7;color:#166534}
+.avail-pill.low{background:#FEF3C7;color:#92400E}
+.avail-pill.none{background:#FEE2E2;color:#991B1B}
+.stars{color:var(--sun);letter-spacing:1px;font-size:13px}
+/* ── buttons ── */
+.btn{border:none;border-radius:11px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:inherit;padding:12px 22px;transition:background .12s}
+.btn-primary{background:var(--sky);color:#fff}
+.btn-primary:hover{background:#0284C7}
+.btn-primary:disabled{background:#94A3B8;cursor:not-allowed}
+.btn-sun{background:var(--sun);color:#3B2200}
+.btn-sun:hover{background:#fbbf24}
+.btn-ghost{background:#F1F5F9;color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{background:#E2E8F0}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:9px}
+.btn-block{width:100%;display:block}
+/* ── checkout ── */
+.checkout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+.step{border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.step-h{display:flex;align-items:center;gap:11px;padding:14px 18px;border-bottom:1px solid var(--line);background:#FBFDFF}
+.step-h .n{width:25px;height:25px;border-radius:50%;background:var(--sky);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:800;flex:none}
+.step-h.done .n{background:var(--green)}
+.step-h h3{font-size:15px;letter-spacing:-.1px}
+.step-b{padding:18px}
+.opt{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}
+.opt:hover{border-color:#BAE6FD}
+.opt.sel{border-color:var(--sky);background:#F0F9FF}
+.opt input{margin-top:3px;accent-color:var(--sky);width:17px;height:17px;flex:none}
+.opt .t{font-weight:700;font-size:14.5px}
+.opt .d{font-size:12.5px;color:var(--gray);margin-top:3px;line-height:1.45}
+.opt .p{margin-left:auto;font-weight:800;font-size:15px;white-space:nowrap}
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.acc{border:2px solid var(--line);border-radius:11px;padding:11px 13px;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600}
+.acc:hover{border-color:#BAE6FD}
+.acc.sel{border-color:var(--sky);background:#F0F9FF}
+.acc input{accent-color:var(--sky);width:16px;height:16px}
+.acc .p{margin-left:auto;font-weight:800;color:var(--ink-2)}
+.summary{position:sticky;top:80px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh-lg);overflow:hidden}
+.summary .h{background:var(--ink);color:#fff;padding:16px 18px}
+.summary .h h3{font-size:15.5px;margin-bottom:2px}
+.summary .h .s{font-size:12.5px;color:rgba(255,255,255,.72)}
+.summary .b{padding:16px 18px}
+.li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:6px 0}
+.li .l{color:var(--gray)}
+.li.neg .a{color:var(--green)}
+.li.tot{border-top:2px solid var(--line);margin-top:9px;padding-top:11px;font-size:19px;font-weight:800}
+.waiverbox{border:1px solid var(--line);border-radius:11px;background:#F8FAFC;padding:14px;font-size:12.5px;line-height:1.6;color:var(--ink-2);max-height:160px;overflow-y:auto;margin-bottom:13px}
+.sigline{display:flex;gap:11px;align-items:center}
+.sigline input{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:16px;font-family:'Segoe Script','Snell Roundhand',cursive;font-family:inherit}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14.5px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(14,165,233,.14)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* ── confirmation ── */
+.conf{text-align:center;padding:44px 24px}
+.conf .tick{width:74px;height:74px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:38px;margin:0 auto 18px}
+.conf .code{font-size:34px;font-weight:800;letter-spacing:2px;margin:14px 0 6px}
+.next{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:26px;text-align:left}
+.next .n{border:1px solid var(--line);border-radius:12px;padding:14px;background:#F8FAFC}
+.next .n b{display:block;font-size:13px;margin-bottom:4px}
+.next .n span{font-size:12.5px;color:var(--gray);line-height:1.5}
+/* ── my reservations ── */
+.res{display:grid;grid-template-columns:74px 1fr auto;gap:16px;align-items:center;border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh);padding:15px;margin-bottom:12px;cursor:pointer}
+.res:hover{box-shadow:var(--sh-lg)}
+.res .date{text-align:center;background:#F1F5F9;border-radius:11px;padding:9px 4px}
+.res .date .m{font-size:10.5px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px}
+.res .date .d{font-size:23px;font-weight:800;line-height:1.05}
+.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800}
+.b-confirmed{background:#DBEAFE;color:#1E40AF}.b-ready{background:#DCFCE7;color:#166534}
+.b-active{background:#CFFAFE;color:#155E75}.b-done{background:#F1F5F9;color:#475569}
+.b-pending{background:#FEF3C7;color:#92400E}.b-cancel{background:#FEE2E2;color:#991B1B}
+.empty{padding:46px;text-align:center;color:var(--gray)}
+.spin{display:inline-block;width:17px;height:17px;border:2.5px solid var(--line);border-top-color:var(--sky);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading{padding:44px;text-align:center;color:var(--gray)}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 22px;border-radius:11px;font-size:14px;font-weight:600;z-index:400;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:var(--sh-xl);max-width:86vw;text-align:center}
+#toast.show{opacity:1}
+.crumb{font-size:13px;color:var(--gray);margin-bottom:14px}
+.crumb a{color:var(--sky);cursor:pointer;font-weight:600;text-decoration:none}
+.notice{display:flex;gap:11px;border-radius:12px;padding:13px 15px;font-size:13.5px;margin-bottom:16px;line-height:1.5}
+.notice.warn{background:#FEF3C7;border:1px solid #FDE68A;color:#78350F}
+.notice.info{background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A}
+@media(max-width:880px){
+  .checkout{grid-template-columns:1fr}.summary{position:static}
+  .searchbar{grid-template-columns:1fr}.searchbar .fld{border-right:none;border-bottom:1px solid var(--line)}
+  .searchbar .go{padding:15px}.hero h1{font-size:30px}
+  .eq{grid-template-columns:1fr;text-align:left}.eq .photo{height:120px}
+  .nav-tabs button{padding:8px 9px;font-size:12.5px}
+}
+
+/* ── sign-in gate ── */
+body:not(.authed) .topbar,
+body:not(.authed) .wrap,
+body:not(.authed) .view,
+body:not(.authed) .hero,
+body:not(.authed) #drawer{display:none !important}
+body.authed #login-screen{display:none}
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0B2A3B 0%,#0C4A6E 50%,#0EA5E9 100%);z-index:900;padding:20px}
+.login-box{background:#fff;border-radius:18px;padding:38px 36px;width:400px;max-width:94vw;
+  box-shadow:0 24px 60px rgba(2,20,35,.4)}
+.login-box .brand{font-size:23px;font-weight:800;text-align:center;color:#0B2A3B;letter-spacing:-.4px;
+  display:flex;align-items:center;justify-content:center;gap:9px}
+.login-box .brand em{font-style:normal;color:#0EA5E9}
+.login-box .mark{width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,#0EA5E9,#F59E0B);display:grid;place-items:center;font-size:16px}
+.login-box .who{text-align:center;font-size:12.5px;color:#64748B;margin:10px 0 22px}
+.login-box label{display:block;font-size:11.5px;font-weight:700;color:#64748B;margin:13px 0 5px;
+  text-transform:uppercase;letter-spacing:.4px}
+.login-box input{width:100%;padding:12px 13px;border:1px solid #E2E8F0;border-radius:10px;font-size:15px;font-family:inherit}
+.login-box input:focus{outline:none;border-color:#0EA5E9;box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+.login-box button{width:100%;margin-top:22px;padding:13px;background:#0EA5E9;color:#fff;border:none;
+  border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.login-box button:hover{background:#0284C7}
+.login-box button:disabled{background:#94A3B8;cursor:not-allowed}
+.login-err{color:#EF4444;font-size:12.5px;text-align:center;margin-top:13px;min-height:15px}
+.login-note{text-align:center;font-size:11.5px;color:#94A3B8;margin-top:16px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand"><span class="mark">🌊</span>Billys<em>BoatWorks</em></div>
+    <div class="who">Sign in to the BillysBoatWorks marketplace</div>
+    <label>Username</label>
+    <input id="li-user" autocomplete="username" placeholder="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password">
+    <button id="li-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+    <div class="login-note" id="li-server"></div>
+  </div>
+</div>
+
+
+<div class="topbar">
+  <div class="logo"><span class="mark">🌊</span>Billys<span>BoatWorks</span></div>
+  <div class="nav-tabs">
+    <button class="active" onclick="go('home')">Find a Boat</button>
+    <button onclick="go('trips')">My Trips</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="user-info">
+    <a class="console-link" href="ops.html">Operations</a>
+    <a class="console-link" href="corporate.html">Corporate</a>
+    <strong id="user-display"></strong>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<!-- ══════════ HOME ══════════ -->
+<div id="v-home" class="view active">
+  <div class="hero">
+    <div class="hero-in">
+      <h1>Get on the water today.</h1>
+      <p>Pontoons, fishing boats, jet skis and paddle craft across the best lakes in the Midwest.</p>
+      <div class="searchbar">
+        <div class="fld">
+          <label>Where are you going?</label>
+          <select id="s-dest"><option value="">Any destination</option></select>
+        </div>
+        <div class="fld">
+          <label>Date</label>
+          <input id="s-date" type="date">
+        </div>
+        <div class="fld">
+          <label>How long?</label>
+          <select id="s-dur">
+            <option>Half Day</option><option selected>Full Day</option>
+            <option>Hourly</option><option>Multi-Day</option><option>Weekly</option>
+          </select>
+        </div>
+        <button class="go" onclick="search()">Search</button>
+      </div>
+      <div class="hero-stats" id="hero-stats"></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <h2 style="margin-bottom:4px">Popular destinations</h2>
+    <div class="sub">Every location is a locally owned BillysBoatWorks franchise.</div>
+    <div class="grid" id="dest-grid"><div class="loading"><span class="spin"></span> Loading destinations…</div></div>
+  </div>
+</div>
+
+<!-- ══════════ RESULTS ══════════ -->
+<div id="v-results" class="view">
+  <div class="wrap">
+    <div class="crumb"><a onclick="go('home')">← All destinations</a></div>
+    <h1 id="r-title">Availability</h1>
+    <div class="sub" id="r-sub"></div>
+    <div id="r-notices"></div>
+    <div id="r-list"></div>
+  </div>
+</div>
+
+<!-- ══════════ CHECKOUT ══════════ -->
+<div id="v-book" class="view">
+  <div class="wrap">
+    <div class="crumb"><a onclick="go('results')">← Back to availability</a></div>
+    <h1 id="b-title">Book your trip</h1>
+    <div class="sub" id="b-sub"></div>
+    <div class="checkout">
+      <div>
+        <div class="step">
+          <div class="step-h"><span class="n">1</span><h3>Add to your day</h3></div>
+          <div class="step-b"><div class="acc-grid" id="b-acc"></div></div>
+        </div>
+        <div class="step">
+          <div class="step-h"><span class="n">2</span><h3>Damage protection</h3></div>
+          <div class="step-b" id="b-prot"></div>
+        </div>
+        <div class="step">
+          <div class="step-h"><span class="n">3</span><h3>Who's renting?</h3></div>
+          <div class="step-b">
+            <div class="two">
+              <div class="field"><label>First name</label><input id="b-first"></div>
+              <div class="field"><label>Last name</label><input id="b-last"></div>
+            </div>
+            <div class="two">
+              <div class="field"><label>Email</label><input id="b-email" type="email"></div>
+              <div class="field"><label>Mobile</label><input id="b-phone"></div>
+            </div>
+            <div class="two">
+              <div class="field"><label>Party size</label><input id="b-party" type="number" min="1" value="4"></div>
+              <div class="field"><label>Pickup location</label><select id="b-loc"></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-h"><span class="n">4</span><h3>Sign your rental agreement</h3></div>
+          <div class="step-b">
+            <div class="waiverbox" id="b-waiver"></div>
+            <div class="sigline">
+              <input id="b-sig" placeholder="Type your full name to sign">
+              <button class="btn btn-ghost btn-sm" onclick="autoSign()">Use my name</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="summary">
+        <div class="h"><h3 id="s-title">Your trip</h3><div class="s" id="s-when"></div></div>
+        <div class="b">
+          <div id="s-lines"></div>
+          <button class="btn btn-sun btn-block" style="margin-top:16px" id="s-pay" onclick="confirmBooking()">Pay &amp; confirm</button>
+          <div class="muted" style="font-size:11.5px;text-align:center;margin-top:9px">
+            Security deposit held separately · free cancellation up to 48h before
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CONFIRMATION ══════════ -->
+<div id="v-conf" class="view">
+  <div class="wrap" style="max-width:720px">
+    <div class="card conf" id="conf-body"></div>
+  </div>
+</div>
+
+<!-- ══════════ MY TRIPS ══════════ -->
+<div id="v-trips" class="view">
+  <div class="wrap">
+    <h1>My trips</h1>
+    <div class="sub">Upcoming and past rentals. Look yourself up by the email you booked with.</div>
+    <div class="card" style="display:flex;gap:11px;align-items:flex-end;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:230px;margin:0">
+        <label>Email on the reservation</label><input id="t-email" placeholder="you@example.com">
+      </div>
+      <button class="btn btn-primary" onclick="loadTrips()">Find my trips</button>
+    </div>
+    <div id="t-list"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const KAPP='billys';
+let API={url:'',auth:'',user:'',displayName:''};
+let LOOK={destinations:[],categories:[]},PLANS={plans:[],accessories:[]};
+let SEARCH={dest:'',date:'',dur:'Full Day',data:null};
+let BOOK=null,QUOTE=null;
+
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+const esc=s=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")};
+const v=(s,f)=>s&&s.values?(s.values[f]||''):'';
+const money=n=>{const x=parseFloat(n);return isNaN(x)?'—':'$'+Math.round(x).toLocaleString()};
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200)};
+const stars=n=>{n=Math.round(n||0);return n?'★'.repeat(n)+'<span style="color:#CBD5E1">'+'☆'.repeat(5-n)+'</span>':''};
+const nid=p=>p+'-'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*1e3);
+const MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function photoClass(cls){return cls==='Paddle'?'paddle':cls==='Powersport'?'power':cls==='Land'?'land':''}
+function photoIcon(cat){
+  if(/Pontoon/.test(cat))return'⛵';if(/Jet Ski|PWC/.test(cat))return'🌊';if(/Fishing/.test(cat))return'🎣';
+  if(/Kayak|Canoe/.test(cat))return'🛶';if(/Paddleboard|Paddle Boat|Water Bike/.test(cat))return'🏄';
+  if(/Bike|Bicycle/.test(cat))return'🚲';if(/Ski|Wake/.test(cat))return'🚤';return'⚓';}
+
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,200)}`)}
+  const t=await r.text();return t?JSON.parse(t):{};
+}
+async function appApi(p){
+  const r=await fetch(p,{headers:{Authorization:'Basic '+API.auth}});
+  if(!r.ok)throw new Error(String(r.status));
+  return r.json();
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+// session comes from the launcher; served same-origin through :3011 so url stays ''
+
+/* ── sign-in ──
+   Served through the launcher, /app/api/v1 is proxied same-origin, so we authenticate
+   against this origin and keep url:'' — a direct cross-origin call to the Kinetic host
+   is blocked by its self-signed certificate. */
+function showLogin(msg){
+  document.body.classList.remove('authed');
+  if(msg)document.getElementById('li-err').textContent=msg;
+  fetch('/api/base/target').then(r=>r.json()).then(d=>{
+    document.getElementById('li-server').textContent='Connected to '+(d.target||'this Kinetic space');
+  }).catch(()=>{});
+  const u=document.getElementById('li-user');if(u)u.focus();
+}
+function doLogin(){
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const err=document.getElementById('li-err'),btn=document.getElementById('li-btn');
+  if(!user||!pass){err.textContent='Enter your username and password';return}
+  err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
+  const auth=btoa(user+':'+pass);
+  fetch('/app/api/v1/me',{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error(r.status===401?'Incorrect username or password':'Sign-in failed ('+r.status+')');return r.json()})
+    .then(d=>{
+      API={url:'',auth,user:d.username,displayName:d.displayName||d.username};
+      sessionStorage.setItem('kinetic_session',JSON.stringify(
+        {url:'',auth,user:d.username,displayName:API.displayName,spaceSlug:d.space&&d.space.slug||''}));
+      document.body.classList.add('authed');
+      start();
+    })
+    .catch(e=>{err.textContent=e.message})
+    .finally(()=>{btn.disabled=false;btn.textContent='Sign In'});
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!document.body.classList.contains('authed'))doLogin();
+});
+
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s){showLogin();return}
+  try{
+    const ss=JSON.parse(s);
+    API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};
+    document.body.classList.add('authed');
+    start();
+  }catch(e){showLogin()}
+})();
+
+const VIEWS=['home','results','book','conf','trips'];
+function go(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  if(v==='home')document.querySelectorAll('.nav-tabs button')[0].classList.add('active');
+  if(v==='trips')document.querySelectorAll('.nav-tabs button')[1].classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function start(){
+  document.getElementById('user-display').textContent=API.displayName;
+  const d=new Date();d.setDate(d.getDate()+3);
+  document.getElementById('s-date').value=d.toISOString().slice(0,10);
+  try{
+    const [dests,plans]=await Promise.all([appApi('/api/bbw/market/destinations'),appApi('/api/bbw/market/plans')]);
+    LOOK=dests;PLANS=plans;
+    document.getElementById('s-dest').innerHTML='<option value="">Any destination</option>'+
+      dests.destinations.map(x=>`<option>${esc(x.name)}</option>`).join('');
+    const tot=dests.destinations.reduce((s,x)=>s+x.assets,0),locs=dests.destinations.reduce((s,x)=>s+x.locations,0);
+    document.getElementById('hero-stats').innerHTML=
+      `<div><b>${dests.destinations.length}</b>destinations</div>
+       <div><b>${locs}</b>rental locations</div>
+       <div><b>${tot}</b>boats &amp; toys</div>`;
+    document.getElementById('dest-grid').innerHTML=dests.destinations.map(x=>`
+      <div class="dest" onclick="pickDest('${esc(x.name).replace(/'/g,"\\'")}')">
+        <div class="img"><span class="wave">${x.type==='Lake'?'🌊':'🏖️'}</span>
+          ${x.rating?`<span class="badge">${x.rating.toFixed(1)} ★</span>`:''}
+          <span class="state">${esc(x.state)} · ${esc(x.region)}</span></div>
+        <div class="b">
+          <h3>${esc(x.name)}</h3>
+          <div class="meta">${x.locations} location${x.locations===1?'':'s'} · ${x.assets} rentals${x.acres?` · ${x.acres.toLocaleString()} acres`:''}</div>
+          <div class="chips">${x.categories.slice(0,3).map(c=>`<span class="chip">${esc(c)}</span>`).join('')}
+            ${x.categories.length>3?`<span class="chip more">+${x.categories.length-3} more</span>`:''}</div>
+        </div>
+      </div>`).join('')||'<div class="empty">No destinations yet.</div>';
+  }catch(e){
+    document.getElementById('dest-grid').innerHTML=`<div class="empty">Could not load destinations: ${esc(e.message)}</div>`;
+  }
+}
+function pickDest(name){document.getElementById('s-dest').value=name;search()}
+
+async function search(){
+  SEARCH.dest=document.getElementById('s-dest').value;
+  SEARCH.date=document.getElementById('s-date').value;
+  SEARCH.dur=document.getElementById('s-dur').value;
+  go('results');
+  document.getElementById('r-title').textContent=SEARCH.dest||'All destinations';
+  document.getElementById('r-sub').textContent=`${SEARCH.dur} · ${SEARCH.date}`;
+  document.getElementById('r-list').innerHTML='<div class="loading"><span class="spin"></span> Checking availability…</div>';
+  document.getElementById('r-notices').innerHTML='';
+  try{
+    const d=await appApi(`/api/bbw/market/availability?destination=${encodeURIComponent(SEARCH.dest)}&date=${SEARCH.date}&duration=${encodeURIComponent(SEARCH.dur)}`);
+    SEARCH.data=d;
+    const notices=[];
+    (d.weatherHolds||[]).filter(w=>!SEARCH.dest||w.destination===SEARCH.dest).forEach(w=>notices.push(
+      `<div class="notice warn"><span>⛈️</span><div><b>${esc(w.type)} ${esc(w.severity)} — ${esc(w.destination)}.</b>
+       Our local team is monitoring conditions and may adjust departures. You can still book; we'll contact you if anything changes.</div></div>`));
+    if((d.closedLocations||[]).length)notices.push(
+      `<div class="notice info"><span>ℹ️</span><div>${d.closedLocations.map(esc).join(', ')} ${d.closedLocations.length===1?'is':'are'} closed for the season.</div></div>`);
+    document.getElementById('r-notices').innerHTML=notices.join('');
+    document.getElementById('r-list').innerHTML=(d.results||[]).map(x=>`
+      <div class="eq">
+        <div class="photo ${photoClass(x.class)}">${photoIcon(x.category)}</div>
+        <div>
+          <h3>${esc(x.category)}</h3>
+          ${x.rating?`<div class="stars">${stars(x.rating)} <span class="muted" style="font-size:12px">${x.rating.toFixed(1)} (${x.reviews})</span></div>`:''}
+          <div class="facts">
+            <span>👥 Seats ${x.capacity||'—'}</span>
+            ${x.requiresLicense?'<span>🪪 License required</span>':''}
+            ${x.requiresBriefing?'<span>🦺 Safety briefing</span>':''}
+            ${x.minimumAge?`<span>Min age ${x.minimumAge}</span>`:''}
+            <span>📍 ${x.locations.length} pickup point${x.locations.length===1?'':'s'}</span>
+          </div>
+          <span class="avail-pill ${x.available>2?'ok':x.available>0?'low':'none'}">
+            ${x.available>2?`${x.available} available`:x.available>0?`Only ${x.available} left`:'Sold out this day'}</span>
+        </div>
+        <div class="right">
+          <div class="price">${money(x.price)}</div>
+          <div class="per">${esc(SEARCH.dur.toLowerCase())} · before fees</div>
+          <button class="btn btn-primary" ${x.available?'':'disabled'}
+            onclick="startBooking('${esc(x.category).replace(/'/g,"\\'")}')">${x.available?'Select':'Unavailable'}</button>
+        </div>
+      </div>`).join('')||'<div class="empty">Nothing available for that day. Try another date.</div>';
+  }catch(e){
+    document.getElementById('r-list').innerHTML=`<div class="empty">Could not check availability: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ── checkout ── */
+function startBooking(category){
+  const r=(SEARCH.data.results||[]).find(x=>x.category===category);
+  BOOK={category,accessories:[],protection:'None',result:r};
+  go('book');
+  document.getElementById('b-title').textContent=category;
+  document.getElementById('b-sub').textContent=`${SEARCH.dest||'Midwest'} · ${SEARCH.dur} · ${SEARCH.date}`;
+  document.getElementById('b-acc').innerHTML=PLANS.accessories.map(a=>`
+    <label class="acc" onclick="setTimeout(()=>toggleAcc('${esc(a.name).replace(/'/g,"\\'")}'),0)">
+      <input type="checkbox" id="acc-${a.name.replace(/\W/g,'')}"><span>${esc(a.name)}</span><span class="p">+${money(a.price)}</span>
+    </label>`).join('');
+  document.getElementById('b-prot').innerHTML=PLANS.plans.map(p=>`
+    <label class="opt ${p.tier==='None'?'sel':''}" id="prot-${p.tier}" onclick="setTimeout(()=>setProt('${p.tier}'),0)">
+      <input type="radio" name="prot" ${p.tier==='None'?'checked':''}>
+      <div><div class="t">${esc(p.name)}</div>
+        <div class="d">${esc(p.description)}${p.provider?`<br><span class="muted">Underwritten by ${esc(p.provider)}</span>`:''}</div></div>
+      <div class="p">${p.percent?`+${p.percent}%`:'Included'}</div>
+    </label>`).join('');
+  const locs=(SEARCH.data.locations||[]).filter(l=>l.status==='Active'&&(!r||r.locations.includes(l.name)));
+  document.getElementById('b-loc').innerHTML=(locs.length?locs:SEARCH.data.locations||[])
+    .map(l=>`<option>${esc(l.name)}</option>`).join('');
+  const nm=(API.displayName||'').split(' ');
+  document.getElementById('b-first').value=nm[0]||'';
+  document.getElementById('b-last').value=nm.slice(1).join(' ')||'';
+  document.getElementById('b-sig').value='';
+  quote();
+}
+function toggleAcc(name){
+  const i=BOOK.accessories.indexOf(name);
+  if(i>=0)BOOK.accessories.splice(i,1);else BOOK.accessories.push(name);
+  document.querySelectorAll('#b-acc .acc').forEach(el=>{
+    const t=el.querySelector('span').textContent;
+    el.classList.toggle('sel',BOOK.accessories.includes(t));
+    el.querySelector('input').checked=BOOK.accessories.includes(t);
+  });
+  quote();
+}
+function setProt(tier){
+  BOOK.protection=tier;
+  document.querySelectorAll('#b-prot .opt').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('prot-'+tier).classList.add('sel');
+  document.getElementById('prot-'+tier).querySelector('input').checked=true;
+  quote();
+}
+async function quote(){
+  const q=`/api/bbw/market/quote?destination=${encodeURIComponent(SEARCH.dest)}&date=${SEARCH.date}`
+    +`&duration=${encodeURIComponent(SEARCH.dur)}&category=${encodeURIComponent(BOOK.category)}`
+    +`&accessories=${encodeURIComponent(BOOK.accessories.join(','))}&protection=${BOOK.protection}`;
+  try{
+    QUOTE=await appApi(q);
+    document.getElementById('s-title').textContent=BOOK.category;
+    document.getElementById('s-when').textContent=`${SEARCH.date} · ${SEARCH.dur}`;
+    document.getElementById('s-lines').innerHTML=QUOTE.lines.map(l=>
+      `<div class="li ${l.amount<0?'neg':''}"><span class="l">${esc(l.label)}</span><span class="a">${l.amount<0?'−':''}${money(Math.abs(l.amount))}</span></div>`).join('')
+      +`<div class="li tot"><span>Total</span><span>${money(QUOTE.total)}</span></div>`
+      +(QUOTE.deposit?`<div class="li"><span class="l">Refundable deposit</span><span>${money(QUOTE.deposit)}</span></div>`:'');
+    document.getElementById('b-waiver').innerHTML=waiverText();
+  }catch(e){toast('Could not price that: '+e.message)}
+}
+function waiverText(){
+  return `<b>BillysBoatWorks Rental Agreement &amp; Liability Waiver — version 2026.2</b><br><br>
+  I am renting a ${esc(BOOK.category)} on ${esc(SEARCH.date)} for a ${esc(SEARCH.dur.toLowerCase())} period. I confirm that the
+  operator will be at least ${QUOTE&&QUOTE.requiresLicense?'18':'12'} years old and hold any licence or boater
+  certification required by state law.<br><br>
+  I acknowledge that water recreation carries inherent risk, including risk of serious injury or death, and I accept
+  responsibility for the safe operation of the equipment and for every member of my party wearing a life jacket as required.
+  ${QUOTE&&QUOTE.requiresBriefing?'I will complete the on-dock safety briefing before departure.':''}<br><br>
+  ${BOOK.protection==='None'
+    ? 'I have <b>declined</b> optional damage protection and remain responsible for damage to the equipment up to its full repair cost.'
+    : `I have selected <b>${esc(QUOTE?QUOTE.protection.name:'')}</b>, underwritten by ${esc(QUOTE?QUOTE.protection.provider:'')}, with a
+       ${money(QUOTE?QUOTE.protection.deductible:0)} deductible and ${money(QUOTE?QUOTE.protection.coverage:0)} coverage limit.
+       BillysBoatWorks is not the insurance carrier.`}<br><br>
+  I agree to return the equipment at the scheduled time and to report any damage or incident immediately.`;
+}
+function autoSign(){
+  const n=`${document.getElementById('b-first').value} ${document.getElementById('b-last').value}`.trim();
+  document.getElementById('b-sig').value=n;
+}
+
+async function confirmBooking(){
+  const g=id=>document.getElementById(id).value.trim();
+  const first=g('b-first'),last=g('b-last'),email=g('b-email'),sig=g('b-sig');
+  if(!first||!last)return toast('Please enter your name');
+  if(!email)return toast('Please enter an email so we can send your confirmation');
+  if(sig.toLowerCase()!==`${first} ${last}`.toLowerCase())return toast('Please sign with your full name to accept the agreement');
+  const btn=document.getElementById('s-pay');btn.disabled=true;btn.textContent='Confirming…';
+  try{
+    const loc=g('b-loc');
+    const locRec=(SEARCH.data.locations||[]).find(l=>l.name===loc)||{};
+    const code='BB'+Math.floor(100000+Math.random()*899999);
+    const start=SEARCH.dur==='Half Day'?'13:00':'08:00';
+    const end=SEARCH.dur==='Hourly'?'10:00':SEARCH.dur==='Half Day'?'17:00':'17:00';
+    // customer first so the reservation can reference a real profile
+    const custId=nid('CUS');
+    await api(`/kapps/${KAPP}/forms/customers/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Customer ID':custId,'First Name':first,'Last Name':last,'Email':email,'Phone':g('b-phone'),
+      'ID Verified':'No','Loyalty Tier':'Standard','Rentals Count':'1','Lifetime Spend':String(QUOTE.total),
+      'First Rental':SEARCH.date,'Last Rental':SEARCH.date,'Marketing Opt In':'Yes','Status':'Active'}})});
+    const resId=nid('RES');
+    const franchise=await franchiseFor(loc);
+    const values={'Reservation ID':resId,'Confirmation Code':code,'Customer':custId,
+      'Customer Name':`${first} ${last}`,'Customer Email':email,'Customer Phone':g('b-phone'),
+      'Franchise':franchise,'Location':loc,'Destination':SEARCH.dest,'Category':BOOK.category,
+      'Asset':'','Asset Assignment':'Category — auto-assigned','Start Date':SEARCH.date,'Start Time':start,
+      'End Date':SEARCH.date,'End Time':end,'Duration Type':SEARCH.dur,
+      'Duration Hours':SEARCH.dur==='Full Day'?'8':SEARCH.dur==='Half Day'?'4':'2',
+      'Party Size':g('b-party'),'Base Price':String(QUOTE.lines.filter(l=>l.kind==='base'||l.kind==='adjust').reduce((s,l)=>s+l.amount,0)),
+      'Accessories Total':String(QUOTE.lines.filter(l=>l.kind==='accessory').reduce((s,l)=>s+l.amount,0)),
+      'Protection Plan':QUOTE.protection.name,'Protection Fee':String(QUOTE.lines.filter(l=>l.kind==='protection').reduce((s,l)=>s+l.amount,0)),
+      'Fees':String(QUOTE.fees),'Tax':String(QUOTE.tax),'Total':String(QUOTE.total),
+      'Security Deposit':String(QUOTE.deposit),'Balance Due':'0','Source':'Marketplace',
+      'Waiver Signed':'Yes','Late Minutes':'0','Status':'Confirmed','Notes':'Booked on billysboatworks.com'};
+    await api(`/kapps/${KAPP}/forms/reservations/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values})});
+    // line items keep the total traceable
+    for(const l of QUOTE.lines){
+      const kind=l.kind==='base'||l.kind==='adjust'?'Equipment':l.kind==='accessory'?'Accessory':l.kind==='protection'?'Protection':'Fee';
+      await api(`/kapps/${KAPP}/forms/reservation-items/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+        'Item ID':nid('RI'),'Reservation':resId,'Confirmation Code':code,'Item Type':kind,
+        'Category':kind==='Equipment'?BOOK.category:'','Description':l.label,'Quantity':'1',
+        'Unit Price':String(l.amount),'Line Total':String(l.amount),'Franchise':franchise}})});
+    }
+    // versioned signature records
+    for(const doc of ['Rental Agreement','Liability Waiver',...(BOOK.protection!=='None'?['Insurance Acknowledgement']:[])]){
+      await api(`/kapps/${KAPP}/forms/waivers/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+        'Waiver ID':nid('WVR'),'Reservation':resId,'Confirmation Code':code,'Customer':custId,
+        'Customer Name':`${first} ${last}`,'Franchise':franchise,'Location':loc,
+        'Document Type':doc,'Document Version':doc==='Rental Agreement'?'2026.2':'2026.1',
+        'Signature Name':sig,'Signed At':new Date().toISOString().slice(0,16).replace('T',' '),
+        'IP Address':'','Status':'Signed'}})});
+    }
+    await api(`/kapps/${KAPP}/forms/payments/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Payment ID':nid('PAY'),'Reservation':resId,'Confirmation Code':code,'Customer':custId,'Franchise':franchise,
+      'Payment Type':'Capture','Method':'Card','Provider':'PaymentsAbstraction',
+      'Provider Reference':'pi_'+Math.random().toString(36).slice(2,12),'Amount':String(QUOTE.total),
+      'Processed At':new Date().toISOString().slice(0,16).replace('T',' '),'Period':SEARCH.date.slice(0,7),
+      'Status':'Succeeded'}})});
+    await api(`/kapps/${KAPP}/forms/notifications/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Notification ID':nid('NTF'),'Channel':'Email','Template':'Booking Confirmation','Recipient Type':'Customer',
+      'Recipient':`${first} ${last}`,'Recipient Address':email,'Reservation':resId,'Confirmation Code':code,
+      'Franchise':franchise,'Subject':`Your ${BOOK.category} is booked — ${code}`,
+      'Scheduled At':SEARCH.date,'Status':'Queued'}})});
+    showConfirmation(code,loc,locRec,email);
+  }catch(e){
+    toast('Booking failed: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent='Pay & confirm';
+  }
+}
+async function franchiseFor(locName){
+  try{
+    const d=await api(`/kapps/${KAPP}/forms/locations/submissions?include=values&limit=25&q=`
+      +encodeURIComponent(`values[Location Name]="${locName.replace(/"/g,'\\"')}"`));
+    return v((d.submissions||[])[0],'Franchise');
+  }catch(e){return ''}
+}
+function showConfirmation(code,loc,locRec,email){
+  go('conf');
+  document.getElementById('conf-body').innerHTML=`
+    <div class="tick">✓</div>
+    <h1>You're on the water.</h1>
+    <div class="muted">Confirmation sent to ${esc(email)}</div>
+    <div class="code">${esc(code)}</div>
+    <div class="muted">${esc(BOOK.category)} · ${esc(SEARCH.date)} · ${esc(SEARCH.dur)}</div>
+    <div class="next">
+      <div class="n"><b>📍 Where to go</b><span>${esc(loc)}${locRec.city?`, ${esc(locRec.city)}`:''}${locRec.hours?`<br>Open ${esc(locRec.hours)}`:''}</span></div>
+      <div class="n"><b>🪪 Bring with you</b><span>Photo ID for the operator${QUOTE&&QUOTE.requiresLicense?' and any required boater certification':''}. Arrive 15 minutes early.</span></div>
+      <div class="n"><b>🦺 At the dock</b><span>${QUOTE&&QUOTE.requiresBriefing?'A quick safety briefing, then life jackets for everyone aboard.':'Life jackets provided for everyone aboard.'}</span></div>
+      <div class="n"><b>🛡️ Protection</b><span>${esc(QUOTE?QUOTE.protection.name:'')}${QUOTE&&QUOTE.protection.tier!=='None'?` · ${money(QUOTE.protection.deductible)} deductible`:''}</span></div>
+    </div>
+    <div style="margin-top:26px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="go('home')">Book another</button>
+      <button class="btn btn-primary" onclick="document.getElementById('t-email').value='${esc(email)}';go('trips');loadTrips()">View my trips</button>
+    </div>`;
+}
+
+/* ── my trips ── */
+async function loadTrips(){
+  const email=document.getElementById('t-email').value.trim();
+  const el=document.getElementById('t-list');
+  if(!email)return toast('Enter the email you booked with');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Looking up your trips…</div>';
+  try{
+    const d=await api(`/kapps/${KAPP}/forms/reservations/submissions?include=values&limit=25&q=`
+      +encodeURIComponent(`values[Customer Email]="${email.replace(/"/g,'\\"')}"`));
+    const subs=d.submissions||[];
+    if(!subs.length){el.innerHTML='<div class="empty">No trips found for that email.</div>';return}
+    const cls=s=>({Confirmed:'b-confirmed','Ready for Pickup':'b-ready','Active Rental':'b-active',
+      'Equipment Released':'b-active',Completed:'b-done','Pending Payment':'b-pending',
+      'Customer Cancelled':'b-cancel','Weather Cancelled':'b-cancel'})[s]||'b-confirmed';
+    el.innerHTML=subs.sort((a,b)=>v(b,'Start Date').localeCompare(v(a,'Start Date'))).map(s=>{
+      const d2=v(s,'Start Date').split('-');
+      return `<div class="res">
+        <div class="date"><div class="m">${MONTHS[+d2[1]-1]||''}</div><div class="d">${d2[2]||''}</div></div>
+        <div>
+          <div style="font-weight:700;font-size:15.5px">${esc(v(s,'Category'))}</div>
+          <div class="muted" style="font-size:13px">${esc(v(s,'Location'))} · ${esc(v(s,'Destination'))}</div>
+          <div class="muted" style="font-size:12.5px;margin-top:3px">
+            ${esc(v(s,'Start Time'))}–${esc(v(s,'End Time'))} · ${esc(v(s,'Duration Type'))} ·
+            ${esc(v(s,'Confirmation Code'))} ${v(s,'Protection Plan')&&v(s,'Protection Plan')!=='No Protection'?'· 🛡️ '+esc(v(s,'Protection Plan')):''}
+          </div>
+        </div>
+        <div class="right">
+          <div style="font-weight:800;font-size:18px">${money(v(s,'Total'))}</div>
+          <div style="margin-top:6px"><span class="badge ${cls(v(s,'Status'))}">${esc(v(s,'Status'))}</span></div>
+          ${v(s,'Waiver Signed')==='No'?'<div style="margin-top:6px"><span class="badge b-pending">Waiver needed</span></div>':''}
+        </div>
+      </div>`}).join('');
+  }catch(e){el.innerHTML=`<div class="empty">Could not load trips: ${esc(e.message)}</div>`}
+}
+</script>
+</body>
+</html>

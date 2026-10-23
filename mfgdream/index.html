@@ -533,7 +533,8 @@ svg.viz{width:100%;height:auto;display:block;font-family:inherit}
 const KAPP='mfgdream';
 let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
 
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){return sub.values?.[f]||''}
 function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
 function fmt$(x){return '$'+Math.round(n_(x)).toLocaleString('en-US')}

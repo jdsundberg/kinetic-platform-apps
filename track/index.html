@@ -314,7 +314,8 @@ const EVENTS_FIELD=['Long Jump','Standing Long Jump','High Jump','Softball Throw
 const ALL_EVENTS=[...EVENTS_TRACK,...EVENTS_FIELD];
 const GRADES=['K','1','2','3','4','5','6'];
 
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){return sub.values?.[f]||''}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 function badgeClass(val){if(!val)return'badge-default';return'badge-'+val.toLowerCase().replace(/[\s]+/g,'-')}

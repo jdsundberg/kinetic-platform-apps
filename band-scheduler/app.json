@@ -1,0 +1,120 @@
+{
+  "name": "Band Scheduler",
+  "slug": "band-scheduler",
+  "description": "Book bands into venues for fun. Directory of 20 live-music venues and 100 touring bands, a gig calendar that tracks door price, guarantee, tickets and attendance, plus band feedback with performance, professionalism and crowd-response ratings.",
+  "category": "Entertainment",
+  "icon": "music",
+  "color": "#FF4D8D",
+  "bg": "#FFEAF2",
+  "forms": [
+    {
+      "slug": "venues",
+      "name": "Venues",
+      "description": "Live music venues available for booking — clubs, theaters, breweries and festival grounds",
+      "submissionLabelExpression": "${values('Venue Name')} - ${values('City')}",
+      "fields": [
+        { "name": "Venue ID", "required": true },
+        { "name": "Venue Name", "required": true },
+        { "name": "Venue Type" },
+        { "name": "City" },
+        { "name": "State" },
+        { "name": "Address" },
+        { "name": "Capacity" },
+        { "name": "Stage Size" },
+        { "name": "Sound System" },
+        { "name": "Preferred Genre" },
+        { "name": "Contact Name" },
+        { "name": "Contact Email" },
+        { "name": "Contact Phone" },
+        { "name": "Base Fee" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Venue Name]", "values[Venue Type]", "values[City]", "values[State]", "values[Preferred Genre]", "values[Status]"],
+        "compound": [["values[Venue Type]", "values[Status]"], ["values[City]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "bands",
+      "name": "Bands",
+      "description": "Band roster — genre, home town, lineup size, booking rate and typical draw",
+      "submissionLabelExpression": "${values('Band Name')} - ${values('Genre')}",
+      "fields": [
+        { "name": "Band ID", "required": true },
+        { "name": "Band Name", "required": true },
+        { "name": "Genre" },
+        { "name": "Home City" },
+        { "name": "Home State" },
+        { "name": "Members" },
+        { "name": "Formed Year" },
+        { "name": "Contact Name" },
+        { "name": "Contact Email" },
+        { "name": "Contact Phone" },
+        { "name": "Rate" },
+        { "name": "Typical Draw" },
+        { "name": "Rating" },
+        { "name": "Website" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Band Name]", "values[Genre]", "values[Home City]", "values[Home State]", "values[Rating]", "values[Status]"],
+        "compound": [["values[Genre]", "values[Status]"], ["values[Home City]", "values[Genre]"]]
+      }
+    },
+    {
+      "slug": "gigs",
+      "name": "Gigs",
+      "description": "Booked shows pairing a band with a venue on a date — money, tickets and attendance",
+      "submissionLabelExpression": "${values('Band')} @ ${values('Venue')} - ${values('Gig Date')}",
+      "fields": [
+        { "name": "Gig ID", "required": true },
+        { "name": "Gig Date" },
+        { "name": "Set Time" },
+        { "name": "Venue" },
+        { "name": "Band" },
+        { "name": "Support Act" },
+        { "name": "Genre" },
+        { "name": "City" },
+        { "name": "Door Price" },
+        { "name": "Guarantee" },
+        { "name": "Tickets Sold" },
+        { "name": "Attendance" },
+        { "name": "Bar Sales" },
+        { "name": "Status" },
+        { "name": "Notes", "rows": 3 }
+      ],
+      "indexes": {
+        "single": ["values[Gig Date]", "values[Venue]", "values[Band]", "values[Genre]", "values[City]", "values[Status]"],
+        "compound": [["values[Status]", "values[Gig Date]"], ["values[Venue]", "values[Status]"], ["values[Band]", "values[Status]"]]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Band Feedback",
+      "description": "Feedback on a band's show — performance, professionalism, crowd response and whether to book again",
+      "submissionLabelExpression": "${values('Band')} - ${values('Submitted By')} (${values('Overall Rating')})",
+      "fields": [
+        { "name": "Feedback ID", "required": true },
+        { "name": "Date" },
+        { "name": "Band" },
+        { "name": "Venue" },
+        { "name": "Gig" },
+        { "name": "Submitted By" },
+        { "name": "Role" },
+        { "name": "Overall Rating" },
+        { "name": "Performance Rating" },
+        { "name": "Professionalism Rating" },
+        { "name": "Crowd Response" },
+        { "name": "Would Book Again" },
+        { "name": "Comment", "rows": 3 },
+        { "name": "Status" }
+      ],
+      "indexes": {
+        "single": ["values[Date]", "values[Band]", "values[Venue]", "values[Role]", "values[Overall Rating]", "values[Would Book Again]", "values[Status]"],
+        "compound": [["values[Band]", "values[Status]"], ["values[Venue]", "values[Status]"]]
+      }
+    }
+  ]
+}

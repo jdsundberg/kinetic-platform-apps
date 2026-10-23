@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/event-ingestion.schema.json",
+  "title": "Event ingestion envelope v1.x (POST /app/kapps/telco-noc/webApis/ingest-event)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "enum": [
+        "1.0",
+        "1.1"
+      ],
+      "description": "Minor versions are additive; unknown fields are ignored; major versions get a new WebAPI slug (ingest-event-v2)"
+    },
+    "tenantId": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{3,32}$"
+    },
+    "source": {
+      "type": "string",
+      "description": "Registered source id (integrations form); drives severity/condition mapping"
+    },
+    "sourceEventId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique within source; idempotency key = tenantId|source|sourceEventId"
+    },
+    "eventTime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "resourceRef": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier exactly as the source emits it; resolved through the identifiers form"
+    },
+    "relatedResourceRef": {
+      "type": "string",
+      "description": "Peer resource named by the alarm (e.g. X2 neighbour)"
+    },
+    "condition": {
+      "type": "string",
+      "description": "Vendor condition code; mapped via engine/catalog.json conditionMap"
+    },
+    "vendorSeverity": {
+      "type": "string",
+      "description": "Vendor-native severity; mapped via catalog severityMap; unmapped → Indeterminate + note"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "raise",
+        "clear"
+      ],
+      "default": "raise"
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "attributes": {
+      "type": "object"
+    },
+    "replayBatch": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenantId",
+    "source",
+    "sourceEventId",
+    "eventTime",
+    "resourceRef",
+    "condition"
+  ],
+  "additionalProperties": true
+}

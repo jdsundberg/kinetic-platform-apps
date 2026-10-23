@@ -1,0 +1,1082 @@
+{
+  "name": "Corporate Brain",
+  "slug": "corporate-brain",
+  "description": "Kinetic Data's institutional memory: companies, people, events, decisions and knowledge, every claim traceable to evidence and human-reviewed.",
+  "category": "Knowledge",
+  "icon": "brain",
+  "color": "#3B2F6B",
+  "bg": "#ECE8F7",
+  "forms": [
+    {
+      "slug": "companies",
+      "name": "Companies",
+      "description": "Organizations: customers, prospects, partners, vendors and Kinetic itself",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Company ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Name Key"
+        },
+        {
+          "name": "Aliases"
+        },
+        {
+          "name": "Domain"
+        },
+        {
+          "name": "Industry"
+        },
+        {
+          "name": "Country"
+        },
+        {
+          "name": "Customer Status"
+        },
+        {
+          "name": "Customer Status Basis",
+          "rows": 4
+        },
+        {
+          "name": "First Known Date"
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Merged Into"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Company ID]",
+          "values[Record Status]",
+          "values[Customer Status]",
+          "values[Name Key]",
+          "values[Name]"
+        ],
+        "compound": [
+          [
+            "values[Record Status]",
+            "values[Name Key]"
+          ],
+          [
+            "values[Customer Status]",
+            "values[Name Key]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Company ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "people",
+      "name": "People",
+      "description": "Individuals and their history with Kinetic",
+      "submissionLabelExpression": "${values('Full Name')}",
+      "fields": [
+        {
+          "name": "Person ID",
+          "required": true
+        },
+        {
+          "name": "Full Name",
+          "required": true
+        },
+        {
+          "name": "Name Key"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Primary Company ID"
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Kinetic Relationship"
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Merged Into"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Person ID]",
+          "values[Record Status]",
+          "values[Name Key]",
+          "values[Primary Company ID]",
+          "values[Email]"
+        ],
+        "compound": [
+          [
+            "values[Primary Company ID]",
+            "values[Name Key]"
+          ],
+          [
+            "values[Record Status]",
+            "values[Name Key]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Person ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "relationships",
+      "name": "Relationships",
+      "description": "Typed many-to-many links between entities by stable ID (never by display name)",
+      "submissionLabelExpression": "${values('Relationship Type')}",
+      "fields": [
+        {
+          "name": "Relationship ID",
+          "required": true
+        },
+        {
+          "name": "From Type"
+        },
+        {
+          "name": "From ID",
+          "required": true
+        },
+        {
+          "name": "To Type"
+        },
+        {
+          "name": "To ID",
+          "required": true
+        },
+        {
+          "name": "Relationship Type",
+          "required": true
+        },
+        {
+          "name": "Role"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Date Precision"
+        },
+        {
+          "name": "Notes",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Relationship ID]",
+          "values[From ID]",
+          "values[To ID]",
+          "values[Relationship Type]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[From ID]",
+            "values[Relationship Type]"
+          ],
+          [
+            "values[To ID]",
+            "values[Relationship Type]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Relationship ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "communications",
+      "name": "Communications",
+      "description": "Email, meeting and conversation metadata (bodies stay in the source system)",
+      "submissionLabelExpression": "${values('Subject')}",
+      "fields": [
+        {
+          "name": "Communication ID",
+          "required": true
+        },
+        {
+          "name": "Channel"
+        },
+        {
+          "name": "Subject"
+        },
+        {
+          "name": "Communication Date"
+        },
+        {
+          "name": "Participants",
+          "rows": 4
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Company IDs",
+          "rows": 4
+        },
+        {
+          "name": "Person IDs",
+          "rows": 4
+        },
+        {
+          "name": "Source ID"
+        },
+        {
+          "name": "Summary",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Communication ID]",
+          "values[Company ID]",
+          "values[Source ID]",
+          "values[Communication Date]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[Company ID]",
+            "values[Communication Date]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Communication ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "historical-events",
+      "name": "Historical Events",
+      "description": "Significant dated events; never overwritten when later information arrives",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Event ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Event Type"
+        },
+        {
+          "name": "Event Date"
+        },
+        {
+          "name": "Date Precision"
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Project ID"
+        },
+        {
+          "name": "Product ID"
+        },
+        {
+          "name": "Person IDs",
+          "rows": 4
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Verification Status"
+        },
+        {
+          "name": "Knowledge ID"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Event ID]",
+          "values[Company ID]",
+          "values[Event Date]",
+          "values[Event Type]",
+          "values[Verification Status]",
+          "values[Project ID]",
+          "values[Product ID]",
+          "values[Record Status]",
+          "values[Knowledge ID]"
+        ],
+        "compound": [
+          [
+            "values[Company ID]",
+            "values[Event Date]"
+          ],
+          [
+            "values[Event Type]",
+            "values[Event Date]"
+          ],
+          [
+            "values[Record Status]",
+            "values[Event Date]"
+          ],
+          [
+            "values[Project ID]",
+            "values[Event Date]"
+          ],
+          [
+            "values[Product ID]",
+            "values[Event Date]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Event ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "decisions",
+      "name": "Decisions",
+      "description": "Business and technical decisions with context, rationale and alternatives",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Decision ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Decision Date"
+        },
+        {
+          "name": "Date Precision"
+        },
+        {
+          "name": "Decision Area"
+        },
+        {
+          "name": "Context",
+          "rows": 4
+        },
+        {
+          "name": "Decision",
+          "rows": 4
+        },
+        {
+          "name": "Rationale",
+          "rows": 4
+        },
+        {
+          "name": "Alternatives Considered",
+          "rows": 4
+        },
+        {
+          "name": "Decided By",
+          "rows": 4
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Project ID"
+        },
+        {
+          "name": "Product ID"
+        },
+        {
+          "name": "Verification Status"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Decision ID]",
+          "values[Company ID]",
+          "values[Decision Date]",
+          "values[Verification Status]",
+          "values[Record Status]",
+          "values[Product ID]"
+        ],
+        "compound": [
+          [
+            "values[Record Status]",
+            "values[Decision Date]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Decision ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "knowledge-entries",
+      "name": "Knowledge Entries",
+      "description": "Facts, interpretations, narratives, lessons, claims and recollections — each with evidence and review status",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Knowledge ID",
+          "required": true
+        },
+        {
+          "name": "Knowledge Type",
+          "required": true
+        },
+        {
+          "name": "Subject Type"
+        },
+        {
+          "name": "Subject ID"
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Statement",
+          "rows": 4
+        },
+        {
+          "name": "Supporting Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Extraction Method"
+        },
+        {
+          "name": "Model Confidence"
+        },
+        {
+          "name": "Review Status"
+        },
+        {
+          "name": "Verified By"
+        },
+        {
+          "name": "Verified At"
+        },
+        {
+          "name": "Superseded By"
+        },
+        {
+          "name": "Supersedes"
+        },
+        {
+          "name": "Contradicts",
+          "rows": 4
+        },
+        {
+          "name": "Review History",
+          "rows": 4
+        },
+        {
+          "name": "Job ID"
+        },
+        {
+          "name": "Last Reviewed At"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Knowledge ID]",
+          "values[Review Status]",
+          "values[Knowledge Type]",
+          "values[Subject ID]",
+          "values[Company ID]",
+          "values[Job ID]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[Subject ID]",
+            "values[Review Status]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Review Status]"
+          ],
+          [
+            "values[Knowledge Type]",
+            "values[Review Status]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Knowledge Type]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Knowledge Type]",
+            "values[Review Status]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Knowledge ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "sources",
+      "name": "Sources",
+      "description": "References to original evidence; the source system stays authoritative for content",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Source ID",
+          "required": true
+        },
+        {
+          "name": "Source Type"
+        },
+        {
+          "name": "Source System",
+          "required": true
+        },
+        {
+          "name": "Original ID",
+          "required": true
+        },
+        {
+          "name": "Title"
+        },
+        {
+          "name": "Source Date"
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Access Scope"
+        },
+        {
+          "name": "Original URL"
+        },
+        {
+          "name": "Excerpt",
+          "rows": 4
+        },
+        {
+          "name": "Content Hash"
+        },
+        {
+          "name": "Processing Status"
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Company IDs",
+          "rows": 4
+        },
+        {
+          "name": "Person IDs",
+          "rows": 4
+        },
+        {
+          "name": "Ingest Job ID"
+        },
+        {
+          "name": "Last Synced At"
+        },
+        {
+          "name": "Processing Error",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Source ID]",
+          "values[Company ID]",
+          "values[Source System]",
+          "values[Processing Status]",
+          "values[Ingest Job ID]",
+          "values[Source Date]",
+          "values[Record Status]",
+          "values[Access Scope]"
+        ],
+        "compound": [
+          [
+            "values[Company ID]",
+            "values[Source Date]"
+          ],
+          [
+            "values[Source System]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Source System]",
+            "values[Original ID]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Source System]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Source System]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Company ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Company ID]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Source System]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Source System]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Company ID]",
+            "values[Source System]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Company ID]",
+            "values[Source System]",
+            "values[Processing Status]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Ingest Job ID]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Source ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "projects",
+      "name": "Projects",
+      "description": "Customer implementations and internal projects",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Project ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Name Key"
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Project Type"
+        },
+        {
+          "name": "Project Status"
+        },
+        {
+          "name": "Start Date"
+        },
+        {
+          "name": "End Date"
+        },
+        {
+          "name": "Date Precision"
+        },
+        {
+          "name": "Product IDs",
+          "rows": 4
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Project ID]",
+          "values[Company ID]",
+          "values[Record Status]",
+          "values[Name Key]",
+          "values[Project Status]"
+        ],
+        "compound": [
+          [
+            "values[Company ID]",
+            "values[Start Date]"
+          ],
+          [
+            "values[Company ID]",
+            "values[Name Key]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Project ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "description": "Kinetic products and major capabilities",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Product ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Name Key"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Introduced Date"
+        },
+        {
+          "name": "Product Status"
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Product ID]",
+          "values[Record Status]",
+          "values[Name Key]",
+          "values[Category]"
+        ],
+        "compound": []
+      },
+      "uniqueIndexes": [
+        [
+          "values[Product ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "research-jobs",
+      "name": "Research Jobs",
+      "description": "Historical research and ingestion jobs with checkpoints, counters and errors",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Job ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Job Type"
+        },
+        {
+          "name": "Connector"
+        },
+        {
+          "name": "Scope",
+          "rows": 4
+        },
+        {
+          "name": "Subject Type"
+        },
+        {
+          "name": "Subject ID"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Checkpoint",
+          "rows": 4
+        },
+        {
+          "name": "Batch Size"
+        },
+        {
+          "name": "Items Discovered"
+        },
+        {
+          "name": "Items Processed"
+        },
+        {
+          "name": "Items Skipped"
+        },
+        {
+          "name": "Items Failed"
+        },
+        {
+          "name": "Errors",
+          "rows": 4
+        },
+        {
+          "name": "Requested By"
+        },
+        {
+          "name": "Started At"
+        },
+        {
+          "name": "Completed At"
+        },
+        {
+          "name": "Summary",
+          "rows": 4
+        },
+        {
+          "name": "Open Questions",
+          "rows": 4
+        },
+        {
+          "name": "Attempts"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Job ID]",
+          "values[Status]",
+          "values[Job Type]",
+          "values[Subject ID]",
+          "values[Connector]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Job Type]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Job ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "audit-log",
+      "name": "Audit Log",
+      "description": "Append-only record of material changes by users and agents (review decisions, merges, ingestion writes)",
+      "submissionLabelExpression": "${values('Action')}",
+      "fields": [
+        {
+          "name": "Audit ID",
+          "required": true
+        },
+        {
+          "name": "Action",
+          "required": true
+        },
+        {
+          "name": "Entity Type"
+        },
+        {
+          "name": "Entity ID"
+        },
+        {
+          "name": "Actor"
+        },
+        {
+          "name": "Actor Type"
+        },
+        {
+          "name": "From Status"
+        },
+        {
+          "name": "To Status"
+        },
+        {
+          "name": "Comment",
+          "rows": 4
+        },
+        {
+          "name": "Details",
+          "rows": 4
+        },
+        {
+          "name": "Occurred At"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Audit ID]",
+          "values[Entity ID]",
+          "values[Action]",
+          "values[Actor]",
+          "values[Occurred At]"
+        ],
+        "compound": [
+          [
+            "values[Entity ID]",
+            "values[Occurred At]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Audit ID]"
+        ]
+      ]
+    }
+  ]
+}

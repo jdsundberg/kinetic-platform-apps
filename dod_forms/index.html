@@ -644,11 +644,8 @@ function fmtDateTime(d) {
   catch { return d; }
 }
 
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s || '';
-  return d.innerHTML;
-}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 
 /* =============== API LAYER =============== */
 async function kapi(path, opts = {}) {

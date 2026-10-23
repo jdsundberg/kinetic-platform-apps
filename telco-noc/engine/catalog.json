@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "lateThresholdSeconds": 120,
+  "futureSkewToleranceSeconds": 120,
+  "severityRank": { "Critical": 5, "Major": 4, "Minor": 3, "Warning": 2, "Indeterminate": 1, "Cleared": 0 },
+  "severityMap": {
+    "optical-ems": { "CR": "Critical", "MJ": "Major", "MN": "Minor", "WR": "Warning", "NA": "Warning", "CL": "Cleared" },
+    "ip-nms": { "0": "Critical", "1": "Critical", "2": "Critical", "3": "Major", "4": "Minor", "5": "Warning", "6": "Warning", "7": "Indeterminate" },
+    "ran-oss": { "critical": "Critical", "major": "Major", "minor": "Minor", "warning": "Warning", "indeterminate": "Indeterminate", "cleared": "Cleared" },
+    "mom-sentinel": { "P1": "Critical", "P2": "Major", "P3": "Minor", "P4": "Warning", "P5": "Indeterminate" },
+    "power-bms": { "ALARM": "Major", "WARN": "Warning", "OK": "Cleared" }
+  },
+  "conditionMap": {
+    "optical-ems": { "LOS": "LOS", "OMS-LOS": "OMS-LOS", "OCH-LOS": "OCH-LOS", "OTU-LOF": "OTU-LOF", "ODU-AIS": "ODU-AIS", "OTU-BDI": "OTU-BDI", "CARD-FAIL": "CARD-FAIL", "APS-SW": "APS-SWITCH" },
+    "ip-nms": { "%LINK-3-UPDOWN": "LINK-DOWN", "%BGP-5-ADJCHANGE": "BGP-DOWN", "%ISIS-5-ADJCHANGE": "ISIS-ADJ-DOWN", "%BFD-6-SESSION_DOWN": "BFD-DOWN", "ICMP-UNREACH": "CPE-UNREACHABLE", "MGMT-UNREACH": "MGMT-UNREACHABLE", "%MW-4-SWITCHOVER": "MW-SWITCHOVER", "%IF-FLAP": "LINK-FLAP" },
+    "ran-oss": { "NG link failure": "NG-LINK-FAIL", "X2 link failure": "X2-LINK-FAIL", "PTP sync loss": "PTP-SYNC-LOSS", "Cell out of service": "CELL-OOS", "Heartbeat failure": "HEARTBEAT-LOSS" },
+    "mom-sentinel": { "LinkDown": "LINK-DOWN", "BgpPeerDown": "BGP-DOWN", "NodeUnreachable": "MGMT-UNREACHABLE", "CpeDown": "CPE-UNREACHABLE" },
+    "power-bms": { "HIGH_TEMP": "HIGH-TEMP", "RECT_FAIL": "RECTIFIER-FAIL", "MAINS_FAIL": "MAINS-FAIL" }
+  },
+  "conditions": {
+    "LOS":              { "x733": "lossOfSignal",            "sa": true,  "text": "Loss of signal" },
+    "OMS-LOS":          { "x733": "lossOfSignal",            "sa": true,  "text": "OMS loss of signal" },
+    "OCH-LOS":          { "x733": "lossOfSignal",            "sa": true,  "text": "Optical channel loss of signal" },
+    "OTU-LOF":          { "x733": "lossOfFrame",             "sa": true,  "text": "OTU loss of frame" },
+    "ODU-AIS":          { "x733": "aIS",                     "sa": false, "text": "ODU alarm indication signal" },
+    "OTU-BDI":          { "x733": "farEndReceiverFailure",   "sa": false, "text": "OTU backward defect indication" },
+    "CARD-FAIL":        { "x733": "equipmentMalfunction",    "sa": true,  "text": "Card failure" },
+    "APS-SWITCH":       { "x733": "protectionPathFailure",   "sa": false, "text": "Protection switch to standby path" },
+    "LINK-DOWN":        { "x733": "lossOfSignal",            "sa": true,  "text": "Interface down" },
+    "LINK-FLAP":        { "x733": "degradedSignal",          "sa": false, "text": "Interface flapping" },
+    "BGP-DOWN":         { "x733": "communicationsProtocolError", "sa": false, "text": "BGP session down" },
+    "ISIS-ADJ-DOWN":    { "x733": "communicationsProtocolError", "sa": false, "text": "IS-IS adjacency down" },
+    "BFD-DOWN":         { "x733": "communicationsProtocolError", "sa": false, "text": "BFD session down" },
+    "CPE-UNREACHABLE":  { "x733": "communicationsSubsystemFailure", "sa": true, "text": "Customer CPE unreachable" },
+    "MGMT-UNREACHABLE": { "x733": "communicationsSubsystemFailure", "sa": false, "text": "Node management unreachable" },
+    "MW-SWITCHOVER":    { "x733": "protectionPathFailure",   "sa": false, "text": "Backhaul switched to microwave" },
+    "NG-LINK-FAIL":     { "x733": "communicationsSubsystemFailure", "sa": true, "text": "gNB NG (core) link failure" },
+    "X2-LINK-FAIL":     { "x733": "communicationsSubsystemFailure", "sa": false, "text": "X2/Xn neighbour link failure" },
+    "PTP-SYNC-LOSS":    { "x733": "timingProblem",           "sa": false, "text": "PTP timing sync lost" },
+    "CELL-OOS":         { "x733": "unavailable",             "sa": true,  "text": "Cell out of service" },
+    "HEARTBEAT-LOSS":   { "x733": "communicationsSubsystemFailure", "sa": false, "text": "OSS heartbeat lost" },
+    "HIGH-TEMP":        { "x733": "temperatureUnacceptable", "sa": false, "text": "High temperature" },
+    "RECTIFIER-FAIL":   { "x733": "powerProblem",            "sa": false, "text": "Rectifier module failure" },
+    "MAINS-FAIL":       { "x733": "powerProblem",            "sa": true,  "text": "Commercial power failure" },
+    "UNKNOWN":          { "x733": "unknown",                 "sa": false, "text": "Unmapped vendor condition" }
+  },
+  "metrics": {
+    "availability_pct": { "unit": "%", "from": { "ratio": 100, "%": 1 }, "healthy": ">=99.0" },
+    "packet_loss_pct":  { "unit": "%", "from": { "ratio": 100, "%": 1 }, "healthy": "<=0.5" },
+    "latency_ms":       { "unit": "ms", "from": { "us": 0.001, "ms": 1, "s": 1000 }, "healthy": "<=25" },
+    "rx_power_dbm":     { "unit": "dBm", "from": { "dBm": 1 }, "healthy": ">=-20" },
+    "throughput_mbps":  { "unit": "Mbps", "from": { "bps": 0.000001, "kbps": 0.001, "Mbps": 1, "Gbps": 1000 }, "healthy": ">=0" }
+  }
+}

@@ -302,7 +302,8 @@ let CUR = { group:null, slug:null, pageToken:null, page:1, history:[] };
 const FIELD_CACHE = {};
 
 /* ─────────── Helpers ─────────── */
-function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){ return sub.values?.[f] || ''; }
 function toast(m,t){ const e=document.getElementById('toast'); e.textContent=m; e.className=t||''; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),3200); }
 function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }

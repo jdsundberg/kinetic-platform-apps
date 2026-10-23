@@ -256,7 +256,8 @@ const PS={art:{pt:null,p:1,h:[]},swap:{pt:null,p:1,h:[]},ship:{pt:null,p:1,h:[]}
 let COMPANY_CACHE=[]; // active companies (latest 25) for selects
 const CARRIERS=['Atelier North Fine Art Logistics','Twin Ports Art Transit','Gallery Movers MN'];
 
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(s,f){return s.values?.[f]||''}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
 function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}

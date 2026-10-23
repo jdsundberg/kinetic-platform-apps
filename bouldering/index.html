@@ -288,7 +288,8 @@ const GRADES=['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12
 const HOLD_COLORS={Red:'#DC2626',Blue:'#2563EB',Green:'#16A34A',Yellow:'#F59E0B',Purple:'#7C3AED',Orange:'#F97316',Black:'#1E293B',White:'#F1F5F9',Pink:'#EC4899',Teal:'#0D9488'};
 const STYLES='Overhang,Slab,Vertical,Roof,Arete,Dihedral,Compression,Slopers,Crimps,Dyno,Mantle,Traverse';
 
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){return sub.values?.[f]||''}
 function fmt$(n){const num=parseFloat(n);return isNaN(num)?'$0':'$'+num.toLocaleString('en-US',{maximumFractionDigits:0})}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}

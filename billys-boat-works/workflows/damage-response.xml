@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>__SOURCE_GROUP__</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="1">
+        <name>Damage Response</name>
+        <author>BillysBoatWorks</author>
+        <notes>Fires when a damage report is submitted. Operational or unsafe damage pulls the hull
+from the rentable fleet and opens a blocking Damage Repair work order. Every path writes an audit
+record. Unsafe damage additionally queues a corporate escalation notice.</notes>
+        <lastID>6</lastID>
+        <request>
+
+            <task definition_id="system_start_v1" id="start" name="Start" x="60" y="200">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters/>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="then find the hull" type="Complete" value="">kinetic_core_api_connection_v1_1</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Find Asset" x="240" y="200">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">GET</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Server-root-relative path"><%= "/app/api/v1/kapps/billys/forms/assets/submissions?include=values&amp;limit=1&amp;q=" + URI.encode_www_form_component('values[Asset Name]="' + @values['Asset'].to_s + '"') %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Request body"></parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Additional headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="How to handle errors">Error Message</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="Hull found and out of service?" type="Complete" value="@results['Find Asset'].fetch('Handler Error Message','').to_s.empty? &amp;&amp; @values['Out Of Service'].to_s == 'Yes' &amp;&amp; JSON.parse(@results['Find Asset']['Response Body'].to_s)['submissions'].to_a.length &gt; 0">kinetic_core_api_connection_v1_2</task>
+                    <task label="No hull pull needed" type="Complete" value="!(@results['Find Asset'].fetch('Handler Error Message','').to_s.empty? &amp;&amp; @values['Out Of Service'].to_s == 'Yes' &amp;&amp; JSON.parse(@results['Find Asset']['Response Body'].to_s)['submissions'].to_a.length &gt; 0)">kinetic_core_api_connection_v1_4</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Pull From Service" x="440" y="120">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">PUT</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Server-root-relative path"><%= "/app/api/v1/submissions/" + JSON.parse(@results['Find Asset']['Response Body'].to_s)['submissions'][0]['id'].to_s %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Request body">{"values":{"Status":"Out of Service"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Additional headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="How to handle errors">Error Message</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="then open the repair order" type="Complete" value="">kinetic_core_api_connection_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Open Work Order" x="640" y="120">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Server-root-relative path">/app/api/v1/kapps/billys/forms/maintenance-orders/submissions</parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Request body">{"coreState":"Submitted","values":{"Work Order ID":"WO-WF-<%= @run['Id'] %>","Asset":"<%= @values['Asset'] %>","Asset Tag":"<%= @values['Asset Tag'] %>","Franchise":"<%= @values['Franchise'] %>","Location":"<%= @values['Location'] %>","Maintenance Type":"Damage Repair","Priority":"<%= @values['Severity'].to_s == 'Unsafe' ? 'Urgent' : 'High' %>","Reported By":"<%= @values['Reported By'] %>","Opened Date":"<%= @values['Reported At'] %>","Damage Report":"<%= @values['Damage ID'] %>","Blocks Reservations":"Yes","Status":"Open","Description":"Auto-opened by Damage Response workflow for <%= @values['Damage ID'] %>: <%= @values['Damage Area'] %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Additional headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="How to handle errors">Error Message</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="then record the audit trail" type="Complete" value="">kinetic_core_api_connection_v1_4</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_4" name="Write Audit" x="840" y="200">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Server-root-relative path">/app/api/v1/kapps/billys/forms/audit-log/submissions</parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Request body">{"coreState":"Submitted","values":{"Audit ID":"AUD-WF-<%= @run['Id'] %>","Entity Type":"Damage Report","Entity Reference":"<%= @values['Damage ID'] %>","Action":"Damage response workflow","Field Changed":"Asset Status","Previous Value":"Available","New Value":"<%= @values['Out Of Service'].to_s == 'Yes' ? 'Out of Service' : 'unchanged' %>","Changed By":"Damage Response workflow","Changed At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>","Franchise":"<%= @values['Franchise'] %>","Reason":"<%= @values['Severity'] %> damage reported on <%= @values['Asset'] %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Additional headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="How to handle errors">Error Message</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="Unsafe? escalate" type="Complete" value="@values['Severity'].to_s == 'Unsafe'">kinetic_core_api_connection_v1_5</task>
+                    <task label="Not unsafe — done" type="Complete" value="@values['Severity'].to_s != 'Unsafe'">utilities_echo_v1_6</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_5" name="Escalate To Corporate" x="1040" y="120">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Server-root-relative path">/app/api/v1/kapps/billys/forms/notifications/submissions</parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Request body">{"coreState":"Submitted","values":{"Notification ID":"NTF-WF-<%= @run['Id'] %>","Channel":"Email","Template":"Unsafe Damage Escalation","Recipient Type":"Corporate","Recipient":"Corporate Risk","Recipient Address":"risk@billysboatworks.com","Confirmation Code":"<%= @values['Confirmation Code'] %>","Franchise":"<%= @values['Franchise'] %>","Subject":"UNSAFE damage on <%= @values['Asset'] %> — <%= @values['Damage ID'] %>","Scheduled At":"<%= Time.now.strftime('%Y-%m-%d') %>","Status":"Queued","Body":"Unsafe damage reported at <%= @values['Location'] %>. Hull pulled from service and a repair order opened. Estimated cost <%= @values['Estimated Cost'] %>."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Additional headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="How to handle errors">Error Message</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_6</task>
+                </dependents>
+            </task>
+
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_6" name="Damage Response Complete" x="1240" y="200">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter id="input" label="Input" required="true" tooltip="Value to echo">Damage <%= @values['Damage ID'] %> (<%= @values['Severity'] %>) processed. Hull pulled: <%= @values['Out Of Service'] %>.</parameter>
+                </parameters>
+                <messages>
+                    <message type="Complete"></message>
+                </messages>
+                <dependents/>
+            </task>
+
+        </request>
+    </taskTree>
+</tree>

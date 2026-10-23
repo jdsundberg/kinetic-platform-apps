@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minnetonka Cowork</title>
+<style>
+:root{
+  --blue:#16324A;        /* deep lake — topbar/headers */
+  --blue-light:#21486A;
+  --orange:#1E5A7A;      /* accent/CTA */
+  --orange-light:#2A7299;
+  --green:#34A853; --red:#EA4335; --yellow:#FBBC04;
+  --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+  --slot:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+/* ── login ── */
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0E2233 0%,#16324A 55%,#1E5A7A 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:400px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.login-box .brand{font-size:24px;font-weight:800;color:var(--blue);text-align:center}
+.login-box .brand span{color:var(--orange)}
+.login-box .accent{width:40px;height:3px;background:var(--orange);margin:12px auto 20px;border-radius:2px}
+.login-box .sub{text-align:center;color:var(--gray);font-size:12px;margin-bottom:22px}
+.login-box label{display:block;font-size:12px;color:var(--gray);margin:12px 0 4px;font-weight:600}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(30,90,122,.15)}
+.login-box button{width:100%;margin-top:20px;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.login-box button:hover{background:var(--orange-light)}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:12px;min-height:14px}
+/* ── topbar ── */
+#app{display:none}
+.topbar{background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:800;font-size:18px;white-space:nowrap;margin-right:28px}
+.topbar .logo span{color:#8CC4E3}
+.nav-tabs{display:flex;gap:4px}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.75);padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-tabs button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:#fff}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:#8CC4E3;color:#fff}
+/* ── layout ── */
+.wrap{max-width:1240px;margin:0 auto;padding:24px}
+.console{display:none}
+.console.active{display:block}
+h1{font-size:20px;color:var(--blue);margin-bottom:4px}
+.page-sub{color:var(--gray);font-size:13px;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:15px;color:var(--blue);margin-bottom:14px}
+.card h2 .muted{font-weight:500;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* ── kpis ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--orange)}
+.kpi.blue{border-left-color:var(--blue)}
+.kpi.green{border-left-color:var(--green)}
+.kpi.gray{border-left-color:var(--gray)}
+.kpi .val{font-size:26px;font-weight:800;color:var(--blue);line-height:1.1}
+.kpi .label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;font-weight:600}
+.kpi .sub{font-size:11px;color:var(--gray);margin-top:2px}
+/* ── tables ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--light);color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#fafafa}
+.table-wrap{overflow-x:auto}
+.clickable tbody tr{cursor:pointer}
+/* ── controls ── */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,.controls input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff}
+select:focus,input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(30,90,122,.12)}
+.spacer-h{flex:1}
+.btn-primary{background:var(--orange);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-primary:disabled{background:#9DB3C2;cursor:not-allowed}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:#eceef0}
+.btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+.btn-danger{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-sm{padding:5px 10px;font-size:12px}
+.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;color:var(--gray);font-size:13px}
+.datenav{display:flex;align-items:center;gap:6px}
+.datenav .dlabel{font-weight:700;color:var(--blue);min-width:190px;text-align:center}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:600;cursor:pointer}
+/* ── badges ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-confirmed,.b-reserved{background:#E3F2FD;color:#1565C0}
+.b-checkedin,.b-active{background:#E0F2F1;color:#00695C}
+.b-completed{background:#E8F5E9;color:#2E7D32}
+.b-cancelled{background:#FDECEA;color:#C62828}
+.b-noshow{background:#FFF3E0;color:#B45309}
+.b-available{background:#E8F5E9;color:#2E7D32}
+.b-outofservice{background:#FFF8E1;color:#8D6E00}
+.b-prospect{background:#FFF8E1;color:#8D6E00}
+.b-paused{background:#F1F3F4;color:#5F6368}
+.b-default{background:#F1F3F4;color:#5F6368}
+.tv{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:.3px}
+.tv.yes{background:#16324A;color:#fff}
+.tv.no{background:#F1F3F4;color:#5F6368;border:1px solid var(--border)}
+.pill{display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--gray);white-space:nowrap}
+.empty{padding:34px;text-align:center;color:var(--gray);font-size:13px}
+.muted{color:var(--gray)}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--orange)}
+/* ── room day grid ── */
+.grid-wrap{overflow-x:auto}
+.rgrid{display:grid;grid-template-columns:56px repeat(var(--cols),minmax(150px,1fr));min-width:calc(56px + var(--cols) * 150px)}
+.rgrid .hdr{position:sticky;top:0;background:#fff;padding:8px 8px 10px;border-bottom:2px solid var(--border);font-weight:700;color:var(--blue);font-size:13px}
+.rgrid .hdr .meta{font-weight:500;color:var(--gray);font-size:11px;margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.rgrid .hdr.oos{color:var(--gray)}
+.times{position:relative}
+.times div{height:var(--slot);font-size:10px;color:var(--gray);text-align:right;padding-right:6px;transform:translateY(-6px)}
+.col{position:relative;border-left:1px solid var(--border);cursor:copy;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--slot)*2 - 1px),#E8EAED calc(var(--slot)*2 - 1px),#E8EAED calc(var(--slot)*2)),
+                   repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--slot) - 1px),#F4F5F6 calc(var(--slot) - 1px),#F4F5F6 var(--slot))}
+.col.oos{background-color:#FAFAFA;cursor:not-allowed}
+.col .past{position:absolute;left:0;right:0;top:0;background:rgba(241,243,244,.55);pointer-events:none}
+.col .nowline{position:absolute;left:0;right:0;height:2px;background:var(--red);z-index:3;pointer-events:none}
+.blk{position:absolute;left:4px;right:4px;border-radius:7px;padding:4px 7px;font-size:11px;line-height:1.25;overflow:hidden;cursor:pointer;z-index:2;
+  background:#E3F2FD;border-left:4px solid #1565C0;color:#0D3C6E;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.blk:hover{filter:brightness(.97);box-shadow:var(--shadow-lg)}
+.blk b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk .t{opacity:.8}
+.blk.checkedin{background:#E0F2F1;border-left-color:#00695C;color:#004D40}
+.blk.completed{background:#EEF1F3;border-left-color:#8A949C;color:#4A545C}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-top:10px;align-items:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+/* ── desk floor ── */
+.zone{margin-bottom:16px}
+.zone h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.desks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.desk{border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff;min-height:74px;transition:box-shadow .15s}
+.desk:hover{box-shadow:var(--shadow-lg)}
+.desk .dn{font-weight:800;color:var(--blue);display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap}
+.desk .who{font-size:12px;margin-top:5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.desk .till{font-size:11px;color:var(--gray);margin-top:2px}
+.desk.open{border-color:#B7DFC0;background:#F4FBF5}
+.desk.open .who{color:#2E7D32}
+.desk.taken{border-color:#BBD3E6;background:#F2F7FB}
+.desk.oos{background:#FAFAFA;color:var(--gray);cursor:not-allowed}
+.desk.oos .dn{color:var(--gray)}
+/* ── modal helpers ── */
+.hint{font-size:12px;color:var(--gray);margin-top:6px}
+.hint.warn{color:#C62828;font-weight:600}
+.hint.ok{color:#2E7D32;font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{border:1px solid var(--border);background:#fff;border-radius:14px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer}
+.chip:hover{border-color:var(--orange)}
+.chip.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+.dayline{margin-top:6px;border:1px solid var(--border);border-radius:8px;height:22px;position:relative;background:#FAFBFC;overflow:hidden}
+.dayline span{position:absolute;top:2px;bottom:2px;border-radius:4px;background:#BBD3E6}
+.dayline span.me{background:var(--orange);opacity:.85}
+.dayline span.clash{background:var(--red)}
+.modal-err{background:#FDECEA;color:#9B322B;border:1px solid #F5C6C2;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:14px;display:none}
+/* ── modal ── */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
+#modal.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;width:700px;max-width:96vw;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--blue)}
+.modal-close{background:none;border:none;font-size:24px;color:var(--gray);cursor:pointer;line-height:1}
+.modal-body{padding:22px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-grid .full{grid-column:1/-1}
+.modal-body label{display:block;font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:64px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:16px 22px;border-top:1px solid var(--border)}
+.confirm-bar{display:none;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#9B322B}
+/* ── toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;max-width:80vw;text-align:center}
+#toast.show{opacity:1}
+@media(max-width:820px){.modal-grid,.two-col{grid-template-columns:1fr}.nav-tabs button{padding:8px 7px;font-size:12px}.datenav .dlabel{min-width:0}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand">Minnetonka <span>Cowork</span></div>
+    <div class="accent"></div>
+    <div class="sub">Sign in to rent desks and schedule conference rooms</div>
+    <label>Server URL</label>
+    <input id="li-url" value="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="li-user" value="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Minnetonka<span>&nbsp;Cowork</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Today</button>
+      <button onclick="switchTab('rooms')">Room Schedule</button>
+      <button onclick="switchTab('desks')">Desks</button>
+      <button onclick="switchTab('members')">Members</button>
+      <button onclick="switchTab('setup')">Setup</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- ── Today ── -->
+    <div id="console-dash" class="console active">
+      <h1 id="dash-title">Today</h1>
+      <div class="page-sub">Open desks, who's in which conference room, and what's coming up</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="two-col">
+        <div class="card"><h2>Conference Rooms Today</h2><div class="table-wrap"><table id="dash-today"></table></div></div>
+        <div class="card"><h2>Desks Today <span class="muted" id="dash-open-count"></span></h2><div class="table-wrap"><table id="dash-zones"></table></div>
+          <div class="hint" id="dash-open-list"></div></div>
+      </div>
+      <div class="card"><h2>Room Use This Week <span class="muted" id="dash-week"></span></h2><div class="table-wrap"><table id="dash-rooms"></table></div></div>
+      <div class="two-col">
+        <div class="card"><h2>Next Room Bookings</h2><div class="table-wrap"><table id="dash-upcoming"></table></div></div>
+        <div class="card"><h2>Desk Rentals Starting This Week</h2><div class="table-wrap"><table id="dash-deskstarts"></table></div></div>
+      </div>
+    </div>
+
+    <!-- ── Room Schedule ── -->
+    <div id="console-rooms" class="console">
+      <h1>Room Schedule</h1>
+      <div class="page-sub">Six 6-person conference rooms, bookable 7:00am–7:00pm in 30-minute steps. Click an empty slot to book it.</div>
+      <div class="controls">
+        <div class="datenav">
+          <button class="btn-secondary btn-sm" onclick="shiftRoomDay(-1)">&#9664;</button>
+          <input type="date" id="rs-date" onchange="loadRoomDay()">
+          <button class="btn-secondary btn-sm" onclick="shiftRoomDay(1)">&#9654;</button>
+          <button class="btn-secondary btn-sm" onclick="setRoomDay(todayIso())">Today</button>
+        </div>
+        <span class="dlabel muted" id="rs-label"></span>
+        <label class="chk"><input type="checkbox" id="rs-tvonly" onchange="renderRoomDay()"> TV rooms only</label>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openBookingModal()">+ Book a Room</button>
+      </div>
+      <div class="card">
+        <div class="grid-wrap" id="rs-grid"><div class="empty">Loading…</div></div>
+        <div class="legend">
+          <span><i style="background:#E3F2FD;border-left:3px solid #1565C0"></i>Confirmed</span>
+          <span><i style="background:#E0F2F1;border-left:3px solid #00695C"></i>Checked in</span>
+          <span><i style="background:#EEF1F3;border-left:3px solid #8A949C"></i>Completed</span>
+          <span><span class="tv yes">TV</span> has a TV</span>
+          <span id="rs-freed"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>All Room Bookings</h2>
+        <div class="controls">
+          <select id="rb-room" onchange="loadBookings()"></select>
+          <input type="date" id="rb-date" onchange="loadBookings()" title="Booking date">
+          <select id="rb-status" onchange="loadBookings()"></select>
+          <button class="btn-secondary btn-sm" onclick="document.getElementById('rb-date').value='';loadBookings()">Any date</button>
+        </div>
+        <div class="table-wrap"><table id="rb-table"></table></div><div class="pager" id="rb-pager"></div>
+      </div>
+    </div>
+
+    <!-- ── Desks ── -->
+    <div id="console-desks" class="console">
+      <h1>Desks</h1>
+      <div class="page-sub">Open-office single desks rented by the day, week or month. Click an open desk to rent it for that day.</div>
+      <div class="controls">
+        <div class="datenav">
+          <button class="btn-secondary btn-sm" onclick="shiftDeskDay(-1)">&#9664;</button>
+          <input type="date" id="df-date" onchange="loadDeskDay()">
+          <button class="btn-secondary btn-sm" onclick="shiftDeskDay(1)">&#9654;</button>
+          <button class="btn-secondary btn-sm" onclick="setDeskDay(todayIso())">Today</button>
+        </div>
+        <span class="dlabel muted" id="df-label"></span>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openRentalModal()">+ Rent a Desk</button>
+      </div>
+      <div class="card" id="df-floor"><div class="empty">Loading…</div></div>
+      <div class="card">
+        <h2>All Desk Rentals</h2>
+        <div class="controls">
+          <select id="dr-desk" onchange="loadRentals()"></select>
+          <select id="dr-type" onchange="loadRentals()"></select>
+          <select id="dr-status" onchange="loadRentals()"></select>
+        </div>
+        <div class="table-wrap"><table id="dr-table"></table></div><div class="pager" id="dr-pager"></div>
+      </div>
+    </div>
+
+    <!-- ── Members ── -->
+    <div id="console-members" class="console">
+      <h1>Members</h1>
+      <div class="page-sub">Everyone who rents desks or books rooms</div>
+      <div class="controls">
+        <select id="mb-status" onchange="loadMembers()"></select>
+        <select id="mb-plan" onchange="loadMembers()"></select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openMemberModal()">+ Add Member</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="mb-table"></table></div><div class="pager" id="mb-pager"></div></div>
+    </div>
+
+    <!-- ── Setup ── -->
+    <div id="console-setup" class="console">
+      <h1>Setup</h1>
+      <div class="page-sub">The rooms and desks you rent out — rates, TVs and availability</div>
+      <div class="card">
+        <div class="controls" style="margin-bottom:10px"><h2 style="margin:0">Conference Rooms</h2><div class="spacer-h"></div>
+          <button class="btn-primary" onclick="openRoomModal()">+ Add Room</button></div>
+        <div class="table-wrap"><table id="rm-table"></table></div><div class="pager" id="rm-pager"></div>
+      </div>
+      <div class="card">
+        <div class="controls" style="margin-bottom:10px"><h2 style="margin:0">Desks</h2>
+          <select id="dk-zone" onchange="loadDeskSetup()"></select>
+          <select id="dk-status" onchange="loadDeskSetup()"></select>
+          <div class="spacer-h"></div>
+          <button class="btn-primary" onclick="openDeskModal()">+ Add Desk</button></div>
+        <div class="table-wrap"><table id="dk-table"></table></div><div class="pager" id="dk-pager"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL + TOAST ══════════════ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body"><div class="modal-err" id="modal-err"></div><div id="modal-body"></div></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const KAPP='cowork';
+let API={url:'',auth:'',user:'',displayName:''};
+
+// state machines — whitelists of statuses that hold a room / desk (mirrors server.mjs)
+const ROOM_STATUS=['Confirmed','Checked In','Completed','Cancelled','No Show'];
+const ROOM_HOLDING=['Confirmed','Checked In','Completed'];
+const DESK_STATUS=['Reserved','Active','Completed','Cancelled'];
+const DESK_HOLDING=['Reserved','Active','Completed'];
+const RENTAL_TYPES=['Day Pass','Weekly','Monthly'];
+const MEMBER_STATUS=['Active','Prospect','Paused','Cancelled'];
+const PLANS=['Pay As You Go','Monthly Desk','Meeting Rooms Only'];
+const ZONES=['Window Row','Open Floor','Quiet Zone','Standing Bar'];
+const UNIT_STATUS=['Available','Out of Service'];
+const OPEN_MIN=7*60,CLOSE_MIN=19*60;
+let LOOKUPS={rooms:[],desks:[],members:[],companies:[]};
+let ROOM_DAY=null,DESK_DAY=null;
+
+// ── helpers ──
+// also escapes quotes: values land in attributes (value="…", title="…") and TV sizes contain " (65")
+function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+// safe JS string literal inside a double-quoted HTML attribute (names can contain ' like Gray's Bay)
+function jsArg(x){return esc(JSON.stringify(String(x==null?'':x)))}
+function v(sub,f){return sub&&sub.values?(sub.values[f]||''):''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),3200)}
+function opt(val,cur,label){return `<option value="${esc(val)}" ${val===cur?'selected':''}>${esc(label==null?val:label)}</option>`}
+function nid(pre){return pre+'-'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*1e3)}
+function money(n){const x=parseFloat(n);return isNaN(x)?'—':'$'+Math.round(x).toLocaleString()}
+function moneyShort(n){const x=parseFloat(n);if(isNaN(x))return '—';if(x>=1e6)return '$'+(x/1e6).toFixed(1)+'M';if(x>=1e4)return '$'+Math.round(x/1e3)+'K';return '$'+Math.round(x).toLocaleString()}
+const pad=n=>String(n).padStart(2,'0');
+function isoOf(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function todayIso(){return isoOf(new Date())}
+function nowHHMM(){const d=new Date();return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function addDays(s,n){const [y,m,d]=s.split('-').map(Number);const x=new Date(y,m-1,d);x.setDate(x.getDate()+n);return isoOf(x)}
+function addMonthsMinusDay(s){const [y,m,d]=s.split('-').map(Number);const x=new Date(y,m,d);x.setDate(x.getDate()-1);return isoOf(x)}
+function prettyDate(s,long){if(!s)return '';const [y,m,d]=s.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString(undefined,long?{weekday:'long',month:'long',day:'numeric',year:'numeric'}:{weekday:'short',month:'short',day:'numeric'})}
+function mins(t){const [h,m]=String(t||'0:0').split(':').map(Number);return h*60+m}
+function hhmm(m){return `${pad(Math.floor(m/60))}:${pad(m%60)}`}
+function ampm(t){if(!t)return '';let [h,m]=t.split(':').map(Number);const s=h>=12?'pm':'am';h=h%12||12;return m?`${h}:${pad(m)}${s}`:`${h}${s}`}
+function statusBadge(s){const cls='b-'+String(s||'').toLowerCase().replace(/[^a-z]/g,'');return `<span class="badge ${cls} ">${esc(s||'—')}</span>`.replace('b- ','b-default ')}
+function tvTag(r){return r&&r.tv==='Yes'?`<span class="tv yes">TV ${esc(r.tvSize||'')}</span>`:'<span class="tv no">No TV</span>'}
+const TIME_OPTS=[];for(let m=OPEN_MIN;m<=CLOSE_MIN;m+=30)TIME_OPTS.push(hhmm(m));
+
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,220)}`)}
+  const t=await r.text();return t?JSON.parse(t):{}
+}
+async function appApi(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t.slice(0,200)}}
+  if(!r.ok){const e=new Error(d.error||`${r.status}`);e.status=r.status;throw e}
+  return d;
+}
+const invalidate=()=>appApi('/api/cowork/invalidate',{method:'POST'}).catch(()=>{});
+
+// ── auth ──
+function doLogin(){
+  const url=document.getElementById('li-url').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const auth=btoa(user+':'+pass);
+  fetch(`${url}/app/api/v1/me`,{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error('Invalid credentials');return r.json()})
+    .then(d=>{API={url,auth,user:d.username,displayName:d.displayName||d.username};enterApp()})
+    .catch(e=>{document.getElementById('li-err').textContent=e.message});
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;
+  document.getElementById('rs-date').value=todayIso();
+  document.getElementById('df-date').value=todayIso();
+  buildFilters();
+  loadLookups();
+  loadDash();
+}
+
+// ── tabs ──
+const TABS=['dash','rooms','desks','members','setup'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='rooms'){loadRoomDay();loadBookings()}
+  else if(tab==='desks'){loadDeskDay();loadRentals()}
+  else if(tab==='members')loadMembers();
+  else if(tab==='setup'){loadRoomSetup();loadDeskSetup()}
+}
+
+function fillSelect(id,label,vals,keep){
+  const el=document.getElementById(id);if(!el)return;
+  const cur=keep?el.value:'';
+  el.innerHTML=`<option value="">${esc(label)}</option>`+vals.map(x=>opt(x,cur)).join('');
+}
+function buildFilters(){
+  fillSelect('rb-room','All rooms',[]);
+  fillSelect('rb-status','All statuses',ROOM_STATUS);
+  fillSelect('dr-desk','All desks',[]);
+  fillSelect('dr-type','All rental types',RENTAL_TYPES);
+  fillSelect('dr-status','All statuses',DESK_STATUS);
+  fillSelect('mb-status','All statuses',MEMBER_STATUS);
+  fillSelect('mb-plan','All plans',PLANS);
+  fillSelect('dk-zone','All zones',ZONES);
+  fillSelect('dk-status','All statuses',UNIT_STATUS);
+}
+async function loadLookups(fresh){
+  try{
+    LOOKUPS=await appApi('/api/cowork/lookups'+(fresh?'?fresh=1':''));
+    fillSelect('rb-room','All rooms',LOOKUPS.rooms.map(r=>r.name),true);
+    fillSelect('dr-desk','All desks',LOOKUPS.desks.map(d=>d.name),true);
+  }catch(e){toast('Could not load rooms/desks/members: '+e.message)}
+}
+
+// ── pagination (25 per page, Prev/Next, sequence-guarded) ──
+const PS={rb:{h:[],pt:null,p:1,seq:0},dr:{h:[],pt:null,p:1,seq:0},mb:{h:[],pt:null,p:1,seq:0},rm:{h:[],pt:null,p:1,seq:0},dk:{h:[],pt:null,p:1,seq:0}};
+function paginate(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+function pagerHTML(ps,fn){
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button>`
+       +`<span>Page ${ps.p}</span>`
+       +`<button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+// filters are applied in declaration order so every combination maps to a compound index in app.json
+function buildQ(pairs){
+  const q=pairs.filter(([f,val])=>val).map(([f,val])=>`values[${f}]="${String(val).replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`);
+  return q.length?'&q='+encodeURIComponent(q.join(' AND ')):'';
+}
+async function loadList({dir,form,ps,tableId,pagerId,filters,head,row,emptyMsg,fn}){
+  paginate(ps,dir);
+  const ticket=++ps.seq;
+  let p=`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`+buildQ(filters);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const wrap=document.getElementById(tableId).closest('.table-wrap');
+  try{
+    const d=await api(p);
+    if(ticket!==ps.seq)return;               // a newer filter/page request has started
+    const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length)wrap.innerHTML=`<table id="${tableId}"></table><div class="empty">${esc(emptyMsg)}</div>`;
+    else{
+      wrap.innerHTML=`<table id="${tableId}" class="clickable"></table>`;
+      document.getElementById(tableId).innerHTML=head+'<tbody>'+subs.map(row).join('')+'</tbody>';
+    }
+    document.getElementById(pagerId).innerHTML=pagerHTML(ps,fn);
+  }catch(e){
+    if(ticket!==ps.seq)return;
+    wrap.innerHTML=`<table id="${tableId}"></table><div class="empty">Error loading ${esc(form)}: ${esc(e.message)}</div>`;
+  }
+}
+const editBtn=(fn,id)=>`<td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();${fn}('${id}')">Edit</button></td>`;
+
+// ══════════════ TODAY ══════════════
+let DASH_SEQ=0;
+async function loadDash(fresh){
+  const ticket=++DASH_SEQ;
+  const k=document.getElementById('dash-kpis');
+  if(!k.innerHTML.trim())k.innerHTML='<div class="empty">Loading today\u2019s numbers…</div>';
+  try{
+    const d=await appApi(`/api/cowork/dashboard?date=${todayIso()}&now=${nowHHMM()}${fresh?'&fresh=1':''}`);
+    if(ticket!==DASH_SEQ)return;
+    const t=d.totals||{};
+    document.getElementById('dash-title').textContent='Today · '+prettyDate(d.today,true);
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi green"><div class="val">${t.desksOpen}<span class="muted" style="font-size:15px">/${t.rentableDesks}</span></div><div class="label">Desks Open Today</div>
+        <div class="sub">${t.desksTaken} taken${t.outOfService?` · ${t.outOfService} out of service`:''}</div></div>
+      <div class="kpi"><div class="val">${t.meetingsToday}</div><div class="label">Meetings Today</div><div class="sub">${t.roomHoursToday} room-hours · ${t.inRoomNow} in a room now</div></div>
+      <div class="kpi blue"><div class="val">${t.weekUtil}%</div><div class="label">Room Use This Week</div><div class="sub">TV rooms ${t.tvUtil}% · no-TV ${t.noTvUtil}%</div></div>
+      <div class="kpi gray"><div class="val">${t.monthlyDesks}</div><div class="label">Monthly Desks</div><div class="sub">held on a monthly rental today</div></div>
+      <div class="kpi green"><div class="val" title="${money(t.monthRevenue)}">${moneyShort(t.monthRevenue)}</div><div class="label">Booked This Month</div>
+        <div class="sub">rooms ${moneyShort(t.roomRevenue)} · desks ${moneyShort(t.deskRevenue)}</div></div>
+      <div class="kpi blue"><div class="val">${t.activeMembers}</div><div class="label">Active Members</div><div class="sub">${t.prospects} prospects · ${t.noShows} no-shows this month</div></div>`;
+
+    const rm=Object.fromEntries((LOOKUPS.rooms||[]).map(r=>[r.name,r]));
+    document.getElementById('dash-today').innerHTML=
+      `<thead><tr><th>Time</th><th>Room</th><th>Meeting</th><th>People</th><th>Status</th></tr></thead><tbody>`+
+      ((d.todayBookings||[]).map(b=>`<tr onclick="editBooking('${b.id}')">
+        <td style="white-space:nowrap"><strong>${ampm(b.start)}–${ampm(b.end)}</strong></td>
+        <td>${esc(b.room)} ${rm[b.room]?tvTag(rm[b.room]):''}</td>
+        <td>${esc(b.title)}<br><span class="muted">${esc(b.by)}${b.company&&b.company!=='Independent'?' · '+esc(b.company):''}</span></td>
+        <td>${esc(b.attendees)}</td><td>${statusBadge(b.status)}</td></tr>`).join('')
+       ||'<tr><td colspan="5" class="empty">No rooms booked today.</td></tr>')+`</tbody>`;
+    document.getElementById('dash-today').classList.add('clickable');
+
+    document.getElementById('dash-open-count').textContent=`· ${t.desksOpen} open`;
+    document.getElementById('dash-zones').innerHTML=
+      `<thead><tr><th>Zone</th><th>Desks</th><th>Taken</th><th>Open</th><th>Occupancy</th></tr></thead><tbody>`+
+      ((d.zones||[]).map(z=>{const rent=z.desks-z.oos,pct=rent?Math.round(100*z.taken/rent):0;return `<tr>
+        <td><strong>${esc(z.zone)}</strong></td><td>${z.desks}${z.oos?` <span class="muted">(${z.oos} out)</span>`:''}</td>
+        <td>${z.taken}</td><td>${rent-z.taken}</td>
+        <td><div class="bar" title="${pct}%"><i style="width:${pct}%"></i></div><span class="muted">${pct}%</span></td></tr>`}).join('')
+       ||'<tr><td colspan="5" class="empty">No desks set up.</td></tr>')+`</tbody>`;
+    document.getElementById('dash-open-list').innerHTML=(d.openDesks||[]).length
+      ?'Open now: '+d.openDesks.map(n=>`<a href="#" onclick="event.preventDefault();openRentalModal(null,{desk:${jsArg(n)},start:${jsArg(d.today)}})">${esc(n)}</a>`).join(', ')
+      :'Every rentable desk is taken today.';
+
+    document.getElementById('dash-week').textContent=`· ${prettyDate(d.weekStart)} – ${prettyDate(d.weekEnd)}, 12 bookable hours a day`;
+    document.getElementById('dash-rooms').innerHTML=
+      `<thead><tr><th>Room</th><th>TV</th><th>Status</th><th>Today</th><th>Bookings</th><th>Hours</th><th>Utilization</th></tr></thead><tbody>`+
+      ((d.roomsWeek||[]).map(r=>`<tr>
+        <td><strong>${esc(r.room)}</strong></td><td>${tvTag(r)}</td><td>${statusBadge(r.status)}</td><td>${r.today}</td><td>${r.bookings}</td><td>${r.hours}</td>
+        <td><div class="bar" title="${r.util}%"><i style="width:${Math.min(100,r.util)}%"></i></div><span class="muted">${r.util}%</span></td></tr>`).join('')
+       ||'<tr><td colspan="7" class="empty">No rooms set up.</td></tr>')+`</tbody>`;
+
+    document.getElementById('dash-upcoming').innerHTML=
+      `<thead><tr><th>When</th><th>Room</th><th>Booked By</th><th>People</th><th>TV</th></tr></thead><tbody>`+
+      ((d.upcoming||[]).map(b=>`<tr onclick="editBooking('${b.id}')">
+        <td style="white-space:nowrap"><strong>${esc(prettyDate(b.date))}</strong><br><span class="muted">${ampm(b.start)}–${ampm(b.end)}</span></td>
+        <td>${esc(b.room)}</td><td>${esc(b.by)}<br><span class="muted">${esc(b.title)}</span></td><td>${esc(b.attendees)}</td>
+        <td>${b.needsTv==='Yes'?'<span class="tv yes">Needs TV</span>':'<span class="muted">—</span>'}</td></tr>`).join('')
+       ||'<tr><td colspan="5" class="empty">Nothing booked ahead.</td></tr>')+`</tbody>`;
+    document.getElementById('dash-upcoming').classList.add('clickable');
+
+    document.getElementById('dash-deskstarts').innerHTML=
+      `<thead><tr><th>Starts</th><th>Desk</th><th>Member</th><th>Type</th><th>Through</th></tr></thead><tbody>`+
+      ((d.deskStarts||[]).map(r=>`<tr onclick="editRental('${r.id}')">
+        <td style="white-space:nowrap"><strong>${esc(prettyDate(r.start))}</strong></td><td>${esc(r.desk)}<br><span class="muted">${esc(r.zone)}</span></td>
+        <td>${esc(r.member)}</td><td><span class="pill">${esc(r.type)}</span></td><td>${esc(prettyDate(r.end))}</td></tr>`).join('')
+       ||'<tr><td colspan="5" class="empty">No desk rentals start in the next 7 days.</td></tr>')+`</tbody>`;
+    document.getElementById('dash-deskstarts').classList.add('clickable');
+  }catch(e){
+    if(ticket!==DASH_SEQ)return;
+    document.getElementById('dash-kpis').innerHTML=`<div class="empty">Error loading dashboard: ${esc(e.message)}</div>`;
+  }
+}
+
+// ══════════════ ROOM SCHEDULE (day grid) ══════════════
+let ROOM_SEQ=0;
+function setRoomDay(d){document.getElementById('rs-date').value=d;loadRoomDay()}
+function shiftRoomDay(n){setRoomDay(addDays(document.getElementById('rs-date').value||todayIso(),n))}
+async function loadRoomDay(){
+  const date=document.getElementById('rs-date').value||todayIso();
+  document.getElementById('rs-label').textContent=prettyDate(date,true);
+  const ticket=++ROOM_SEQ;
+  document.getElementById('rs-grid').style.opacity='.5';
+  try{
+    const d=await appApi(`/api/cowork/day?date=${date}&what=rooms`);
+    if(ticket!==ROOM_SEQ)return;
+    ROOM_DAY=d;renderRoomDay();document.getElementById('rs-grid').style.opacity='';
+  }catch(e){
+    if(ticket!==ROOM_SEQ)return;
+    document.getElementById('rs-grid').style.opacity='';
+    document.getElementById('rs-grid').innerHTML=`<div class="empty">Error loading schedule: ${esc(e.message)}</div>`;
+  }
+}
+function renderRoomDay(){
+  const d=ROOM_DAY;if(!d)return;
+  const tvOnly=document.getElementById('rs-tvonly').checked;
+  const rooms=d.rooms.filter(r=>!tvOnly||r.tv==='Yes');
+  const slots=(CLOSE_MIN-OPEN_MIN)/30;
+  const slotPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--slot'))||26;
+  const H=slots*slotPx;
+  const isToday=d.date===todayIso(),nowM=mins(nowHHMM());
+  let times='';for(let i=0;i<slots;i++)times+=`<div>${i%2===0?ampm(hhmm(OPEN_MIN+i*30)):''}</div>`;
+  const live=d.bookings.filter(b=>ROOM_HOLDING.includes(b.status));
+  const freed=d.bookings.filter(b=>!ROOM_HOLDING.includes(b.status));
+  let html=`<div class="rgrid" style="--cols:${rooms.length}"><div class="hdr"></div>`;
+  html+=rooms.map(r=>`<div class="hdr ${r.status!=='Available'?'oos':''}">${esc(r.name)}
+     <div class="meta">${tvTag(r)}<span>${r.capacity} seats</span><span>${money(r.rate)}/hr</span>${r.status!=='Available'?statusBadge(r.status):''}</div></div>`).join('');
+  html+=`<div class="times" style="height:${H}px">${times}</div>`;
+  for(const r of rooms){
+    const oos=r.status!=='Available';
+    let inner='';
+    if(d.date<todayIso())inner+=`<div class="past" style="height:${H}px"></div>`;
+    else if(isToday&&nowM>OPEN_MIN){const y=Math.min(H,(nowM-OPEN_MIN)/30*slotPx);inner+=`<div class="past" style="height:${y}px"></div>`;if(nowM<CLOSE_MIN)inner+=`<div class="nowline" style="top:${y}px"></div>`}
+    for(const b of live.filter(b=>b.room===r.name)){
+      const top=(mins(b.start)-OPEN_MIN)/30*slotPx,h=Math.max(slotPx,(mins(b.end)-mins(b.start))/30*slotPx)-2;
+      const cls=b.status==='Checked In'?'checkedin':b.status==='Completed'?'completed':'';
+      inner+=`<div class="blk ${cls}" style="top:${top+1}px;height:${h}px" onclick="event.stopPropagation();editBooking('${b.id}')"
+        title="${esc(b.title)} — ${esc(b.by)} · ${ampm(b.start)}–${ampm(b.end)} · ${esc(b.attendees)} people${b.needsTv==='Yes'?' · needs TV':''} · ${esc(b.status)}">
+        <b>${esc(b.title||b.by)}</b><span class="t">${ampm(b.start)}–${ampm(b.end)} · ${esc(b.by)} · ${esc(b.attendees)}p${b.needsTv==='Yes'?' · TV':''}</span></div>`;
+    }
+    html+=`<div class="col ${oos?'oos':''}" style="height:${H}px" data-room="${esc(r.name)}" onclick="gridClick(event,this)">${inner}</div>`;
+  }
+  html+='</div>';
+  document.getElementById('rs-grid').innerHTML=rooms.length?html:'<div class="empty">No rooms match.</div>';
+  document.getElementById('rs-freed').textContent=freed.length?`${freed.length} cancelled / no-show booking${freed.length===1?'':'s'} not shown (they free the slot)`:'';
+}
+function gridClick(ev,col){
+  if(col.classList.contains('oos')){toast('That room is out of service');return}
+  const slotPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--slot'))||26;
+  const y=ev.clientY-col.getBoundingClientRect().top;
+  let start=OPEN_MIN+Math.floor(y/slotPx)*30;
+  start=Math.min(start,CLOSE_MIN-60);
+  const date=ROOM_DAY.date;
+  if(date<todayIso()){toast('That day has passed — pick today or later');return}
+  openBookingModal(null,{room:col.dataset.room,date,start:hhmm(start),end:hhmm(start+60)});
+}
+
+// ── all bookings list ──
+async function loadBookings(dir){
+  const rm=Object.fromEntries((LOOKUPS.rooms||[]).map(r=>[r.name,r]));
+  await loadList({dir,form:'room-bookings',ps:PS.rb,tableId:'rb-table',pagerId:'rb-pager',fn:'loadBookings',
+    filters:[['Room',document.getElementById('rb-room').value],['Booking Date',document.getElementById('rb-date').value],['Status',document.getElementById('rb-status').value]],
+    emptyMsg:'No bookings match these filters.',
+    head:`<thead><tr><th>Date</th><th>Time</th><th>Room</th><th>Meeting</th><th>Booked By</th><th>People</th><th>TV</th><th>Rate</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const x=s.values;return `<tr onclick="editBooking('${s.id}')">
+      <td style="white-space:nowrap"><strong>${esc(prettyDate(x['Booking Date']))}</strong></td>
+      <td style="white-space:nowrap">${ampm(x['Start Time'])}–${ampm(x['End Time'])}<br><span class="muted">${esc(x['Hours'])} hr</span></td>
+      <td>${esc(x['Room'])} ${rm[x['Room']]?tvTag(rm[x['Room']]):''}</td>
+      <td>${esc(x['Meeting Title'])}</td>
+      <td>${esc(x['Booked By'])}<br><span class="muted">${esc(x['Company']||'')}</span></td>
+      <td>${esc(x['Attendees'])}</td>
+      <td>${x['Needs TV']==='Yes'?'<span class="tv yes">Needs TV</span>':'<span class="muted">—</span>'}</td>
+      <td>${money(x['Rate'])}</td><td>${statusBadge(x['Status'])}</td>${editBtn('editBooking',s.id)}</tr>`}});
+}
+
+// ── booking modal ──
+async function editBooking(id){
+  try{const d=await api(`/submissions/${id}?include=values`);openBookingModal(d.submission||d)}
+  catch(e){toast('Could not open booking: '+e.message)}
+}
+let BK={id:'',dayCache:{}};
+function memberOptions(cur){
+  const ms=(LOOKUPS.members||[]).filter(m=>m.status==='Active'||m.name===cur);
+  return `<option value="">Choose a member…</option>`+ms.map(m=>opt(m.name,cur,`${m.name}${m.company&&m.company!=='Independent'?' — '+m.company:''}`)).join('')
+    +(cur&&!ms.some(m=>m.name===cur)?opt(cur,cur):'');
+}
+function openBookingModal(ex,pre={}){
+  const s=ex||{},x=s.values||{};
+  BK={id:s.id||'',dayCache:{}};
+  const date=x['Booking Date']||pre.date||document.getElementById('rs-date').value||todayIso();
+  const start=x['Start Time']||pre.start||'09:00',end=x['End Time']||pre.end||hhmm(mins(start)+60);
+  const room=x['Room']||pre.room||'';
+  const needsTv=x['Needs TV']||(pre.room&&(LOOKUPS.rooms.find(r=>r.name===pre.room)||{}).tv==='Yes'?'':'No')||'No';
+  document.getElementById('modal-title').textContent=ex?'Edit Room Booking':'Book a Conference Room';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Date</label><input id="m-date" type="date" value="${esc(date)}" onchange="bkRefresh()"></div>
+      <div><label>Attendees (max 6)</label><select id="m-att" onchange="bkRefresh()">${[1,2,3,4,5,6].map(n=>opt(String(n),x['Attendees']||'4')).join('')}</select></div>
+      <div><label>Start</label><select id="m-start" onchange="bkStartChanged()">${TIME_OPTS.slice(0,-1).map(t=>opt(t,start,ampm(t))).join('')}</select></div>
+      <div><label>End</label><select id="m-end" onchange="bkRefresh()">${TIME_OPTS.slice(1).map(t=>opt(t,end,ampm(t))).join('')}</select></div>
+      <div class="full"><label class="chk" style="margin:0"><input type="checkbox" id="m-tv" style="width:auto" ${needsTv==='Yes'?'checked':''} onchange="bkRefresh()"> Needs a TV / screen</label></div>
+      <div class="full"><label>Room</label><select id="m-room" onchange="bkRefresh()"></select>
+        <div class="dayline" id="m-dayline"></div>
+        <div class="hint" id="m-roomhint"></div>
+        <div class="chips" id="m-freerooms"></div></div>
+      <div class="full"><label>Meeting Title</label><input id="m-title" value="${esc(x['Meeting Title']||'')}" placeholder="Client kickoff"></div>
+      <div><label>Booked By</label><select id="m-member" onchange="bkMember()">${memberOptions(x['Booked By']||'')}</select></div>
+      <div><label>Company</label><input id="m-company" value="${esc(x['Company']||'')}"></div>
+      <div><label>Email</label><input id="m-email" value="${esc(x['Email']||'')}"></div>
+      <div><label>Rate</label><input id="m-rate" value="${esc(x['Rate']||'')}" placeholder="auto from room × hours" ${x['Rate']?'data-touched="1"':''}></div>
+      <div><label>Status</label><select id="m-status" onchange="bkRefresh()">${ROOM_STATUS.map(t=>opt(t,x['Status']||'Confirmed')).join('')}</select></div>
+      <div></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(x['Notes']||'')}</textarea></div>
+    </div>`;
+  footer(ex?`<button class="btn-danger" onclick="askDelete('${s.id}',afterBookingWrite)">Delete</button>`:'',
+    `<button class="btn-primary" id="m-save" onclick="saveBooking()">${ex?'Update':'Book Room'}</button>`);
+  openModal();
+  bkFillRooms(room);
+  bkRefresh();
+}
+function bkRoomsFor(needTv){return (LOOKUPS.rooms||[]).filter(r=>!needTv||r.tv==='Yes')}
+function bkFillRooms(keep){
+  const needTv=document.getElementById('m-tv').checked;
+  const sel=document.getElementById('m-room');
+  const cur=keep!=null?keep:sel.value;
+  const list=bkRoomsFor(needTv).filter(r=>r.status==='Available'||r.name===cur);
+  sel.innerHTML=`<option value="">Choose a room…</option>`+list.map(r=>
+    opt(r.name,cur,`${r.name} — ${r.tv==='Yes'?'TV '+r.tvSize:'no TV'} · ${r.capacity} seats · ${money(r.rate)}/hr${r.vc==='Yes'?' · video conf':''}`)).join('');
+}
+function bkStartChanged(){
+  const s=mins(document.getElementById('m-start').value),e=document.getElementById('m-end');
+  if(mins(e.value)<=s)e.value=hhmm(Math.min(CLOSE_MIN,s+60));
+  bkRefresh();
+}
+function bkMember(){
+  const m=(LOOKUPS.members||[]).find(x=>x.name===document.getElementById('m-member').value);
+  if(m){document.getElementById('m-company').value=m.company||'';document.getElementById('m-email').value=m.email||''}
+}
+// Pull the chosen day's bookings (cached per open modal), then show the room's day,
+// flag any overlap, and list every other room that is free for the same window.
+let BK_SEQ=0;
+async function bkRefresh(){
+  bkFillRooms();
+  const date=document.getElementById('m-date').value,room=document.getElementById('m-room').value;
+  const st=document.getElementById('m-start').value,en=document.getElementById('m-end').value;
+  const holds=ROOM_HOLDING.includes(document.getElementById('m-status').value);
+  const hint=document.getElementById('m-roomhint'),line=document.getElementById('m-dayline'),chips=document.getElementById('m-freerooms');
+  bkSyncRate();
+  if(!date){hint.textContent='Pick a date.';return}
+  const ticket=++BK_SEQ;
+  let day=BK.dayCache[date];
+  if(!day){
+    hint.className='hint';hint.textContent='Checking availability…';
+    try{day=await appApi(`/api/cowork/day?date=${date}&what=rooms`);BK.dayCache[date]=day}
+    catch(e){hint.className='hint warn';hint.textContent='Could not check availability: '+e.message;return}
+  }
+  if(ticket!==BK_SEQ)return;
+  const others=day.bookings.filter(b=>b.id!==BK.id&&ROOM_HOLDING.includes(b.status));
+  const overlaps=(b)=>st<b.end&&b.start<en;
+  const needTv=document.getElementById('m-tv').checked,att=+document.getElementById('m-att').value;
+  // free rooms for this window
+  const free=bkRoomsFor(needTv).filter(r=>r.status==='Available'&&att<=r.capacity&&!others.some(b=>b.room===r.name&&overlaps(b)));
+  chips.innerHTML=st<en?(free.length
+    ?'<span class="hint" style="margin:0 4px 0 0">Free '+ampm(st)+'–'+ampm(en)+':</span>'+free.map(r=>`<span class="chip ${r.name===room?'on':''}" onclick="document.getElementById('m-room').value=${jsArg(r.name)};bkRefresh()">${esc(r.name)}${r.tv==='Yes'?' · TV':''}</span>`).join('')
+    :`<span class="hint warn" style="margin:0">No ${needTv?'TV ':''}room is free ${ampm(st)}–${ampm(en)}.</span>`):'';
+  // day strip for the chosen room
+  const mine=others.filter(b=>b.room===room);
+  const span=CLOSE_MIN-OPEN_MIN,pct=(t)=>((mins(t)-OPEN_MIN)/span*100).toFixed(2);
+  line.innerHTML=room?mine.map(b=>`<span class="${holds&&overlaps(b)?'clash':''}" style="left:${pct(b.start)}%;width:${(pct(b.end)-pct(b.start)).toFixed(2)}%" title="${ampm(b.start)}–${ampm(b.end)} ${esc(b.by)}"></span>`).join('')
+    +(st<en?`<span class="me" style="left:${pct(st)}%;width:${(pct(en)-pct(st)).toFixed(2)}%"></span>`:''):'';
+  line.style.display=room?'block':'none';
+  const r=(LOOKUPS.rooms||[]).find(x=>x.name===room);
+  const clash=mine.filter(overlaps);
+  if(!room){hint.className='hint';hint.textContent='Choose a room — or click one of the free rooms below.'}
+  else if(st>=en){hint.className='hint warn';hint.textContent='End time must be after the start time.'}
+  else if(r&&att>r.capacity){hint.className='hint warn';hint.textContent=`${room} seats ${r.capacity}.`}
+  else if(holds&&clash.length){hint.className='hint warn';hint.textContent='Conflicts with '+clash.map(b=>`${ampm(b.start)}–${ampm(b.end)} (${b.by})`).join(', ')}
+  else{hint.className='hint ok';hint.textContent=mine.length?`Open ${ampm(st)}–${ampm(en)}. Also booked today: `+mine.map(b=>`${ampm(b.start)}–${ampm(b.end)}`).join(', '):`${room} is open all day.`}
+  document.getElementById('m-save').disabled=!!(room&&holds&&clash.length);
+}
+function bkSyncRate(){
+  const el=document.getElementById('m-rate');if(!el||el.dataset.touched==='1')return;
+  const r=(LOOKUPS.rooms||[]).find(x=>x.name===document.getElementById('m-room').value);
+  const hrs=(mins(document.getElementById('m-end').value)-mins(document.getElementById('m-start').value))/60;
+  el.value=r&&hrs>0?String(Math.round(r.rate*hrs)):'';
+}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='m-rate')e.target.dataset.touched='1'});
+async function saveBooking(){
+  const g=x=>document.getElementById(x).value;
+  const values={'Room':g('m-room'),'Booking Date':g('m-date'),'Start Time':g('m-start'),'End Time':g('m-end'),
+    'Attendees':g('m-att'),'Needs TV':document.getElementById('m-tv').checked?'Yes':'No','Meeting Title':g('m-title'),
+    'Booked By':g('m-member'),'Company':g('m-company'),'Email':g('m-email'),'Rate':g('m-rate'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Room']){modalErr('Choose a room.');return}
+  if(!values['Booked By']){modalErr('Choose who the booking is for.');return}
+  const btn=document.getElementById('m-save');btn.disabled=true;
+  try{
+    await appApi('/api/cowork/room-bookings',{method:'POST',body:JSON.stringify({id:BK.id,values})});
+    closeModal();toast(BK.id?'Booking updated':`Booked ${values['Room']} ${ampm(values['Start Time'])}–${ampm(values['End Time'])}, ${prettyDate(values['Booking Date'])}`);
+    afterBookingWrite(values['Booking Date']);
+  }catch(e){btn.disabled=false;modalErr(e.message);BK.dayCache={};bkRefresh()}
+}
+function afterBookingWrite(date){
+  if(date&&document.getElementById('console-rooms').classList.contains('active')&&typeof date==='string')document.getElementById('rs-date').value=date;
+  if(document.getElementById('console-rooms').classList.contains('active')){loadRoomDay();setTimeout(()=>loadBookings(),1200)}
+  if(document.getElementById('console-dash').classList.contains('active'))loadDash(true);
+}
+
+// ══════════════ DESKS (floor + rentals) ══════════════
+let DESK_SEQ=0;
+function setDeskDay(d){document.getElementById('df-date').value=d;loadDeskDay()}
+function shiftDeskDay(n){setDeskDay(addDays(document.getElementById('df-date').value||todayIso(),n))}
+async function loadDeskDay(){
+  const date=document.getElementById('df-date').value||todayIso();
+  document.getElementById('df-label').textContent=prettyDate(date,true);
+  const ticket=++DESK_SEQ;
+  document.getElementById('df-floor').style.opacity='.5';
+  try{
+    const d=await appApi(`/api/cowork/day?date=${date}&what=desks`);
+    if(ticket!==DESK_SEQ)return;
+    DESK_DAY=d;renderDeskDay();document.getElementById('df-floor').style.opacity='';
+  }catch(e){
+    if(ticket!==DESK_SEQ)return;
+    document.getElementById('df-floor').style.opacity='';
+    document.getElementById('df-floor').innerHTML=`<div class="empty">Error loading desks: ${esc(e.message)}</div>`;
+  }
+}
+function renderDeskDay(){
+  const d=DESK_DAY;if(!d)return;
+  const holdOf=Object.fromEntries(d.deskHolds.map(h=>[h.desk,h]));
+  const zones=[...new Set(d.desks.map(x=>x.zone))];
+  const open=d.desks.filter(x=>x.status==='Available'&&!holdOf[x.name]).length;
+  const rentable=d.desks.filter(x=>x.status==='Available').length;
+  document.getElementById('df-floor').innerHTML=`<h2>Floor on ${esc(prettyDate(d.date))} <span class="muted">· ${open} of ${rentable} rentable desks open</span></h2>`+
+    zones.map(z=>{const ds=d.desks.filter(x=>x.zone===z);return `<div class="zone"><h3>${esc(z)} <span class="pill">${ds.length} desks</span></h3><div class="desks">`+
+      ds.map(x=>{
+        const h=holdOf[x.name];
+        if(x.status!=='Available')return `<div class="desk oos" title="${esc(x.status)}"><div class="dn">${esc(x.name)} ${statusBadge(x.status)}</div><div class="till">${esc(x.features)}</div></div>`;
+        if(h)return `<div class="desk taken" onclick="editRental('${h.id}')" title="${esc(h.member)} · ${esc(h.type)} ${esc(h.start)} → ${esc(h.end)}">
+          <div class="dn">${esc(x.name)} <span class="pill">${esc(h.type)}</span></div><div class="who">${esc(h.member)}</div>
+          <div class="till">${h.start===h.end?'today only':'through '+esc(prettyDate(h.end))}</div></div>`;
+        const past=d.date<todayIso();
+        return `<div class="desk open" ${past?'':`onclick="openRentalModal(null,{desk:${jsArg(x.name)},start:${jsArg(d.date)}})"`}>
+          <div class="dn">${esc(x.name)} <span class="muted" style="font-weight:600;font-size:12px">${money(x.day)}/day</span></div>
+          <div class="who">Open</div><div class="till">${esc(x.features)}</div></div>`;
+      }).join('')+'</div></div>'}).join('');
+}
+async function loadRentals(dir){
+  await loadList({dir,form:'desk-rentals',ps:PS.dr,tableId:'dr-table',pagerId:'dr-pager',fn:'loadRentals',
+    filters:[['Desk',document.getElementById('dr-desk').value],['Rental Type',document.getElementById('dr-type').value],['Status',document.getElementById('dr-status').value]],
+    emptyMsg:'No desk rentals match these filters.',
+    head:`<thead><tr><th>Desk</th><th>Member</th><th>Type</th><th>Start</th><th>End</th><th>Rate</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const x=s.values;return `<tr onclick="editRental('${s.id}')">
+      <td><strong>${esc(x['Desk'])}</strong><br><span class="muted">${esc(x['Zone'])}</span></td>
+      <td>${esc(x['Member'])}<br><span class="muted">${esc(x['Company']||'')}</span></td>
+      <td><span class="pill">${esc(x['Rental Type'])}</span></td>
+      <td style="white-space:nowrap">${esc(prettyDate(x['Start Date']))}</td><td style="white-space:nowrap">${esc(prettyDate(x['End Date']))}</td>
+      <td>${money(x['Rate'])}</td><td>${statusBadge(x['Status'])}</td>${editBtn('editRental',s.id)}</tr>`}});
+}
+async function editRental(id){
+  try{const d=await api(`/submissions/${id}?include=values`);openRentalModal(d.submission||d)}
+  catch(e){toast('Could not open rental: '+e.message)}
+}
+let RT={id:''};
+function rentalEnd(type,start){if(!start)return '';return type==='Monthly'?addMonthsMinusDay(start):type==='Weekly'?addDays(start,6):start}
+function openRentalModal(ex,pre={}){
+  const s=ex||{},x=s.values||{};
+  RT={id:s.id||''};
+  const type=x['Rental Type']||pre.type||'Day Pass';
+  const start=x['Start Date']||pre.start||document.getElementById('df-date').value||todayIso();
+  const end=x['End Date']||rentalEnd(type,start);
+  document.getElementById('modal-title').textContent=ex?'Edit Desk Rental':'Rent a Desk';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Rental Type</label><div class="chips" id="m-types">${RENTAL_TYPES.map(t=>`<span class="chip ${t===type?'on':''}" data-t="${t}" onclick="rtType('${t}')">${t}</span>`).join('')}</div></div>
+      <div><label>Start Date</label><input id="m-start" type="date" value="${esc(start)}" onchange="rtDates(true)"></div>
+      <div><label>End Date</label><input id="m-end" type="date" value="${esc(end)}" onchange="rtDates(false)"></div>
+      <div class="full"><label>Desk</label><select id="m-desk" onchange="rtRefresh()"></select><div class="hint" id="m-deskhint"></div></div>
+      <div><label>Member</label><select id="m-member" onchange="rtMember()">${memberOptions(x['Member']||'')}</select></div>
+      <div><label>Company</label><input id="m-company" value="${esc(x['Company']||'')}"></div>
+      <div><label>Email</label><input id="m-email" value="${esc(x['Email']||'')}"></div>
+      <div><label>Rate</label><input id="m-rate" value="${esc(x['Rate']||'')}" placeholder="auto from desk + type" ${x['Rate']?'data-touched="1"':''}></div>
+      <div><label>Status</label><select id="m-status" onchange="rtRefresh()">${DESK_STATUS.map(t=>opt(t,x['Status']||'Reserved')).join('')}</select></div>
+      <div></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(x['Notes']||'')}</textarea></div>
+    </div>`;
+  RT.type=type;RT.keepDesk=x['Desk']||pre.desk||'';
+  footer(ex?`<button class="btn-danger" onclick="askDelete('${s.id}',afterRentalWrite)">Delete</button>`:'',
+    `<button class="btn-primary" id="m-save" onclick="saveRental()">${ex?'Update':'Rent Desk'}</button>`);
+  openModal();
+  rtRefresh();
+}
+function rtType(t){RT.type=t;document.querySelectorAll('#m-types .chip').forEach(c=>c.classList.toggle('on',c.dataset.t===t));
+  const rate=document.getElementById('m-rate');rate.dataset.touched='';rtDates(true)}
+function rtDates(fromStart){
+  const s=document.getElementById('m-start'),e=document.getElementById('m-end');
+  if(fromStart||!e.value||e.value<s.value)e.value=rentalEnd(RT.type,s.value);
+  rtRefresh();
+}
+function rtMember(){
+  const m=(LOOKUPS.members||[]).find(x=>x.name===document.getElementById('m-member').value);
+  if(m){document.getElementById('m-company').value=m.company||'';document.getElementById('m-email').value=m.email||''}
+}
+// Which desks are already held for any day in [start, end]? Mark them unavailable.
+let RT_SEQ=0,RT_BUSY={};
+async function rtRefresh(){
+  const start=document.getElementById('m-start').value,end=document.getElementById('m-end').value;
+  const sel=document.getElementById('m-desk'),hint=document.getElementById('m-deskhint');
+  const keep=sel.value||RT.keepDesk;RT.keepDesk='';
+  const holds=DESK_HOLDING.includes(document.getElementById('m-status').value);
+  if(!start||!end||end<start){hint.className='hint warn';hint.textContent='Pick a start date and an end date on or after it.';return}
+  const ticket=++RT_SEQ;
+  hint.className='hint';hint.textContent='Checking availability…';
+  try{
+    // cached read is fine here: every write busts the server cache, and the save re-checks fresh
+    const d=await appApi(`/api/cowork/desk-availability?start=${start}&end=${end}&exclude=${RT.id}`);
+    if(ticket!==RT_SEQ)return;
+    RT_BUSY=d.busy||{};
+  }catch(e){hint.className='hint warn';hint.textContent='Could not check availability: '+e.message;return}
+  const desks=LOOKUPS.desks||[];
+  const label=(x)=>{const b=RT_BUSY[x.name];
+    if(x.status!=='Available')return `${x.name} — ${x.zone} · ${x.status}`;
+    if(b)return `${x.name} — ${x.zone} · taken (${b.map(r=>r.member).join(', ')})`;
+    return `${x.name} — ${x.zone} · ${money(x.day)}/day · ${money(x.week)}/wk · ${money(x.month)}/mo`};
+  const freeCount=desks.filter(x=>x.status==='Available'&&!RT_BUSY[x.name]).length;
+  sel.innerHTML=`<option value="">Choose a desk… (${freeCount} free for these dates)</option>`+desks.map(x=>{
+    const blocked=x.status!=='Available'||RT_BUSY[x.name];
+    return `<option value="${esc(x.name)}" ${x.name===keep?'selected':''} ${blocked&&x.name!==keep?'disabled':''}>${esc(label(x))}</option>`}).join('');
+  const desk=sel.value,b=RT_BUSY[desk];
+  if(!desk){hint.className='hint';hint.textContent=`${freeCount} desk${freeCount===1?'':'s'} free ${prettyDate(start)}${end!==start?' → '+prettyDate(end):''}.`}
+  else if(holds&&b){hint.className='hint warn';hint.textContent=`${desk} is taken: `+b.map(r=>`${r.member} ${r.start}${r.end!==r.start?' → '+r.end:''}`).join(', ')}
+  else{hint.className='hint ok';hint.textContent=`${desk} is free ${prettyDate(start)}${end!==start?' → '+prettyDate(end):''}.`}
+  document.getElementById('m-save').disabled=!!(desk&&holds&&b);
+  const rate=document.getElementById('m-rate');
+  const x=desks.find(y=>y.name===desk);
+  if(x&&rate.dataset.touched!=='1')rate.value=String(RT.type==='Monthly'?x.month:RT.type==='Weekly'?x.week:x.day);
+}
+async function saveRental(){
+  const g=x=>document.getElementById(x).value;
+  const values={'Desk':g('m-desk'),'Rental Type':RT.type,'Start Date':g('m-start'),'End Date':g('m-end'),
+    'Member':g('m-member'),'Company':g('m-company'),'Email':g('m-email'),'Rate':g('m-rate'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Desk']){modalErr('Choose a desk.');return}
+  if(!values['Member']){modalErr('Choose the member renting the desk.');return}
+  const btn=document.getElementById('m-save');btn.disabled=true;
+  try{
+    await appApi('/api/cowork/desk-rentals',{method:'POST',body:JSON.stringify({id:RT.id,values})});
+    closeModal();toast(RT.id?'Rental updated':`${values['Desk']} rented to ${values['Member']}`);afterRentalWrite();
+  }catch(e){btn.disabled=false;modalErr(e.message);rtRefresh()}
+}
+function afterRentalWrite(){
+  if(document.getElementById('console-desks').classList.contains('active')){loadDeskDay();setTimeout(()=>loadRentals(),1200)}
+  if(document.getElementById('console-dash').classList.contains('active'))loadDash(true);
+}
+
+// ══════════════ MEMBERS ══════════════
+async function loadMembers(dir){
+  await loadList({dir,form:'members',ps:PS.mb,tableId:'mb-table',pagerId:'mb-pager',fn:'loadMembers',
+    filters:[['Status',document.getElementById('mb-status').value],['Plan',document.getElementById('mb-plan').value]],
+    emptyMsg:'No members match these filters.',
+    head:`<thead><tr><th>Member</th><th>Company</th><th>Email</th><th>Phone</th><th>Plan</th><th>Joined</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const x=s.values;return `<tr onclick="editMember('${s.id}')">
+      <td><strong>${esc(x['Full Name'])}</strong></td><td>${esc(x['Company'])}</td><td>${esc(x['Email'])}</td><td>${esc(x['Phone'])}</td>
+      <td><span class="pill">${esc(x['Plan'])}</span></td><td>${esc(x['Join Date'])}</td><td>${statusBadge(x['Status'])}</td>${editBtn('editMember',s.id)}</tr>`}});
+}
+async function editMember(id){try{const d=await api(`/submissions/${id}?include=values`);openMemberModal(d.submission||d)}catch(e){toast('Could not open member: '+e.message)}}
+function openMemberModal(ex){
+  const s=ex||{},x=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Member':'New Member';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Full Name *</label><input id="m-name" value="${esc(x['Full Name']||'')}"></div>
+      <div><label>Company</label><input id="m-company" value="${esc(x['Company']||'')}" placeholder="Independent"></div>
+      <div><label>Email</label><input id="m-email" value="${esc(x['Email']||'')}"></div>
+      <div><label>Phone</label><input id="m-phone" value="${esc(x['Phone']||'')}"></div>
+      <div><label>Plan</label><select id="m-plan">${PLANS.map(t=>opt(t,x['Plan']||'Pay As You Go')).join('')}</select></div>
+      <div><label>Join Date</label><input id="m-join" type="date" value="${esc(x['Join Date']||todayIso())}"></div>
+      <div><label>Status</label><select id="m-status">${MEMBER_STATUS.map(t=>opt(t,x['Status']||'Active')).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(x['Notes']||'')}</textarea></div>
+    </div>`;
+  footer(ex?`<button class="btn-danger" onclick="askDelete('${s.id}',()=>{invalidate().then(()=>loadLookups(true));loadMembers()})">Delete</button>`:'',
+    `<button class="btn-primary" id="m-save" onclick="saveMember('${s.id||''}')">${ex?'Update':'Create'}</button>`);
+  openModal();
+}
+async function saveMember(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Full Name':g('m-name').trim(),'Company':g('m-company')||'Independent','Email':g('m-email'),'Phone':g('m-phone'),
+    'Plan':g('m-plan'),'Join Date':g('m-join'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Full Name']){modalErr('Full name is required.');return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Member ID']=nid('MB');await api(`/kapps/${KAPP}/forms/members/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Member updated':'Member added');await invalidate();loadLookups(true);setTimeout(()=>loadMembers(),900);
+  }catch(e){modalErr('Save failed: '+e.message)}
+}
+
+// ══════════════ SETUP: rooms + desks ══════════════
+async function loadRoomSetup(dir){
+  await loadList({dir,form:'rooms',ps:PS.rm,tableId:'rm-table',pagerId:'rm-pager',fn:'loadRoomSetup',filters:[],
+    emptyMsg:'No rooms yet.',
+    head:`<thead><tr><th>Room</th><th>Seats</th><th>TV</th><th>Video Conf</th><th>Whiteboard</th><th>Location</th><th>Hourly</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const x=s.values;return `<tr onclick="editRoom('${s.id}')">
+      <td><strong>${esc(x['Room Name'])}</strong><br><span class="muted">${esc(x['Notes']||'')}</span></td><td>${esc(x['Capacity'])}</td>
+      <td>${tvTag({tv:x['Has TV'],tvSize:x['TV Size']})}</td><td>${esc(x['Video Conferencing'])}</td><td>${esc(x['Whiteboard'])}</td>
+      <td>${esc(x['Location'])}</td><td>${money(x['Hourly Rate'])}</td><td>${statusBadge(x['Status'])}</td>${editBtn('editRoom',s.id)}</tr>`}});
+}
+async function editRoom(id){try{const d=await api(`/submissions/${id}?include=values`);openRoomModal(d.submission||d)}catch(e){toast('Could not open room: '+e.message)}}
+function openRoomModal(ex){
+  const s=ex||{},x=s.values||{};
+  const yn=(id,cur)=>`<select id="${id}">${['Yes','No'].map(t=>opt(t,cur||'No')).join('')}</select>`;
+  document.getElementById('modal-title').textContent=ex?'Edit Conference Room':'New Conference Room';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Room Name *</label><input id="m-name" value="${esc(x['Room Name']||'')}" ${ex?'title="Existing bookings reference this name"':''}></div>
+      <div><label>Capacity</label><input id="m-cap" type="number" min="1" value="${esc(x['Capacity']||'6')}"></div>
+      <div><label>Hourly Rate</label><input id="m-rate" value="${esc(x['Hourly Rate']||'')}"></div>
+      <div><label>Has TV</label>${yn('m-hastv',x['Has TV'])}</div>
+      <div><label>TV Size</label><input id="m-tvsize" value="${esc(x['TV Size']||'')}" placeholder='55"'></div>
+      <div><label>Video Conferencing</label>${yn('m-vc',x['Video Conferencing'])}</div>
+      <div><label>Whiteboard</label>${yn('m-wb',x['Whiteboard'])}</div>
+      <div><label>Location</label><input id="m-loc" value="${esc(x['Location']||'')}"></div>
+      <div><label>Status</label><select id="m-status">${UNIT_STATUS.map(t=>opt(t,x['Status']||'Available')).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(x['Notes']||'')}</textarea></div>
+    </div>`;
+  footer(ex?`<button class="btn-danger" onclick="askDelete('${s.id}',()=>{invalidate().then(()=>loadLookups(true));loadRoomSetup()})">Delete</button>`:'',
+    `<button class="btn-primary" id="m-save" onclick="saveRoom(${jsArg(s.id)},${jsArg(x['Room Name'])})">${ex?'Update':'Create'}</button>`);
+  openModal();
+}
+async function saveRoom(id,oldName){
+  const g=x=>document.getElementById(x).value;
+  const values={'Room Name':g('m-name').trim(),'Capacity':g('m-cap'),'Hourly Rate':g('m-rate'),'Has TV':g('m-hastv'),
+    'TV Size':g('m-hastv')==='Yes'?g('m-tvsize'):'','Video Conferencing':g('m-vc'),'Whiteboard':g('m-wb'),'Location':g('m-loc'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Room Name']){modalErr('Room name is required.');return}
+  if(id&&oldName&&values['Room Name']!==oldName){modalErr('Renaming a room would orphan its bookings — keep the name, or add a new room.');return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Room ID']=nid('RM');await api(`/kapps/${KAPP}/forms/rooms/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Room updated':'Room added');await invalidate();loadLookups(true);setTimeout(()=>loadRoomSetup(),900);
+  }catch(e){modalErr('Save failed: '+e.message)}
+}
+async function loadDeskSetup(dir){
+  await loadList({dir,form:'desks',ps:PS.dk,tableId:'dk-table',pagerId:'dk-pager',fn:'loadDeskSetup',
+    filters:[['Zone',document.getElementById('dk-zone').value],['Status',document.getElementById('dk-status').value]],
+    emptyMsg:'No desks match these filters.',
+    head:`<thead><tr><th>Desk</th><th>Zone</th><th>Features</th><th>Day</th><th>Week</th><th>Month</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const x=s.values;return `<tr onclick="editDesk('${s.id}')">
+      <td><strong>${esc(x['Desk Name'])}</strong>${x['Notes']?`<br><span class="muted">${esc(x['Notes'])}</span>`:''}</td><td>${esc(x['Zone'])}</td><td>${esc(x['Features'])}</td>
+      <td>${money(x['Day Rate'])}</td><td>${money(x['Week Rate'])}</td><td>${money(x['Month Rate'])}</td><td>${statusBadge(x['Status'])}</td>${editBtn('editDesk',s.id)}</tr>`}});
+}
+async function editDesk(id){try{const d=await api(`/submissions/${id}?include=values`);openDeskModal(d.submission||d)}catch(e){toast('Could not open desk: '+e.message)}}
+function openDeskModal(ex){
+  const s=ex||{},x=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Desk':'New Desk';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Desk Name *</label><input id="m-name" value="${esc(x['Desk Name']||'')}" placeholder="D-25"></div>
+      <div><label>Zone</label><select id="m-zone">${ZONES.map(t=>opt(t,x['Zone']||'Open Floor')).join('')}</select></div>
+      <div class="full"><label>Features</label><input id="m-feat" value="${esc(x['Features']||'')}" placeholder='27" monitor'></div>
+      <div><label>Day Rate</label><input id="m-day" value="${esc(x['Day Rate']||'30')}"></div>
+      <div><label>Week Rate</label><input id="m-week" value="${esc(x['Week Rate']||'120')}"></div>
+      <div><label>Month Rate</label><input id="m-month" value="${esc(x['Month Rate']||'325')}"></div>
+      <div><label>Status</label><select id="m-status">${UNIT_STATUS.map(t=>opt(t,x['Status']||'Available')).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(x['Notes']||'')}</textarea></div>
+    </div>`;
+  footer(ex?`<button class="btn-danger" onclick="askDelete('${s.id}',()=>{invalidate().then(()=>loadLookups(true));loadDeskSetup()})">Delete</button>`:'',
+    `<button class="btn-primary" id="m-save" onclick="saveDesk(${jsArg(s.id)},${jsArg(x['Desk Name'])})">${ex?'Update':'Create'}</button>`);
+  openModal();
+}
+async function saveDesk(id,oldName){
+  const g=x=>document.getElementById(x).value;
+  const values={'Desk Name':g('m-name').trim(),'Zone':g('m-zone'),'Features':g('m-feat'),'Day Rate':g('m-day'),'Week Rate':g('m-week'),
+    'Month Rate':g('m-month'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Desk Name']){modalErr('Desk name is required.');return}
+  if(id&&oldName&&values['Desk Name']!==oldName){modalErr('Renaming a desk would orphan its rentals — keep the name, or add a new desk.');return}
+  if(!id&&(LOOKUPS.desks||[]).some(d=>d.name===values['Desk Name'])){modalErr(`${values['Desk Name']} already exists.`);return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Desk ID']=nid('DK');await api(`/kapps/${KAPP}/forms/desks/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Desk updated':'Desk added');await invalidate();loadLookups(true);setTimeout(()=>loadDeskSetup(),900);
+  }catch(e){modalErr('Save failed: '+e.message)}
+}
+
+// ── shared modal / delete (inline confirm — no browser dialogs) ──
+function footer(left,right){
+  document.getElementById('modal-footer').innerHTML=`${left}<span class="confirm-bar" id="m-confirm"></span><div class="spacer-h"></div>
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>${right}`;
+}
+function modalErr(m){const e=document.getElementById('modal-err');e.textContent=m;e.style.display=m?'block':'none'}
+function openModal(){modalErr('');document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+let PENDING_DEL=null;
+function askDelete(id,after){
+  PENDING_DEL={id,after};
+  const c=document.getElementById('m-confirm');c.style.display='flex';
+  c.innerHTML=`Delete permanently? <button class="btn-danger btn-sm" onclick="doDelete()">Yes, delete</button><button class="btn-secondary btn-sm" onclick="this.parentNode.style.display='none'">No</button>`;
+}
+async function doDelete(){
+  if(!PENDING_DEL)return;const {id,after}=PENDING_DEL;PENDING_DEL=null;
+  try{await api(`/submissions/${id}`,{method:'DELETE'});await invalidate();closeModal();toast('Deleted');setTimeout(()=>after&&after(),600)}
+  catch(e){modalErr('Delete failed: '+e.message)}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// Runs LAST: enterApp() touches let/const state declared above (sequence counters,
+// pagination), which would be in the temporal dead zone if this ran earlier.
+// session bootstrap (launcher-injected). Served through :3011, which proxies /app/api/v1
+// same-origin, so force url:'' (cross-origin to the target server is CORS-blocked).
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s)return;
+  try{const ss=JSON.parse(s);API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};enterApp()}catch(e){}
+})();
+</script>
+</body>
+</html>

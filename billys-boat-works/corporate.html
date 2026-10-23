@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BillysBoatWorks — Corporate</title>
+<style>
+:root{
+  --ink:#0B1B2B; --ink-2:#14415A; --sky:#0EA5E9; --sky-2:#38BDF8; --navy:#1E293B;
+  --sun:#F59E0B; --green:#10B981; --red:#EF4444; --purple:#8B5CF6; --teal:#14B8A6;
+  --gray:#64748B; --line:#E2E8F0; --bg:#F1F5F9; --card:#fff;
+  --sh:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.1);
+  --sh-lg:0 10px 30px rgba(15,23,42,.12); --r:13px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.topbar{background:linear-gradient(90deg,#0B1B2B,#14415A);color:#fff;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:120;gap:12px}
+.topbar .logo{font-weight:800;font-size:16px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.topbar .logo span{color:var(--sky-2)}
+.logo .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--sky),var(--sun));display:grid;place-items:center;font-size:13px}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.72);padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tabs button.active{background:var(--sky);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.72);display:flex;align-items:center;gap:8px}
+.user-info strong{color:#fff}
+.logout-btn,.console-link{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.75);padding:4px 10px;border-radius:7px;font-size:11px;cursor:pointer;text-decoration:none;font-family:inherit}
+.console-link:hover,.logout-btn:hover{border-color:var(--sky-2);color:#fff}
+.wrap{max-width:1340px;margin:0 auto;padding:20px 18px 60px}
+.view{display:none}.view.active{display:block}
+h1{font-size:21px;letter-spacing:-.4px;margin-bottom:3px}
+h2{font-size:15px;letter-spacing:-.2px;margin-bottom:12px}
+.sub{color:var(--gray);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:18px;margin-bottom:14px}
+.muted{color:var(--gray)}.right{text-align:right}.mini{font-size:12px;color:var(--gray)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border-radius:12px;padding:14px 16px;border:1px solid var(--line);box-shadow:var(--sh);border-left:4px solid var(--sky)}
+.kpi.green{border-left-color:var(--green)}.kpi.sun{border-left-color:var(--sun)}
+.kpi.red{border-left-color:var(--red)}.kpi.purple{border-left-color:var(--purple)}.kpi.gray{border-left-color:var(--gray)}
+.kpi .v{font-size:25px;font-weight:800;letter-spacing:-.6px;line-height:1.05}
+.kpi .l{font-size:10.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:#F8FAFC;color:var(--gray);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line);font-weight:800;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line)}
+tbody tr:hover{background:#F8FAFC}
+.clickable tbody tr{cursor:pointer}
+.tw{overflow-x:auto}
+.badge{display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.b-blue{background:#DBEAFE;color:#1E40AF}.b-green{background:#DCFCE7;color:#166534}
+.b-amber{background:#FEF3C7;color:#92400E}.b-red{background:#FEE2E2;color:#991B1B}
+.b-gray{background:#F1F5F9;color:#475569}.b-purple{background:#EDE9FE;color:#5B21B6}
+.b-cyan{background:#CFFAFE;color:#155E75}
+.pill{display:inline-block;background:#F1F5F9;border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--ink-2)}
+.empty{padding:34px;text-align:center;color:var(--gray);font-size:13px}
+.loading{padding:34px;text-align:center;color:var(--gray)}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--line);border-top-color:var(--sky);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.two-col{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+.rank{width:26px;height:26px;border-radius:8px;background:#F1F5F9;display:inline-grid;place-items:center;font-weight:800;font-size:12px}
+.rank.top{background:#FEF3C7;color:#92400E}
+.barline{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:70px}
+.barline i{display:block;height:100%;background:var(--sky)}
+/* attention list */
+.att{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--sun);border-radius:11px;padding:12px 14px;margin-bottom:9px;background:#FFFBEB}
+.att.hot{border-left-color:var(--red);background:#FEF2F2}
+.att .s{width:30px;height:30px;border-radius:9px;background:#FEF3C7;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.att.hot .s{background:#FEE2E2;color:#991B1B}
+.att .t{font-weight:700;font-size:14px}
+.att .f{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.5}
+/* pipeline kanban */
+.kan{display:flex;gap:11px;overflow-x:auto;padding-bottom:10px}
+.col{min-width:225px;flex:none;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:11px}
+.col h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);font-weight:800;margin-bottom:9px;display:flex;justify-content:space-between}
+.col h4 span{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--ink)}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer}
+.pcard:hover{box-shadow:var(--sh-lg)}
+.pcard .n{font-weight:700;font-size:13.5px}
+.pcard .m{font-size:11.5px;color:var(--gray);margin-top:2px}
+.pcard .b{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:11.5px}
+.score{font-weight:800;color:var(--green)}
+.score.low{color:var(--sun)}
+/* territory map-ish grid */
+.terr{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:11px}
+.tcard{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff;box-shadow:var(--sh)}
+.tcard.available{border-left:4px solid var(--green)}
+.tcard.reserved{border-left:4px solid var(--sun)}
+.tcard.expansion{border-left:4px solid var(--purple)}
+.tcard .n{font-weight:700;font-size:14px}
+.tcard .m{font-size:12px;color:var(--gray);margin-top:2px}
+.tcard .st{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
+.opp{font-weight:800;font-size:17px}
+/* statement */
+.stmt{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px;background:#fff}
+.stmt .h{background:var(--navy);color:#fff;padding:13px 16px;display:flex;justify-content:space-between;align-items:center}
+.stmt .h .f{font-weight:700}
+.stmt .b{padding:14px 16px}
+.row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.row.sub2{border-top:1px solid var(--line);margin-top:5px;padding-top:8px;font-weight:700}
+.row.net{border-top:2px solid var(--line);margin-top:6px;padding-top:9px;font-weight:800;font-size:16px}
+.row .neg{color:var(--red)}
+#drawer{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:300;display:none;justify-content:flex-end}
+#drawer.open{display:flex}
+.dr{background:#fff;width:640px;max-width:96vw;height:100%;overflow-y:auto}
+.dr-h{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.dr-b{padding:20px}
+.x{background:none;border:none;font-size:26px;color:var(--gray);cursor:pointer;line-height:1}
+.sec{margin-bottom:20px}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);font-weight:800;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:5px 12px;font-size:13px}
+.kv .k{color:var(--gray)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:11px;font-size:13.5px;font-weight:600;z-index:400;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+.funnel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.fstep{flex:1;min-width:110px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center;box-shadow:var(--sh)}
+.fstep .v{font-size:21px;font-weight:800}
+.fstep .l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:2px}
+@media(max-width:980px){.two-col{grid-template-columns:1fr}}
+
+/* ── sign-in gate ── */
+body:not(.authed) .topbar,
+body:not(.authed) .wrap,
+body:not(.authed) .view,
+body:not(.authed) .hero,
+body:not(.authed) #drawer{display:none !important}
+body.authed #login-screen{display:none}
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0B2A3B 0%,#0C4A6E 50%,#0EA5E9 100%);z-index:900;padding:20px}
+.login-box{background:#fff;border-radius:18px;padding:38px 36px;width:400px;max-width:94vw;
+  box-shadow:0 24px 60px rgba(2,20,35,.4)}
+.login-box .brand{font-size:23px;font-weight:800;text-align:center;color:#0B2A3B;letter-spacing:-.4px;
+  display:flex;align-items:center;justify-content:center;gap:9px}
+.login-box .brand em{font-style:normal;color:#0EA5E9}
+.login-box .mark{width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,#0EA5E9,#F59E0B);display:grid;place-items:center;font-size:16px}
+.login-box .who{text-align:center;font-size:12.5px;color:#64748B;margin:10px 0 22px}
+.login-box label{display:block;font-size:11.5px;font-weight:700;color:#64748B;margin:13px 0 5px;
+  text-transform:uppercase;letter-spacing:.4px}
+.login-box input{width:100%;padding:12px 13px;border:1px solid #E2E8F0;border-radius:10px;font-size:15px;font-family:inherit}
+.login-box input:focus{outline:none;border-color:#0EA5E9;box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+.login-box button{width:100%;margin-top:22px;padding:13px;background:#0EA5E9;color:#fff;border:none;
+  border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.login-box button:hover{background:#0284C7}
+.login-box button:disabled{background:#94A3B8;cursor:not-allowed}
+.login-err{color:#EF4444;font-size:12.5px;text-align:center;margin-top:13px;min-height:15px}
+.login-note{text-align:center;font-size:11.5px;color:#94A3B8;margin-top:16px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand"><span class="mark">🌊</span>Billys<em>BoatWorks</em></div>
+    <div class="who">Corporate network management</div>
+    <label>Username</label>
+    <input id="li-user" autocomplete="username" placeholder="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password">
+    <button id="li-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+    <div class="login-note" id="li-server"></div>
+  </div>
+</div>
+
+
+<div class="topbar">
+  <div class="logo"><span class="mark">🌊</span>Billys<span>Corporate</span></div>
+  <div class="nav-tabs">
+    <button class="active" onclick="go('net')">Network</button>
+    <button onclick="go('rank')">Franchise Performance</button>
+    <button onclick="go('dev')">Franchise Development</button>
+    <button onclick="go('terr')">Territories</button>
+    <button onclick="go('risk')">Safety &amp; Claims</button>
+    <button onclick="go('fin')">Financials</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="user-info">
+    <a class="console-link" href="./">Marketplace</a>
+    <a class="console-link" href="ops.html">Operations</a>
+    <strong id="user-display"></strong>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- ══════ NETWORK ══════ -->
+  <div id="v-net" class="view active">
+    <h1>BillysBoatWorks network</h1>
+    <div class="sub" id="net-sub">Systemwide performance across every franchise, location and asset.</div>
+    <div class="kpis" id="net-kpis"></div>
+    <div class="two-col">
+      <div class="card"><h2>Franchises needing attention</h2>
+        <div class="mini" style="margin-top:-6px;margin-bottom:11px">Ranked by weighted risk across safety, compliance, training, satisfaction and asset productivity.</div>
+        <div id="net-attention"></div></div>
+      <div class="card"><h2>By region</h2><div class="tw"><table id="t-region"></table></div></div>
+    </div>
+    <div class="card"><h2>Systemwide fleet &amp; revenue by franchise</h2>
+      <div class="tw"><table id="t-net"></table></div></div>
+  </div>
+
+  <!-- ══════ RANKINGS ══════ -->
+  <div id="v-rank" class="view">
+    <h1>Franchise performance</h1>
+    <div class="sub">Compare operators on the measures that predict a healthy franchise. Click any row to drill in.</div>
+    <div class="card"><div class="tw"><table id="t-rank"></table></div></div>
+  </div>
+
+  <!-- ══════ DEVELOPMENT ══════ -->
+  <div id="v-dev" class="view">
+    <h1>Franchise development</h1>
+    <div class="sub">Prospect through opening. Every stage of the franchise lifecycle is a record, not a spreadsheet.</div>
+    <div class="funnel" id="dev-funnel"></div>
+    <div class="card"><h2>Pipeline</h2><div class="kan" id="dev-kanban"></div></div>
+    <div class="two-col">
+      <div class="card"><h2>Where prospects come from</h2><div class="tw"><table id="t-source"></table></div></div>
+      <div class="card"><h2>Highest-opportunity open territories</h2><div class="tw"><table id="t-topterr"></table></div></div>
+    </div>
+  </div>
+
+  <!-- ══════ TERRITORIES ══════ -->
+  <div id="v-terr" class="view">
+    <h1>Territory management</h1>
+    <div class="sub">Sold, reserved, available and expansion territory across the Midwest.</div>
+    <div class="kpis" id="terr-kpis"></div>
+    <div class="card"><h2>Open &amp; reserved territory</h2><div class="terr" id="terr-grid"></div></div>
+  </div>
+
+  <!-- ══════ RISK ══════ -->
+  <div id="v-risk" class="view">
+    <h1>Safety, claims &amp; compliance</h1>
+    <div class="sub">Serious incidents escalate to corporate. Claims run through the third-party carrier, not BillysBoatWorks.</div>
+    <div class="kpis" id="risk-kpis"></div>
+    <div class="card"><h2>Safety incidents</h2><div class="tw"><table id="t-inc"></table></div></div>
+    <div class="two-col">
+      <div class="card"><h2>Protection claims</h2><div class="tw"><table id="t-claims"></table></div></div>
+      <div class="card"><h2>Training compliance</h2><div class="tw"><table id="t-train"></table></div></div>
+    </div>
+  </div>
+
+  <!-- ══════ FINANCIALS ══════ -->
+  <div id="v-fin" class="view">
+    <h1>Franchise financials</h1>
+    <div class="sub">Monthly statements. Every figure traces to captured payments and refunds.</div>
+    <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="fin-period" onchange="renderStatements()"><option value="">All periods</option></select>
+      <select id="fin-fr" onchange="renderStatements()"><option value="">All franchises</option></select>
+      <div style="flex:1"></div>
+      <div class="mini" id="fin-tot"></div>
+    </div>
+    <div id="fin-list"></div>
+  </div>
+</div>
+
+<div id="drawer" onclick="if(event.target===this)closeDrawer()"><div class="dr">
+  <div class="dr-h"><h2 id="dr-title" style="margin:0"></h2><button class="x" onclick="closeDrawer()">&times;</button></div>
+  <div class="dr-b" id="dr-body"></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='billys';
+let API={url:'',auth:'',user:'',displayName:''};
+let NET=null,DEV=null,RISK=null;
+
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+const esc=s=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")};
+const money=n=>{const x=parseFloat(n);return isNaN(x)?'—':'$'+Math.round(x).toLocaleString()};
+const moneyS=n=>{const x=parseFloat(n);if(isNaN(x))return'—';if(Math.abs(x)>=1e6)return'$'+(x/1e6).toFixed(1)+'M';if(Math.abs(x)>=1e4)return'$'+Math.round(x/1e3)+'K';return'$'+Math.round(x).toLocaleString()};
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)};
+function badge(s){
+  const map={Operating:'b-green',Onboarding:'b-blue',Suspended:'b-red',Closed:'b-gray',
+    Founding:'b-purple',Premier:'b-cyan',Standard:'b-gray',
+    Paid:'b-green',Issued:'b-blue',Draft:'b-gray',Disputed:'b-red',
+    Critical:'b-red',Serious:'b-red',Moderate:'b-amber',Low:'b-gray',
+    Open:'b-amber',Investigating:'b-blue',Escalated:'b-red',
+    Approved:'b-green','Partially Approved':'b-amber',Denied:'b-red',Submitted:'b-blue',
+    'Under Review':'b-blue','Adjuster Assigned':'b-purple',Available:'b-green',Reserved:'b-amber',Expansion:'b-purple',Sold:'b-gray'};
+  return `<span class="badge ${map[s]||'b-gray'}">${esc(s||'')}</span>`;
+}
+async function appApi(p){const r=await fetch(p,{headers:{Authorization:'Basic '+API.auth}});if(!r.ok)throw new Error(String(r.status));return r.json()}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+/* ── sign-in ──
+   Served through the launcher, /app/api/v1 is proxied same-origin, so we authenticate
+   against this origin and keep url:'' — a direct cross-origin call to the Kinetic host
+   is blocked by its self-signed certificate. */
+function showLogin(msg){
+  document.body.classList.remove('authed');
+  if(msg)document.getElementById('li-err').textContent=msg;
+  fetch('/api/base/target').then(r=>r.json()).then(d=>{
+    document.getElementById('li-server').textContent='Connected to '+(d.target||'this Kinetic space');
+  }).catch(()=>{});
+  const u=document.getElementById('li-user');if(u)u.focus();
+}
+function doLogin(){
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const err=document.getElementById('li-err'),btn=document.getElementById('li-btn');
+  if(!user||!pass){err.textContent='Enter your username and password';return}
+  err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
+  const auth=btoa(user+':'+pass);
+  fetch('/app/api/v1/me',{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error(r.status===401?'Incorrect username or password':'Sign-in failed ('+r.status+')');return r.json()})
+    .then(d=>{
+      API={url:'',auth,user:d.username,displayName:d.displayName||d.username};
+      sessionStorage.setItem('kinetic_session',JSON.stringify(
+        {url:'',auth,user:d.username,displayName:API.displayName,spaceSlug:d.space&&d.space.slug||''}));
+      document.body.classList.add('authed');
+      start();
+    })
+    .catch(e=>{err.textContent=e.message})
+    .finally(()=>{btn.disabled=false;btn.textContent='Sign In'});
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!document.body.classList.contains('authed'))doLogin();
+});
+
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s){showLogin();return}
+  try{
+    const ss=JSON.parse(s);
+    API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};
+    document.body.classList.add('authed');
+    start();
+  }catch(e){showLogin()}
+})();
+
+const VIEWS=['net','rank','dev','terr','risk','fin'];
+function go(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach((b,i)=>b.classList.toggle('active',VIEWS[i]===v));
+  window.scrollTo(0,0);
+  ({net:loadNet,rank:loadRank,dev:loadDev,terr:loadTerr,risk:loadRisk,fin:loadFin})[v]();
+}
+function start(){document.getElementById('user-display').textContent=API.displayName;loadNet()}
+
+async function net(){if(!NET)NET=await appApi('/api/bbw/corp/network');return NET}
+
+/* ══════ NETWORK ══════ */
+async function loadNet(){
+  document.getElementById('net-kpis').innerHTML='<div class="loading"><span class="spin"></span> Aggregating the network…</div>';
+  try{
+    const d=await net(),t=d.totals;
+    document.getElementById('net-kpis').innerHTML=`
+      <div class="kpi"><div class="v">${t.franchises}</div><div class="l">Franchises</div></div>
+      <div class="kpi gray"><div class="v">${t.locations}</div><div class="l">Rental locations</div></div>
+      <div class="kpi gray"><div class="v">${t.fleet}</div><div class="l">Assets</div></div>
+      <div class="kpi"><div class="v">${t.reservations.toLocaleString()}</div><div class="l">Reservations</div></div>
+      <div class="kpi green"><div class="v">${moneyS(t.revenue)}</div><div class="l">Systemwide revenue</div></div>
+      <div class="kpi purple"><div class="v">${moneyS(t.royalties)}</div><div class="l">Royalties earned</div></div>
+      <div class="kpi"><div class="v">${t.rating?t.rating.toFixed(2):'—'}</div><div class="l">Customer rating</div></div>
+      <div class="kpi ${t.seriousIncidents?'red':'gray'}"><div class="v">${t.seriousIncidents}</div><div class="l">Serious incidents</div></div>
+      <div class="kpi sun"><div class="v">${t.claimsOpen}</div><div class="l">Open claims</div></div>
+      <div class="kpi green"><div class="v">${t.territoriesAvailable}</div><div class="l">Territories open</div></div>
+      <div class="kpi purple"><div class="v">${t.pipeline}</div><div class="l">Active prospects</div></div>`;
+    document.getElementById('net-sub').textContent=
+      `${t.operating} operating · ${t.onboarding} onboarding · ${t.locations} locations · ${t.fleet} assets across the Midwest`;
+    document.getElementById('net-attention').innerHTML=(d.attention||[]).map(a=>`
+      <div class="att ${a.score>=6?'hot':''}">
+        <div class="s">${a.score}</div>
+        <div><div class="t">${esc(a.franchise)}</div>
+          <div class="f">${a.flags.map(esc).join(' · ')}</div>
+          <div class="mini" style="margin-top:4px">${esc(a.owner)} · ${esc(a.state)}</div></div>
+      </div>`).join('')||'<div class="empty">Every franchise is inside tolerance. 🎉</div>';
+    document.getElementById('t-region').innerHTML=
+      `<thead><tr><th>Region</th><th class="right">Franchises</th><th class="right">Fleet</th><th class="right">Revenue</th><th class="right">Rating</th></tr></thead><tbody>`
+      +d.byRegion.map(r=>`<tr><td><strong>${esc(r.region)}</strong></td><td class="right">${r.franchises}</td>
+        <td class="right">${r.fleet}</td><td class="right">${money(r.revenue)}</td>
+        <td class="right">${r.rating?r.rating.toFixed(1)+' ★':'—'}</td></tr>`).join('')+`</tbody>`;
+    document.getElementById('t-net').innerHTML=
+      `<thead><tr><th>#</th><th>Franchise</th><th>Owner</th><th>Status</th><th class="right">Locations</th><th class="right">Fleet</th>
+        <th class="right">Reservations</th><th class="right">Revenue</th><th class="right">Rev / asset</th><th class="right">Royalty</th><th class="right">Rating</th></tr></thead><tbody>`
+      +d.rows.map(r=>`<tr onclick="openFranchise('${esc(r.franchise).replace(/'/g,"\\'")}')">
+        <td><span class="rank ${r.rank<=3?'top':''}">${r.rank}</span></td>
+        <td><strong>${esc(r.franchise)}</strong><div class="mini">${esc(r.region)}</div></td>
+        <td>${esc(r.owner)}</td><td>${badge(r.status)} ${badge(r.tier)}</td>
+        <td class="right">${r.locations}</td><td class="right">${r.fleet}</td>
+        <td class="right">${r.reservations}</td><td class="right"><strong>${money(r.revenue)}</strong></td>
+        <td class="right">${money(r.revenuePerAsset)}</td><td class="right">${money(r.royaltyDue)}</td>
+        <td class="right">${r.rating?r.rating.toFixed(1)+' ★':'—'}</td></tr>`).join('')+`</tbody>`;
+  }catch(e){document.getElementById('net-kpis').innerHTML=`<div class="empty">Could not load the network: ${esc(e.message)}</div>`}
+}
+
+/* ══════ RANKINGS ══════ */
+async function loadRank(){
+  const tw=document.getElementById('t-rank').closest('.tw');
+  tw.innerHTML='<div class="loading"><span class="spin"></span> Ranking franchises…</div>';
+  try{
+    const d=await net();
+    tw.innerHTML='<table id="t-rank" class="clickable"></table>';
+    const maxRev=Math.max(...d.rows.map(r=>r.revenue),1);
+    document.getElementById('t-rank').innerHTML=
+      `<thead><tr><th>#</th><th>Franchise</th><th>Revenue</th><th class="right">Rev / asset</th><th class="right">Upcoming</th>
+        <th class="right">Rating</th><th class="right">Compliance</th><th class="right">Open WO</th><th class="right">Training due</th>
+        <th class="right">Incidents</th><th class="right">Claims</th></tr></thead><tbody>`
+      +d.rows.map(r=>`<tr onclick="openFranchise('${esc(r.franchise).replace(/'/g,"\\'")}')">
+        <td><span class="rank ${r.rank<=3?'top':''}">${r.rank}</span></td>
+        <td><strong>${esc(r.franchise)}</strong><div class="mini">${esc(r.owner)} · ${esc(r.state)}</div></td>
+        <td style="min-width:150px"><div class="barline"><i style="width:${Math.round(100*r.revenue/maxRev)}%"></i></div>
+          <div class="mini">${money(r.revenue)}</div></td>
+        <td class="right">${money(r.revenuePerAsset)}</td>
+        <td class="right">${r.upcoming}</td>
+        <td class="right">${r.rating?`${r.rating.toFixed(1)} ★<div class="mini">${r.reviewCount}</div>`:'—'}</td>
+        <td class="right"><strong style="color:${r.compliance<80?'var(--red)':r.compliance<90?'var(--sun)':'var(--green)'}">${r.compliance}</strong></td>
+        <td class="right">${r.openWO}</td>
+        <td class="right ${r.trainingDue>=4?'':'muted'}">${r.trainingDue}</td>
+        <td class="right">${r.incidents}${r.seriousIncidents?` <span class="badge b-red">${r.seriousIncidents}</span>`:''}</td>
+        <td class="right">${r.claims}</td></tr>`).join('')+`</tbody>`;
+  }catch(e){tw.innerHTML=`<div class="empty">Could not rank: ${esc(e.message)}</div>`}
+}
+async function openFranchise(name){
+  const d=await net();
+  const r=d.rows.find(x=>x.franchise===name);
+  if(!r)return;
+  const stmts=d.statements.filter(s=>s.franchise===name);
+  document.getElementById('dr-title').textContent=name;
+  document.getElementById('dr-body').innerHTML=`
+    <div class="sec"><h3>Franchise</h3><div class="kv">
+      <div class="k">Owner</div><div>${esc(r.owner)}</div>
+      <div class="k">Region</div><div>${esc(r.region)} · ${esc(r.state)}</div>
+      <div class="k">Status</div><div>${badge(r.status)} ${badge(r.tier)}</div>
+      <div class="k">Opened</div><div>${esc(r.opened||'not yet open')}</div>
+      <div class="k">Network rank</div><div><strong>#${r.rank}</strong> of ${d.rows.length}</div>
+      <div class="k">Compliance score</div><div>${r.compliance}</div>
+    </div></div>
+    <div class="sec"><h3>Scale &amp; production</h3><div class="kv">
+      <div class="k">Locations</div><div>${r.locations}</div>
+      <div class="k">Fleet</div><div>${r.fleet} assets</div>
+      <div class="k">Reservations</div><div>${r.reservations} (${r.upcoming} upcoming)</div>
+      <div class="k">Revenue</div><div><strong>${money(r.revenue)}</strong></div>
+      <div class="k">Revenue per asset</div><div>${money(r.revenuePerAsset)}</div>
+      <div class="k">Customer rating</div><div>${r.rating?`${r.rating.toFixed(2)} ★ from ${r.reviewCount} reviews`:'—'}</div>
+    </div></div>
+    <div class="sec"><h3>Risk &amp; compliance</h3><div class="kv">
+      <div class="k">Safety incidents</div><div>${r.incidents}${r.seriousIncidents?` · <strong style="color:var(--red)">${r.seriousIncidents} serious</strong>`:''}</div>
+      <div class="k">Open work orders</div><div>${r.openWO}</div>
+      <div class="k">Training overdue</div><div>${r.trainingDue}</div>
+      <div class="k">Protection claims</div><div>${r.claims}</div>
+      <div class="k">Cancellations</div><div>${r.refunds}</div>
+    </div></div>
+    ${stmts.length?`<div class="sec"><h3>Statements</h3>${stmts.map(s=>`
+      <div class="stmt"><div class="h"><span class="f">${esc(s.period)}</span>${badge(s.status)}</div>
+        <div class="b">
+          <div class="row"><span class="muted">Gross rental revenue</span><span>${money(s.gross)}</span></div>
+          <div class="row"><span class="muted">Refunds</span><span class="neg">−${money(s.refunds)}</span></div>
+          <div class="row sub2"><span>Net revenue</span><span>${money(s.net)}</span></div>
+          <div class="row"><span class="muted">Royalty</span><span class="neg">−${money(s.royalty)}</span></div>
+          <div class="row"><span class="muted">Marketing fee</span><span class="neg">−${money(s.marketing)}</span></div>
+          <div class="row"><span class="muted">Platform fee</span><span class="neg">−${money(s.platform)}</span></div>
+          <div class="row net"><span>Franchise net</span><span>${money(s.franchiseNet)}</span></div>
+        </div></div>`).join('')}</div>`:''}
+    <button class="btn" style="background:var(--sky);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer"
+      onclick="location.href='ops.html'">Open operations console →</button>`;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+
+/* ══════ DEVELOPMENT ══════ */
+async function loadDev(){
+  const k=document.getElementById('dev-kanban');
+  k.innerHTML='<div class="loading"><span class="spin"></span> Loading pipeline…</div>';
+  try{
+    if(!DEV)DEV=await appApi('/api/bbw/corp/development');
+    const f=DEV.funnel;
+    document.getElementById('dev-funnel').innerHTML=`
+      <div class="fstep"><div class="v">${f.inquiries}</div><div class="l">Total inquiries</div></div>
+      <div class="fstep"><div class="v">${f.active}</div><div class="l">Active prospects</div></div>
+      <div class="fstep"><div class="v">${f.avgScore}</div><div class="l">Avg qualification</div></div>
+      <div class="fstep"><div class="v">${f.awarded}</div><div class="l">Awarded</div></div>
+      <div class="fstep"><div class="v">${f.declined}</div><div class="l">Declined</div></div>
+      <div class="fstep"><div class="v">${moneyS(f.committedFees)}</div><div class="l">Deposits committed</div></div>`;
+    k.innerHTML=DEV.byStage.filter(s=>s.prospects.length).map(s=>`
+      <div class="col"><h4>${esc(s.stage)}<span>${s.prospects.length}</span></h4>
+        ${s.prospects.map(p=>`<div class="pcard" onclick="openProspect('${esc(p.id)}')">
+          <div class="n">${esc(p.name)}</div>
+          <div class="m">${esc(p.territory)}</div>
+          <div class="b"><span class="mini">${esc(p.state)} · ${esc(p.source)}</span>
+            <span class="score ${p.score<70?'low':''}">${p.score}</span></div>
+        </div>`).join('')}
+      </div>`).join('');
+    document.getElementById('t-source').innerHTML=
+      `<thead><tr><th>Source</th><th class="right">Prospects</th><th class="right">Share</th></tr></thead><tbody>`
+      +DEV.bySource.map(s=>`<tr><td>${esc(s.source)}</td><td class="right">${s.count}</td>
+        <td class="right"><div class="barline" style="display:inline-block;width:80px"><i style="width:${Math.round(100*s.count/DEV.funnel.inquiries)}%"></i></div>
+        ${Math.round(100*s.count/DEV.funnel.inquiries)}%</td></tr>`).join('')+`</tbody>`;
+    document.getElementById('t-topterr').innerHTML=
+      `<thead><tr><th>Territory</th><th>State</th><th class="right">Boat registrations</th><th class="right">Opportunity</th><th>Status</th></tr></thead><tbody>`
+      +DEV.territories.slice(0,10).map(t=>`<tr><td><strong>${esc(t.name)}</strong></td><td>${esc(t.state)}</td>
+        <td class="right">${t.boats.toLocaleString()}</td><td class="right"><strong>${t.score}</strong></td>
+        <td>${badge(t.status)}</td></tr>`).join('')+`</tbody>`;
+  }catch(e){k.innerHTML=`<div class="empty">Could not load pipeline: ${esc(e.message)}</div>`}
+}
+function openProspect(id){
+  const p=DEV.byStage.flatMap(s=>s.prospects.map(x=>({...x,stage:s.stage}))).find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('dr-title').textContent=p.name;
+  document.getElementById('dr-body').innerHTML=`
+    <div class="sec"><h3>Prospect</h3><div class="kv">
+      <div class="k">Stage</div><div><strong>${esc(p.stage)}</strong></div>
+      <div class="k">Desired territory</div><div>${esc(p.territory)}</div>
+      <div class="k">State</div><div>${esc(p.state)}</div>
+      <div class="k">Source</div><div>${esc(p.source)}</div>
+      <div class="k">Qualification score</div><div><strong>${p.score}</strong></div>
+      <div class="k">Liquid capital</div><div>${money(p.capital)}</div>
+      <div class="k">Assigned to</div><div>${esc(p.assigned)}</div>
+      <div class="k">Last activity</div><div>${esc(p.lastActivity)}</div>
+    </div></div>
+    <div class="sec"><h3>Next step</h3><div style="font-size:15px;font-weight:600">${esc(p.next)}</div></div>`;
+  document.getElementById('drawer').classList.add('open');
+}
+
+/* ══════ TERRITORIES ══════ */
+async function loadTerr(){
+  const g=document.getElementById('terr-grid');
+  g.innerHTML='<div class="loading"><span class="spin"></span> Loading territories…</div>';
+  try{
+    if(!DEV)DEV=await appApi('/api/bbw/corp/development');
+    const avail=DEV.territories.filter(t=>t.status==='Available').length;
+    const resv=DEV.territories.filter(t=>t.status==='Reserved').length;
+    const exp=DEV.territories.filter(t=>t.status==='Expansion').length;
+    document.getElementById('terr-kpis').innerHTML=`
+      <div class="kpi gray"><div class="v">${DEV.total}</div><div class="l">Total territories</div></div>
+      <div class="kpi"><div class="v">${DEV.sold}</div><div class="l">Sold &amp; operating</div></div>
+      <div class="kpi green"><div class="v">${avail}</div><div class="l">Available</div></div>
+      <div class="kpi sun"><div class="v">${resv}</div><div class="l">Reserved</div></div>
+      <div class="kpi purple"><div class="v">${exp}</div><div class="l">Expansion targets</div></div>`;
+    g.innerHTML=DEV.territories.map(t=>`
+      <div class="tcard ${t.status.toLowerCase()}">
+        <div class="n">${esc(t.name)}</div>
+        <div class="m">${esc(t.county)} County, ${esc(t.state)} · ${esc(t.type)}</div>
+        <div class="m" style="margin-top:5px">${t.population.toLocaleString()} people · ${t.boats.toLocaleString()} registered boats</div>
+        ${t.reservedFor?`<div class="m" style="margin-top:4px">Reserved for <strong>${esc(t.reservedFor)}</strong></div>`:''}
+        <div class="st"><span class="opp">${t.score}</span>${badge(t.status)}</div>
+        <div class="mini">opportunity score</div>
+      </div>`).join('')||'<div class="empty">No open territory.</div>';
+  }catch(e){g.innerHTML=`<div class="empty">Could not load territories: ${esc(e.message)}</div>`}
+}
+
+/* ══════ RISK ══════ */
+async function loadRisk(){
+  document.getElementById('risk-kpis').innerHTML='<div class="loading"><span class="spin"></span> Loading risk picture…</div>';
+  try{
+    if(!RISK)RISK=await appApi('/api/bbw/corp/risk');
+    const t=RISK.totals;
+    document.getElementById('risk-kpis').innerHTML=`
+      <div class="kpi ${t.serious?'red':'gray'}"><div class="v">${t.serious}</div><div class="l">Serious incidents</div></div>
+      <div class="kpi ${t.unreviewed?'red':'green'}"><div class="v">${t.unreviewed}</div><div class="l">Awaiting corporate review</div></div>
+      <div class="kpi"><div class="v">${t.incidents}</div><div class="l">Total incidents</div></div>
+      <div class="kpi sun"><div class="v">${t.claimsOpen}</div><div class="l">Open claims</div></div>
+      <div class="kpi"><div class="v">${moneyS(t.claimed)}</div><div class="l">Claimed</div></div>
+      <div class="kpi green"><div class="v">${moneyS(t.approved)}</div><div class="l">Approved</div></div>
+      <div class="kpi gray"><div class="v">${t.damage}</div><div class="l">Damage reports</div></div>
+      <div class="kpi sun"><div class="v">${t.trainingOverdue}</div><div class="l">Training overdue</div></div>`;
+    document.getElementById('t-inc').innerHTML=
+      `<thead><tr><th>ID</th><th>Type</th><th>Severity</th><th>Franchise</th><th>Occurred</th><th>Injuries</th><th>Authorities</th><th>Corporate</th><th>Status</th></tr></thead><tbody>`
+      +RISK.incidents.map(i=>`<tr><td><strong>${esc(i.id)}</strong></td><td>${esc(i.type)}</td>
+        <td>${badge(i.severity)}</td><td>${esc(i.franchise)}<div class="mini">${esc(i.location)}</div></td>
+        <td>${esc(i.occurred)}</td><td>${esc(i.injuries)}</td>
+        <td>${i.authorities==='Yes'?'<span class="badge b-amber">notified</span>':'<span class="muted">—</span>'}${i.regulatory?`<div class="mini">${esc(i.regulatory)}</div>`:''}</td>
+        <td>${i.reviewed==='Yes'?'<span class="badge b-green">reviewed</span>':'<span class="badge b-red">pending</span>'}</td>
+        <td>${badge(i.status)}</td></tr>`).join('')+`</tbody>`;
+    document.getElementById('t-claims').innerHTML=
+      `<thead><tr><th>Claim</th><th>Franchise</th><th>Plan</th><th class="right">Claimed</th><th class="right">Approved</th><th>Status</th></tr></thead><tbody>`
+      +(RISK.claims.map(c=>`<tr><td><strong>${esc(c.id)}</strong><div class="mini">${esc(c.number)}</div></td>
+        <td>${esc(c.franchise)}</td><td>${esc(c.plan)}<div class="mini">${esc(c.provider)}</div></td>
+        <td class="right">${money(c.claimed)}</td><td class="right">${c.approved?money(c.approved):'<span class="muted">—</span>'}</td>
+        <td>${badge(c.status)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No claims filed.</td></tr>')+`</tbody>`;
+    document.getElementById('t-train').innerHTML=
+      `<thead><tr><th>Franchise</th><th class="right">Complete</th><th class="right">Overdue</th><th class="right">Expired</th><th class="right">Rate</th></tr></thead><tbody>`
+      +RISK.training.map(t2=>`<tr><td>${esc(t2.franchise)}</td><td class="right">${t2.complete}/${t2.total}</td>
+        <td class="right ${t2.overdue?'':'muted'}">${t2.overdue}</td><td class="right ${t2.expired?'':'muted'}">${t2.expired}</td>
+        <td class="right"><div class="barline" style="display:inline-block;width:70px"><i style="width:${t2.pct}%;background:${t2.pct<70?'var(--red)':t2.pct<90?'var(--sun)':'var(--green)'}"></i></div> <strong>${t2.pct}%</strong></td></tr>`).join('')+`</tbody>`;
+  }catch(e){document.getElementById('risk-kpis').innerHTML=`<div class="empty">Could not load risk: ${esc(e.message)}</div>`}
+}
+
+/* ══════ FINANCIALS ══════ */
+async function loadFin(){
+  const el=document.getElementById('fin-list');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Loading statements…</div>';
+  try{
+    const d=await net();
+    const periods=[...new Set(d.statements.map(s=>s.period))].sort().reverse();
+    const frs=[...new Set(d.statements.map(s=>s.franchise))].sort();
+    const pSel=document.getElementById('fin-period'),fSel=document.getElementById('fin-fr');
+    if(pSel.options.length<=1)pSel.innerHTML='<option value="">All periods</option>'+periods.map(p=>`<option>${esc(p)}</option>`).join('');
+    if(fSel.options.length<=1)fSel.innerHTML='<option value="">All franchises</option>'+frs.map(f=>`<option>${esc(f)}</option>`).join('');
+    renderStatements();
+  }catch(e){el.innerHTML=`<div class="empty">Could not load statements: ${esc(e.message)}</div>`}
+}
+function renderStatements(){
+  if(!NET)return;
+  const p=document.getElementById('fin-period').value,f=document.getElementById('fin-fr').value;
+  const list=NET.statements.filter(s=>(!p||s.period===p)&&(!f||s.franchise===f));
+  const sum=k=>list.reduce((a,s)=>a+s[k],0);
+  document.getElementById('fin-tot').innerHTML=
+    `${list.length} statement${list.length===1?'':'s'} · gross ${money(sum('gross'))} · royalty <strong>${money(sum('royalty'))}</strong> · corporate total ${money(sum('royalty')+sum('marketing')+sum('platform'))}`;
+  document.getElementById('fin-list').innerHTML=list.map(s=>`
+    <div class="stmt">
+      <div class="h"><span class="f">${esc(s.franchise)} — ${esc(s.period)}</span>
+        <span>${s.reservations} reservations ${badge(s.status)}</span></div>
+      <div class="b">
+        <div class="row"><span class="muted">Gross rental revenue</span><span>${money(s.gross)}</span></div>
+        <div class="row"><span class="muted">Refunds</span><span class="neg">−${money(s.refunds)}</span></div>
+        <div class="row sub2"><span>Net revenue</span><span>${money(s.net)}</span></div>
+        <div class="row"><span class="muted">Royalty</span><span class="neg">−${money(s.royalty)}</span></div>
+        <div class="row"><span class="muted">Marketing fee</span><span class="neg">−${money(s.marketing)}</span></div>
+        <div class="row"><span class="muted">Platform fee</span><span class="neg">−${money(s.platform)}</span></div>
+        ${s.insurance?`<div class="row"><span class="muted">Insurance commission</span><span>${money(s.insurance)}</span></div>`:''}
+        <div class="row net"><span>Franchise net</span><span>${money(s.franchiseNet)}</span></div>
+      </div>
+    </div>`).join('')||'<div class="empty">No statements for that filter.</div>';
+}
+</script>
+</body>
+</html>

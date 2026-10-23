@@ -1,0 +1,153 @@
+<!doctype html>
+<!-- Shared build-status viewer: templates/build-status (copy with `status.mjs init`). Polls build-status.json every 4 s. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building…</title>
+<style>
+:root{--blue:#242F4D;--blue2:#2E3B5E;--orange:#F36C24;--green:#2E7D32;--gray:#5F6368;--border:#E8EAED;--bg:#F1F3F4;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124}
+header{background:var(--blue);color:#fff;padding:22px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px;font-weight:800}
+header h1 span{color:var(--orange)}
+header .sub{font-size:13px;opacity:.85}
+.live{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;background:rgba(255,255,255,.1);padding:6px 12px;border-radius:20px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--orange);animation:pulse 1.4s infinite}
+.done .dot{background:#66BB6A;animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(243,108,36,.7)}70%{box-shadow:0 0 0 10px rgba(243,108,36,0)}100%{box-shadow:0 0 0 0 rgba(243,108,36,0)}}
+main{max-width:1180px;margin:0 auto;padding:22px 16px 40px}
+.bar{background:var(--white);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.12);margin-bottom:18px}
+.progress{height:12px;background:#E8EAED;border-radius:6px;overflow:hidden;margin-top:10px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--orange),#FF8A4C);transition:width .8s}
+.now{font-size:15px;font-weight:700;color:var(--blue)}
+.now small{display:block;font-weight:400;color:var(--gray);margin-top:3px;font-size:13px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.12);padding:18px 20px}
+.card h2{margin:0 0 12px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--gray)}
+.phase{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.phase:first-of-type{border-top:0}
+.ico{flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.ico.done{background:#E8F5E9;color:var(--green)}
+.ico.active{background:#FFF3E0;color:#B8460A;animation:pulse 1.4s infinite}
+.ico.todo{background:#F1F3F4;color:#9AA0A6}
+.ph-name{font-weight:700;font-size:14px;color:var(--blue)}
+.ph-desc{font-size:13px;color:var(--gray);margin-top:2px}
+.ph-items{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#3c4043}
+.ph-items li{margin:2px 0}
+.ph-items li.ok::marker{content:'✓  ';color:var(--green)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#F8F9FA;border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:22px;color:var(--blue)}
+.stat span{font-size:12px;color:var(--gray)}
+.tl{position:relative;max-height:560px;overflow:auto;padding:2px 4px 2px 0}
+.tl-item{position:relative;padding:0 0 16px 30px}
+.tl-item:last-child{padding-bottom:2px}
+.tl-item::before{content:'';position:absolute;left:9px;top:14px;bottom:-2px;width:2px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #9AA0A6}
+.tl-item.finish .tl-dot{border-color:var(--green);background:#E8F5E9}
+.tl-item.start .tl-dot{border-color:var(--orange);background:#FFF3E0}
+.tl-item.latest .tl-dot{box-shadow:0 0 0 4px rgba(243,108,36,.18)}
+.tl-time{font-size:11.5px;color:var(--gray);font-weight:600;letter-spacing:.02em}
+.tl-time span{font-weight:400;margin-left:6px}
+.tl-msg{font-size:13.5px;color:#202124;margin-top:2px;line-height:1.35}
+.tl-item.finish .tl-msg{font-weight:600;color:var(--blue)}
+.apps{display:flex;flex-wrap:wrap;gap:8px}
+.app{font-size:12px;padding:5px 10px;border-radius:14px;border:1px solid var(--border);background:#F8F9FA;color:var(--gray)}
+.app.ready{background:#E8F5E9;border-color:#C8E6C9;color:var(--green);font-weight:700;text-decoration:none}
+.sess{font-size:12px;color:var(--gray);margin-bottom:4px;font-weight:600;letter-spacing:.02em}
+.hist{margin-top:18px}
+.hs{border-top:1px solid var(--border);padding:10px 0}
+.hs:first-of-type{border-top:0}
+.hs summary{cursor:pointer;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;list-style:none}
+.hs summary::-webkit-details-marker{display:none}
+.hs .t{font-weight:700;color:var(--blue);font-size:14px}
+.hs .when{font-size:12.5px;color:var(--gray)}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#F1F3F4;color:var(--gray)}
+.pill.ok{background:#E8F5E9;color:var(--green)}
+.pill.live{background:#FFF3E0;color:#B8460A}
+.hs .body{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+@media(max-width:860px){.hs .body{grid-template-columns:1fr}}
+.hs .body h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--gray);margin:0 0 6px}
+.hs .body ul{margin:0;padding-left:18px;font-size:12.5px}
+.hs .body li{margin:2px 0}
+footer{font-size:12px;color:var(--gray);text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<header id="hdr">
+  <div>
+    <h1 id="brand">Kinetic <span>App</span></h1>
+    <div class="sub" id="tagline">Being built automatically on the Kinetic Platform</div>
+  </div>
+  <div class="live"><span class="dot"></span><span id="liveText">Building now</span></div>
+</header>
+<main>
+  <div class="bar">
+    <div class="sess" id="sess"></div>
+    <div class="now" id="now">Loading build status…<small></small></div>
+    <div class="progress"><div id="pct" style="width:0%"></div></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>Build plan</h2><div id="phases"></div></div>
+    <div>
+      <div class="card" style="margin-bottom:18px"><h2>Built so far</h2><div class="stats" id="stats"></div></div>
+      <div class="card" style="margin-bottom:18px"><h2>Applications</h2><div class="apps" id="apps"></div></div>
+      <div class="card"><h2>Activity</h2><div class="tl" id="log"></div></div>
+    </div>
+  </div>
+  <div class="card hist"><h2>Build history</h2><div id="history"></div></div>
+  <footer>Space: <span id="space"></span> · updated <span id="upd"></span> · this page refreshes automatically</footer>
+</main>
+<script>
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function clock(t){var d=new Date(t);return d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
+function day(t){return t?new Date(t).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'}):''}
+function span(a,b){if(!a)return'';var m=Math.round((new Date(b||Date.now())-new Date(a))/60000);return m<60?m+' min':m<1440?(m/60).toFixed(1)+' h':Math.round(m/1440)+' d'}
+function sessionHtml(h,live){
+  var ph=h.phases||[],done=ph.filter(function(p){return p.status==='done'}).length;
+  var items=[].concat.apply([],ph.map(function(p){return (p.items||[]).filter(function(i){return i.charAt(0)==='✓'}).map(function(i){return i.slice(1).trim()})}));
+  var log=(h.log||[]).slice().sort(function(a,b){return new Date(a.t)-new Date(b.t)});
+  return '<details class="hs"'+(live?'':'')+'><summary><span class="t">'+esc(h.title||'Session')+'</span><span class="when">'+esc(day(h.started))+' '+esc(clock(h.started))+(h.ended?' → '+esc(day(h.ended)===day(h.started)?clock(h.ended):day(h.ended)+' '+clock(h.ended)):'')+' · '+esc(span(h.started,h.ended))+'</span>'+
+    (live?'<span class="pill live">in progress · '+(h.percent||0)+'%</span>':h.complete?'<span class="pill ok">complete</span>':'<span class="pill">'+(h.percent||0)+'%</span>')+
+    '<span class="when">'+done+'/'+ph.length+' phases · '+items.length+' things done</span></summary>'+
+    '<div class="body"><div><h3>What it did</h3><ul>'+(items.length?items.map(function(i){return '<li>'+esc(i)+'</li>'}).join(''):'<li>—</li>')+'</ul></div>'+
+    '<div><h3>Activity</h3><ul>'+log.map(function(l){return '<li><b>'+esc(clock(l.t))+'</b> '+esc(l.msg)+'</li>'}).join('')+'</ul></div></div></details>';
+}
+function ago(t){var s=Math.round((Date.now()-new Date(t))/1000);if(s<5)return 'just now';if(s<60)return s+'s ago';if(s<3600)return Math.round(s/60)+'m ago';return Math.round(s/3600)+'h ago'}
+var ICON={done:'✓',active:'●',todo:'○'};
+async function load(){
+  try{
+    var r=await fetch('build-status.json?t='+Date.now());var d=await r.json();
+    var ph=d.phases||[];var done=ph.filter(function(p){return p.status==='done'}).length;
+    var active=ph.find(function(p){return p.status==='active'});
+    var pct=d.percent!=null?d.percent:Math.round(done/ph.length*100);
+    document.getElementById('pct').style.width=pct+'%';
+    document.getElementById('now').innerHTML=esc(d.complete?'Build complete':(active?active.name:'Starting'))+' <small>'+esc(d.current||'')+' · '+pct+'% complete</small>';
+    document.getElementById('hdr').className=d.complete?'done':'';
+    document.getElementById('liveText').textContent=d.complete?'Build complete':'Building now';
+    document.getElementById('phases').innerHTML=ph.map(function(p){
+      return '<div class="phase"><div class="ico '+p.status+'">'+ICON[p.status]+'</div><div><div class="ph-name">'+esc(p.name)+'</div><div class="ph-desc">'+esc(p.desc||'')+'</div>'+
+        (p.items&&p.items.length?'<ul class="ph-items">'+p.items.map(function(i){var ok=i.charAt(0)==='✓';return '<li class="'+(ok?'ok':'')+'">'+esc(ok?i.slice(1).trim():i)+'</li>'}).join('')+'</ul>':'')+'</div></div>'}).join('');
+    document.getElementById('stats').innerHTML=Object.entries(d.stats||{}).map(function(e){return '<div class="stat"><b>'+esc(e[1])+'</b><span>'+esc(e[0])+'</span></div>'}).join('');
+    document.getElementById('apps').innerHTML=(d.apps||[]).map(function(a){return a.ready?'<a class="app ready" href="/'+esc(a.slug)+'/">'+esc(a.name)+' ↗</a>':'<span class="app">'+esc(a.name)+'</span>'}).join('');
+    var items=(d.log||[]).slice().sort(function(a,b){return new Date(b.t)-new Date(a.t)});
+    document.getElementById('log').innerHTML=items.map(function(l,i){var k=/^Finished|complete|verified|pass/i.test(l.msg)?'finish':/^Started/.test(l.msg)?'start':'';
+      return '<div class="tl-item '+k+(i===0?' latest':'')+'"><span class="tl-dot"></span><div class="tl-time">'+esc(clock(l.t))+'<span>'+esc(ago(l.t))+'</span></div><div class="tl-msg">'+esc(l.msg)+'</div></div>'}).join('');
+    var p=d.project||{};document.getElementById('brand').innerHTML=esc(p.brand||'Kinetic')+' <span>'+esc(p.name||'App')+'</span>';
+    document.getElementById('tagline').textContent=p.tagline||'Being built automatically on the Kinetic Platform';
+    document.title=(p.brand||'Kinetic')+' '+(p.name||'App')+' — '+(d.complete?'Build complete':'Building');
+    var se=d.session||{};document.getElementById('sess').textContent='Session: '+(se.title||'Build')+(se.started?' · started '+day(se.started)+' '+clock(se.started):'');
+    var hist=(d.history||[]).slice().reverse();
+    document.getElementById('history').innerHTML=sessionHtml({title:se.title||'Current build',started:se.started,ended:d.complete?se.ended:null,complete:d.complete,percent:pct,phases:ph,log:d.log},!d.complete)+hist.map(function(h){return sessionHtml(h,false)}).join('')||'<div class="when">No earlier sessions.</div>';
+    document.getElementById('space').textContent=d.space||'';
+    document.getElementById('upd').textContent=d.updated?ago(d.updated):'';
+  }catch(e){document.getElementById('now').innerHTML='Waiting for build status…<small>'+esc(e.message)+'</small>'}
+}
+load();setInterval(load,4000);
+</script>
+</body>
+</html>

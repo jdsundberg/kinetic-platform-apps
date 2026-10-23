@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Band Scheduler</title>
+<style>
+:root{
+  --blue:#1A1424;        /* stage-dark plum — topbar/headers */
+  --blue-light:#2A2036;
+  --orange:#FF4D8D;      /* stage pink — accent/CTA */
+  --orange-light:#ff74a7;
+  --green:#34A853; --red:#EA4335; --yellow:#FBBC04;
+  --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F1F3F4; --white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.08);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+/* ── login ── */
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#120E1A 0%,#2A1036 55%,#5A1440 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:400px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.login-box .brand{font-size:24px;font-weight:800;color:var(--blue);text-align:center}
+.login-box .brand span{color:var(--orange)}
+.login-box .accent{width:40px;height:3px;background:var(--orange);margin:12px auto 20px;border-radius:2px}
+.login-box .sub{text-align:center;color:var(--gray);font-size:12px;margin-bottom:22px}
+.login-box label{display:block;font-size:12px;color:var(--gray);margin:12px 0 4px;font-weight:600}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,77,141,.15)}
+.login-box button{width:100%;margin-top:20px;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.login-box button:hover{background:var(--orange-light)}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:12px;min-height:14px}
+/* ── topbar ── */
+#app{display:none}
+.topbar{background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-weight:800;font-size:18px;white-space:nowrap;margin-right:28px}
+.topbar .logo span{color:var(--orange)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.75);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-tabs button.active{background:var(--orange);color:#fff}
+.topbar .spacer{flex:1}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px}
+.user-info strong{color:#fff}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.logout-btn:hover{border-color:var(--orange);color:#fff}
+/* ── layout ── */
+.wrap{max-width:1180px;margin:0 auto;padding:24px}
+.console{display:none}
+.console.active{display:block}
+h1{font-size:20px;color:var(--blue);margin-bottom:4px}
+.page-sub{color:var(--gray);font-size:13px;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:15px;color:var(--blue);margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* ── kpis ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--orange)}
+.kpi.blue{border-left-color:var(--blue)}
+.kpi.green{border-left-color:var(--green)}
+.kpi.gray{border-left-color:var(--gray)}
+.kpi .val{font-size:26px;font-weight:800;color:var(--blue);line-height:1.1}
+.kpi .label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;font-weight:600}
+/* ── tables ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--light);color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#fafafa}
+.table-wrap{overflow-x:auto}
+.clickable tbody tr{cursor:pointer}
+/* ── controls ── */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,.controls input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff}
+select:focus,input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,77,141,.12)}
+.spacer-h{flex:1}
+.btn-primary{background:var(--orange);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:#eceef0}
+.btn-danger{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-sm{padding:5px 10px;font-size:12px}
+.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;color:var(--gray);font-size:13px}
+/* ── badges ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.b-played{background:#E8F5E9;color:#2E7D32}
+.b-confirmed{background:#E3F2FD;color:#1565C0}
+.b-sched{background:#F1F3F4;color:#5F6368}
+.b-cancelled{background:#FDECEA;color:#C62828}
+.b-active{background:#E8F5E9;color:#2E7D32}
+.b-inactive{background:#F1F3F4;color:#5F6368}
+.b-hiatus{background:#FFF8E1;color:#8D6E00}
+.b-new{background:#FFF8E1;color:#8D6E00}
+.b-reviewed{background:#E3F2FD;color:#1565C0}
+.b-resolved{background:#E8F5E9;color:#2E7D32}
+.b-yes{background:#E8F5E9;color:#2E7D32}
+.b-no{background:#FDECEA;color:#C62828}
+.stars{color:var(--orange);letter-spacing:1px;white-space:nowrap}
+.pill{display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--gray)}
+.empty{padding:34px;text-align:center;color:var(--gray);font-size:13px}
+.win{font-weight:700;color:var(--green)}
+.muted{color:var(--gray)}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--orange)}
+/* ── modal ── */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
+#modal.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;width:660px;max-width:96vw;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-header h2{font-size:16px;color:var(--blue)}
+.modal-close{background:none;border:none;font-size:24px;color:var(--gray);cursor:pointer;line-height:1}
+.modal-body{padding:22px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-grid .full{grid-column:1/-1}
+.modal-body label{display:block;font-size:12px;color:var(--gray);font-weight:600;margin-bottom:4px}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.modal-body textarea{resize:vertical;min-height:64px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:16px 22px;border-top:1px solid var(--border)}
+.modal-footer .spacer-h{order:-1}
+/* ── toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+@media(max-width:760px){.modal-grid,.two-col{grid-template-columns:1fr}.nav-tabs button{padding:8px 9px}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand">Band <span>Scheduler</span></div>
+    <div class="accent"></div>
+    <div class="sub">Sign in to book bands, venues &amp; gigs</div>
+    <label>Server URL</label>
+    <input id="li-url" value="https://first.kinetics.com">
+    <label>Username</label>
+    <input id="li-user" value="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" value="john1">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">Band<span>&nbsp;Scheduler</span></div>
+    <div class="nav-tabs">
+      <button class="active" onclick="switchTab('dash')">Dashboard</button>
+      <button onclick="switchTab('venues')">Venues</button>
+      <button onclick="switchTab('bands')">Bands</button>
+      <button onclick="switchTab('gigs')">Gigs</button>
+      <button onclick="switchTab('feedback')">Feedback</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="user-info">
+      <strong id="user-display"></strong>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- ── Dashboard ── -->
+    <div id="console-dash" class="console active">
+      <h1>Booking Dashboard</h1>
+      <div class="page-sub">Live music across the Upper Midwest — venues, bands on the road, and how the shows went</div>
+      <div class="kpi-row" id="dash-kpis"></div>
+      <div class="card"><h2>Next Shows</h2><div class="table-wrap"><table id="dash-upcoming"></table></div></div>
+      <div class="two-col">
+        <div class="card"><h2>Top Rated Bands</h2><div class="table-wrap"><table id="dash-bands"></table></div></div>
+        <div class="card"><h2>Busiest Venues</h2><div class="table-wrap"><table id="dash-venues"></table></div></div>
+      </div>
+      <div class="card"><h2>By Genre</h2><div class="table-wrap"><table id="dash-genre"></table></div></div>
+      <div class="card"><h2>Latest Feedback</h2><div class="table-wrap"><table id="dash-feedback"></table></div></div>
+    </div>
+
+    <!-- ── Venues ── -->
+    <div id="console-venues" class="console">
+      <h1>Venues</h1>
+      <div class="page-sub">Rooms to book — capacity, stage, sound and who to call</div>
+      <div class="controls">
+        <select id="v-type" onchange="loadVenues()"></select>
+        <select id="v-city" onchange="loadVenues()"></select>
+        <select id="v-status" onchange="loadVenues()">
+          <option value="">All statuses</option><option>Active</option><option>Inactive</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openVenueModal()">+ Add Venue</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="venues-table"></table></div><div class="pager" id="venues-pager"></div></div>
+    </div>
+
+    <!-- ── Bands ── -->
+    <div id="console-bands" class="console">
+      <h1>Bands</h1>
+      <div class="page-sub">The roster — genre, lineup, rate and typical draw</div>
+      <div class="controls">
+        <select id="b-genre" onchange="loadBands()"></select>
+        <select id="b-city" onchange="loadBands()"></select>
+        <select id="b-status" onchange="loadBands()">
+          <option value="">All statuses</option><option>Active</option><option>On Hiatus</option><option>Broken Up</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openBandModal()">+ Add Band</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="bands-table"></table></div><div class="pager" id="bands-pager"></div></div>
+    </div>
+
+    <!-- ── Gigs ── -->
+    <div id="console-gigs" class="console">
+      <h1>Gigs</h1>
+      <div class="page-sub">Who is playing where — door, guarantee, tickets and attendance</div>
+      <div class="controls">
+        <select id="g-venue" onchange="loadGigs()"></select>
+        <select id="g-genre" onchange="loadGigs()"></select>
+        <select id="g-status" onchange="loadGigs()">
+          <option value="">All statuses</option><option>Scheduled</option><option>Confirmed</option><option>Played</option><option>Cancelled</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openGigModal()">+ Book Gig</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="gigs-table"></table></div><div class="pager" id="gigs-pager"></div></div>
+    </div>
+
+    <!-- ── Feedback ── -->
+    <div id="console-feedback" class="console">
+      <h1>Band Feedback</h1>
+      <div class="page-sub">Performance, professionalism and crowd response — and whether we'd book them again</div>
+      <div class="controls">
+        <select id="f-band" onchange="loadFeedback()"></select>
+        <select id="f-venue" onchange="loadFeedback()"></select>
+        <select id="f-role" onchange="loadFeedback()">
+          <option value="">All roles</option><option>Fan</option><option>Venue Manager</option><option>Sound Engineer</option><option>Promoter</option><option>Bartender</option>
+        </select>
+        <select id="f-status" onchange="loadFeedback()">
+          <option value="">All statuses</option><option>New</option><option>Reviewed</option><option>Resolved</option>
+        </select>
+        <div class="spacer-h"></div>
+        <button class="btn-primary" onclick="openFeedbackModal()">+ Add Feedback</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table id="feedback-table"></table></div><div class="pager" id="feedback-pager"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL + TOAST ══════════════ -->
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const KAPP='band-scheduler';
+let API={url:'',auth:'',user:'',displayName:''};
+
+const GENRES=['Rock','Indie','Punk','Metal','Jazz','Blues','Funk','Soul','Country','Americana','Bluegrass','Hip-Hop','Electronic','Reggae','Folk','Pop'];
+const VENUE_TYPES=['Club','Bar','Theater','Amphitheater','Brewery','Festival Grounds','Coffeehouse','Ballroom'];
+const STAGE_SIZES=['Small','Medium','Large'];
+const SOUND=['House PA + engineer','House PA, BYO engineer','Full line array','Basic vocal PA','Backline provided'];
+const ROLES=['Fan','Venue Manager','Sound Engineer','Promoter','Bartender'];
+const CROWD=['Packed and loud','Enthusiastic','Steady','Polite but quiet','Thin early, filled in'];
+const GIG_STATUS=['Scheduled','Confirmed','Played','Cancelled'];
+const SET_TIMES=['7:00 PM','7:30 PM','8:00 PM','8:30 PM','9:00 PM','9:30 PM','10:00 PM'];
+// filled from /api/bandsched/lookups so dropdowns never page the client past 25 rows
+let LOOKUPS={venues:[],bands:[],genres:[],cities:[],venueTypes:[]};
+
+// ── helpers ──
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
+function v(sub,f){return sub&&sub.values?(sub.values[f]||''):''}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function stars(n){n=Math.max(0,Math.min(5,parseInt(n)||0));return '★'.repeat(n)+'<span class="muted">'+'☆'.repeat(5-n)+'</span>'}
+function opt(val,cur){return `<option ${val===cur?'selected':''}>${esc(val)}</option>`}
+function nid(pre){return pre+'-'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*1e3)}
+function money(n){const x=parseFloat(n);return isNaN(x)?'—':'$'+Math.round(x).toLocaleString()}
+// compact form for KPI tiles — a full $1,930,053 overflows a 150px card
+function moneyShort(n){const x=parseFloat(n);if(isNaN(x))return '—';
+  if(x>=1e6)return '$'+(x/1e6).toFixed(1)+'M';
+  if(x>=1e4)return '$'+Math.round(x/1e3)+'K';
+  return '$'+Math.round(x).toLocaleString()}
+function num(n){const x=parseFloat(n);return isNaN(x)?0:x}
+function statusBadge(s){
+  const map={Played:'b-played',Confirmed:'b-confirmed',Scheduled:'b-sched',Cancelled:'b-cancelled',
+    Active:'b-active',Inactive:'b-inactive','On Hiatus':'b-hiatus','Broken Up':'b-cancelled',
+    New:'b-new',Reviewed:'b-reviewed',Resolved:'b-resolved'};
+  return `<span class="badge ${map[s]||'b-sched'}">${esc(s||'')}</span>`;
+}
+
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,220)}`)}
+  const t=await r.text();return t?JSON.parse(t):{}
+}
+async function appApi(path){
+  const r=await fetch(path,{headers:{Authorization:'Basic '+API.auth}});
+  if(!r.ok)throw new Error(`${r.status}`);
+  return r.json();
+}
+
+// ── auth ──
+function doLogin(){
+  const url=document.getElementById('li-url').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const auth=btoa(user+':'+pass);
+  fetch(`${url}/app/api/v1/me`,{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error('Invalid credentials');return r.json()})
+    .then(d=>{API={url,auth,user:d.username,displayName:d.displayName||d.username};enterApp()})
+    .catch(e=>{document.getElementById('li-err').textContent=e.message});
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-display').textContent=API.displayName;
+  buildFilters();
+  loadLookups();
+  loadDash();
+}
+
+// session bootstrap (launcher-injected) — check before showing login.
+// Served through the base launcher on :3011, which proxies /app/api/v1 same-origin,
+// so force url:'' (a cross-origin fetch to the target server is cert/CORS-blocked).
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s)return;
+  try{const ss=JSON.parse(s);API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};enterApp()}catch(e){}
+})();
+
+// ── tabs ──
+const TABS=['dash','venues','bands','gigs','feedback'];
+function switchTab(tab){
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('console-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button')[TABS.indexOf(tab)].classList.add('active');
+  if(tab==='dash')loadDash();
+  else if(tab==='venues')loadVenues();
+  else if(tab==='bands')loadBands();
+  else if(tab==='gigs')loadGigs();
+  else if(tab==='feedback')loadFeedback();
+}
+
+function fillSelect(id,label,vals,keep){
+  const el=document.getElementById(id);if(!el)return;
+  const cur=keep?el.value:'';
+  el.innerHTML=`<option value="">${label}</option>`+vals.map(x=>`<option ${x===cur?'selected':''}>${esc(x)}</option>`).join('');
+}
+function buildFilters(){
+  fillSelect('v-type','All types',VENUE_TYPES);
+  fillSelect('b-genre','All genres',GENRES);
+  fillSelect('g-genre','All genres',GENRES);
+  fillSelect('v-city','All cities',[]);
+  fillSelect('b-city','All cities',[]);
+  fillSelect('g-venue','All venues',[]);
+  fillSelect('f-band','All bands',[]);
+  fillSelect('f-venue','All venues',[]);
+}
+async function loadLookups(){
+  try{
+    LOOKUPS=await appApi('/api/bandsched/lookups');
+    fillSelect('v-type','All types',LOOKUPS.venueTypes.length?LOOKUPS.venueTypes:VENUE_TYPES,true);
+    fillSelect('v-city','All cities',LOOKUPS.cities,true);
+    fillSelect('b-city','All cities',LOOKUPS.cities,true);
+    fillSelect('b-genre','All genres',LOOKUPS.genres.length?LOOKUPS.genres:GENRES,true);
+    fillSelect('g-genre','All genres',LOOKUPS.genres.length?LOOKUPS.genres:GENRES,true);
+    fillSelect('g-venue','All venues',LOOKUPS.venues,true);
+    fillSelect('f-band','All bands',LOOKUPS.bands,true);
+    fillSelect('f-venue','All venues',LOOKUPS.venues,true);
+  }catch(e){/* filters fall back to the static lists */}
+}
+
+// ── pagination state ──
+const PS={venues:{h:[],pt:null,p:1},bands:{h:[],pt:null,p:1},gigs:{h:[],pt:null,p:1},feedback:{h:[],pt:null,p:1}};
+function paginate(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+function pagerHTML(ps,fn){
+  return `<button class="btn-secondary btn-sm" onclick="${fn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button>`
+       +`<span>Page ${ps.p}</span>`
+       +`<button class="btn-secondary btn-sm" onclick="${fn}('next')" ${!ps.pt?'disabled':''}>Next</button>`;
+}
+function buildQ(pairs){
+  const q=pairs.filter(([f,val])=>val).map(([f,val])=>`values[${f}]="${String(val).replace(/"/g,'\\"')}"`);
+  return q.length?'&q='+encodeURIComponent(q.join(' AND ')):'';
+}
+// shared list loader — 25 rows max per fetch (golden rule), Prev/Next only
+async function loadList({dir,form,ps,tableId,pagerId,filters,head,row,emptyMsg,fn}){
+  paginate(ps,dir);
+  let p=`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`+buildQ(filters);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const wrap=document.getElementById(tableId).closest('.card').querySelector('.table-wrap');
+  try{
+    const d=await api(p);const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length){
+      wrap.innerHTML=`<table id="${tableId}"></table><div class="empty">${esc(emptyMsg)}</div>`;
+    }else{
+      wrap.innerHTML=`<table id="${tableId}" class="clickable"></table>`;
+      document.getElementById(tableId).innerHTML=head+'<tbody>'+subs.map(row).join('')+'</tbody>';
+    }
+    document.getElementById(pagerId).innerHTML=pagerHTML(ps,fn);
+  }catch(e){
+    wrap.innerHTML=`<table id="${tableId}"></table><div class="empty">Error loading ${esc(form)}: ${esc(e.message)}</div>`;
+  }
+}
+
+// ══════════════ DASHBOARD ══════════════
+async function loadDash(){
+  try{
+    const d=await appApi('/api/bandsched/dashboard');
+    const t=d.totals||{};
+    document.getElementById('dash-kpis').innerHTML=`
+      <div class="kpi"><div class="val">${t.venues||0}</div><div class="label">Venues</div></div>
+      <div class="kpi blue"><div class="val">${t.bands||0}</div><div class="label">Bands</div></div>
+      <div class="kpi gray"><div class="val">${t.upcoming||0}</div><div class="label">Upcoming Gigs</div></div>
+      <div class="kpi green"><div class="val">${t.played||0}</div><div class="label">Shows Played</div></div>
+      <div class="kpi"><div class="val">${(t.attendance||0).toLocaleString()}</div><div class="label">Total Attendance</div></div>
+      <div class="kpi green"><div class="val" title="${money((t.doorRevenue||0)+(t.barSales||0))}">${moneyShort((t.doorRevenue||0)+(t.barSales||0))}</div><div class="label">Door + Bar</div></div>
+      <div class="kpi"><div class="val">${(t.avgRating||0).toFixed(1)}</div><div class="label">Avg Band Rating</div></div>
+      <div class="kpi blue"><div class="val">${t.bookAgainPct||0}%</div><div class="label">Would Book Again</div></div>`;
+
+    document.getElementById('dash-upcoming').innerHTML=
+      `<thead><tr><th>Date</th><th>Time</th><th>Band</th><th>Venue</th><th>City</th><th>Genre</th><th>Door</th><th>Status</th></tr></thead><tbody>`+
+      ((d.upcomingGigs||[]).map(g=>`<tr>
+        <td><strong>${esc(g.date)}</strong></td><td>${esc(g.time)}</td>
+        <td>${esc(g.band)}${g.support?`<br><span class="muted">w/ ${esc(g.support)}</span>`:''}</td>
+        <td>${esc(g.venue)}</td><td>${esc(g.city)}</td><td><span class="pill">${esc(g.genre)}</span></td>
+        <td>${money(g.door)}</td><td>${statusBadge(g.status)}</td></tr>`).join('')
+       ||'<tr><td colspan="8" class="empty">No upcoming shows booked.</td></tr>')+`</tbody>`;
+
+    document.getElementById('dash-bands').innerHTML=
+      `<thead><tr><th>#</th><th>Band</th><th>Genre</th><th>Rating</th><th>Shows</th><th>Avg Draw</th></tr></thead><tbody>`+
+      ((d.topBands||[]).map((b,i)=>`<tr>
+        <td>${i+1}</td><td><strong>${esc(b.band)}</strong></td><td>${esc(b.genre)}</td>
+        <td class="stars">${stars(Math.round(b.avgRating))} <span class="muted">${b.avgRating.toFixed(1)}</span></td>
+        <td>${b.gigs}</td><td>${b.avgAttendance}</td></tr>`).join('')
+       ||'<tr><td colspan="6" class="empty">No rated bands yet.</td></tr>')+`</tbody>`;
+
+    document.getElementById('dash-venues').innerHTML=
+      `<thead><tr><th>Venue</th><th>City</th><th>Shows</th><th>Avg Att.</th><th>Fill</th></tr></thead><tbody>`+
+      ((d.topVenues||[]).map(vn=>`<tr>
+        <td><strong>${esc(vn.venue)}</strong></td><td>${esc(vn.city)}</td>
+        <td>${vn.played}</td><td>${vn.avgAttendance}</td>
+        <td><div class="bar" title="${vn.fill}% of ${vn.capacity}"><i style="width:${Math.min(100,vn.fill)}%"></i></div></td></tr>`).join('')
+       ||'<tr><td colspan="5" class="empty">No shows played yet.</td></tr>')+`</tbody>`;
+
+    document.getElementById('dash-genre').innerHTML=
+      `<thead><tr><th>Genre</th><th>Bands</th><th>Gigs</th><th>Played</th><th>Attendance</th><th>Avg Rating</th></tr></thead><tbody>`+
+      ((d.byGenre||[]).map(g=>`<tr>
+        <td><strong>${esc(g.genre)}</strong></td><td>${g.bands}</td><td>${g.gigs}</td><td>${g.played}</td>
+        <td>${g.attendance.toLocaleString()}</td>
+        <td class="stars">${g.avgRating?stars(Math.round(g.avgRating))+' <span class="muted">'+g.avgRating.toFixed(1)+'</span>':'<span class="muted">—</span>'}</td></tr>`).join('')
+       ||'<tr><td colspan="6" class="empty">No genre data.</td></tr>')+`</tbody>`;
+
+    document.getElementById('dash-feedback').innerHTML=
+      `<thead><tr><th>Date</th><th>Band</th><th>Venue</th><th>By</th><th>Rating</th><th>Book Again</th><th>Comment</th></tr></thead><tbody>`+
+      ((d.recentFeedback||[]).map(f=>`<tr>
+        <td>${esc(f.date)}</td><td><strong>${esc(f.band)}</strong></td><td>${esc(f.venue)}</td>
+        <td>${esc(f.by)}<br><span class="muted">${esc(f.role)}</span></td>
+        <td class="stars">${stars(f.overall)}</td>
+        <td><span class="badge ${f.again==='Yes'?'b-yes':'b-no'}">${esc(f.again||'—')}</span></td>
+        <td class="muted">${esc(f.comment)}</td></tr>`).join('')
+       ||'<tr><td colspan="7" class="empty">No feedback yet.</td></tr>')+`</tbody>`;
+  }catch(e){
+    document.getElementById('dash-kpis').innerHTML=`<div class="empty">Error loading dashboard: ${esc(e.message)}</div>`;
+  }
+}
+
+// ══════════════ VENUES ══════════════
+async function loadVenues(dir){
+  await loadList({dir,form:'venues',ps:PS.venues,tableId:'venues-table',pagerId:'venues-pager',fn:'loadVenues',
+    filters:[['Venue Type',document.getElementById('v-type').value],['City',document.getElementById('v-city').value],['Status',document.getElementById('v-status').value]],
+    emptyMsg:'No venues match these filters.',
+    head:`<thead><tr><th>Venue</th><th>Type</th><th>City</th><th>Capacity</th><th>Stage</th><th>Base Fee</th><th>Contact</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const vl=s.values;return `<tr onclick="editVenue('${s.id}')">
+      <td><strong>${esc(vl['Venue Name'])}</strong><br><span class="muted">${esc(vl['Preferred Genre']||'')}</span></td>
+      <td><span class="pill">${esc(vl['Venue Type'])}</span></td>
+      <td>${esc(vl['City'])}, ${esc(vl['State'])}</td>
+      <td>${esc(vl['Capacity'])}</td>
+      <td>${esc(vl['Stage Size'])}</td>
+      <td>${money(vl['Base Fee'])}</td>
+      <td>${esc(vl['Contact Name'])}<br><span class="muted">${esc(vl['Contact Phone']||'')}</span></td>
+      <td>${statusBadge(vl['Status'])}</td>
+      <td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editVenue('${s.id}')">Edit</button></td></tr>`}});
+}
+async function editVenue(id){const d=await api(`/submissions/${id}?include=values`);openVenueModal(d.submission||d)}
+function openVenueModal(ex){
+  const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Venue':'New Venue';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Venue Name *</label><input id="m-name" value="${esc(vl['Venue Name']||'')}"></div>
+      <div><label>Venue Type</label><select id="m-type">${VENUE_TYPES.map(x=>opt(x,vl['Venue Type'])).join('')}</select></div>
+      <div><label>Preferred Genre</label><select id="m-genre"><option value=""></option>${GENRES.map(x=>opt(x,vl['Preferred Genre'])).join('')}</select></div>
+      <div><label>City</label><input id="m-city" value="${esc(vl['City']||'')}"></div>
+      <div><label>State</label><input id="m-state" value="${esc(vl['State']||'')}"></div>
+      <div class="full"><label>Address</label><input id="m-addr" value="${esc(vl['Address']||'')}"></div>
+      <div><label>Capacity</label><input id="m-cap" value="${esc(vl['Capacity']||'')}"></div>
+      <div><label>Stage Size</label><select id="m-stage">${STAGE_SIZES.map(x=>opt(x,vl['Stage Size'])).join('')}</select></div>
+      <div class="full"><label>Sound System</label><select id="m-sound"><option value=""></option>${SOUND.map(x=>opt(x,vl['Sound System'])).join('')}</select></div>
+      <div><label>Contact Name</label><input id="m-contact" value="${esc(vl['Contact Name']||'')}"></div>
+      <div><label>Contact Email</label><input id="m-email" value="${esc(vl['Contact Email']||'')}"></div>
+      <div><label>Contact Phone</label><input id="m-phone" value="${esc(vl['Contact Phone']||'')}"></div>
+      <div><label>Base Fee</label><input id="m-fee" value="${esc(vl['Base Fee']||'')}"></div>
+      <div><label>Status</label><select id="m-status">${['Active','Inactive'].map(x=>opt(x,vl['Status']||'Active')).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(vl['Notes']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadVenues')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveVenue('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveVenue(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Venue Name':g('m-name'),'Venue Type':g('m-type'),'Preferred Genre':g('m-genre'),'City':g('m-city'),
+    'State':g('m-state'),'Address':g('m-addr'),'Capacity':g('m-cap'),'Stage Size':g('m-stage'),'Sound System':g('m-sound'),
+    'Contact Name':g('m-contact'),'Contact Email':g('m-email'),'Contact Phone':g('m-phone'),'Base Fee':g('m-fee'),
+    'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Venue Name']){toast('Venue Name is required');return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Venue ID']=nid('VEN');await api(`/kapps/${KAPP}/forms/venues/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Venue updated':'Venue created');loadLookups();loadVenues();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ══════════════ BANDS ══════════════
+async function loadBands(dir){
+  await loadList({dir,form:'bands',ps:PS.bands,tableId:'bands-table',pagerId:'bands-pager',fn:'loadBands',
+    filters:[['Genre',document.getElementById('b-genre').value],['Home City',document.getElementById('b-city').value],['Status',document.getElementById('b-status').value]],
+    emptyMsg:'No bands match these filters.',
+    head:`<thead><tr><th>Band</th><th>Genre</th><th>Home</th><th>Members</th><th>Formed</th><th>Rate</th><th>Draw</th><th>Rating</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const vl=s.values;return `<tr onclick="editBand('${s.id}')">
+      <td><strong>${esc(vl['Band Name'])}</strong><br><span class="muted">${esc(vl['Contact Email']||'')}</span></td>
+      <td><span class="pill">${esc(vl['Genre'])}</span></td>
+      <td>${esc(vl['Home City'])}, ${esc(vl['Home State'])}</td>
+      <td>${esc(vl['Members'])}</td>
+      <td>${esc(vl['Formed Year'])}</td>
+      <td>${money(vl['Rate'])}</td>
+      <td>${esc(vl['Typical Draw'])}</td>
+      <td class="stars">${stars(vl['Rating'])}</td>
+      <td>${statusBadge(vl['Status'])}</td>
+      <td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editBand('${s.id}')">Edit</button></td></tr>`}});
+}
+async function editBand(id){const d=await api(`/submissions/${id}?include=values`);openBandModal(d.submission||d)}
+function openBandModal(ex){
+  const s=ex||{},vl=s.values||{};
+  document.getElementById('modal-title').textContent=ex?'Edit Band':'New Band';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Band Name *</label><input id="m-name" value="${esc(vl['Band Name']||'')}"></div>
+      <div><label>Genre</label><select id="m-genre">${GENRES.map(x=>opt(x,vl['Genre'])).join('')}</select></div>
+      <div><label>Status</label><select id="m-status">${['Active','On Hiatus','Broken Up'].map(x=>opt(x,vl['Status']||'Active')).join('')}</select></div>
+      <div><label>Home City</label><input id="m-city" value="${esc(vl['Home City']||'')}"></div>
+      <div><label>Home State</label><input id="m-state" value="${esc(vl['Home State']||'')}"></div>
+      <div><label>Members</label><input id="m-members" value="${esc(vl['Members']||'')}"></div>
+      <div><label>Formed Year</label><input id="m-formed" value="${esc(vl['Formed Year']||'')}"></div>
+      <div><label>Rate</label><input id="m-rate" value="${esc(vl['Rate']||'')}"></div>
+      <div><label>Typical Draw</label><input id="m-draw" value="${esc(vl['Typical Draw']||'')}"></div>
+      <div><label>Rating</label><select id="m-rating">${['','1','2','3','4','5'].map(x=>opt(x,vl['Rating'])).join('')}</select></div>
+      <div><label>Website</label><input id="m-site" value="${esc(vl['Website']||'')}"></div>
+      <div><label>Contact Name</label><input id="m-contact" value="${esc(vl['Contact Name']||'')}"></div>
+      <div><label>Contact Email</label><input id="m-email" value="${esc(vl['Contact Email']||'')}"></div>
+      <div><label>Contact Phone</label><input id="m-phone" value="${esc(vl['Contact Phone']||'')}"></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(vl['Notes']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadBands')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveBand('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveBand(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Band Name':g('m-name'),'Genre':g('m-genre'),'Status':g('m-status'),'Home City':g('m-city'),
+    'Home State':g('m-state'),'Members':g('m-members'),'Formed Year':g('m-formed'),'Rate':g('m-rate'),
+    'Typical Draw':g('m-draw'),'Rating':g('m-rating'),'Website':g('m-site'),'Contact Name':g('m-contact'),
+    'Contact Email':g('m-email'),'Contact Phone':g('m-phone'),'Notes':g('m-notes')};
+  if(!values['Band Name']){toast('Band Name is required');return}
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Band ID']=nid('BND');await api(`/kapps/${KAPP}/forms/bands/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Band updated':'Band created');loadLookups();loadBands();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ══════════════ GIGS ══════════════
+async function loadGigs(dir){
+  await loadList({dir,form:'gigs',ps:PS.gigs,tableId:'gigs-table',pagerId:'gigs-pager',fn:'loadGigs',
+    filters:[['Venue',document.getElementById('g-venue').value],['Genre',document.getElementById('g-genre').value],['Status',document.getElementById('g-status').value]],
+    emptyMsg:'No gigs match these filters.',
+    head:`<thead><tr><th>Date</th><th>Band</th><th>Venue</th><th>Genre</th><th>Door</th><th>Guarantee</th><th>Tickets</th><th>Att.</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const vl=s.values;return `<tr onclick="editGig('${s.id}')">
+      <td><strong>${esc(vl['Gig Date'])}</strong><br><span class="muted">${esc(vl['Set Time']||'')}</span></td>
+      <td>${esc(vl['Band'])}${vl['Support Act']?`<br><span class="muted">w/ ${esc(vl['Support Act'])}</span>`:''}</td>
+      <td>${esc(vl['Venue'])}<br><span class="muted">${esc(vl['City']||'')}</span></td>
+      <td><span class="pill">${esc(vl['Genre'])}</span></td>
+      <td>${money(vl['Door Price'])}</td>
+      <td>${money(vl['Guarantee'])}</td>
+      <td>${esc(vl['Tickets Sold']||'—')}</td>
+      <td>${esc(vl['Attendance']||'—')}</td>
+      <td>${statusBadge(vl['Status'])}</td>
+      <td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editGig('${s.id}')">Edit</button></td></tr>`}});
+}
+async function editGig(id){const d=await api(`/submissions/${id}?include=values`);openGigModal(d.submission||d)}
+function openGigModal(ex){
+  const s=ex||{},vl=s.values||{};
+  const venueOpts=`<option value=""></option>`+(LOOKUPS.venues||[]).map(x=>opt(x,vl['Venue'])).join('');
+  const bandOpts=`<option value=""></option>`+(LOOKUPS.bands||[]).map(x=>opt(x,vl['Band'])).join('');
+  const supportOpts=`<option value=""></option>`+(LOOKUPS.bands||[]).map(x=>opt(x,vl['Support Act'])).join('');
+  document.getElementById('modal-title').textContent=ex?'Edit Gig':'Book a Gig';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div><label>Gig Date</label><input id="m-date" type="date" value="${esc(vl['Gig Date']||'')}"></div>
+      <div><label>Set Time</label><select id="m-time">${SET_TIMES.map(x=>opt(x,vl['Set Time']||'8:00 PM')).join('')}</select></div>
+      <div class="full"><label>Band</label><select id="m-band">${bandOpts}</select></div>
+      <div class="full"><label>Support Act</label><select id="m-support">${supportOpts}</select></div>
+      <div class="full"><label>Venue</label><select id="m-venue" onchange="syncGigVenue()">${venueOpts}</select></div>
+      <div><label>Genre</label><select id="m-genre"><option value=""></option>${GENRES.map(x=>opt(x,vl['Genre'])).join('')}</select></div>
+      <div><label>City</label><input id="m-city" value="${esc(vl['City']||'')}"></div>
+      <div><label>Door Price</label><input id="m-door" value="${esc(vl['Door Price']||'')}"></div>
+      <div><label>Guarantee</label><input id="m-guar" value="${esc(vl['Guarantee']||'')}"></div>
+      <div><label>Tickets Sold</label><input id="m-tix" value="${esc(vl['Tickets Sold']||'')}"></div>
+      <div><label>Attendance</label><input id="m-att" value="${esc(vl['Attendance']||'')}"></div>
+      <div><label>Bar Sales</label><input id="m-bar" value="${esc(vl['Bar Sales']||'')}"></div>
+      <div><label>Status</label><select id="m-status">${GIG_STATUS.map(x=>opt(x,vl['Status']||'Scheduled')).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="m-notes">${esc(vl['Notes']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadGigs')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveGig('${s.id||''}')">${ex?'Update':'Book'}</button>`;
+  openModal();
+}
+// fill City from the chosen venue when it is still blank
+async function syncGigVenue(){
+  const name=document.getElementById('m-venue').value;
+  const cityEl=document.getElementById('m-city');
+  if(!name||cityEl.value)return;
+  try{
+    const d=await api(`/kapps/${KAPP}/forms/venues/submissions?include=values&limit=1&q=`+encodeURIComponent(`values[Venue Name]="${name.replace(/"/g,'\\"')}"`));
+    const sub=(d.submissions||[])[0];
+    if(sub)cityEl.value=v(sub,'City');
+  }catch(e){/* leave city for the user to type */}
+}
+async function saveGig(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Gig Date':g('m-date'),'Set Time':g('m-time'),'Band':g('m-band'),'Support Act':g('m-support'),
+    'Venue':g('m-venue'),'Genre':g('m-genre'),'City':g('m-city'),'Door Price':g('m-door'),'Guarantee':g('m-guar'),
+    'Tickets Sold':g('m-tix'),'Attendance':g('m-att'),'Bar Sales':g('m-bar'),'Status':g('m-status'),'Notes':g('m-notes')};
+  if(!values['Band']||!values['Venue']){toast('Pick a band and a venue');return}
+  if(values['Support Act']===values['Band'])values['Support Act']='';
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Gig ID']=nid('GIG');await api(`/kapps/${KAPP}/forms/gigs/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Gig updated':'Gig booked');loadGigs();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ══════════════ FEEDBACK ══════════════
+async function loadFeedback(dir){
+  await loadList({dir,form:'feedback',ps:PS.feedback,tableId:'feedback-table',pagerId:'feedback-pager',fn:'loadFeedback',
+    filters:[['Band',document.getElementById('f-band').value],['Venue',document.getElementById('f-venue').value],
+             ['Role',document.getElementById('f-role').value],['Status',document.getElementById('f-status').value]],
+    emptyMsg:'No feedback matches these filters.',
+    head:`<thead><tr><th>Date</th><th>Band</th><th>Venue</th><th>By</th><th>Overall</th><th>Perf.</th><th>Prof.</th><th>Crowd</th><th>Again</th><th>Status</th><th></th></tr></thead>`,
+    row:s=>{const vl=s.values;return `<tr onclick="editFeedback('${s.id}')">
+      <td>${esc(vl['Date'])}</td>
+      <td><strong>${esc(vl['Band'])}</strong></td>
+      <td>${esc(vl['Venue'])}</td>
+      <td>${esc(vl['Submitted By'])}<br><span class="muted">${esc(vl['Role']||'')}</span></td>
+      <td class="stars">${stars(vl['Overall Rating'])}</td>
+      <td class="stars">${stars(vl['Performance Rating'])}</td>
+      <td class="stars">${stars(vl['Professionalism Rating'])}</td>
+      <td>${esc(vl['Crowd Response']||'')}</td>
+      <td><span class="badge ${vl['Would Book Again']==='Yes'?'b-yes':'b-no'}">${esc(vl['Would Book Again']||'—')}</span></td>
+      <td>${statusBadge(vl['Status'])}</td>
+      <td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editFeedback('${s.id}')">Edit</button></td></tr>`}});
+}
+async function editFeedback(id){const d=await api(`/submissions/${id}?include=values`);openFeedbackModal(d.submission||d)}
+function openFeedbackModal(ex){
+  const s=ex||{},vl=s.values||{};
+  const rate=(id,cur)=>`<select id="${id}">${['','1','2','3','4','5'].map(x=>opt(x,cur)).join('')}</select>`;
+  const bandOpts=`<option value=""></option>`+(LOOKUPS.bands||[]).map(x=>opt(x,vl['Band'])).join('');
+  const venueOpts=`<option value=""></option>`+(LOOKUPS.venues||[]).map(x=>opt(x,vl['Venue'])).join('');
+  document.getElementById('modal-title').textContent=ex?'Edit Feedback':'New Band Feedback';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-grid">
+      <div class="full"><label>Band</label><select id="m-band">${bandOpts}</select></div>
+      <div class="full"><label>Venue</label><select id="m-venue">${venueOpts}</select></div>
+      <div class="full"><label>Gig</label><input id="m-gig" value="${esc(vl['Gig']||'')}" placeholder="Band @ Venue"></div>
+      <div><label>Date</label><input id="m-date" type="date" value="${esc(vl['Date']||'')}"></div>
+      <div><label>Submitted By</label><input id="m-by" value="${esc(vl['Submitted By']||'')}"></div>
+      <div><label>Role</label><select id="m-role">${ROLES.map(x=>opt(x,vl['Role']||'Fan')).join('')}</select></div>
+      <div><label>Crowd Response</label><select id="m-crowd"><option value=""></option>${CROWD.map(x=>opt(x,vl['Crowd Response'])).join('')}</select></div>
+      <div><label>Overall Rating</label>${rate('m-overall',vl['Overall Rating'])}</div>
+      <div><label>Performance</label>${rate('m-perf',vl['Performance Rating'])}</div>
+      <div><label>Professionalism</label>${rate('m-prof',vl['Professionalism Rating'])}</div>
+      <div><label>Would Book Again</label><select id="m-again">${['Yes','No'].map(x=>opt(x,vl['Would Book Again']||'Yes')).join('')}</select></div>
+      <div><label>Status</label><select id="m-status">${['New','Reviewed','Resolved'].map(x=>opt(x,vl['Status']||'New')).join('')}</select></div>
+      <div class="full"><label>Comment</label><textarea id="m-comment">${esc(vl['Comment']||'')}</textarea></div>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=
+    `${ex?`<button class="btn-danger" onclick="delSub('${s.id}','loadFeedback')">Delete</button>`:''}
+     <div class="spacer-h"></div>
+     <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+     <button class="btn-primary" onclick="saveFeedback('${s.id||''}')">${ex?'Update':'Create'}</button>`;
+  openModal();
+}
+async function saveFeedback(id){
+  const g=x=>document.getElementById(x).value;
+  const values={'Band':g('m-band'),'Venue':g('m-venue'),'Gig':g('m-gig'),'Date':g('m-date'),'Submitted By':g('m-by'),
+    'Role':g('m-role'),'Crowd Response':g('m-crowd'),'Overall Rating':g('m-overall'),'Performance Rating':g('m-perf'),
+    'Professionalism Rating':g('m-prof'),'Would Book Again':g('m-again'),'Status':g('m-status'),'Comment':g('m-comment')};
+  if(!values['Band']){toast('Pick a band');return}
+  if(!values['Gig']&&values['Venue'])values['Gig']=`${values['Band']} @ ${values['Venue']}`;
+  try{
+    if(id)await api(`/submissions/${id}`,{method:'PUT',body:JSON.stringify({values})});
+    else{values['Feedback ID']=nid('FBK');await api(`/kapps/${KAPP}/forms/feedback/submissions`,{method:'POST',body:JSON.stringify({values,coreState:'Submitted'})})}
+    closeModal();toast(id?'Feedback updated':'Feedback created');loadFeedback();
+  }catch(e){toast('Save failed: '+e.message)}
+}
+
+// ── shared modal / delete ──
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+async function delSub(id,fn){
+  if(!confirm('Delete this record? This cannot be undone.'))return;
+  try{await api(`/submissions/${id}`,{method:'DELETE'});closeModal();toast('Deleted');window[fn]()}
+  catch(e){toast('Delete failed: '+e.message)}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>

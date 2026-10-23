@@ -621,7 +621,8 @@ async function openSupplierDetail(supplierId) {
 }
 
 /* ======= RECORD DETAIL (generic) ======= */
-function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 
 async function showRecord(form, idField, idVal, title) {
   openModal('record-modal');

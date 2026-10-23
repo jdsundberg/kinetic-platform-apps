@@ -1,0 +1,54 @@
+<taskTree schema_version="1.0" version="1">
+  <name>Verification Guard</name>
+  <author>corporate-brain</author>
+  <notes>Reverts knowledge that became "verified" without a named human verifier, or a fact/narrative/lesson/summary/interpretation verified without evidence. Only the Corporate Brain review workflow (a human reviewer) may establish verified history.</notes>
+  <lastID>3</lastID>
+  <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="200" y="50">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters/>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="Revert unsupported verification" type="Complete" value="">kinetic_core_api_connection_v1_2</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Revert To Needs Research" x="200" y="200">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">PUT</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; h = (JSON.parse(@values['Review History'].to_s) rescue []); h = [] unless h.is_a?(Array); h &lt;&lt; { 'at' =&gt; Time.now.utc.iso8601, 'by' =&gt; 'kinetic-task', 'actorType' =&gt; 'workflow', 'action' =&gt; 'guard-revert', 'from' =&gt; 'verified', 'to' =&gt; 'needs-research', 'comment' =&gt; 'Verified without a named reviewer or without required evidence; reverted by the Verification Guard workflow.' }; { 'values' =&gt; { 'Review Status' =&gt; 'needs-research', 'Verified By' =&gt; '', 'Verified At' =&gt; '', 'Review History' =&gt; h.to_json } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="then write audit entry" type="Complete" value="">kinetic_core_api_connection_v1_3</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Audit Guard Revert" x="200" y="350">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">POST</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/kapps/corporate-brain/forms/audit-log/submissions</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; { 'coreState' =&gt; 'Submitted', 'values' =&gt; { 'Audit ID' =&gt; 'AU-WF-' + @run['Id'].to_s, 'Action' =&gt; 'guard:verification-reverted', 'Entity Type' =&gt; 'knowledge', 'Entity ID' =&gt; @values['Knowledge ID'].to_s, 'Actor' =&gt; 'kinetic-task (Verification Guard)', 'Actor Type' =&gt; 'workflow', 'From Status' =&gt; 'verified', 'To Status' =&gt; 'needs-research', 'Comment' =&gt; 'Revert result: ' + @results['Revert To Needs Research']['Response Code'].to_s + ' ' + @results['Revert To Needs Research']['Handler Error Message'].to_s, 'Occurred At' =&gt; Time.now.utc.iso8601 } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents/>
+    </task>
+  </request>
+</taskTree>

@@ -456,7 +456,8 @@ const FORMS = {
 };
 
 /* ───────── Utils ───────── */
-function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){ return (sub.values && sub.values[f]) || ''; }
 function money(n){ n=Number(n)||0; if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K'; return '$'+n; }
 function numfmt(n){ n=Number(n)||0; return n.toLocaleString(); }

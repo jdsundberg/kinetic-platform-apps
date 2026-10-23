@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/alarms.schema.json",
+  "title": "Normalized alarm",
+  "type": "object",
+  "properties": {
+    "Tenant ID": {
+      "type": "string",
+      "description": "Owning tenant. Leading part of every index; enforced by KSL policy + server scoping."
+    },
+    "Alarm ID": {
+      "type": "string"
+    },
+    "Fingerprint": {
+      "type": "string"
+    },
+    "Resource ID": {
+      "type": "string"
+    },
+    "Resource Ref": {
+      "type": "string",
+      "description": "Identifier as the source sent it"
+    },
+    "Resource Match": {
+      "type": "string",
+      "enum": [
+        "Exact",
+        "Alias",
+        "Unmatched"
+      ]
+    },
+    "Site ID": {
+      "type": "string"
+    },
+    "Alarm Type": {
+      "type": "string",
+      "description": "Canonical condition code"
+    },
+    "Probable Cause": {
+      "type": "string",
+      "description": "ITU-T X.733 probableCause"
+    },
+    "Specific Problem": {
+      "type": "string"
+    },
+    "Severity": {
+      "type": "string",
+      "enum": [
+        "Critical",
+        "Major",
+        "Minor",
+        "Warning",
+        "Indeterminate",
+        "Cleared"
+      ]
+    },
+    "Vendor Severity": {
+      "type": "string"
+    },
+    "Service Affecting": {
+      "type": "string",
+      "enum": [
+        "Yes",
+        "No"
+      ]
+    },
+    "State": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Cleared",
+        "Suppressed"
+      ]
+    },
+    "First Occurred At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Last Occurred At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Cleared At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Occurrence Count": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "Source Systems": {
+      "type": "string"
+    },
+    "Related Resource Ref": {
+      "type": "string",
+      "description": "Peer named by the alarm (e.g. X2 neighbour)"
+    },
+    "Related Resource ID": {
+      "type": "string"
+    },
+    "Correlation Group ID": {
+      "type": "string"
+    },
+    "Correlation Role": {
+      "type": "string",
+      "enum": [
+        "Uncorrelated",
+        "Root Evidence",
+        "Symptom",
+        "Independent",
+        "Suppressed"
+      ]
+    },
+    "Incident ID": {
+      "type": "string"
+    },
+    "Suppressed By Change ID": {
+      "type": "string"
+    },
+    "Last Raw ID": {
+      "type": "string"
+    },
+    "Normalization Notes": {
+      "type": "string",
+      "description": "Why severity/resource/time were adjusted (unknown severity, alias match, clock skew…)"
+    },
+    "Replay Batch": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "Tenant ID",
+    "Alarm ID",
+    "Fingerprint",
+    "Resource Ref",
+    "Resource Match",
+    "Alarm Type",
+    "Severity",
+    "State",
+    "First Occurred At",
+    "Last Occurred At"
+  ],
+  "additionalProperties": false,
+  "description": "Kinetic submission values for form alarms (all values are strings on the wire). Schema version 1.0."
+}

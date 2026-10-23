@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="1">
+        <name>Weather Operations</name>
+        <author>BillysBoatWorks</author>
+        <notes>Fires when a weather event is recorded. Alerts the franchise when conditions warrant
+stopping or pausing rentals, and records the assessment. It NEVER cancels a reservation: the event
+carries a Recommended Action and waits for a named human decision.</notes>
+        <lastID>3</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="60" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>false</visible><parameters/>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="Action needed from the operator?" type="Complete" value="['Pause Bookings','Cancel Rentals','Close Location','Delay'].include?(@values['Recommended Action'].to_s)">kinetic_core_api_connection_v1_1</task>
+                    <task label="Monitor only" type="Complete" value="!['Pause Bookings','Cancel Rentals','Close Location','Delay'].include?(@values['Recommended Action'].to_s)">kinetic_core_api_connection_v1_2</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Alert Operator" x="300" y="110">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/notifications/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Notification ID":"NTF-WX-<%= @run['Id'] %>","Channel":"SMS","Template":"Weather Decision Required","Recipient Type":"Franchise","Recipient":"<%= @values['Franchise'] %>","Recipient Address":"operations@billysboatworks.com","Franchise":"<%= @values['Franchise'] %>","Subject":"<%= @values['Weather Type'] %> <%= @values['Severity'] %> at <%= @values['Destination'] %> - decision required","Scheduled At":"<%= Time.now.strftime('%Y-%m-%d') %>","Status":"Queued","Body":"Recommended action: <%= @values['Recommended Action'] %>. <%= @values['Reservations Affected'] %> reservations affected, <%= @values['Revenue At Risk'] %> at risk. No reservation has been changed. Open Weather Operations to record your decision."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then record the assessment" type="Complete" value="">kinetic_core_api_connection_v1_2</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Record Assessment" x="560" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/audit-log/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Audit ID":"AUD-WX-<%= @run['Id'] %>","Entity Type":"Weather Event","Entity Reference":"<%= @values['Event ID'] %>","Action":"Weather assessment","Field Changed":"Recommended Action","Previous Value":"","New Value":"<%= @values['Recommended Action'] %>","Changed By":"Weather Operations workflow","Changed At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>","Franchise":"<%= @values['Franchise'] %>","Reason":"<%= @values['Weather Type'] %> <%= @values['Severity'] %> at <%= @values['Destination'] %>. Assessment only - no reservation changed without a human decision."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_3" name="Awaiting Human Decision" x="800" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="input" label="Input" required="true" tooltip="Echo">Weather event <%= @values['Event ID'] %> assessed. Recommended <%= @values['Recommended Action'] %>. Reservations left untouched pending operator decision.</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents/>
+            </task>
+        </request>
+    </taskTree>
+</tree>

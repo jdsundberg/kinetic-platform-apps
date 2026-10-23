@@ -1,0 +1,54 @@
+<taskTree schema_version="1.0" version="1">
+  <name>Ingestion Retry</name>
+  <author>corporate-brain</author>
+  <notes>A failed ingestion job with fewer than 3 attempts is re-queued so it can resume from its checkpoint; repeated failures stay failed for a person to inspect.</notes>
+  <lastID>3</lastID>
+  <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="200" y="50">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters/>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="Re-queue failed job" type="Complete" value="">kinetic_core_api_connection_v1_2</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Requeue Job" x="200" y="200">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">PUT</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; { 'values' =&gt; { 'Status' =&gt; 'queued', 'Summary' =&gt; 'Re-queued automatically after failure (attempt ' + @values['Attempts'].to_s + ' of 3) by the Ingestion Retry workflow. Run the job to resume from its checkpoint.' } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents>
+        <task label="then write audit entry" type="Complete" value="">kinetic_core_api_connection_v1_3</task>
+      </dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Audit Requeue" x="200" y="350">
+      <version>1</version>
+      <configured>true</configured>
+      <defers>false</defers>
+      <deferrable>false</deferrable>
+      <visible>false</visible>
+      <parameters>
+        <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="">POST</parameter>
+        <parameter id="path" label="Path" menu="" required="true" tooltip="">/app/api/v1/kapps/corporate-brain/forms/audit-log/submissions</parameter>
+        <parameter id="body" label="Body" menu="" required="false" tooltip="">&lt;%= require 'json'; { 'coreState' =&gt; 'Submitted', 'values' =&gt; { 'Audit ID' =&gt; 'AU-WF-' + @run['Id'].to_s, 'Action' =&gt; 'job:auto-requeue', 'Entity Type' =&gt; 'job', 'Entity ID' =&gt; @values['Job ID'].to_s, 'Actor' =&gt; 'kinetic-task (Ingestion Retry)', 'Actor Type' =&gt; 'workflow', 'From Status' =&gt; 'failed', 'To Status' =&gt; 'queued', 'Comment' =&gt; 'Requeue result ' + @results['Requeue Job']['Response Code'].to_s, 'Occurred At' =&gt; Time.now.utc.iso8601 } }.to_json %&gt;</parameter>
+        <parameter id="extra_headers" label="Extra Headers" menu="" required="false" tooltip=""></parameter>
+        <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="">Error Message</parameter>
+      </parameters>
+      <messages><message type="Complete"/></messages>
+      <dependents/>
+    </task>
+  </request>
+</taskTree>

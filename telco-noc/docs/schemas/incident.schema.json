@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/incidents.schema.json",
+  "title": "Incident",
+  "type": "object",
+  "properties": {
+    "Tenant ID": {
+      "type": "string",
+      "description": "Owning tenant. Leading part of every index; enforced by KSL policy + server scoping."
+    },
+    "Incident ID": {
+      "type": "string"
+    },
+    "Title": {
+      "type": "string"
+    },
+    "State": {
+      "type": "string",
+      "enum": [
+        "New",
+        "Acknowledged",
+        "In Progress",
+        "Mitigated",
+        "Resolved",
+        "Closed",
+        "Cancelled"
+      ]
+    },
+    "Priority": {
+      "type": "string",
+      "enum": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    "Major Incident": {
+      "type": "string",
+      "enum": [
+        "Yes",
+        "No"
+      ]
+    },
+    "Major Declared At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Major Declared By": {
+      "type": "string"
+    },
+    "Owner": {
+      "type": "string"
+    },
+    "Owner Team ID": {
+      "type": "string"
+    },
+    "Escalation Level": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "Root Resource ID": {
+      "type": "string"
+    },
+    "Correlation Group ID": {
+      "type": "string"
+    },
+    "Probable Cause": {
+      "type": "string",
+      "description": "Engine/AI hypothesis — never presented as fact"
+    },
+    "Probable Cause Confidence": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "Observed Root Cause": {
+      "type": "string",
+      "description": "Confirmed by a human (field finding / diagnostics)"
+    },
+    "Cause Confirmed By": {
+      "type": "string"
+    },
+    "Cause Confirmed At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Impact Summary": {
+      "type": "string"
+    },
+    "Customers Affected": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "Services Affected": {
+      "type": "string",
+      "pattern": "^\\d+$"
+    },
+    "SLA Exposure USD": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "Detected At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Acknowledged At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Mitigated At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Network Recovered At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Service Recovered At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Verification State": {
+      "type": "string",
+      "enum": [
+        "Not Started",
+        "Pending",
+        "Partial",
+        "Passed",
+        "Failed"
+      ]
+    },
+    "Resolved At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Closed At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Comms State": {
+      "type": "string",
+      "enum": [
+        "None",
+        "Draft",
+        "Awaiting Approval",
+        "Sent",
+        "Not Required"
+      ]
+    },
+    "Next Update Due At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Problem ID": {
+      "type": "string"
+    },
+    "Region ID": {
+      "type": "string"
+    },
+    "Market ID": {
+      "type": "string"
+    },
+    "Replay Batch": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "Tenant ID",
+    "Incident ID",
+    "Title",
+    "State",
+    "Priority",
+    "Detected At"
+  ],
+  "additionalProperties": false,
+  "description": "Kinetic submission values for form incidents (all values are strings on the wire). Schema version 1.0."
+}

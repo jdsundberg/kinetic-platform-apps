@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BillysBoatWorks — Operations</title>
+<style>
+:root{
+  --ink:#0B2A3B; --ink-2:#14415A; --sky:#0EA5E9; --sky-2:#38BDF8;
+  --sun:#F59E0B; --green:#10B981; --red:#EF4444; --purple:#8B5CF6;
+  --gray:#64748B; --line:#E2E8F0; --bg:#F1F5F9; --card:#fff;
+  --sh:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.1);
+  --sh-lg:0 10px 30px rgba(15,23,42,.12); --r:13px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.topbar{background:var(--ink);color:#fff;display:flex;align-items:center;padding:0 18px;height:56px;position:sticky;top:0;z-index:120;gap:12px}
+.topbar .logo{font-weight:800;font-size:16px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.topbar .logo span{color:var(--sky-2)}
+.logo .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--sky),var(--sun));display:grid;place-items:center;font-size:13px}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.72);padding:7px 11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tabs button.active{background:var(--sky);color:#fff}
+.topbar .spacer{flex:1}
+.gsearch{position:relative}
+.gsearch input{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;padding:7px 11px;font-size:13px;width:190px;font-family:inherit}
+.gsearch input::placeholder{color:rgba(255,255,255,.5)}
+.gsearch input:focus{outline:none;background:rgba(255,255,255,.2);width:250px}
+.gres{position:absolute;top:38px;right:0;width:390px;background:#fff;border-radius:12px;box-shadow:var(--sh-lg);overflow:hidden;display:none;z-index:200;max-height:420px;overflow-y:auto}
+.gres.open{display:block}
+.gres .row{padding:10px 13px;border-bottom:1px solid var(--line);cursor:pointer}
+.gres .row:hover{background:#F8FAFC}
+.gres .k{font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;color:var(--sky)}
+.gres .t{font-weight:700;font-size:13.5px;color:var(--ink)}
+.gres .d{font-size:12px;color:var(--gray)}
+.user-info{font-size:12px;color:rgba(255,255,255,.72);display:flex;align-items:center;gap:8px}
+.user-info strong{color:#fff}
+.logout-btn,.console-link{background:none;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.75);padding:4px 10px;border-radius:7px;font-size:11px;cursor:pointer;text-decoration:none;font-family:inherit}
+.console-link:hover,.logout-btn:hover{border-color:var(--sky-2);color:#fff}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 18px 60px}
+.view{display:none}.view.active{display:block}
+h1{font-size:21px;letter-spacing:-.4px;margin-bottom:3px}
+h2{font-size:15px;letter-spacing:-.2px;margin-bottom:12px}
+.sub{color:var(--gray);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);padding:18px;margin-bottom:14px}
+.muted{color:var(--gray)}.right{text-align:right}
+.bar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,input[type=date],input[type=text]{padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(14,165,233,.13)}
+.spacer-h{flex:1}
+.btn{border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:9px 15px}
+.btn-primary{background:var(--sky);color:#fff}.btn-primary:hover{background:#0284C7}
+.btn-ghost{background:#F1F5F9;color:var(--ink);border:1px solid var(--line)}.btn-ghost:hover{background:#E2E8F0}
+.btn-green{background:var(--green);color:#fff}.btn-red{background:var(--red);color:#fff}
+.btn-sun{background:var(--sun);color:#3B2200}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-lg{padding:15px 26px;font-size:16px;border-radius:12px}
+/* kpi strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border-radius:12px;padding:13px 15px;border:1px solid var(--line);box-shadow:var(--sh);border-left:4px solid var(--sky)}
+.kpi.red{border-left-color:var(--red)}.kpi.green{border-left-color:var(--green)}
+.kpi.sun{border-left-color:var(--sun)}.kpi.gray{border-left-color:var(--gray)}
+.kpi .v{font-size:25px;font-weight:800;letter-spacing:-.6px;line-height:1.05}
+.kpi .l{font-size:10.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;font-weight:700}
+/* action queue */
+.q{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--gray);border-radius:11px;padding:12px 14px;margin-bottom:9px;background:var(--card)}
+.q.critical{border-left-color:var(--red);background:#FEF2F2}
+.q.high{border-left-color:var(--sun);background:#FFFBEB}
+.q .ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;background:#F1F5F9;flex:none}
+.q.critical .ico{background:#FEE2E2}.q.high .ico{background:#FEF3C7}
+.q .t{font-weight:700;font-size:14px}
+.q .d{font-size:12.5px;color:var(--gray);margin-top:2px}
+.q .kind{font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;color:var(--gray)}
+.q .act{margin-left:auto;display:flex;gap:6px;align-items:center;flex:none}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:#F8FAFC;color:var(--gray);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line);font-weight:800;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:hover{background:#F8FAFC}
+.clickable tbody tr{cursor:pointer}
+.tw{overflow-x:auto}
+.pager{display:flex;gap:9px;align-items:center;justify-content:flex-end;margin-top:11px;color:var(--gray);font-size:12.5px}
+/* badges */
+.badge{display:inline-block;border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.b-blue{background:#DBEAFE;color:#1E40AF}.b-green{background:#DCFCE7;color:#166534}
+.b-amber{background:#FEF3C7;color:#92400E}.b-red{background:#FEE2E2;color:#991B1B}
+.b-gray{background:#F1F5F9;color:#475569}.b-cyan{background:#CFFAFE;color:#155E75}
+.b-purple{background:#EDE9FE;color:#5B21B6}
+.pill{display:inline-block;background:#F1F5F9;border:1px solid var(--line);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--ink-2)}
+.empty{padding:36px;text-align:center;color:var(--gray);font-size:13px}
+.loading{padding:36px;text-align:center;color:var(--gray)}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--line);border-top-color:var(--sky);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* fleet board */
+.board{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:#fff}
+.board table{font-size:12px;min-width:820px}
+.board th:first-child,.board td:first-child{position:sticky;left:0;background:#fff;z-index:2;min-width:210px;box-shadow:1px 0 0 var(--line)}
+.board th{background:#F8FAFC}
+.cell{border-radius:7px;padding:6px 7px;font-size:11px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell.open{background:#F8FAFC;color:#CBD5E1}
+.cell.booked{background:#DBEAFE;color:#1E40AF}
+.cell.out{background:#CFFAFE;color:#155E75}
+.cell.service{background:#FEE2E2;color:#991B1B}
+.cell.cleaning{background:#FEF3C7;color:#92400E}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);margin-top:11px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+/* checklist / mobile ops */
+.check{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:9px;cursor:pointer;font-size:15px;font-weight:600;background:#fff;transition:border-color .12s,background .12s}
+.check:hover{border-color:#BAE6FD}
+.check.on{border-color:var(--green);background:#F0FDF4}
+.check .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;font-size:15px;color:transparent;flex:none}
+.check.on .box{background:var(--green);border-color:var(--green);color:#fff}
+.check .hint{font-size:12px;color:var(--gray);font-weight:500;margin-top:2px}
+.opshead{background:var(--ink);color:#fff;border-radius:var(--r);padding:17px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.opshead .who{font-size:20px;font-weight:800;letter-spacing:-.3px}
+.opshead .meta{font-size:13px;color:rgba(255,255,255,.75);margin-top:3px}
+.opshead .code{background:rgba(255,255,255,.14);border-radius:9px;padding:7px 13px;font-weight:800;letter-spacing:1px}
+/* detail drawer */
+#drawer{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:300;display:none;justify-content:flex-end}
+#drawer.open{display:flex}
+.dr{background:#fff;width:660px;max-width:96vw;height:100%;overflow-y:auto;box-shadow:-10px 0 40px rgba(0,0,0,.2)}
+.dr-h{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;z-index:3}
+.dr-b{padding:20px}
+.x{background:none;border:none;font-size:26px;color:var(--gray);cursor:pointer;line-height:1}
+.sec{margin-bottom:22px}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);font-weight:800;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:5px 12px;font-size:13px}
+.kv .k{color:var(--gray)}
+.tl{border-left:2px solid var(--line);padding-left:16px;margin-left:6px}
+.tl .e{position:relative;padding-bottom:15px}
+.tl .e::before{content:"";position:absolute;left:-22px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--sky);border:2px solid #fff;box-shadow:0 0 0 2px var(--line)}
+.tl .e .t{font-weight:700;font-size:13px}
+.tl .e .d{font-size:12px;color:var(--gray)}
+.money-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.money-row.tot{border-top:2px solid var(--line);margin-top:7px;padding-top:9px;font-weight:800;font-size:15px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:11px;font-size:13.5px;font-weight:600;z-index:400;opacity:0;transition:opacity .2s;pointer-events:none;max-width:84vw;text-align:center}
+#toast.show{opacity:1}
+.advice{border:1px solid var(--line);border-left:4px solid var(--sky);border-radius:11px;padding:14px 16px;margin-bottom:10px;background:#fff}
+.advice.high{border-left-color:var(--sun);background:#FFFBEB}
+.advice .k{font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;color:var(--gray)}
+.advice .t{font-weight:700;font-size:14.5px;margin:3px 0}
+.advice .d{font-size:13px;color:var(--ink-2);line-height:1.5}
+.advice .a{font-size:12.5px;font-weight:700;color:var(--sky);margin-top:7px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mini{font-size:12px;color:var(--gray)}
+.barline{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:70px}
+.barline i{display:block;height:100%;background:var(--sky)}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.gsearch input{width:130px}}
+
+/* ── sign-in gate ── */
+body:not(.authed) .topbar,
+body:not(.authed) .wrap,
+body:not(.authed) .view,
+body:not(.authed) .hero,
+body:not(.authed) #drawer{display:none !important}
+body.authed #login-screen{display:none}
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0B2A3B 0%,#0C4A6E 50%,#0EA5E9 100%);z-index:900;padding:20px}
+.login-box{background:#fff;border-radius:18px;padding:38px 36px;width:400px;max-width:94vw;
+  box-shadow:0 24px 60px rgba(2,20,35,.4)}
+.login-box .brand{font-size:23px;font-weight:800;text-align:center;color:#0B2A3B;letter-spacing:-.4px;
+  display:flex;align-items:center;justify-content:center;gap:9px}
+.login-box .brand em{font-style:normal;color:#0EA5E9}
+.login-box .mark{width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,#0EA5E9,#F59E0B);display:grid;place-items:center;font-size:16px}
+.login-box .who{text-align:center;font-size:12.5px;color:#64748B;margin:10px 0 22px}
+.login-box label{display:block;font-size:11.5px;font-weight:700;color:#64748B;margin:13px 0 5px;
+  text-transform:uppercase;letter-spacing:.4px}
+.login-box input{width:100%;padding:12px 13px;border:1px solid #E2E8F0;border-radius:10px;font-size:15px;font-family:inherit}
+.login-box input:focus{outline:none;border-color:#0EA5E9;box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+.login-box button{width:100%;margin-top:22px;padding:13px;background:#0EA5E9;color:#fff;border:none;
+  border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.login-box button:hover{background:#0284C7}
+.login-box button:disabled{background:#94A3B8;cursor:not-allowed}
+.login-err{color:#EF4444;font-size:12.5px;text-align:center;margin-top:13px;min-height:15px}
+.login-note{text-align:center;font-size:11.5px;color:#94A3B8;margin-top:16px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand"><span class="mark">🌊</span>Billys<em>BoatWorks</em></div>
+    <div class="who">Franchise operations console</div>
+    <label>Username</label>
+    <input id="li-user" autocomplete="username" placeholder="john">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password">
+    <button id="li-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+    <div class="login-note" id="li-server"></div>
+  </div>
+</div>
+
+
+<div class="topbar">
+  <div class="logo"><span class="mark">🌊</span>Billys<span>Ops</span></div>
+  <div class="nav-tabs">
+    <button class="active" onclick="go('today')">Today</button>
+    <button onclick="go('board')">Fleet Board</button>
+    <button onclick="go('res')">Reservations</button>
+    <button onclick="go('checkin')">Check-In</button>
+    <button onclick="go('return')">Return</button>
+    <button onclick="go('fleet')">Fleet</button>
+    <button onclick="go('maint')">Maintenance</button>
+    <button onclick="go('damage')">Damage</button>
+    <button onclick="go('advice')">Advisor</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="gsearch">
+    <input id="gq" placeholder="Search anything…" oninput="gsearch()" onblur="setTimeout(()=>document.getElementById('gres').classList.remove('open'),200)">
+    <div class="gres" id="gres"></div>
+  </div>
+  <div class="user-info">
+    <a class="console-link" href="./">Marketplace</a>
+    <a class="console-link" href="corporate.html">Corporate</a>
+    <strong id="user-display"></strong>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="bar" style="margin-bottom:16px">
+    <select id="f-franchise" onchange="onFranchise()"><option value="">All franchises</option></select>
+    <span class="mini" id="scope-note"></span>
+  </div>
+
+  <!-- ══════ TODAY ══════ -->
+  <div id="v-today" class="view active">
+    <h1>Today at a glance</h1>
+    <div class="sub" id="today-date"></div>
+    <div class="kpis" id="today-kpis"></div>
+    <div class="two-col">
+      <div>
+        <div class="card"><h2>What needs you right now</h2><div id="today-queue"></div></div>
+      </div>
+      <div>
+        <div class="card"><h2>Going out today</h2><div class="tw"><table id="t-pickups"></table></div></div>
+        <div class="card"><h2>Coming back today</h2><div class="tw"><table id="t-returns"></table></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ FLEET BOARD ══════ -->
+  <div id="v-board" class="view">
+    <h1>Fleet board</h1>
+    <div class="sub">Every hull against the clock. Conflicts and downtime are visible at a glance.</div>
+    <div class="bar">
+      <input type="date" id="b-date" onchange="loadBoard()">
+      <select id="b-loc" onchange="loadBoard()"><option value="">All locations</option></select>
+      <div class="spacer-h"></div>
+      <span class="mini" id="b-util"></span>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="legend">
+      <span><i style="background:#DBEAFE"></i>Booked</span>
+      <span><i style="background:#CFFAFE"></i>On the water</span>
+      <span><i style="background:#FEE2E2"></i>Service</span>
+      <span><i style="background:#FEF3C7"></i>Cleaning</span>
+      <span><i style="background:#F8FAFC;border:1px solid #E2E8F0"></i>Open</span>
+    </div>
+  </div>
+
+  <!-- ══════ RESERVATIONS ══════ -->
+  <div id="v-res" class="view">
+    <h1>Reservations</h1>
+    <div class="sub">Every booking across the lifecycle. Click a row for the full record.</div>
+    <div class="bar">
+      <select id="r-loc" onchange="loadRes()"><option value="">All locations</option></select>
+      <select id="r-status" onchange="loadRes()"><option value="">All statuses</option></select>
+      <select id="r-cat" onchange="loadRes()"><option value="">All equipment</option></select>
+      <input type="date" id="r-date" onchange="loadRes()">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('r-date').value='';loadRes()">Clear date</button>
+    </div>
+    <div class="card"><div class="tw"><table id="t-res"></table></div><div class="pager" id="p-res"></div></div>
+  </div>
+
+  <!-- ══════ CHECK-IN ══════ -->
+  <div id="v-checkin" class="view">
+    <h1>Check-in &amp; release</h1>
+    <div class="sub">Big controls, few taps. Built for a dock in bright sun.</div>
+    <div class="bar">
+      <input type="text" id="ci-code" placeholder="Confirmation code (e.g. BB10042)" style="width:250px">
+      <button class="btn btn-primary" onclick="loadCheckin()">Open</button>
+      <span class="mini">or pick from today's pickups below</span>
+    </div>
+    <div id="ci-body"><div class="card"><div class="tw"><table id="t-ci"></table></div></div></div>
+  </div>
+
+  <!-- ══════ RETURN ══════ -->
+  <div id="v-return" class="view">
+    <h1>Process a return</h1>
+    <div class="sub">Under a minute per boat.</div>
+    <div class="bar">
+      <input type="text" id="rt-code" placeholder="Confirmation code" style="width:250px">
+      <button class="btn btn-primary" onclick="loadReturn()">Open</button>
+      <span class="mini">or pick from what's on the water</span>
+    </div>
+    <div id="rt-body"><div class="card"><div class="tw"><table id="t-rt"></table></div></div></div>
+  </div>
+
+  <!-- ══════ FLEET ══════ -->
+  <div id="v-fleet" class="view">
+    <h1>Fleet &amp; asset economics</h1>
+    <div class="sub">What every hull earns, costs and returns. This is how you answer "should I buy another one?"</div>
+    <div class="card"><h2>By category</h2><div class="tw"><table id="t-catecon"></table></div></div>
+    <div class="card"><h2>Every asset</h2><div class="tw"><table id="t-assets"></table></div></div>
+  </div>
+
+  <!-- ══════ MAINTENANCE ══════ -->
+  <div id="v-maint" class="view">
+    <h1>Maintenance</h1>
+    <div class="sub">Work orders pull equipment from the rentable fleet automatically.</div>
+    <div class="bar">
+      <select id="m-status" onchange="loadMaint()"><option value="">All statuses</option></select>
+      <select id="m-type" onchange="loadMaint()"><option value="">All types</option></select>
+      <select id="m-pri" onchange="loadMaint()"><option value="">All priorities</option></select>
+    </div>
+    <div class="card"><div class="tw"><table id="t-maint"></table></div><div class="pager" id="p-maint"></div></div>
+  </div>
+
+  <!-- ══════ DAMAGE ══════ -->
+  <div id="v-damage" class="view">
+    <h1>Damage reports</h1>
+    <div class="sub">Severity drives what happens next — service, a customer charge, or a protection claim.</div>
+    <div class="bar">
+      <select id="d-sev" onchange="loadDamage()"><option value="">All severities</option></select>
+      <select id="d-status" onchange="loadDamage()"><option value="">All statuses</option></select>
+    </div>
+    <div class="card"><div class="tw"><table id="t-damage"></table></div><div class="pager" id="p-damage"></div></div>
+  </div>
+
+  <!-- ══════ ADVISOR ══════ -->
+  <div id="v-advice" class="view">
+    <h1>Owner advisor</h1>
+    <div class="sub">"What should I be worried about?" — derived from your bookings, fleet, service queue and reviews. Every recommendation is a suggestion; you decide.</div>
+    <div id="advice-list"></div>
+    <div class="card"><h2>Peak saturation — where you are turning people away</h2><div class="tw"><table id="t-peaks"></table></div></div>
+  </div>
+</div>
+
+<div id="drawer" onclick="if(event.target===this)closeDrawer()"><div class="dr">
+  <div class="dr-h"><h2 id="dr-title" style="margin:0"></h2><button class="x" onclick="closeDrawer()">&times;</button></div>
+  <div class="dr-b" id="dr-body"></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+const KAPP='billys';
+let API={url:'',auth:'',user:'',displayName:''};
+let LOOK={franchises:[],locations:[],categories:[],assets:[]};
+let FR='';
+const RES_STATUS=['Draft','Pending Payment','Confirmed','Waiver Required','Ready for Pickup','Checked In',
+  'Safety Briefing Complete','Equipment Released','Active Rental','Returning','Returned','Inspection','Completed',
+  'Customer Cancelled','Operator Cancelled','Weather Cancelled','No Show'];
+const WO_STATUS=['Open','Scheduled','In Progress','Waiting Parts','Complete','Cancelled'];
+const WO_TYPES=['Preventive','Scheduled','Repair','Inspection','Cleaning','Winterization','Spring Commissioning','Damage Repair','Recall','Safety Inspection'];
+const PRIORITIES=['Low','Normal','High','Urgent'];
+const SEVERITIES=['Cosmetic','Minor','Operational','Unsafe'];
+const DMG_STATUS=['New','Under Review','Charged','Claim Filed','Repaired','Closed','Waived'];
+
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+const esc=s=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")};
+const v=(s,f)=>s&&s.values?(s.values[f]||''):'';
+const money=n=>{const x=parseFloat(n);return isNaN(x)?'—':'$'+Math.round(x).toLocaleString()};
+const moneyS=n=>{const x=parseFloat(n);if(isNaN(x))return'—';if(Math.abs(x)>=1e6)return'$'+(x/1e6).toFixed(1)+'M';if(Math.abs(x)>=1e4)return'$'+Math.round(x/1e3)+'K';return'$'+Math.round(x).toLocaleString()};
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)};
+const today=()=>new Date().toISOString().slice(0,10);
+function sBadge(s){
+  const map={Completed:'b-gray',Confirmed:'b-blue','Ready for Pickup':'b-green','Active Rental':'b-cyan',
+    'Equipment Released':'b-cyan',Returning:'b-cyan',Returned:'b-green',Inspection:'b-amber','Checked In':'b-blue',
+    'Pending Payment':'b-amber','Waiver Required':'b-amber',Draft:'b-gray','Customer Cancelled':'b-red',
+    'Weather Cancelled':'b-red','Operator Cancelled':'b-red','No Show':'b-red',
+    Available:'b-green',Rented:'b-cyan',Maintenance:'b-amber',Cleaning:'b-amber','Out of Service':'b-red',Retired:'b-gray',
+    Open:'b-amber',Scheduled:'b-blue','In Progress':'b-cyan','Waiting Parts':'b-amber',Complete:'b-green',
+    Urgent:'b-red',High:'b-amber',Normal:'b-blue',Low:'b-gray',
+    Cosmetic:'b-gray',Minor:'b-blue',Operational:'b-amber',Unsafe:'b-red',
+    New:'b-amber','Under Review':'b-blue',Charged:'b-purple','Claim Filed':'b-purple',Repaired:'b-green',
+    Closed:'b-gray',Waived:'b-gray'};
+  return `<span class="badge ${map[s]||'b-gray'}">${esc(s||'')}</span>`;
+}
+async function api(path,opts={}){
+  const r=await fetch(`${API.url}/app/api/v1${path}`,{...opts,
+    headers:{Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const t=await r.text();throw new Error(`${r.status}: ${t.slice(0,180)}`)}
+  const t=await r.text();return t?JSON.parse(t):{};
+}
+async function appApi(p){const r=await fetch(p,{headers:{Authorization:'Basic '+API.auth}});if(!r.ok)throw new Error(String(r.status));return r.json()}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');location.reload()};
+
+/* ── sign-in ──
+   Served through the launcher, /app/api/v1 is proxied same-origin, so we authenticate
+   against this origin and keep url:'' — a direct cross-origin call to the Kinetic host
+   is blocked by its self-signed certificate. */
+function showLogin(msg){
+  document.body.classList.remove('authed');
+  if(msg)document.getElementById('li-err').textContent=msg;
+  fetch('/api/base/target').then(r=>r.json()).then(d=>{
+    document.getElementById('li-server').textContent='Connected to '+(d.target||'this Kinetic space');
+  }).catch(()=>{});
+  const u=document.getElementById('li-user');if(u)u.focus();
+}
+function doLogin(){
+  const user=document.getElementById('li-user').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const err=document.getElementById('li-err'),btn=document.getElementById('li-btn');
+  if(!user||!pass){err.textContent='Enter your username and password';return}
+  err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
+  const auth=btoa(user+':'+pass);
+  fetch('/app/api/v1/me',{headers:{Authorization:'Basic '+auth}})
+    .then(r=>{if(!r.ok)throw new Error(r.status===401?'Incorrect username or password':'Sign-in failed ('+r.status+')');return r.json()})
+    .then(d=>{
+      API={url:'',auth,user:d.username,displayName:d.displayName||d.username};
+      sessionStorage.setItem('kinetic_session',JSON.stringify(
+        {url:'',auth,user:d.username,displayName:API.displayName,spaceSlug:d.space&&d.space.slug||''}));
+      document.body.classList.add('authed');
+      start();
+    })
+    .catch(e=>{err.textContent=e.message})
+    .finally(()=>{btn.disabled=false;btn.textContent='Sign In'});
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!document.body.classList.contains('authed'))doLogin();
+});
+
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  if(!s){showLogin();return}
+  try{
+    const ss=JSON.parse(s);
+    API={url:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};
+    document.body.classList.add('authed');
+    start();
+  }catch(e){showLogin()}
+})();
+
+const VIEWS=['today','board','res','checkin','return','fleet','maint','damage','advice'];
+function go(v2){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v2).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach((b,i)=>b.classList.toggle('active',VIEWS[i]===v2));
+  window.scrollTo(0,0);
+  ({today:loadToday,board:loadBoard,res:loadRes,checkin:loadCheckinList,return:loadReturnList,
+    fleet:loadFleet,maint:loadMaint,damage:loadDamage,advice:loadAdvice})[v2]();
+}
+function fill(id,label,vals,keep){
+  const el=document.getElementById(id);if(!el)return;
+  const cur=keep?el.value:'';
+  el.innerHTML=`<option value="">${label}</option>`+vals.map(x=>`<option ${x===cur?'selected':''}>${esc(x)}</option>`).join('');
+}
+async function start(){
+  document.getElementById('user-display').textContent=API.displayName;
+  document.getElementById('b-date').value=today();
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  fill('r-status','All statuses',RES_STATUS);fill('r-cat','All equipment',[]);
+  fill('m-status','All statuses',WO_STATUS);fill('m-type','All types',WO_TYPES);fill('m-pri','All priorities',PRIORITIES);
+  fill('d-sev','All severities',SEVERITIES);fill('d-status','All statuses',DMG_STATUS);
+  try{
+    LOOK=await appApi('/api/bbw/ops/lookups');
+    document.getElementById('f-franchise').innerHTML='<option value="">All franchises</option>'+
+      LOOK.franchises.map(f=>`<option>${esc(f.name)}</option>`).join('');
+    fill('r-cat','All equipment',LOOK.categories);
+    refreshLocations();
+  }catch(e){toast('Could not load lookups: '+e.message)}
+  loadToday();
+}
+function refreshLocations(){
+  const locs=LOOK.locations.filter(l=>!FR||l.franchise===FR).map(l=>l.name);
+  fill('b-loc','All locations',locs,true);fill('r-loc','All locations',locs,true);
+}
+function onFranchise(){
+  FR=document.getElementById('f-franchise').value;
+  document.getElementById('scope-note').textContent=FR?`Scoped to ${FR}`:`All ${LOOK.franchises.length} franchises — corporate view`;
+  refreshLocations();
+  const cur=VIEWS.find(x=>document.getElementById('v-'+x).classList.contains('active'));
+  go(cur);
+}
+function buildQ(pairs){
+  const q=pairs.filter(([f,x])=>x).map(([f,x])=>`values[${f}]="${String(x).replace(/"/g,'\\"')}"`);
+  return q.length?'&q='+encodeURIComponent(q.join(' AND ')):'';
+}
+const PS={res:{h:[],pt:null,p:1},maint:{h:[],pt:null,p:1},damage:{h:[],pt:null,p:1}};
+// Switching tabs or filters can leave two fetches in flight; without this the slower
+// (stale) response paints last and the screen disagrees with the filters.
+const SEQ={};
+const bump=k=>(SEQ[k]=(SEQ[k]||0)+1);
+const current=(k,n)=>SEQ[k]===n;
+function paginate(ps,dir){
+  if(dir==='next'&&ps.pt){ps.h.push(ps.pt);ps.p++}
+  else if(dir==='prev'&&ps.h.length){ps.h.pop();ps.p--}
+  else if(!dir){ps.h=[];ps.p=1;ps.pt=null}
+}
+function pager(ps,fn){return `<button class="btn btn-ghost btn-sm" onclick="${fn}('prev')" ${ps.p<=1?'disabled':''}>Prev</button>`
+  +`<span>Page ${ps.p}</span><button class="btn btn-ghost btn-sm" onclick="${fn}('next')" ${!ps.pt?'disabled':''}>Next</button>`}
+async function listForm({dir,form,ps,tableId,pagerId,filters,head,row,empty,fn}){
+  paginate(ps,dir);
+  const n=bump(tableId);
+  let p=`/kapps/${KAPP}/forms/${form}/submissions?include=values&limit=25`+buildQ(filters);
+  if(ps.h.length)p+='&pageToken='+encodeURIComponent(ps.h[ps.h.length-1]);
+  const tw=document.getElementById(tableId).closest('.tw');
+  try{
+    const d=await api(p);
+    if(!current(tableId,n))return;
+    const subs=d.submissions||[];ps.pt=d.nextPageToken||null;
+    if(!subs.length)tw.innerHTML=`<table id="${tableId}"></table><div class="empty">${esc(empty)}</div>`;
+    else{tw.innerHTML=`<table id="${tableId}" class="clickable"></table>`;
+      document.getElementById(tableId).innerHTML=head+'<tbody>'+subs.map(row).join('')+'</tbody>';}
+    if(pagerId)document.getElementById(pagerId).innerHTML=pager(ps,fn);
+  }catch(e){tw.innerHTML=`<table id="${tableId}"></table><div class="empty">Error loading ${esc(form)}: ${esc(e.message)}</div>`}
+}
+
+/* ══════ TODAY ══════ */
+async function loadToday(){
+  const n=bump('today');
+  document.getElementById('today-queue').innerHTML='<div class="loading"><span class="spin"></span> Reading the day…</div>';
+  try{
+    const d=await appApi('/api/bbw/ops/today?franchise='+encodeURIComponent(FR));
+    if(!current('today',n))return;
+    const c=d.counts;
+    document.getElementById('today-kpis').innerHTML=`
+      <div class="kpi"><div class="v">${c.goingOut}</div><div class="l">Going out</div></div>
+      <div class="kpi green"><div class="v">${c.returning}</div><div class="l">Returning</div></div>
+      <div class="kpi ${c.overdue?'red':'gray'}"><div class="v">${c.overdue}</div><div class="l">Overdue</div></div>
+      <div class="kpi ${c.unavailable?'sun':'gray'}"><div class="v">${c.unavailable}</div><div class="l">Unavailable</div></div>
+      <div class="kpi sun"><div class="v">${c.cleaning}</div><div class="l">Need cleaning</div></div>
+      <div class="kpi ${c.openWorkOrders?'sun':'gray'}"><div class="v">${c.openWorkOrders}</div><div class="l">Open work orders</div></div>
+      <div class="kpi green"><div class="v">${moneyS(c.expectedRevenue)}</div><div class="l">Expected revenue</div></div>
+      <div class="kpi"><div class="v">${c.utilization}%</div><div class="l">Utilization</div></div>
+      <div class="kpi gray"><div class="v">${c.rentable}<span style="font-size:14px;color:#94A3B8">/${c.fleet}</span></div><div class="l">Rentable</div></div>`;
+    const ico={'Overdue return':'⏰',Weather:'⛈️',Maintenance:'🔧',Damage:'💥',Waiver:'✍️',Payment:'💳',Review:'⭐'};
+    document.getElementById('today-queue').innerHTML=(d.queue||[]).map(q=>`
+      <div class="q ${q.severity}">
+        <div class="ico">${ico[q.kind]||'•'}</div>
+        <div style="min-width:0">
+          <div class="kind">${esc(q.kind)}</div>
+          <div class="t">${esc(q.title)}</div>
+          <div class="d">${esc(q.detail)}</div>
+        </div>
+        <div class="act">${q.link==='reservation'?`<button class="btn btn-ghost btn-sm" onclick="openRes('${esc(q.ref)}')">Open</button>`:''}</div>
+      </div>`).join('')||'<div class="empty">Nothing needs you right now. Enjoy the lake. 🌅</div>';
+    const rows=(list,kind)=>list.map(r=>`<tr onclick="openRes('${esc(r.code)}')">
+      <td><strong>${esc(kind==='out'?r.start:r.end)}</strong></td>
+      <td>${esc(r.customer)}<div class="mini">${esc(r.phone||'')}</div></td>
+      <td>${esc(r.category)}<div class="mini">${esc(r.asset||'auto-assign')}</div></td>
+      <td>${esc(r.location)}</td>
+      <td class="right">${money(r.total)}</td>
+      <td>${sBadge(r.status)}${r.waiver==='No'?' <span class="badge b-amber">waiver</span>':''}${r.balance>0?' <span class="badge b-red">unpaid</span>':''}</td></tr>`).join('');
+    document.getElementById('t-pickups').innerHTML=
+      `<thead><tr><th>Time</th><th>Customer</th><th>Equipment</th><th>Location</th><th class="right">Total</th><th>Status</th></tr></thead><tbody>`
+      +(rows(d.pickups,'out')||`<tr><td colspan="6" class="empty">Nothing going out today.</td></tr>`)+`</tbody>`;
+    document.getElementById('t-returns').innerHTML=
+      `<thead><tr><th>Due</th><th>Customer</th><th>Equipment</th><th>Location</th><th class="right">Total</th><th>Status</th></tr></thead><tbody>`
+      +(rows(d.returns,'in')||`<tr><td colspan="6" class="empty">Nothing due back today.</td></tr>`)+`</tbody>`;
+  }catch(e){document.getElementById('today-queue').innerHTML=`<div class="empty">Could not load today: ${esc(e.message)}</div>`}
+}
+
+/* ══════ FLEET BOARD ══════ */
+async function loadBoard(){
+  const el=document.getElementById('board');
+  const n=bump('board');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Building the board…</div>';
+  try{
+    const d=await appApi(`/api/bbw/ops/fleetboard?franchise=${encodeURIComponent(FR)}&location=${encodeURIComponent(document.getElementById('b-loc').value)}&date=${document.getElementById('b-date').value}`);
+    if(!current('board',n))return;
+    document.getElementById('b-util').textContent=`${d.rows.length} assets · ${d.utilization}% of slots committed`;
+    if(!d.rows.length){el.innerHTML='<div class="empty">No assets for this scope.</div>';return}
+    el.innerHTML=`<table><thead><tr><th>Asset</th>${d.hours.map(h=>`<th>${h>12?h-12:h}${h>=12?'PM':'AM'}</th>`).join('')}<th>Booked</th></tr></thead>
+      <tbody>${d.rows.map(r=>`<tr>
+        <td><strong>${esc(r.asset)}</strong><div class="mini">${esc(r.tag)} · ${esc(r.category)}</div></td>
+        ${r.cells.map(c=>`<td><div class="cell ${c.state}" ${c.code?`title="${esc(c.code)}"`:''}>${esc(c.label||'')||'&nbsp;'}</div></td>`).join('')}
+        <td class="right">${r.booked?`<strong>${r.booked}</strong><div class="mini">${money(r.revenue)}</div>`:'<span class="muted">—</span>'}</td>
+      </tr>`).join('')}</tbody></table>`;
+  }catch(e){el.innerHTML=`<div class="empty">Could not build the board: ${esc(e.message)}</div>`}
+}
+
+/* ══════ RESERVATIONS ══════ */
+async function loadRes(dir){
+  await listForm({dir,form:'reservations',ps:PS.res,tableId:'t-res',pagerId:'p-res',fn:'loadRes',
+    filters:[['Franchise',FR],['Location',document.getElementById('r-loc').value],
+      ['Status',document.getElementById('r-status').value],['Category',document.getElementById('r-cat').value],
+      ['Start Date',document.getElementById('r-date').value]],
+    empty:'No reservations match these filters.',
+    head:`<thead><tr><th>Code</th><th>Date</th><th>Customer</th><th>Equipment</th><th>Location</th><th class="right">Total</th><th>Protection</th><th>Status</th></tr></thead>`,
+    row:s=>`<tr onclick="openRes('${esc(v(s,'Confirmation Code'))}')">
+      <td><strong>${esc(v(s,'Confirmation Code'))}</strong></td>
+      <td>${esc(v(s,'Start Date'))}<div class="mini">${esc(v(s,'Start Time'))}–${esc(v(s,'End Time'))}</div></td>
+      <td>${esc(v(s,'Customer Name'))}<div class="mini">${esc(v(s,'Customer Email'))}</div></td>
+      <td>${esc(v(s,'Category'))}<div class="mini">${esc(v(s,'Asset')||'auto-assign')}</div></td>
+      <td>${esc(v(s,'Location'))}</td>
+      <td class="right"><strong>${money(v(s,'Total'))}</strong></td>
+      <td>${v(s,'Protection Plan')==='No Protection'?'<span class="muted">—</span>':`<span class="pill">${esc(v(s,'Protection Plan'))}</span>`}</td>
+      <td>${sBadge(v(s,'Status'))}</td></tr>`});
+}
+
+/* ══════ RESERVATION DRAWER ══════ */
+async function openRes(code){
+  openDrawer(code,'<div class="loading"><span class="spin"></span> Loading reservation…</div>');
+  try{
+    const d=await appApi('/api/bbw/ops/reservation?code='+encodeURIComponent(code));
+    if(d.error){document.getElementById('dr-body').innerHTML=`<div class="empty">${esc(d.error)}</div>`;return}
+    const r=d.reservation,g=f=>r[f]||'';
+    const tl=[];
+    if(g('Start Date'))tl.push(['Booked',`${g('Source')} · ${g('Confirmation Code')}`]);
+    d.waivers.forEach(w=>tl.push([`Signed ${w['Document Type']} v${w['Document Version']}`,`${w['Signature Name']} · ${w['Signed At']}`]));
+    if(g('Checked In At'))tl.push(['Checked in',g('Checked In At')]);
+    if(g('Released At'))tl.push(['Equipment released',`${g('Released At')} by ${g('Released By')}`]);
+    if(g('Returned At'))tl.push(['Returned',`${g('Returned At')} · fuel ${g('Return Fuel')||'—'}${+g('Late Minutes')?` · ${g('Late Minutes')} min late`:''}`]);
+    d.damage.forEach(x=>tl.push([`Damage — ${x.Severity}`,`${x['Damage Area']} · est ${money(x['Estimated Cost'])} · ${x.Status}`]));
+    document.getElementById('dr-body').innerHTML=`
+      <div class="opshead">
+        <div><div class="who">${esc(g('Customer Name'))}</div>
+          <div class="meta">${esc(g('Category'))} · ${esc(g('Start Date'))} ${esc(g('Start Time'))}–${esc(g('End Time'))} · ${esc(g('Location'))}</div></div>
+        <div class="right"><div class="code">${esc(g('Confirmation Code'))}</div>
+          <div style="margin-top:7px">${sBadge(g('Status'))}</div></div>
+      </div>
+      <div class="sec"><h3>Reservation</h3><div class="kv">
+        <div class="k">Asset</div><div>${esc(g('Asset')||'Not yet assigned')} <span class="mini">(${esc(g('Asset Assignment'))})</span></div>
+        <div class="k">Duration</div><div>${esc(g('Duration Type'))} · ${esc(g('Duration Hours'))}h</div>
+        <div class="k">Party size</div><div>${esc(g('Party Size'))}</div>
+        <div class="k">Contact</div><div>${esc(g('Customer Email'))} · ${esc(g('Customer Phone'))}</div>
+        <div class="k">Franchise</div><div>${esc(g('Franchise'))}</div>
+        <div class="k">Protection</div><div>${esc(g('Protection Plan'))}</div>
+        <div class="k">Waiver</div><div>${g('Waiver Signed')==='Yes'?'<span class="badge b-green">Signed</span>':'<span class="badge b-amber">Not signed</span>'}</div>
+      </div></div>
+      <div class="sec"><h3>Money — every line traceable</h3>
+        ${d.items.map(i=>`<div class="money-row"><span class="muted">${esc(i.Description)}</span><span>${money(i['Line Total'])}</span></div>`).join('')}
+        <div class="money-row tot"><span>Total</span><span>${money(g('Total'))}</span></div>
+        ${d.payments.length?`<div style="margin-top:13px">${d.payments.map(p=>
+          `<div class="money-row"><span><span class="pill">${esc(p['Payment Type'])}</span> <span class="mini">${esc(p.Method)} · ${esc(p['Provider Reference'])}</span></span>
+           <span>${money(p.Amount)} ${sBadge(p.Status)}</span></div>`).join('')}</div>`:''}
+      </div>
+      ${d.payments.some(p=>+p['Royalty Amount']>0)?`<div class="sec"><h3>Franchise allocation</h3>
+        ${d.payments.filter(p=>+p['Royalty Amount']>0).map(p=>`<div class="kv">
+          <div class="k">Gross</div><div>${money(p.Amount)}</div>
+          <div class="k">Royalty</div><div>${money(p['Royalty Amount'])}</div>
+          <div class="k">Franchise net</div><div><strong>${money(p['Franchise Net'])}</strong></div></div>`).join('')}</div>`:''}
+      <div class="sec"><h3>Timeline</h3><div class="tl">${tl.map(([t,dd])=>
+        `<div class="e"><div class="t">${esc(t)}</div><div class="d">${esc(dd)}</div></div>`).join('')||'<div class="mini">No activity yet.</div>'}</div></div>
+      ${d.inspections.length?`<div class="sec"><h3>Inspections</h3>${d.inspections.map(i=>
+        `<div class="money-row"><span>${esc(i['Inspection Type'])} · ${esc(i.Inspector)}</span>
+         <span class="mini">fuel ${esc(i['Fuel Level'])} · ${esc(i.Condition)} · ${i.Passed==='Yes'?'✅ passed':'⚠️ '+esc(i['Issues Found'])}</span></div>`).join('')}</div>`:''}
+      ${d.reviews.length?`<div class="sec"><h3>Review</h3>${d.reviews.map(rv=>
+        `<div><span style="color:var(--sun)">${'★'.repeat(+rv.Rating)}</span> <span class="mini">${esc(rv['Submitted At'])}</span>
+         <div style="margin-top:5px">${esc(rv.Comment)}</div></div>`).join('')}</div>`:''}
+      ${d.notifications.length?`<div class="sec"><h3>Notifications</h3>${d.notifications.map(n=>
+        `<div class="money-row"><span><span class="pill">${esc(n.Channel)}</span> ${esc(n.Subject)}</span><span>${sBadge(n.Status)}</span></div>`).join('')}</div>`:''}
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="closeDrawer();document.getElementById('ci-code').value='${esc(code)}';go('checkin');loadCheckin()">Check in</button>
+        <button class="btn btn-ghost" onclick="closeDrawer();document.getElementById('rt-code').value='${esc(code)}';go('return');loadReturn()">Process return</button>
+      </div>`;
+  }catch(e){document.getElementById('dr-body').innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`}
+}
+function openDrawer(title,html){
+  document.getElementById('dr-title').textContent=title;
+  document.getElementById('dr-body').innerHTML=html;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+
+/* ══════ CHECK-IN ══════ */
+async function loadCheckinList(){
+  const d=await appApi('/api/bbw/ops/today?franchise='+encodeURIComponent(FR)).catch(()=>null);
+  if(!d)return;
+  // Whitelist what is genuinely still waiting for the dock. A blacklist left
+  // 'Equipment Released' / 'Active Rental' in the queue, so a boat you had just
+  // released still sat here offering to "Start" it again.
+  const AWAITING=['Draft','Pending Payment','Confirmed','Waiver Required','Ready for Pickup',
+    'Checked In','Safety Briefing Complete'];
+  const list=(d.pickups||[]).filter(p=>AWAITING.includes(p.status));
+  const released=(d.pickups||[]).filter(p=>['Equipment Released','Active Rental','Returning'].includes(p.status));
+  document.getElementById('ci-body').innerHTML=`<div class="card"><div class="tw"><table id="t-ci" class="clickable"></table></div></div>`;
+  document.getElementById('t-ci').innerHTML=
+    `<thead><tr><th>Time</th><th>Customer</th><th>Equipment</th><th>Ready?</th><th></th></tr></thead><tbody>`
+    +(list.map(p=>`<tr onclick="document.getElementById('ci-code').value='${esc(p.code)}';loadCheckin()">
+      <td><strong>${esc(p.start)}</strong></td><td>${esc(p.customer)}</td><td>${esc(p.category)}</td>
+      <td>${p.waiver==='Yes'?'<span class="badge b-green">waiver ok</span>':'<span class="badge b-amber">needs waiver</span>'}
+          ${p.balance>0?'<span class="badge b-red">unpaid</span>':'<span class="badge b-green">paid</span>'}</td>
+      <td class="right"><button class="btn btn-primary btn-sm">Start</button></td></tr>`).join('')
+      ||`<tr><td colspan="5" class="empty">Nothing waiting for the dock${released.length?' — everything scheduled today is already on the water.':'.'}</td></tr>`)+`</tbody>`
+    +(released.length?`<tbody><tr><td colspan="5" style="padding-top:14px"><div class="mini" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px">Already released today</div></td></tr>`
+      +released.map(p=>`<tr onclick="document.getElementById('rt-code').value='${esc(p.code)}';go('return');loadReturn()">
+        <td><strong>${esc(p.start)}</strong></td><td>${esc(p.customer)}</td><td>${esc(p.category)}<div class="mini">${esc(p.asset||'')}</div></td>
+        <td>${sBadge(p.status)}</td>
+        <td class="right"><button class="btn btn-ghost btn-sm">Process return</button></td></tr>`).join('')+`</tbody>`:'');
+}
+const CI_STEPS=[['id','Customer identity verified','Photo ID matches the reservation name'],
+  ['waiver','Waiver signed','Rental agreement, liability and any equipment rules'],
+  ['pay','Payment complete','Balance and security deposit authorized'],
+  ['prot','Protection selected or declined','Recorded on the reservation'],
+  ['safety','Safety equipment provided','Life jacket for every person aboard'],
+  ['brief','Safety briefing completed','Controls, no-wake zones, hazards, emergency contact'],
+  ['damage','Existing damage documented','Walk the hull with the customer'],
+  ['fuel','Fuel level documented','Note the level at release'],
+  ['photos','Equipment photos taken','Four angles minimum'],
+  ['accept','Customer accepts condition','Verbal confirmation at the dock']];
+let CI=null;
+async function loadCheckin(){
+  const code=document.getElementById('ci-code').value.trim().toUpperCase();
+  if(!code)return toast('Enter a confirmation code');
+  const el=document.getElementById('ci-body');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Loading…</div>';
+  try{
+    const d=await appApi('/api/bbw/ops/reservation?code='+encodeURIComponent(code));
+    if(d.error){el.innerHTML=`<div class="empty">${esc(d.error)}</div>`;return}
+    CI={code,data:d,state:{},assign:null,chosen:d.reservation['Asset']||''};
+    const r=d.reservation;
+    CI_STEPS.forEach(([k])=>{
+      CI.state[k]=(k==='waiver'&&r['Waiver Signed']==='Yes')||(k==='pay'&&!+r['Balance Due'])
+        ||(k==='prot'&&!!r['Protection Plan']);
+    });
+    // a category-level booking has no hull yet — the dock picks one before release
+    if(!CI.chosen){
+      try{
+        CI.assign=await appApi('/api/bbw/ops/assign?code='+encodeURIComponent(code));
+        const first=(CI.assign.candidates||[]).find(c=>c.eligible);
+        if(first)CI.chosen=first.asset;
+      }catch(e){}
+    }
+    renderCheckin();
+  }catch(e){el.innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`}
+}
+function renderCheckin(){
+  const r=CI.data.reservation,g=f=>r[f]||'';
+  const done=CI_STEPS.filter(([k])=>CI.state[k]).length;
+  document.getElementById('ci-body').innerHTML=`
+    <div class="opshead">
+      <div><div class="who">${esc(g('Customer Name'))}</div>
+        <div class="meta">${esc(g('Start Time'))} · ${esc(g('Category'))} · ${esc(g('Asset')||'assign at dock')} · party of ${esc(g('Party Size'))}</div></div>
+      <div class="right"><div class="code">${esc(g('Confirmation Code'))}</div>
+        <div style="margin-top:6px;font-size:12.5px;color:rgba(255,255,255,.75)">${done}/${CI_STEPS.length} complete</div></div>
+    </div>
+    <div class="card">
+      ${CI.assign?`<div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);margin-bottom:6px">
+          Assign a hull <span class="mini" style="text-transform:none;letter-spacing:0;font-weight:500">— booked as a category, not a specific boat</span></div>
+        <select id="ci-asset" style="width:100%;padding:11px" onchange="CI.chosen=this.value">
+          ${(CI.assign.candidates||[]).map(c=>`<option value="${esc(c.asset)}" ${c.asset===CI.chosen?'selected':''} ${c.eligible?'':'disabled'}>
+            ${esc(c.asset)} · ${esc(c.tag)} · ${esc(c.year)} ${esc(c.make)} · ${c.engineHours}h · ${esc(c.condition)}${c.eligible?'':' — '+esc(c.reasons.join(', '))}</option>`).join('')
+            ||'<option value="">No hull of this category available here</option>'}
+        </select></div>`:`<div class="mini" style="margin-bottom:12px">Assigned hull: <strong>${esc(CI.chosen||'—')}</strong></div>`}
+      ${CI_STEPS.map(([k,t,h])=>`<div class="check ${CI.state[k]?'on':''}" onclick="ciToggle('${k}')">
+        <div class="box">✓</div><div><div>${esc(t)}</div><div class="hint">${esc(h)}</div></div></div>`).join('')}
+      <button class="btn btn-green btn-lg btn-block" style="width:100%;margin-top:14px" ${done<CI_STEPS.length||!CI.chosen?'disabled':''}
+        onclick="releaseEquipment()">${!CI.chosen?'Assign a hull to release':done<CI_STEPS.length?`Complete all ${CI_STEPS.length} steps to release`:'🚤 RELEASE EQUIPMENT'}</button>
+      <div class="mini" style="text-align:center;margin-top:9px">Releasing records the hull, who released it and exactly when.</div>
+    </div>`;
+}
+function ciToggle(k){CI.state[k]=!CI.state[k];renderCheckin()}
+async function releaseEquipment(){
+  const r=CI.data.reservation;
+  const stamp=new Date().toISOString().slice(0,16).replace('T',' ');
+  try{
+    await api(`/submissions/${CI.data.submissionId}`,{method:'PUT',body:JSON.stringify({values:{
+      'Status':'Equipment Released','Checked In At':stamp,'Released At':stamp,'Released By':API.displayName,
+      'Asset':CI.chosen,'Asset Assignment':CI.assign?'Category — assigned at check-in':r['Asset Assignment']}})});
+    // the hull is now on the water
+    const cand=CI.assign&&(CI.assign.candidates||[]).find(c=>c.asset===CI.chosen);
+    if(cand)await api(`/submissions/${cand.submissionId}`,{method:'PUT',body:JSON.stringify({values:{'Status':'Rented'}})});
+    // pre-rental inspection is part of the release, not a separate chore
+    await api(`/kapps/${KAPP}/forms/inspections/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Inspection ID':'INS-'+Date.now().toString(36).toUpperCase(),'Asset':CI.chosen,'Reservation':r['Reservation ID'],
+      'Franchise':r.Franchise,'Location':r.Location,'Inspection Type':'Pre-Rental','Inspector':API.displayName,
+      'Inspected At':stamp,'Condition':'Good','Photos Count':'4','Passed':'Yes'}})});
+    await api(`/kapps/${KAPP}/forms/audit-log/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Audit ID':'AUD-'+Date.now().toString(36).toUpperCase(),'Entity Type':'Reservation',
+      'Entity Reference':r['Confirmation Code'],'Action':'Equipment released','Field Changed':'Status',
+      'Previous Value':r.Status,'New Value':'Equipment Released','Changed By':API.displayName,
+      'Changed At':stamp,'Franchise':r.Franchise,'Reason':'Dock release after check-in checklist'}})});
+    toast(`${CI.chosen} released to ${r['Customer Name']} at ${stamp.slice(11)}`);
+    document.getElementById('ci-code').value='';
+    // bypass the 5-minute aggregation cache so the hull appears in Return immediately
+    await appApi('/api/bbw/ops/today?fresh=1&franchise='+encodeURIComponent(FR)).catch(()=>{});
+    loadCheckinList();
+  }catch(e){toast('Release failed: '+e.message)}
+}
+
+/* ══════ RETURN ══════ */
+async function loadReturnList(fresh){
+  const d=await appApi('/api/bbw/ops/today?franchise='+encodeURIComponent(FR)+(fresh?'&fresh=1':'')).catch(()=>null);
+  if(!d)return;
+  // every hull currently out, not just the ones whose due date happens to be today
+  const list=d.onWater||[];
+  const dueBadge=s=>s==='overdue'?'<span class="badge b-red">overdue</span>'
+    :s==='today'?'<span class="badge b-amber">due today</span>':'<span class="badge b-gray">due later</span>';
+  document.getElementById('rt-body').innerHTML=`<div class="card"><div class="tw"><table id="t-rt" class="clickable"></table></div></div>`;
+  document.getElementById('t-rt').innerHTML=
+    `<thead><tr><th>Due</th><th>Customer</th><th>Equipment</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>`
+    +(list.map(p=>`<tr onclick="document.getElementById('rt-code').value='${esc(p.code)}';loadReturn()">
+      <td><strong>${esc(p.due)}</strong> ${dueBadge(p.dueState)}<div class="mini">out since ${esc(p.start)}</div></td>
+      <td>${esc(p.customer)}<div class="mini">${esc(p.phone||'')}</div></td>
+      <td>${esc(p.category)}<div class="mini">${esc(p.asset||'')}</div></td>
+      <td>${esc(p.location)}</td>
+      <td>${sBadge(p.status)}</td><td class="right"><button class="btn btn-primary btn-sm">Return</button></td></tr>`).join('')
+      ||`<tr><td colspan="6" class="empty">Nothing on the water.</td></tr>`)+`</tbody>`;
+}
+let RT=null;
+async function loadReturn(){
+  const code=document.getElementById('rt-code').value.trim().toUpperCase();
+  if(!code)return toast('Enter a confirmation code');
+  const el=document.getElementById('rt-body');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Loading…</div>';
+  try{
+    const d=await appApi('/api/bbw/ops/reservation?code='+encodeURIComponent(code));
+    if(d.error){el.innerHTML=`<div class="empty">${esc(d.error)}</div>`;return}
+    RT={code,data:d};
+    const r=d.reservation,g=f=>r[f]||'';
+    el.innerHTML=`
+      <div class="opshead">
+        <div><div class="who">${esc(g('Customer Name'))}</div>
+          <div class="meta">${esc(g('Category'))} · ${esc(g('Asset'))} · due ${esc(g('End Date'))} ${esc(g('End Time'))}</div></div>
+        <div class="right"><div class="code">${esc(g('Confirmation Code'))}</div></div>
+      </div>
+      <div class="card">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+          <div><label class="mini">Fuel level</label>
+            <select id="rt-fuel" style="width:100%;margin-top:4px"><option>Full</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Empty</option></select></div>
+          <div><label class="mini">Engine hours</label><input id="rt-hours" type="text" style="width:100%;margin-top:4px" placeholder="optional"></div>
+          <div><label class="mini">Condition</label>
+            <select id="rt-cond" style="width:100%;margin-top:4px"><option>Excellent</option><option selected>Good</option><option>Fair</option><option>Poor</option></select></div>
+          <div><label class="mini">Late minutes</label><input id="rt-late" type="text" style="width:100%;margin-top:4px" value="0"></div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="check" id="chk-clean" onclick="this.classList.toggle('on')"><div class="box">✓</div><div>Cleaning required</div></div>
+          <div class="check" id="chk-missing" onclick="this.classList.toggle('on')"><div class="box">✓</div><div>Accessories missing</div></div>
+          <div class="check" id="chk-damage" onclick="this.classList.toggle('on');document.getElementById('dmg-box').style.display=this.classList.contains('on')?'block':'none'">
+            <div class="box">✓</div><div><div>Damage found</div><div class="hint">Opens a damage report and can pull the asset from service</div></div></div>
+        </div>
+        <div id="dmg-box" style="display:none;border:1px solid var(--line);border-radius:11px;padding:14px;margin-top:6px;background:#FFFBEB">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+            <div><label class="mini">Severity</label>
+              <select id="dmg-sev" style="width:100%;margin-top:4px">${SEVERITIES.map(s=>`<option>${s}</option>`).join('')}</select></div>
+            <div><label class="mini">Area</label>
+              <select id="dmg-area" style="width:100%;margin-top:4px">${['Propeller','Hull — port side','Hull — starboard','Transom','Seating','Bimini top','Windshield','Console','Deck','Trailer'].map(s=>`<option>${s}</option>`).join('')}</select></div>
+            <div><label class="mini">Estimated cost</label><input id="dmg-cost" type="text" style="width:100%;margin-top:4px" placeholder="$"></div>
+            <div><label class="mini">Photos taken</label><input id="dmg-photos" type="text" style="width:100%;margin-top:4px" value="4"></div>
+          </div>
+          <div style="margin-top:10px"><label class="mini">What happened</label>
+            <input id="dmg-desc" type="text" style="width:100%;margin-top:4px" placeholder="Describe the damage"></div>
+          <div class="mini" style="margin-top:8px">Protection on this reservation: <strong>${esc(g('Protection Plan'))}</strong></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-green btn-lg" style="flex:1" onclick="completeReturn(false)">✅ COMPLETE RENTAL</button>
+          <button class="btn btn-sun btn-lg" style="flex:1" onclick="completeReturn(true)">🔍 SEND TO INSPECTION</button>
+        </div>
+      </div>`;
+  }catch(e){el.innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`}
+}
+async function completeReturn(toInspection){
+  const r=RT.data.reservation;
+  const stamp=new Date().toISOString().slice(0,16).replace('T',' ');
+  const gv=id=>document.getElementById(id)?.value||'';
+  const dmg=document.getElementById('chk-damage').classList.contains('on');
+  const cleaning=document.getElementById('chk-clean').classList.contains('on');
+  try{
+    await api(`/submissions/${RT.data.submissionId}`,{method:'PUT',body:JSON.stringify({values:{
+      'Status':toInspection||dmg?'Inspection':'Completed','Returned At':stamp,'Return Fuel':gv('rt-fuel'),
+      'Late Minutes':gv('rt-late')||'0'}})});
+    await api(`/kapps/${KAPP}/forms/inspections/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Inspection ID':'INS-'+Date.now().toString(36).toUpperCase(),'Asset':r.Asset,'Reservation':r['Reservation ID'],
+      'Franchise':r.Franchise,'Location':r.Location,'Inspection Type':'Post-Rental','Inspector':API.displayName,
+      'Inspected At':stamp,'Fuel Level':gv('rt-fuel'),'Engine Hours':gv('rt-hours'),'Condition':gv('rt-cond'),
+      'Photos Count':'4','Passed':dmg?'No':'Yes','Issues Found':dmg?`${gv('dmg-sev')} — ${gv('dmg-area')}`:''}})});
+    if(dmg){
+      const sev=gv('dmg-sev'),oos=['Operational','Unsafe'].includes(sev);
+      const dmgId='DMG-'+Date.now().toString(36).toUpperCase();
+      await api(`/kapps/${KAPP}/forms/damage-reports/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+        'Damage ID':dmgId,'Asset':r.Asset,'Reservation':r['Reservation ID'],'Confirmation Code':r['Confirmation Code'],
+        'Customer':r['Customer Name'],'Franchise':r.Franchise,'Location':r.Location,'Reported By':API.displayName,
+        'Reported At':stamp,'Severity':sev,'Damage Area':gv('dmg-area'),'Photos Count':gv('dmg-photos'),
+        'Estimated Cost':gv('dmg-cost')||'0','Customer Responsible':'Under review','Out Of Service':oos?'Yes':'No',
+        'Status':'New','Description':gv('dmg-desc')}})});
+      // Pulling the hull, opening the repair order, writing the audit row and escalating
+      // unsafe damage are the Task Engine's job now — the "Damage Response" tree fires on
+      // this submission. Doing it here too would double-create the work order.
+      toast(`Return recorded · damage report ${dmgId} opened${oos?' · workflow is pulling the hull and opening a repair order':''}`);
+    } else if(cleaning){
+      const found=await api(`/kapps/${KAPP}/forms/assets/submissions?include=values&limit=25&q=`
+        +encodeURIComponent(`values[Asset Name]="${String(r.Asset).replace(/"/g,'\\"')}"`));
+      const a=(found.submissions||[])[0];
+      if(a)await api(`/submissions/${a.id}`,{method:'PUT',body:JSON.stringify({values:{'Status':'Cleaning'}})});
+      toast('Return complete · asset sent to cleaning');
+    } else toast('Rental completed');
+    // reservation-level audit stays here; the damage-side audit is written by the tree
+    await api(`/kapps/${KAPP}/forms/audit-log/submissions`,{method:'POST',body:JSON.stringify({coreState:'Submitted',values:{
+      'Audit ID':'AUD-'+Date.now().toString(36).toUpperCase(),'Entity Type':'Reservation',
+      'Entity Reference':r['Confirmation Code'],'Action':'Return processed','Field Changed':'Status',
+      'Previous Value':r.Status,'New Value':toInspection||dmg?'Inspection':'Completed','Changed By':API.displayName,
+      'Changed At':stamp,'Franchise':r.Franchise,'Reason':dmg?'Damage found at return':'Normal return'}})});
+    document.getElementById('rt-code').value='';loadReturnList(true);
+  }catch(e){toast('Return failed: '+e.message)}
+}
+
+/* ══════ FLEET ECONOMICS ══════ */
+async function loadFleet(){
+  const el=document.getElementById('t-assets');
+  const n=bump('fleet');
+  el.closest('.tw').innerHTML='<div class="loading"><span class="spin"></span> Calculating asset economics…</div>';
+  try{
+    const d=await appApi('/api/bbw/ops/assets?franchise='+encodeURIComponent(FR));
+    if(!current('fleet',n))return;
+    document.getElementById('t-catecon').innerHTML=
+      `<thead><tr><th>Category</th><th class="right">Units</th><th class="right">Revenue</th><th class="right">Avg utilization</th><th class="right">Revenue / available day</th></tr></thead><tbody>`
+      +d.byCategory.map(c=>`<tr><td><strong>${esc(c.category)}</strong></td><td class="right">${c.count}</td>
+        <td class="right">${money(c.revenue)}</td>
+        <td class="right"><div class="barline" style="display:inline-block;width:70px"><i style="width:${Math.min(100,c.utilization)}%"></i></div> ${c.utilization}%</td>
+        <td class="right"><strong>${money(c.revPerDay)}</strong></td></tr>`).join('')+`</tbody>`;
+    const tw=document.getElementById('t-catecon').closest('.card').nextElementSibling.querySelector('.tw');
+    tw.innerHTML='<table id="t-assets" class="clickable"></table>';
+    document.getElementById('t-assets').innerHTML=
+      `<thead><tr><th>Asset</th><th>Category</th><th>Location</th><th class="right">Rentals</th><th class="right">Revenue</th>
+        <th class="right">Maint.</th><th class="right">Util.</th><th class="right">Rev/day</th><th class="right">ROI</th><th>Status</th></tr></thead><tbody>`
+      +d.rows.slice(0,60).map(r=>`<tr onclick="openAsset('${esc(r.tag)}')">
+        <td><strong>${esc(r.asset)}</strong><div class="mini">${esc(r.tag)} · ${esc(r.year)} ${esc(r.make)}</div></td>
+        <td>${esc(r.category)}</td><td>${esc(r.location)}</td>
+        <td class="right">${r.rentals}</td><td class="right"><strong>${money(r.revenue)}</strong></td>
+        <td class="right">${r.maintenance?money(r.maintenance):'—'}</td>
+        <td class="right">${r.utilization}%</td><td class="right">${money(r.revPerDay)}</td>
+        <td class="right ${r.roi>=0?'':'muted'}"><strong>${r.roi}%</strong></td>
+        <td>${sBadge(r.status)}</td></tr>`).join('')+`</tbody>`;
+  }catch(e){document.querySelector('#v-fleet .tw').innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`}
+}
+async function openAsset(tag){
+  openDrawer(tag,'<div class="loading"><span class="spin"></span> Loading asset…</div>');
+  try{
+    const d=await appApi('/api/bbw/ops/asset?tag='+encodeURIComponent(tag));
+    if(d.error){document.getElementById('dr-body').innerHTML=`<div class="empty">${esc(d.error)}</div>`;return}
+    const a=d.asset,g=f=>a[f]||'',e=d.economics;
+    document.getElementById('dr-body').innerHTML=`
+      <div class="opshead">
+        <div><div class="who">${esc(g('Asset Name'))}</div>
+          <div class="meta">${esc(g('Model Year'))} ${esc(g('Manufacturer'))} ${esc(g('Model')) } · ${esc(g('Category'))} · ${esc(g('Location'))}</div></div>
+        <div class="right"><div class="code">${esc(g('Asset Tag'))}</div><div style="margin-top:7px">${sBadge(g('Status'))}</div></div>
+      </div>
+      ${d.current?`<div class="q high"><div class="ico">🚤</div><div><div class="kind">On the water now</div>
+        <div class="t">${esc(d.current.customer)}</div><div class="d">Due back ${esc(d.current.due)} · ${esc(d.current.code)} · ${esc(d.current.phone)}</div></div></div>`:''}
+      ${d.next?`<div class="q"><div class="ico">📅</div><div><div class="kind">Next reservation</div>
+        <div class="t">${esc(d.next.customer)}</div><div class="d">${esc(d.next.start)} · ${esc(d.next.code)}</div></div></div>`:''}
+      <div class="sec"><h3>Asset economics</h3><div class="kv">
+        <div class="k">Purchase price</div><div>${money(e.purchase)}</div>
+        <div class="k">Current value</div><div>${money(g('Current Value'))}</div>
+        <div class="k">Completed rentals</div><div>${e.rentals}</div>
+        <div class="k">Lifetime revenue</div><div><strong>${money(e.revenue)}</strong></div>
+        <div class="k">Maintenance cost</div><div>${money(e.maintenance)}</div>
+        <div class="k">Net contribution</div><div><strong>${money(e.net)}</strong></div>
+        <div class="k">Return on cost</div><div><strong>${e.roi}%</strong></div>
+        <div class="k">Engine hours</div><div>${esc(g('Engine Hours')||'—')}${g('Next Service Hours')?` · next service at ${esc(g('Next Service Hours'))}`:''}</div>
+        <div class="k">Condition</div><div>${esc(g('Condition'))} · fuel ${esc(g('Fuel Level')||'—')}</div>
+        <div class="k">Registration</div><div>${esc(g('Registration Number')||'—')} ${g('HIN')?`· HIN ${esc(g('HIN'))}`:''}</div>
+      </div></div>
+      ${d.openWorkOrders.length?`<div class="sec"><h3>Open work orders</h3>${d.openWorkOrders.map(w=>
+        `<div class="money-row"><span>${esc(w.id)} · ${esc(w.type)}</span><span>${sBadge(w.priority)} ${sBadge(w.status)}</span></div>`).join('')}</div>`:''}
+      ${d.damage.length?`<div class="sec"><h3>Damage history</h3>${d.damage.map(x=>
+        `<div class="money-row"><span>${esc(x.at)} · ${esc(x.area)}</span><span>${sBadge(x.severity)} ${money(x.cost)} ${sBadge(x.status)}</span></div>`).join('')}</div>`:''}
+      ${d.lastInspection?`<div class="sec"><h3>Last inspection</h3><div class="kv">
+        <div class="k">When</div><div>${esc(d.lastInspection['Inspected At'])}</div>
+        <div class="k">Inspector</div><div>${esc(d.lastInspection.Inspector)}</div>
+        <div class="k">Result</div><div>${d.lastInspection.Passed==='Yes'?'<span class="badge b-green">Passed</span>':'<span class="badge b-red">Issues</span>'} ${esc(d.lastInspection['Issues Found']||'')}</div>
+      </div></div>`:''}
+      <div class="mini">QR: ${esc(g('QR Code'))}</div>`;
+  }catch(e){document.getElementById('dr-body').innerHTML=`<div class="empty">Could not load: ${esc(e.message)}</div>`}
+}
+
+/* ══════ MAINTENANCE ══════ */
+async function loadMaint(dir){
+  await listForm({dir,form:'maintenance-orders',ps:PS.maint,tableId:'t-maint',pagerId:'p-maint',fn:'loadMaint',
+    filters:[['Franchise',FR],['Status',document.getElementById('m-status').value],
+      ['Maintenance Type',document.getElementById('m-type').value],['Priority',document.getElementById('m-pri').value]],
+    empty:'No work orders match these filters.',
+    head:`<thead><tr><th>Work order</th><th>Asset</th><th>Type</th><th>Priority</th><th>Opened</th><th>Assigned</th><th class="right">Cost</th><th>Blocks</th><th>Status</th></tr></thead>`,
+    row:s=>`<tr onclick="openAsset('${esc(v(s,'Asset Tag'))}')">
+      <td><strong>${esc(v(s,'Work Order ID'))}</strong></td>
+      <td>${esc(v(s,'Asset'))}<div class="mini">${esc(v(s,'Location'))}</div></td>
+      <td>${esc(v(s,'Maintenance Type'))}</td><td>${sBadge(v(s,'Priority'))}</td>
+      <td>${esc(v(s,'Opened Date'))}</td><td>${esc(v(s,'Assigned To'))}</td>
+      <td class="right">${money(v(s,'Total Cost'))}</td>
+      <td>${v(s,'Blocks Reservations')==='Yes'?'<span class="badge b-red">blocks</span>':'<span class="muted">—</span>'}</td>
+      <td>${sBadge(v(s,'Status'))}</td></tr>`});
+}
+
+/* ══════ DAMAGE ══════ */
+async function loadDamage(dir){
+  await listForm({dir,form:'damage-reports',ps:PS.damage,tableId:'t-damage',pagerId:'p-damage',fn:'loadDamage',
+    filters:[['Franchise',FR],['Severity',document.getElementById('d-sev').value],['Status',document.getElementById('d-status').value]],
+    empty:'No damage reports match these filters.',
+    head:`<thead><tr><th>ID</th><th>Asset</th><th>Area</th><th>Severity</th><th>Reported</th><th>Customer</th><th class="right">Est. cost</th><th>Service</th><th>Status</th></tr></thead>`,
+    row:s=>`<tr onclick="openRes('${esc(v(s,'Confirmation Code'))}')">
+      <td><strong>${esc(v(s,'Damage ID'))}</strong></td>
+      <td>${esc(v(s,'Asset'))}</td><td>${esc(v(s,'Damage Area'))}</td>
+      <td>${sBadge(v(s,'Severity'))}</td><td>${esc(v(s,'Reported At'))}</td>
+      <td>${esc(v(s,'Customer'))}<div class="mini">${v(s,'Customer Responsible')==='Yes'?'customer responsible':''}</div></td>
+      <td class="right">${money(v(s,'Estimated Cost'))}</td>
+      <td>${v(s,'Out Of Service')==='Yes'?'<span class="badge b-red">out of service</span>':'<span class="muted">—</span>'}</td>
+      <td>${sBadge(v(s,'Status'))}</td></tr>`});
+}
+
+/* ══════ ADVISOR ══════ */
+async function loadAdvice(){
+  const el=document.getElementById('advice-list');
+  const n=bump('advice');
+  el.innerHTML='<div class="loading"><span class="spin"></span> Reading your bookings, fleet and service queue…</div>';
+  try{
+    const d=await appApi('/api/bbw/ops/advice?franchise='+encodeURIComponent(FR));
+    if(!current('advice',n))return;
+    el.innerHTML=(d.advice||[]).map(a=>`
+      <div class="advice ${a.severity}">
+        <div class="k">${esc(a.kind)}</div>
+        <div class="t">${esc(a.title)}</div>
+        <div class="d">${esc(a.detail)}</div>
+        <div class="a">→ ${esc(a.action)}</div>
+      </div>`).join('')||'<div class="empty">Nothing stands out right now.</div>';
+    document.getElementById('t-peaks').innerHTML=
+      `<thead><tr><th>Date</th><th>Equipment</th><th class="right">Booked</th><th class="right">Fleet</th><th class="right">Committed</th></tr></thead><tbody>`
+      +((d.peaks||[]).map(p=>`<tr><td><strong>${esc(p.date)}</strong></td><td>${esc(p.category)}</td>
+        <td class="right">${p.booked}</td><td class="right">${p.fleet}</td>
+        <td class="right"><div class="barline" style="display:inline-block;width:80px"><i style="width:${Math.min(100,p.pct)}%;background:${p.pct>=100?'var(--red)':'var(--sun)'}"></i></div> <strong>${p.pct}%</strong></td></tr>`).join('')
+        ||'<tr><td colspan="5" class="empty">No saturation on upcoming weekends.</td></tr>')+`</tbody>`;
+  }catch(e){el.innerHTML=`<div class="empty">Could not load advisor: ${esc(e.message)}</div>`}
+}
+
+/* ══════ GLOBAL SEARCH ══════ */
+let gTimer=null;
+function gsearch(){
+  clearTimeout(gTimer);
+  const q=document.getElementById('gq').value.trim();
+  const box=document.getElementById('gres');
+  if(q.length<2){box.classList.remove('open');return}
+  gTimer=setTimeout(async()=>{
+    try{
+      const d=await appApi('/api/bbw/search?q='+encodeURIComponent(q));
+      box.innerHTML=(d.results||[]).map(r=>`
+        <div class="row" onclick="gopen('${esc(r.kind)}','${esc(r.ref)}')">
+          <div class="k">${esc(r.kind)}</div><div class="t">${esc(r.title)}</div><div class="d">${esc(r.detail)}</div>
+        </div>`).join('')||'<div class="row"><div class="d">No matches.</div></div>';
+      box.classList.add('open');
+    }catch(e){box.innerHTML=`<div class="row"><div class="d">Search failed: ${esc(e.message)}</div></div>`;box.classList.add('open')}
+  },260);
+}
+function gopen(kind,ref){
+  document.getElementById('gres').classList.remove('open');
+  if(kind==='Reservation')openRes(ref);
+  else if(kind==='Asset')openAsset(ref);
+  else toast(`${kind}: ${ref}`);
+}
+</script>
+</body>
+</html>

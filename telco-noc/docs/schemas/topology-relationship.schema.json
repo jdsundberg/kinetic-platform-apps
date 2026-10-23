@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/relationships.schema.json",
+  "title": "Topology relationship (time-aware)",
+  "type": "object",
+  "properties": {
+    "Tenant ID": {
+      "type": "string",
+      "description": "Owning tenant. Leading part of every index; enforced by KSL policy + server scoping."
+    },
+    "Relationship ID": {
+      "type": "string"
+    },
+    "From ID": {
+      "type": "string",
+      "description": "Dependent resource OR service instance ID"
+    },
+    "From Kind": {
+      "type": "string"
+    },
+    "To ID": {
+      "type": "string",
+      "description": "Supporting resource"
+    },
+    "Relationship Type": {
+      "type": "string",
+      "enum": [
+        "carried_by",
+        "terminates_on",
+        "depends_on",
+        "backhauled_by",
+        "hosted_on",
+        "part_of",
+        "powered_by"
+      ]
+    },
+    "Redundancy Group": {
+      "type": "string",
+      "description": "Edges from the same From ID sharing a group are OR (any one suffices). Empty = mandatory (AND)."
+    },
+    "Protection Role": {
+      "type": "string",
+      "enum": [
+        "Working",
+        "Protect",
+        "None"
+      ]
+    },
+    "Valid From": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Valid To": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Retired",
+        "Disputed"
+      ]
+    },
+    "Last Verified At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Source System": {
+      "type": "string",
+      "description": "System of record that asserted this record"
+    },
+    "External IDs": {
+      "type": "string",
+      "description": "Map of source system → that system's identifier"
+    },
+    "Last Seen At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Confidence": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    }
+  },
+  "required": [
+    "Tenant ID",
+    "Relationship ID",
+    "From ID",
+    "From Kind",
+    "To ID",
+    "Relationship Type",
+    "Valid From",
+    "Last Verified At"
+  ],
+  "additionalProperties": false,
+  "description": "Kinetic submission values for form relationships (all values are strings on the wire). Schema version 1.0."
+}

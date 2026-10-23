@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corporate Brain</title>
+<style>
+:root{
+  --blue:#211B3F;        /* deep ink — topbar/headers */
+  --blue-light:#2E2657;
+  --orange:#5B3FD1;      /* accent/CTA */
+  --orange-light:#6F55E0;
+  --kinetic:#F36C24;
+  --green:#2E7D32; --red:#C62828; --yellow:#B45309;
+  --gray:#5F6368; --light:#F8F9FA; --border:#E8EAED; --bg:#F3F2F8; --white:#fff;
+  --shadow:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 24px rgba(20,10,60,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:#202124;font-size:14px}
+a{color:var(--orange);text-decoration:none}
+a:hover{text-decoration:underline}
+/* ── login ── */
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#120E26 0%,#211B3F 55%,#5B3FD1 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:400px;max-width:92vw;box-shadow:var(--shadow-lg)}
+.login-box .brand{font-size:24px;font-weight:800;color:var(--blue);text-align:center}
+.login-box .brand span{color:var(--orange)}
+.login-box .accent{width:40px;height:3px;background:var(--kinetic);margin:12px auto 20px;border-radius:2px}
+.login-box .sub{text-align:center;color:var(--gray);font-size:12px;margin-bottom:22px}
+.login-box label{display:block;font-size:12px;color:var(--gray);margin:12px 0 4px;font-weight:600}
+.login-box input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.login-box button{width:100%;margin-top:20px;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:12px;min-height:14px}
+/* ── topbar ── */
+#app{display:none}
+.topbar{background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 20px;height:56px;position:sticky;top:0;z-index:100;gap:12px}
+.topbar .logo{font-weight:800;font-size:17px;white-space:nowrap;margin-right:8px;cursor:pointer}
+.topbar .logo span{color:#B9A9FF}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto}
+.nav-tabs button{background:none;border:none;color:rgba(255,255,255,.75);padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;position:relative}
+.nav-tabs button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-tabs button.active{background:var(--orange);color:#fff}
+.nav-tabs .count{display:inline-block;background:var(--kinetic);color:#fff;border-radius:9px;font-size:10px;padding:0 6px;margin-left:4px;line-height:16px}
+.topbar .spacer{flex:1}
+.gsearch{display:flex;align-items:center}
+.gsearch input{width:220px;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px}
+.gsearch input::placeholder{color:rgba(255,255,255,.55)}
+.user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.user-info strong{color:#fff}
+.logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+/* ── layout ── */
+.wrap{max-width:1280px;margin:0 auto;padding:22px}
+.console{display:none}
+.console.active{display:block}
+h1{font-size:20px;color:var(--blue);margin-bottom:4px}
+.page-sub{color:var(--gray);font-size:13px;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:15px;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .muted{font-weight:500;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr}.gsearch input{width:130px}}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--orange);cursor:pointer}
+.kpi.green{border-left-color:var(--green)}.kpi.amber{border-left-color:#D97706}.kpi.red{border-left-color:var(--red)}.kpi.ink{border-left-color:var(--blue)}
+.kpi .val{font-size:26px;font-weight:800;color:var(--blue);line-height:1.1}
+.kpi .label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;font-weight:600}
+.kpi .sub{font-size:11px;color:var(--gray);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;background:var(--light);color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr:hover{background:#faf9fe}
+.table-wrap{overflow-x:auto}
+.clickable tbody tr{cursor:pointer}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,.controls input,.inp{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;font-family:inherit}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(91,63,209,.12)}
+.spacer-h{flex:1}
+.btn-primary{background:var(--orange);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-primary:hover{background:var(--orange-light)}
+.btn-primary:disabled{background:#B3A8E0;cursor:not-allowed}
+.btn-secondary{background:var(--light);color:var(--blue);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-secondary:hover{background:#eceef0}
+.btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-ok{background:var(--green);color:#fff;border:none}
+.btn-bad{background:var(--red);color:#fff;border:none}
+.btn-warn{background:#D97706;color:#fff;border:none}
+.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;color:var(--gray);font-size:13px}
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-verified,.b-completed,.b-extracted,.b-customer{background:#E8F5E9;color:#2E7D32}
+.b-proposed,.b-queued,.b-retrieved{background:#FFF7E0;color:#8D5B00}
+.b-disputed,.b-failed,.b-blocked{background:#FDECEA;color:#C62828}
+.b-rejected,.b-cancelled,.b-source-deleted{background:#F1F3F4;color:#5F6368;text-decoration:line-through}
+.b-superseded,.b-paused{background:#F1F3F4;color:#5F6368}
+.b-needs-research,.b-running,.b-changed{background:#E8EAFD;color:#3730A3}
+.b-restricted,.b-permission-restricted{background:#FCE7F3;color:#9D174D}
+.b-unknown,.b-default{background:#F1F3F4;color:#5F6368}
+.b-former-customer{background:#FFF3E0;color:#B45309}
+.b-prospect{background:#E3F2FD;color:#1565C0}
+.kind{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;background:#EEEAFB;color:#4C35B5}
+.pill{display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--gray);white-space:nowrap}
+.cite{display:inline-block;background:#F3F0FF;border:1px solid #DDD5FF;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:600;color:#4C35B5;margin:2px 4px 0 0;cursor:pointer;font-family:SF Mono,Monaco,Consolas,monospace}
+.cite:hover{background:#E6E0FF}
+.empty{padding:28px;text-align:center;color:var(--gray);font-size:13px}
+.muted{color:var(--gray)}
+.small{font-size:12px}
+.mono{font-family:SF Mono,Monaco,Consolas,monospace;font-size:12px}
+.notice{border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;border:1px solid}
+.notice.info{background:#F3F0FF;border-color:#DDD5FF;color:#3B2A8F}
+.notice.warn{background:#FFF8E6;border-color:#F5DFA5;color:#7A4E00}
+.notice.bad{background:#FDECEA;border-color:#F5C2BE;color:#8E1B1B}
+.bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.crumbs{font-size:12px;color:var(--gray);margin-bottom:10px}
+.crumbs a{cursor:pointer}
+.dl{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;font-size:13px}
+.dl dt{color:var(--gray);font-weight:600}
+.dl dd{word-break:break-word}
+/* timeline */
+.tl{position:relative;padding-left:22px}
+.tl:before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:2px;background:#DDD5FF}
+.tl-item{position:relative;margin-bottom:14px;cursor:pointer}
+.tl-item:before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--orange)}
+.tl-item.approx:before{border-style:dashed;border-color:#9B8AE6}
+.tl-item.unknown:before{border-color:#C4C4C4;border-style:dotted}
+.tl-item.verified:before{background:var(--green);border-color:var(--green)}
+.tl-date{font-size:12px;font-weight:700;color:var(--blue)}
+.tl-title{font-size:14px;margin:2px 0}
+/* historian */
+.ask-box{display:flex;gap:10px}
+.ask-box textarea{flex:1;min-height:58px;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;resize:vertical}
+.answer-sec{margin-top:14px}
+.answer-sec h3{font-size:13px;color:var(--blue);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.finding{border:1px solid var(--border);border-left:4px solid #C4C4C4;border-radius:8px;padding:9px 12px;margin-bottom:8px;background:#fff}
+.finding.verified{border-left-color:var(--green)}
+.finding.proposed,.finding.needs-research{border-left-color:#D97706}
+.finding.disputed{border-left-color:var(--red)}
+.narrative{white-space:pre-wrap;background:#FBFAFF;border:1px dashed #B9A9FF;border-radius:10px;padding:14px;font-size:13px;line-height:1.55}
+.chips button{margin:4px 6px 0 0}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(20,15,45,.45);display:none;align-items:flex-start;justify-content:center;z-index:300;overflow-y:auto;padding:40px 12px}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:680px;max-width:100%;box-shadow:var(--shadow-lg)}
+.modal header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.modal header h3{flex:1;color:var(--blue);font-size:16px}
+.modal .body{padding:18px 20px;max-height:70vh;overflow-y:auto}
+.modal footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.modal label{display:block;font-size:12px;color:var(--gray);font-weight:600;margin:10px 0 4px}
+.modal input,.modal textarea,.modal select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit}
+.modal textarea{min-height:70px}
+.modal .help{font-size:11px;color:var(--gray);margin-top:3px}
+.modal .err{color:var(--red);font-size:12px;flex:1}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--blue);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:13px;z-index:400;display:none;max-width:420px}
+.toast.bad{background:var(--red)}
+.conn{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.conn:last-child{border-bottom:none}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex:none}
+.dot.ok{background:var(--green)}.dot.warn{background:#D97706}.dot.off{background:#C4C4C4}
+.statement{white-space:pre-wrap;line-height:1.5}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-top:8px}
+.legend span:before{content:'';display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="brand">Corporate <span>Brain</span></div>
+    <div class="accent"></div>
+    <div class="sub">Kinetic Data's institutional memory — sign in with your Kinetic account</div>
+    <label>Server URL</label>
+    <input id="li-url" value="https://ai-labs.kinopsdev.io">
+    <label>Username</label>
+    <input id="li-user" autocomplete="username">
+    <label>Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="li-err"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="logo" onclick="switchTab('dash')">Corporate <span>Brain</span></div>
+    <div class="nav-tabs" id="nav"></div>
+    <div class="spacer"></div>
+    <form class="gsearch" onsubmit="event.preventDefault();runSearch(document.getElementById('gq').value)"><input id="gq" placeholder="Search companies, people, knowledge…"></form>
+    <div class="user-info"><strong id="user-display"></strong><span id="role-display" class="pill" style="background:rgba(255,255,255,.12);border-color:transparent;color:#fff"></span><button class="logout-btn" onclick="doLogout()">Sign out</button></div>
+  </div>
+  <div class="wrap">
+    <div id="c-dash" class="console"></div>
+    <div id="c-companies" class="console"></div>
+    <div id="c-people" class="console"></div>
+    <div id="c-timeline" class="console"></div>
+    <div id="c-knowledge" class="console"></div>
+    <div id="c-sources" class="console"></div>
+    <div id="c-review" class="console"></div>
+    <div id="c-historian" class="console"></div>
+    <div id="c-ingest" class="console"></div>
+    <div id="c-search" class="console"></div>
+    <div id="c-detail" class="console"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── state ──
+let API={server:'',auth:'',user:'',displayName:''};
+let ME=null, MODEL=null;
+const PREFIX='/api/corporate-brain';
+const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['historian','Historian'],['ingest','Ingestion']];
+const pages={};          // per-list pagination: {tokens:[...], idx}
+let current='dash';
+const history_=[];       // detail breadcrumbs
+
+// ── helpers ──
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
+function jsArg(x){return esc(JSON.stringify(String(x==null?'':x)))}
+function v(sub,f){return (sub&&sub[f])||''}
+function list(x){if(Array.isArray(x))return x;if(!x)return[];try{const a=JSON.parse(x);return Array.isArray(a)?a:[a]}catch(e){return String(x).split(/[,\n]/).map(s=>s.trim()).filter(Boolean)}}
+function badge(s){const c='b-'+String(s||'default').toLowerCase().replace(/\s+/g,'-');return `<span class="badge ${esc(c)}">${esc(s||'—')}</span>`}
+function kind(s){return s?`<span class="kind">${esc(s)}</span>`:''}
+function n(x){return x&&typeof x==='object'?(x.n+(x.capped?'+':'')):(x||0)}
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(d,prec){
+  if(!d)return '<span class="muted">date unknown</span>';
+  const p=String(d).split('-');
+  let t=d;
+  if(prec==='year'||p.length===1)t=p[0];
+  else if(prec==='month'||p.length===2)t=MON[+p[1]-1]+' '+p[0];
+  else t=String(d).slice(0,10);
+  if(prec==='approximate')t='≈ '+t;
+  return esc(t)+(prec&&prec!=='exact'?` <span class="pill">${esc(prec)}</span>`:'');
+}
+function ago(iso){if(!iso)return'';const s=(Date.now()-new Date(iso))/1000;if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'}
+function toast(msg,bad){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(bad?' bad':'');t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',4200)}
+async function cb(path,opts={}){
+  const headers={Authorization:'Basic '+API.auth,'Content-Type':'application/json',...(opts.headers||{})};
+  if(API.server)headers['X-Kinetic-Server']=API.server;
+  const r=await fetch(PREFIX+path,{...opts,headers,body:opts.body&&typeof opts.body!=='string'?JSON.stringify(opts.body):opts.body});
+  const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(e){d={error:t.slice(0,200)}}
+  if(!r.ok){const e=new Error(d.error||`${r.status}`);e.status=r.status;throw e}
+  return d;
+}
+const box=(id)=>document.getElementById(id);
+function loading(id){box(id).innerHTML='<div class="empty">Loading…</div>'}
+function failBox(id,e){box(id).innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
+function cites(arr){return (arr||[]).filter(c=>c&&c.id).map(c=>`<span class="cite" title="${esc(c.title||c.id)}" onclick="event.stopPropagation();openRef(${jsArg(c.type)},${jsArg(c.id)})">${esc(c.id)}</span>`).join('')}
+function idRef(type,id,label){return id?`<a onclick="event.stopPropagation();openRef(${jsArg(type)},${jsArg(id)})">${esc(label||id)}</a>`:'<span class="muted">—</span>'}
+
+// ── auth ──
+async function doLogin(){
+  const server=box('li-url').value.trim().replace(/\/$/,'');
+  const user=box('li-user').value.trim(), pass=box('li-pass').value;
+  API={server,auth:btoa(user+':'+pass),user,displayName:user};
+  try{await enterApp()}catch(e){box('li-err').textContent=e.status===401?'Invalid username or password':e.message}
+}
+window.doLogout=function(){sessionStorage.removeItem('kinetic_session');sessionStorage.removeItem('cb_session');location.reload()};
+async function enterApp(){
+  ME=await cb('/me');
+  if(!ME.roles.member){box('li-err').textContent='Corporate Brain is private. Ask an administrator to add you to Corporate Brain::Members.';return}
+  try{sessionStorage.setItem('cb_session',JSON.stringify(API))}catch(e){}
+  MODEL=await fetch('app.json').then(r=>r.json()).catch(()=>null);
+  box('login-screen').style.display='none';box('app').style.display='block';
+  box('user-display').textContent=ME.displayName||ME.username;
+  box('role-display').textContent=ME.roles.admin?'Admin':ME.roles.reviewer?'Reviewer':'Member';
+  renderNav();
+  const h=location.hash.slice(1);
+  if(h.startsWith('ref/')){const [,t,i]=h.split('/');openRef(t,decodeURIComponent(i))}
+  else switchTab(TABS.some(t=>t[0]===h)?h:'dash');
+}
+function renderNav(count){
+  box('nav').innerHTML=TABS.map(([id,label])=>`<button id="tab-${id}" class="${id===current?'active':''}" onclick="switchTab('${id}')">${label}${id==='review'&&count?`<span class="count">${count}</span>`:''}</button>`).join('');
+}
+function switchTab(tab){
+  current=tab;history_.length=0;
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));
+  box('c-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
+  if(TABS.some(t=>t[0]===tab))history.replaceState(null,'','#'+tab);
+  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
+}
+
+// ── pagination (≤25 per page, pageToken stack) ──
+function pg(key){return pages[key]||(pages[key]={tokens:[''],idx:0})}
+function resetPg(key){pages[key]={tokens:[''],idx:0}}
+function pager(key,next,reload){
+  const p=pg(key);p.tokens[p.idx+1]=next||null;
+  return `<div class="pager"><span>Page ${p.idx+1}</span><button class="btn-secondary btn-sm" ${p.idx===0?'disabled':''} onclick="pages['${key}'].idx--;${reload}()">‹ Prev</button><button class="btn-secondary btn-sm" ${next?'':'disabled'} onclick="pages['${key}'].idx++;${reload}()">Next ›</button></div>`;
+}
+const tok=(key)=>encodeURIComponent(pg(key).tokens[pg(key).idx]||'');
+
+// ── dashboard ──
+async function loadDash(fresh){
+  loading('c-dash');
+  try{
+    const d=await cb('/stats'+(fresh?'?fresh=1':''));
+    const c=d.counts,s=d.byStatus;
+    const total=+n(c['knowledge-entries'])||0, ver=s.verified?.n||0, unv=total-ver;
+    renderNav(s.proposed?.n||0);
+    const seg=(val,col)=>total?`<i style="width:${val/total*100}%;background:${col}"></i>`:'';
+    box('c-dash').innerHTML=`
+      <h1>Dashboard</h1><div class="page-sub">What Corporate Brain knows, how much of it is verified, and what is waiting for review. ${d.cached?'<span class="muted small">(cached · <a onclick="loadDash(true)">refresh</a>)</span>':''}</div>
+      <div class="kpi-row">
+        <div class="kpi ink" onclick="switchTab('companies')"><div class="val">${n(c.companies)}</div><div class="label">Companies</div></div>
+        <div class="kpi ink" onclick="switchTab('people')"><div class="val">${n(c.people)}</div><div class="label">People</div></div>
+        <div class="kpi" onclick="switchTab('knowledge')"><div class="val">${n(c['knowledge-entries'])}</div><div class="label">Knowledge entries</div></div>
+        <div class="kpi green" onclick="knowledgeFilter('verified')"><div class="val">${ver}</div><div class="label">Verified</div><div class="sub">${total?Math.round(ver/total*100):0}% of knowledge</div></div>
+        <div class="kpi amber" onclick="switchTab('review')"><div class="val">${n(s.proposed)}</div><div class="label">Awaiting review</div></div>
+        <div class="kpi red" onclick="knowledgeFilter('disputed')"><div class="val">${n(s.disputed)}</div><div class="label">Disputed</div></div>
+        <div class="kpi ink" onclick="switchTab('sources')"><div class="val">${n(c.sources)}</div><div class="label">Source references</div></div>
+        <div class="kpi ink" onclick="switchTab('timeline')"><div class="val">${n(c['historical-events'])}</div><div class="label">Historical events</div></div>
+      </div>
+      <div class="card"><h2>Verified vs unverified knowledge</h2>
+        <div class="bar">${seg(ver,'#2E7D32')}${seg(s.proposed?.n||0,'#D97706')}${seg(s['needs-research']?.n||0,'#6366F1')}${seg(s.disputed?.n||0,'#C62828')}${seg((s.rejected?.n||0)+(s.superseded?.n||0),'#BDBDBD')}</div>
+        <div class="legend"><span style="--c:#2E7D32">Verified ${ver}</span><span style="--c:#D97706">Proposed ${n(s.proposed)}</span><span style="--c:#6366F1">Needs research ${n(s['needs-research'])}</span><span style="--c:#C62828">Disputed ${n(s.disputed)}</span><span style="--c:#BDBDBD">Rejected / superseded ${(s.rejected?.n||0)+(s.superseded?.n||0)}</span></div>
+        <div class="small muted" style="margin-top:8px">${unv} of ${total} entries are not verified. Only a human reviewer can verify; AI confidence never does.</div>
+      </div>
+      <div class="two-col">
+        <div class="card"><h2>Items requiring review <span class="muted">newest proposals</span></h2>${d.review.length?`<table class="clickable"><tbody>${d.review.map(k=>`<tr onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})"><td>${kind(k['Knowledge Type'])} ${esc(k.Title)}<div class="small muted">${esc(k['Extraction Method'])} · ${ago(k._createdAt)}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Nothing waiting for review.</div>'}</div>
+        <div class="card"><h2>Recently discovered events</h2>${d.recentEvents.length?`<table class="clickable"><tbody>${d.recentEvents.map(e=>`<tr onclick="openRef('event',${jsArg(e['Event ID'])})"><td style="width:130px">${fmtDate(e['Event Date'],e['Date Precision'])}</td><td>${esc(e.Title)}</td><td>${badge(e['Verification Status'])}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No events yet.</div>'}</div>
+      </div>
+      <div class="two-col">
+        <div class="card"><h2>Recent research &amp; ingestion jobs</h2>${d.recentJobs.length?`<table class="clickable"><tbody>${d.recentJobs.map(j=>`<tr onclick="openJob(${jsArg(j['Job ID'])})"><td>${esc(j.Title)}<div class="small muted">${esc(j['Job Type'])} · ${esc(j.Connector||'—')} · ${ago(j._createdAt)}</div></td><td>${badge(j.Status)}</td><td class="small muted">${esc(j['Items Processed']||0)} processed</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No jobs yet.</div>'}</div>
+        <div class="card"><h2>Data ingestion status</h2>${d.connectors.map(cn=>`<div class="conn"><div class="dot ${cn.configured?(cn.mode==='pull'||cn.pull?'ok':'warn'):'off'}"></div><div style="flex:1"><strong>${esc(cn.name)}</strong> <span class="pill">${esc(cn.mode==='pull'?'server pull':'agent / manual push')}</span> <span class="small muted">${n(d.bySystem[cn.id])} sources</span><div class="small muted">${esc(cn.detail)}</div></div></div>`).join('')}</div>
+      </div>`;
+  }catch(e){failBox('c-dash',e)}
+}
+function knowledgeFilter(st){switchTab('knowledge');box('kf-status').value=st;resetPg('kn');loadKnowledgeList()}
+
+// ── generic editable modal (fields from app.json) ──
+const SYSTEM_FIELDS=new Set(['Name Key','Record Status','Created Via','Source IDs','Merged Into','Review History','Verified By','Verified At','Last Reviewed At','Superseded By','Content Hash','Ingest Job ID','Checkpoint','Items Discovered','Items Processed','Items Skipped','Items Failed','Errors','Attempts','Started At','Completed At']);
+const CHOICES={
+  'Customer Status':['Unknown','Prospect','Customer','Former Customer','Partner','Vendor','Internal'],
+  'Date Precision':['exact','month','year','approximate','unknown'],
+  'Event Type':['first-contact','meeting','proposal','contract','implementation','commercial','support','renewal','product','organizational','other'],
+  'Verification Status':['proposed','verified','disputed','rejected','superseded'],
+  'Knowledge Type':['fact','interpretation','narrative','lesson','claim','commitment','recollection','summary'],
+  'Kinetic Relationship':['','Customer contact','Partner contact','Prospect contact','Employee','Former employee','Advisor','Vendor contact','Other'],
+  'Project Status':['','Planned','Active','Completed','Cancelled','Unknown'],
+  'Product Status':['','Active','Retired','Renamed','Unknown'],
+  'Channel':['email','meeting','call','chat','letter','other'],
+};
+const REF_FIELDS={'Company ID':'company','Primary Company ID':'company','Project ID':'project','Product ID':'product','Subject ID':null};
+function formDef(slug){return MODEL?.forms.find(f=>f.slug===slug)}
+function openEdit(form,rec,onSaved){
+  const def=formDef(form); if(!def){toast('Form definition not loaded',true);return}
+  const idField=def.fields[0].name;
+  const fields=def.fields.filter(f=>!SYSTEM_FIELDS.has(f.name)&&f.name!==idField&&!(form==='knowledge-entries'&&['Review Status','Supporting Source IDs','Contradicts','Supersedes','Job ID','Model Confidence','Extraction Method'].includes(f.name)));
+  const isNew=!rec;
+  const locked=form==='historical-events'&&rec&&rec['Verification Status']==='verified';
+  const field=(f)=>{
+    const val=rec?rec[f.name]||'':(f.name==='Company ID'&&window._ctxCompany?window._ctxCompany:'');
+    const id='fe-'+f.name.replace(/\W+/g,'_');
+    let input;
+    if(CHOICES[f.name]&&!(f.name==='Verification Status'&&!ME.roles.reviewer))input=`<select id="${id}">${CHOICES[f.name].map(o=>`<option ${o===val?'selected':''} value="${esc(o)}">${esc(o||'—')}</option>`).join('')}</select>`;
+    else if(f.name==='Verification Status')input=`<input id="${id}" value="${esc(val||'proposed')}" disabled>`;
+    else if(f.rows)input=`<textarea id="${id}">${esc(val)}</textarea>`;
+    else input=`<input id="${id}" value="${esc(val)}">`;
+    const help=f.name.endsWith('Date')?'YYYY, YYYY-MM or YYYY-MM-DD — record only what the evidence shows':REF_FIELDS[f.name]!==undefined?'Stable ID, e.g. CO-…':f.name==='Customer Status Basis'?'Required when status changes: the evidence or reason':'';
+    return `<label>${esc(f.name)}${f.required?' *':''}</label>${input}${help?`<div class="help">${esc(help)}</div>`:''}`;
+  };
+  box('modal').innerHTML=`<header><h3>${isNew?'Add':'Edit'} ${esc(def.name.replace(/s$/,''))}</h3>${rec?`<span class="mono muted">${esc(rec[idField])}</span>`:''}</header>
+    <div class="body">${locked?'<div class="notice warn">This event is verified. Verified history is not overwritten — add a new event or knowledge entry and supersede this one.</div>':''}${fields.map(field).join('')}</div>
+    <footer><span class="err" id="fe-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="fe-save" ${locked?'disabled':''}>Save</button></footer>`;
+  openModal();
+  box('fe-save').onclick=async()=>{
+    const values={};for(const f of fields){const el=box('fe-'+f.name.replace(/\W+/g,'_'));if(el&&!el.disabled)values[f.name]=el.value.trim()}
+    for(const f of fields)if(f.required&&!values[f.name]){box('fe-err').textContent=f.name+' is required';return}
+    box('fe-save').disabled=true;
+    try{
+      const r=isNew?await cb('/entities/'+form,{method:'POST',body:{values}}):await cb('/entities/'+form+'/'+rec._id,{method:'PUT',body:{values}});
+      closeModal();toast(isNew?'Saved':'Updated');onSaved&&onSaved(r.item);
+    }catch(e){box('fe-err').textContent=e.message;box('fe-save').disabled=false}
+  };
+}
+function openModal(){box('modal-bg').classList.add('open')}
+function closeModal(){box('modal-bg').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// ── companies ──
+function loadCompanies(){
+  if(!box('cf-q')){
+    box('c-companies').innerHTML=`<h1>Company Explorer</h1><div class="page-sub">Customers, prospects, partners and vendors. Customer status is only set from evidence — "Unknown" is a valid answer.</div>
+    <div class="card"><div class="controls"><input id="cf-q" placeholder="Name starts with…" oninput="clearTimeout(this._t);this._t=setTimeout(()=>{resetPg('co');loadCompanyList()},300)">
+    <select id="cf-status" onchange="resetPg('co');loadCompanyList()"><option value="">All statuses</option>${CHOICES['Customer Status'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <div class="spacer-h"></div><button class="btn-primary" onclick="openEdit('companies',null,()=>loadCompanyList())">+ Add company</button></div><div id="co-list"></div></div>`;
+  }
+  loadCompanyList();
+}
+async function loadCompanyList(){
+  loading('co-list');
+  try{
+    const q=box('cf-q').value.trim(),st=box('cf-status').value;
+    const r=await cb(`/entities/companies?prefix=${encodeURIComponent(q)}&status=${encodeURIComponent(st)}&pageToken=${tok('co')}`);
+    box('co-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Company</th><th>Customer status</th><th>Industry</th><th>Country</th><th>First known</th><th></th></tr></thead><tbody>${r.items.map(c=>`<tr onclick="openRef('company',${jsArg(c['Company ID'])})"><td><strong>${esc(c.Name)}</strong><div class="small muted mono">${esc(c['Company ID'])}</div></td><td>${badge(c['Customer Status'])}</td><td>${esc(c.Industry)}</td><td>${esc(c.Country)}</td><td>${c['First Known Date']?fmtDate(c['First Known Date']):'<span class="muted">—</span>'}</td><td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editById('companies',${jsArg(c._id)},loadCompanyList)">Edit</button></td></tr>`).join('')}</tbody></table></div>${pager('co',r.nextPageToken,'loadCompanyList')}`:'<div class="empty">No companies match. Add one, or ingest evidence to discover them.</div>';
+  }catch(e){failBox('co-list',e)}
+}
+async function editById(form,subId,after){try{const r=await cb('/entities/'+form+'/'+subId);openEdit(form,r.item,after)}catch(e){toast(e.message,true)}}
+
+async function showCompany(id){
+  showDetail(`<div class="empty">Loading company…</div>`);
+  try{
+    const d=await cb('/companies/'+encodeURIComponent(id));
+    const c=d.company; window._ctxCompany=c['Company ID'];
+    const kn=d.knowledge, byT=(t)=>kn.filter(k=>k['Knowledge Type']===t);
+    const narratives=byT('narrative'), lessons=byT('lesson');
+    const contracts=d.timeline.filter(e=>['contract','commercial','renewal','proposal'].includes(e['Event Type']));
+    const kTable=(arr,empty)=>arr.length?`<table class="clickable"><tbody>${arr.map(k=>`<tr onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})"><td>${kind(k['Knowledge Type'])} ${esc(k.Title)}<div class="small muted">${list(k['Supporting Source IDs']).length} source(s) · ${esc(k['Extraction Method'])}</div></td><td style="width:120px">${badge(k['Review Status'])}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${empty}</div>`;
+    showDetail(`
+      <div style="display:flex;align-items:flex-start;gap:12px"><div style="flex:1"><h1>${esc(c.Name)}</h1><div class="page-sub"><span class="mono">${esc(c['Company ID'])}</span> · ${badge(c['Customer Status'])} ${c.Aliases?' · aka '+esc(c.Aliases):''}</div></div>
+      <button class="btn-secondary" onclick="editById('companies',${jsArg(c._id)},()=>openRef('company',${jsArg(c['Company ID'])}))">Edit</button>
+      <button class="btn-secondary" onclick="openNote(${jsArg(c['Company ID'])})">+ Interview / note</button>
+      <button class="btn-primary" onclick="askAbout(${jsArg(c.Name)})">Ask the historian</button></div>
+      ${d.truncated?'<div class="notice warn">Some lists were capped for performance; open the individual tabs for complete paging.</div>':''}
+      <div class="three-col">
+        <div>
+          <div class="card"><h2>Overview</h2><dl class="dl">
+            <dt>Customer status</dt><dd>${badge(c['Customer Status'])} <span class="small muted">${esc(c['Customer Status Basis']||'')}</span></dd>
+            <dt>Industry</dt><dd>${esc(c.Industry)||'<span class="muted">—</span>'}</dd><dt>Country</dt><dd>${esc(c.Country)||'<span class="muted">—</span>'}</dd>
+            <dt>Domain</dt><dd>${esc(c.Domain)||'<span class="muted">—</span>'}</dd><dt>First known</dt><dd>${c['First Known Date']?fmtDate(c['First Known Date']):'<span class="muted">not established</span>'}</dd>
+            <dt>Description</dt><dd class="statement">${esc(c.Description)||'<span class="muted">—</span>'}</dd></dl></div>
+          <div class="card"><h2>Relationship timeline <span class="muted">${d.timeline.length} events</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openEdit('historical-events',null,()=>openRef('company',${jsArg(c['Company ID'])}))">+ Event</button></h2>${timelineHtml(d.timeline)}</div>
+          <div class="card"><h2>Historical narratives</h2>${kTable(narratives,'No narratives yet. Ask the historian, then save a reviewed narrative.')}</div>
+          <div class="card"><h2>All knowledge <span class="muted">${kn.length}</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openPropose({companyId:${jsArg(c['Company ID'])},subjectType:'company',subjectId:${jsArg(c['Company ID'])}})">+ Propose knowledge</button></h2>${kTable(kn.filter(k=>!['narrative','lesson'].includes(k['Knowledge Type'])),'No knowledge entries yet.')}</div>
+          <div class="card"><h2>Lessons learned</h2>${kTable(lessons,'No lessons recorded.')}</div>
+        </div>
+        <div>
+          <div class="card"><h2>Important contacts <span class="muted">${d.people.length}</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openEdit('people',null,()=>openRef('company',${jsArg(c['Company ID'])}))">+</button></h2>${d.people.length?`<table class="clickable"><tbody>${d.people.map(p=>`<tr onclick="openRef('person',${jsArg(p['Person ID'])})"><td><strong>${esc(p['Full Name'])}</strong><div class="small muted">${esc(p.Title||p.Email||'')}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No contacts recorded.</div>'}</div>
+          <div class="card"><h2>Contracts &amp; commercial milestones</h2>${contracts.length?contracts.map(e=>`<div style="margin-bottom:8px;cursor:pointer" onclick="openRef('event',${jsArg(e['Event ID'])})"><div class="small">${fmtDate(e['Event Date'],e['Date Precision'])} ${badge(e['Verification Status'])}</div>${esc(e.Title)}</div>`).join(''):'<div class="empty">None recorded. No financial values are shown unless a source establishes them.</div>'}</div>
+          <div class="card"><h2>Projects &amp; implementations</h2>${d.projects.length?d.projects.map(p=>`<div style="margin-bottom:6px"><strong>${esc(p.Name)}</strong> ${badge(p['Project Status']||'Unknown')}<div class="small muted">${fmtDate(p['Start Date'],p['Date Precision'])}</div></div>`).join(''):'<div class="empty">None recorded.</div>'}<button class="btn-secondary btn-sm" onclick="openEdit('projects',null,()=>openRef('company',${jsArg(c['Company ID'])}))">+ Project</button></div>
+          <div class="card"><h2>Products used</h2>${d.products.length?d.products.map(p=>`<span class="pill">${esc(p.Name)}</span> `).join(''):'<div class="empty">None linked.</div>'}</div>
+          <div class="card"><h2>Important communications</h2>${d.communications.length?d.communications.slice(0,12).map(m=>`<div style="margin-bottom:8px;cursor:pointer" onclick="openRef('source',${jsArg(m['Source ID'])})"><div class="small muted">${esc(m['Communication Date'])} · ${esc(m.Channel)}</div>${esc(m.Subject)}</div>`).join(''):'<div class="empty">None recorded.</div>'}</div>
+          <div class="card"><h2>Supporting sources <span class="muted">${d.sources.length}</span></h2>${d.sources.length?d.sources.map(s=>`<div style="margin-bottom:8px;cursor:pointer" onclick="openRef('source',${jsArg(s['Source ID'])})"><div class="small muted">${esc(s['Source System'])} · ${esc(s['Source Date'])} · ${badge(s['Processing Status'])}</div>${esc(s.Title)}</div>`).join(''):'<div class="empty">No evidence ingested yet.</div>'}</div>
+        </div>
+      </div>`,c.Name,'company',c['Company ID']);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}
+function timelineHtml(events){
+  if(!events.length)return '<div class="empty">No events recorded.</div>';
+  return `<div class="tl">${events.map(e=>{const pr=e['Date Precision']||'unknown';const cls=(e['Verification Status']==='verified'?'verified ':'')+(pr==='approximate'||pr==='year'||pr==='month'?'approx':pr==='unknown'||!e['Event Date']?'unknown':'');
+    return `<div class="tl-item ${cls}" onclick="openRef('event',${jsArg(e['Event ID'])})"><div class="tl-date">${fmtDate(e['Event Date'],pr)} ${kind(e['Event Type'])} ${badge(e['Verification Status']||'proposed')}</div><div class="tl-title">${esc(e.Title)}</div>${e.Description?`<div class="small muted">${esc(e.Description).slice(0,220)}</div>`:''}</div>`}).join('')}</div>
+    <div class="legend"><span style="--c:#2E7D32">verified</span><span style="--c:#5B3FD1">exact date</span><span style="--c:#9B8AE6">approximate / month / year</span><span style="--c:#C4C4C4">date unknown</span></div>`;
+}
+
+// ── people ──
+function loadPeople(){
+  if(!box('pf-q')){
+    box('c-people').innerHTML=`<h1>People Explorer</h1><div class="page-sub">Individuals and their history with Kinetic — drill into their organizations, communications and evidence.</div>
+    <div class="card"><div class="controls"><input id="pf-q" placeholder="Name starts with…" oninput="clearTimeout(this._t);this._t=setTimeout(()=>{resetPg('pe');loadPeopleList()},300)">
+    <input id="pf-co" placeholder="Company ID (optional)" onchange="resetPg('pe');loadPeopleList()" style="width:170px">
+    <div class="spacer-h"></div><button class="btn-primary" onclick="openEdit('people',null,()=>loadPeopleList())">+ Add person</button></div><div id="pe-list"></div></div>`;
+  }
+  loadPeopleList();
+}
+async function loadPeopleList(){
+  loading('pe-list');
+  try{
+    const r=await cb(`/entities/people?prefix=${encodeURIComponent(box('pf-q').value.trim())}&companyId=${encodeURIComponent(box('pf-co').value.trim())}&pageToken=${tok('pe')}`);
+    box('pe-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Name</th><th>Title</th><th>Organization</th><th>Relationship to Kinetic</th><th></th></tr></thead><tbody>${r.items.map(p=>`<tr onclick="openRef('person',${jsArg(p['Person ID'])})"><td><strong>${esc(p['Full Name'])}</strong><div class="small muted">${esc(p.Email)}</div></td><td>${esc(p.Title)}</td><td>${idRef('company',p['Primary Company ID'])}</td><td>${esc(p['Kinetic Relationship'])}</td><td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editById('people',${jsArg(p._id)},loadPeopleList)">Edit</button></td></tr>`).join('')}</tbody></table></div>${pager('pe',r.nextPageToken,'loadPeopleList')}`:'<div class="empty">No people match.</div>';
+  }catch(e){failBox('pe-list',e)}
+}
+async function showPerson(id){
+  showDetail('<div class="empty">Loading person…</div>');
+  try{
+    const d=await cb('/people/'+encodeURIComponent(id));const p=d.person;
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(p['Full Name'])}</h1><div class="page-sub"><span class="mono">${esc(p['Person ID'])}</span> · ${esc(p.Title||'')} ${p.Email?'· '+esc(p.Email):''}</div></div>
+      <button class="btn-secondary" onclick="editById('people',${jsArg(p._id)},()=>openRef('person',${jsArg(p['Person ID'])}))">Edit</button>
+      <button class="btn-secondary" onclick="openPropose({subjectType:'person',subjectId:${jsArg(p['Person ID'])},companyId:${jsArg(p['Primary Company ID'])}})">+ Propose knowledge</button></div>
+      <div class="three-col"><div>
+        <div class="card"><h2>Historical relationship with Kinetic</h2><dl class="dl"><dt>Relationship</dt><dd>${esc(p['Kinetic Relationship'])||'<span class="muted">not established</span>'}</dd><dt>Description</dt><dd class="statement">${esc(p.Description)||'<span class="muted">—</span>'}</dd></dl></div>
+        <div class="card"><h2>Communications <span class="muted">${d.communications.length}</span></h2>${d.communications.length?`<table class="clickable"><tbody>${d.communications.map(c=>`<tr onclick="openRef('source',${jsArg(c['Source ID'])})"><td style="width:110px" class="small">${esc(c['Communication Date'])}</td><td>${esc(c.Subject)}<div class="small muted">${esc(c.Channel)}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">None recorded.</div>'}</div>
+        <div class="card"><h2>Significant events</h2>${timelineHtml(d.events)}</div>
+        <div class="card"><h2>Knowledge</h2>${d.knowledge.length?d.knowledge.map(k=>`<div class="finding ${esc(k['Review Status'])}" style="cursor:pointer" onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})">${kind(k['Knowledge Type'])} ${badge(k['Review Status'])} ${esc(k.Title)}</div>`).join(''):'<div class="empty">None.</div>'}</div>
+      </div><div>
+        <div class="card"><h2>Organizations &amp; role history</h2>${d.companies.length?d.companies.map(c=>`<div style="margin-bottom:6px">${idRef('company',c['Company ID'],c.Name)} ${badge(c['Customer Status'])}</div>`).join(''):'<div class="empty">None.</div>'}${d.roles.filter(r=>r.Role||r['Start Date']).map(r=>`<div class="small muted">${esc(r.Role)} ${r['Start Date']?esc(r['Start Date'])+'–'+esc(r['End Date']||''):''}</div>`).join('')}</div>
+        <div class="card"><h2>Projects</h2>${d.projects.length?d.projects.map(x=>`<div>${esc(x.Name)}</div>`).join(''):'<div class="empty">None.</div>'}</div>
+        <div class="card"><h2>Evidence</h2>${d.sources.length?d.sources.map(s=>`<div style="margin-bottom:6px;cursor:pointer" onclick="openRef('source',${jsArg(s['Source ID'])})"><div class="small muted">${esc(s['Source System'])} · ${esc(s['Source Date'])}</div>${esc(s.Title)}</div>`).join(''):'<div class="empty">None.</div>'}</div>
+      </div></div>`,p['Full Name'],'person',p['Person ID']);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}
+
+// ── timeline ──
+function loadTimeline(){
+  if(!box('tf-co')){
+    box('c-timeline').innerHTML=`<h1>Historical Timeline</h1><div class="page-sub">Significant events in date order. Approximate and unknown dates are marked — they are never presented as exact.</div>
+    <div class="card"><div class="controls">
+      <input id="tf-co" placeholder="Company ID" style="width:150px"><input id="tf-pr" placeholder="Project ID" style="width:130px"><input id="tf-pd" placeholder="Product ID" style="width:130px">
+      <select id="tf-type"><option value="">All event types</option>${CHOICES['Event Type'].map(t=>`<option>${t}</option>`).join('')}</select>
+      <input id="tf-from" placeholder="From (YYYY or YYYY-MM-DD)" style="width:180px"><input id="tf-to" placeholder="To" style="width:120px">
+      <button class="btn-secondary" onclick="resetPg('tl');loadTimelineList()">Apply</button><div class="spacer-h"></div>
+      <button class="btn-primary" onclick="openEdit('historical-events',null,()=>loadTimelineList())">+ Add event</button></div><div id="tl-list"></div></div>`;
+  }
+  loadTimelineList();
+}
+async function loadTimelineList(){
+  loading('tl-list');
+  try{
+    const qs=new URLSearchParams({companyId:box('tf-co').value.trim(),projectId:box('tf-pr').value.trim(),productId:box('tf-pd').value.trim(),eventType:box('tf-type').value,from:box('tf-from').value.trim(),to:box('tf-to').value.trim(),pageToken:pg('tl').tokens[pg('tl').idx]||''});
+    const r=await cb('/timeline?'+qs);
+    box('tl-list').innerHTML=timelineHtml(r.items)+pager('tl',r.nextPageToken,'loadTimelineList');
+  }catch(e){failBox('tl-list',e)}
+}
+async function showEvent(id){
+  showDetail('<div class="empty">Loading event…</div>');
+  try{
+    const rec=await findEntity('historical-events','Event ID',id);
+    if(!rec)throw new Error('Event not found');
+    showDetail(`<div style="display:flex;gap:12px"><div style="flex:1"><h1>${esc(rec.Title)}</h1><div class="page-sub"><span class="mono">${esc(rec['Event ID'])}</span> · ${fmtDate(rec['Event Date'],rec['Date Precision'])} · ${kind(rec['Event Type'])} ${badge(rec['Verification Status'])}</div></div>
+      <button class="btn-secondary" onclick="editById('historical-events',${jsArg(rec._id)},()=>openRef('event',${jsArg(id)}))">Edit</button></div>
+      <div class="card"><dl class="dl"><dt>Company</dt><dd>${idRef('company',rec['Company ID'])}</dd><dt>Project</dt><dd>${idRef('project',rec['Project ID'])}</dd>
+      <dt>Description</dt><dd class="statement">${esc(rec.Description)||'—'}</dd><dt>Backing knowledge</dt><dd>${idRef('knowledge',rec['Knowledge ID'])}</dd>
+      <dt>Sources</dt><dd>${cites(list(rec['Source IDs']).map(s=>({type:'source',id:s})))||'<span class="muted">none — unverified</span>'}</dd>
+      <dt>People</dt><dd>${list(rec['Person IDs']).map(p=>idRef('person',p)).join(', ')||'—'}</dd><dt>Created</dt><dd>${esc(rec._createdBy)} · ${esc(rec['Created Via'])} · ${ago(rec._createdAt)}</dd></dl>
+      <div class="small muted" style="margin-top:10px">An event's verification follows the knowledge entry that backs it; review that entry to verify the event.</div></div>`,rec.Title,'event',id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}
+async function findEntity(form,field,id){const type={'historical-events':'event','projects':'project','products':'product','communications':'communication','decisions':'decision'}[form];return (await cb('/ref/'+type+'/'+encodeURIComponent(id))).item}
+
+// ── knowledge ──
+function loadKnowledge(){
+  if(!box('kf-status')){
+    box('c-knowledge').innerHTML=`<h1>Knowledge Explorer</h1><div class="page-sub">Facts, interpretations, narratives, lessons, claims and recollections — each with its evidence and review status.</div>
+    <div class="card"><div class="controls">
+      <select id="kf-status" onchange="resetPg('kn');loadKnowledgeList()"><option value="">All review statuses</option>${['proposed','verified','disputed','needs-research','rejected','superseded'].map(s=>`<option>${s}</option>`).join('')}</select>
+      <select id="kf-type" onchange="resetPg('kn');loadKnowledgeList()"><option value="">All types</option>${CHOICES['Knowledge Type'].map(s=>`<option>${s}</option>`).join('')}</select>
+      <input id="kf-co" placeholder="Company ID" style="width:150px" onchange="resetPg('kn');loadKnowledgeList()">
+      <div class="spacer-h"></div><button class="btn-primary" onclick="openPropose({})">+ Propose knowledge</button></div><div id="kn-list"></div></div>`;
+  }
+  loadKnowledgeList();
+}
+async function loadKnowledgeList(){
+  loading('kn-list');
+  try{
+    const r=await cb(`/entities/knowledge-entries?status=${encodeURIComponent(box('kf-status').value)}&kind=${encodeURIComponent(box('kf-type').value)}&companyId=${encodeURIComponent(box('kf-co').value.trim())}&pageToken=${tok('kn')}`);
+    box('kn-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Knowledge</th><th>Subject</th><th>Evidence</th><th>Method</th><th>Status</th></tr></thead><tbody>${r.items.map(k=>`<tr onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})"><td>${kind(k['Knowledge Type'])} <strong>${esc(k.Title)}</strong><div class="small muted mono">${esc(k['Knowledge ID'])}</div></td><td>${idRef(k['Subject Type']||'company',k['Subject ID']||k['Company ID'])}</td><td>${list(k['Supporting Source IDs']).length?list(k['Supporting Source IDs']).length+' source(s)':'<span class="badge b-disputed">no evidence</span>'}</td><td class="small">${esc(k['Extraction Method'])}${k['Model Confidence']?`<div class="muted">model conf. ${esc(k['Model Confidence'])}</div>`:''}</td><td>${badge(k['Review Status'])}</td></tr>`).join('')}</tbody></table></div>${pager('kn',r.nextPageToken,'loadKnowledgeList')}`:'<div class="empty">No knowledge matches these filters.</div>';
+  }catch(e){failBox('kn-list',e)}
+}
+async function showKnowledge(id){
+  showDetail('<div class="empty">Loading knowledge entry…</div>');
+  try{
+    const d=await cb('/knowledge/'+encodeURIComponent(id));const k=d.entry;
+    const st=k['Review Status'];const editable=['proposed','needs-research'].includes(st)||ME.roles.reviewer;
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(k.Title)}</h1><div class="page-sub"><span class="mono">${esc(k['Knowledge ID'])}</span> · ${kind(k['Knowledge Type'])} ${badge(st)} ${k['Verified By']?`· verified by <strong>${esc(k['Verified By'])}</strong> ${ago(k['Verified At'])}`:''}</div></div>
+      ${editable?`<button class="btn-secondary" onclick="editById('knowledge-entries',${jsArg(k._id)},()=>openRef('knowledge',${jsArg(id)}))">Edit</button>`:''}</div>
+      ${st==='disputed'?'<div class="notice bad">Disputed — competing claims are preserved below. Neither claim has been overwritten.</div>':''}
+      ${st==='superseded'?`<div class="notice warn">Superseded by ${idRef('knowledge',k['Superseded By'])}. Kept for history.</div>`:''}
+      <div class="three-col"><div>
+        <div class="card"><h2>Statement</h2><div class="statement">${esc(k.Statement)}</div>
+          <dl class="dl" style="margin-top:14px"><dt>Subject</dt><dd>${idRef(k['Subject Type']||'company',k['Subject ID'])}</dd><dt>Company</dt><dd>${idRef('company',k['Company ID'])}</dd>
+          <dt>Extraction method</dt><dd>${esc(k['Extraction Method'])}</dd><dt>Model confidence</dt><dd>${esc(k['Model Confidence'])||'—'} <span class="small muted">informational only — never a verification</span></dd>
+          <dt>Created</dt><dd>${esc(k._createdBy)} via ${esc(k['Created Via'])} · ${ago(k._createdAt)}</dd><dt>Research job</dt><dd>${k['Job ID']?`<a onclick="openJob(${jsArg(k['Job ID'])})">${esc(k['Job ID'])}</a>`:'—'}</dd></dl></div>
+        <div class="card"><h2>Supporting evidence <span class="muted">${d.sources.length}</span></h2>${d.sources.length?d.sources.map(s=>s._missing?`<div class="notice warn">${esc(s['Source ID'])} — not found or you do not have access</div>`:`<div class="finding" style="cursor:pointer" onclick="openRef('source',${jsArg(s['Source ID'])})"><div class="small muted">${esc(s['Source System'])} · ${esc(s['Source Type'])} · ${esc(s['Source Date'])} · ${badge(s['Processing Status'])}</div><strong>${esc(s.Title)}</strong>${s.Excerpt?`<div class="small muted" style="margin-top:4px">${esc(s.Excerpt).slice(0,260)}</div>`:''}</div>`).join(''):'<div class="notice warn">No supporting evidence. This entry cannot be verified until a source is attached.</div>'}</div>
+        ${d.contradicts.length?`<div class="card"><h2>Competing claims</h2>${d.contradicts.map(c=>`<div class="finding ${esc(c['Review Status'])}" style="cursor:pointer" onclick="openRef('knowledge',${jsArg(c['Knowledge ID'])})">${badge(c['Review Status'])} <strong>${esc(c.Title)}</strong><div class="small">${esc(c.Statement).slice(0,300)}</div></div>`).join('')}</div>`:''}
+      </div><div>
+        <div class="card"><h2>Review</h2>${reviewButtons(k)}</div>
+        <div class="card"><h2>Review history</h2>${list(k['Review History']).length?JSON.parse(k['Review History']).slice().reverse().map(h=>`<div style="margin-bottom:8px"><div class="small"><strong>${esc(h.by)}</strong> ${esc(h.action)} ${h.from?esc(h.from)+' → ':''}${badge(h.to)}</div><div class="small muted">${esc(new Date(h.at).toLocaleString())}${h.actorType&&h.actorType!=='user'?' · '+esc(h.actorType):''}</div>${h.comment?`<div class="small">“${esc(h.comment)}”</div>`:''}</div>`).join(''):'<div class="empty">No history.</div>'}</div>
+        <div class="card"><h2>Audit trail</h2>${d.audit.length?d.audit.map(a=>`<div class="small" style="margin-bottom:6px"><strong>${esc(a.Action)}</strong> by ${esc(a.Actor)} <span class="muted">${ago(a['Occurred At'])}</span></div>`).join(''):'<div class="empty">No audit entries.</div>'}</div>
+      </div></div>`,k.Title,'knowledge',id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}
+function reviewButtons(k){
+  const st=k['Review Status'];
+  if(!ME.roles.reviewer)return `<div class="small muted">Only Corporate Brain reviewers can approve, reject or dispute. You can request more research.</div>${['proposed','disputed'].includes(st)?`<button class="btn-secondary btn-sm" style="margin-top:8px" onclick="doReview(${jsArg(k['Knowledge ID'])},'research')">Request research</button>`:''}`;
+  const b=[];
+  if(['proposed','needs-research','disputed'].includes(st))b.push(`<button class="btn-primary btn-sm btn-ok" onclick="doReview(${jsArg(k['Knowledge ID'])},'approve')">Approve</button>`);
+  if(['proposed','needs-research','disputed'].includes(st))b.push(`<button class="btn-primary btn-sm btn-bad" onclick="doReview(${jsArg(k['Knowledge ID'])},'reject')">Reject</button>`);
+  if(['proposed','needs-research','verified'].includes(st))b.push(`<button class="btn-primary btn-sm btn-warn" onclick="doReview(${jsArg(k['Knowledge ID'])},'dispute')">Mark disputed</button>`);
+  if(['proposed','disputed'].includes(st))b.push(`<button class="btn-secondary btn-sm" onclick="doReview(${jsArg(k['Knowledge ID'])},'research')">Request research</button>`);
+  if(['proposed','needs-research','disputed','verified'].includes(st))b.push(`<button class="btn-secondary btn-sm" onclick="doReview(${jsArg(k['Knowledge ID'])},'supersede')">Supersede…</button>`);
+  if(st==='rejected')b.push(`<button class="btn-secondary btn-sm" onclick="doReview(${jsArg(k['Knowledge ID'])},'reopen')">Reopen</button>`);
+  return b.length?`<div class="chips" style="display:flex;flex-wrap:wrap;gap:6px">${b.join('')}</div>`:'<div class="small muted">No review actions available in this state.</div>';
+}
+function doReview(id,action,after){
+  const needs=['reject','dispute','research'].includes(action);
+  box('modal').innerHTML=`<header><h3>${{approve:'Approve (verify)',reject:'Reject',dispute:'Mark disputed',research:'Request further research',supersede:'Supersede',reopen:'Reopen'}[action]}</h3><span class="mono muted">${esc(id)}</span></header>
+    <div class="body">${action==='approve'?'<div class="notice info">Approving records you as the verifier. Confirm that the cited evidence supports the statement.</div>':''}
+    ${action==='supersede'?'<label>Replacing knowledge ID *</label><input id="rv-sup" placeholder="KN-…">':''}
+    <label>Comment${needs?' *':''}</label><textarea id="rv-comment" placeholder="${needs?'Why? What is missing or contradictory?':'Optional note for the record'}"></textarea></div>
+    <footer><span class="err" id="rv-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="rv-go">Confirm</button></footer>`;
+  openModal();
+  box('rv-go').onclick=async()=>{
+    box('rv-go').disabled=true;
+    try{await cb('/knowledge/'+encodeURIComponent(id)+'/review',{method:'POST',body:{action,comment:box('rv-comment').value.trim(),supersededBy:box('rv-sup')?.value.trim()}});
+      closeModal();toast('Review recorded');(after||(()=>openRef('knowledge',id)))();
+    }catch(e){box('rv-err').textContent=e.message;box('rv-go').disabled=false}
+  };
+}
+function openPropose(ctx){
+  box('modal').innerHTML=`<header><h3>Propose knowledge</h3></header><div class="body">
+    <div class="notice info">New knowledge always starts as <strong>proposed</strong>. A reviewer verifies it against the cited evidence.</div>
+    <label>Knowledge type *</label><select id="pk-type">${CHOICES['Knowledge Type'].map(t=>`<option>${t}</option>`).join('')}</select>
+    <label>Title *</label><input id="pk-title"><label>Statement *</label><textarea id="pk-stmt"></textarea>
+    <label>Supporting source IDs</label><input id="pk-src" placeholder="SR-…, SR-…"><div class="help">Facts, narratives, lessons and interpretations need at least one source to be verified.</div>
+    <label>Subject type</label><select id="pk-stype">${['company','person','project','product','event','decision'].map(t=>`<option ${t===ctx.subjectType?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Subject ID</label><input id="pk-sid" value="${esc(ctx.subjectId||'')}"><label>Company ID</label><input id="pk-co" value="${esc(ctx.companyId||'')}">
+    <label>Contradicts (knowledge IDs)</label><input id="pk-contra" placeholder="KN-… (optional)"></div>
+    <footer><span class="err" id="pk-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="pk-go">Propose</button></footer>`;
+  openModal();
+  box('pk-go').onclick=async()=>{
+    box('pk-go').disabled=true;
+    try{const r=await cb('/entities/knowledge-entries',{method:'POST',body:{values:{knowledgeType:box('pk-type').value,title:box('pk-title').value,statement:box('pk-stmt').value,sourceIds:box('pk-src').value,subjectType:box('pk-stype').value,subjectId:box('pk-sid').value.trim(),companyId:box('pk-co').value.trim(),contradicts:box('pk-contra').value,extractionMethod:'manual'}}});
+      closeModal();toast('Proposed '+r.item['Knowledge ID']);openRef('knowledge',r.item['Knowledge ID']);
+    }catch(e){box('pk-err').textContent=e.message;box('pk-go').disabled=false}
+  };
+}
+function openNote(companyId){
+  box('modal').innerHTML=`<header><h3>Add interview / recollection</h3></header><div class="body">
+    <div class="notice info">A personal recollection is evidence in its own right. It is stored here (this is its archival copy) and proposed as a <strong>recollection</strong> for review.</div>
+    <label>Title *</label><input id="nt-title" placeholder="e.g. How the Vattenfall relationship started (J. Smith)">
+    <label>Recalled by</label><input id="nt-by" value="${esc(ME.username)}"><label>Date of interview</label><input id="nt-date" value="${new Date().toISOString().slice(0,10)}">
+    <label>Content *</label><textarea id="nt-content" style="min-height:140px"></textarea>
+    <label>Company ID</label><input id="nt-co" value="${esc(companyId||'')}">
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="nt-restricted" style="width:auto"> Restricted (reviewers only)</label></div>
+    <footer><span class="err" id="nt-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="nt-go">Save</button></footer>`;
+  openModal();
+  box('nt-go').onclick=async()=>{
+    box('nt-go').disabled=true;
+    try{const r=await cb('/notes',{method:'POST',body:{title:box('nt-title').value,content:box('nt-content').value,recalledBy:box('nt-by').value,date:box('nt-date').value,companyId:box('nt-co').value.trim(),restricted:box('nt-restricted').checked}});
+      closeModal();toast('Saved as source '+r.sourceId);openRef('source',r.sourceId);
+    }catch(e){box('nt-err').textContent=e.message;box('nt-go').disabled=false}
+  };
+}
+
+// ── sources ──
+function loadSources(){
+  if(!box('sf-sys')){
+    box('c-sources').innerHTML=`<h1>Sources</h1><div class="page-sub">References to original evidence. The source system stays authoritative; Corporate Brain keeps metadata, a short excerpt and a link.</div>
+    <div class="card"><div class="controls"><select id="sf-sys" onchange="resetPg('sr');loadSourceList()"><option value="">All systems</option>${['google-drive','gmail','github','kinetic','manual'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <select id="sf-st" onchange="resetPg('sr');loadSourceList()"><option value="">All processing statuses</option>${['retrieved','extracted','changed','source-deleted','permission-restricted','failed'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <div class="spacer-h"></div><button class="btn-primary" onclick="openNote('')">+ Interview / note</button></div><div id="sr-list"></div></div>`;
+  }
+  loadSourceList();
+}
+async function loadSourceList(){
+  loading('sr-list');
+  try{
+    const r=await cb(`/entities/sources?system=${encodeURIComponent(box('sf-sys').value)}&status=${encodeURIComponent(box('sf-st').value)}&pageToken=${tok('sr')}`);
+    box('sr-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Source</th><th>System</th><th>Date</th><th>Company</th><th>Access</th><th>Status</th></tr></thead><tbody>${r.items.map(s=>`<tr onclick="openRef('source',${jsArg(s['Source ID'])})"><td><strong>${esc(s.Title)}</strong><div class="small muted mono">${esc(s['Source ID'])}</div></td><td>${esc(s['Source System'])}<div class="small muted">${esc(s['Source Type'])}</div></td><td class="small">${esc(s['Source Date'])}</td><td>${idRef('company',s['Company ID'])}</td><td>${badge(s['Access Scope'])}</td><td>${badge(s['Processing Status'])}</td></tr>`).join('')}</tbody></table></div>${pager('sr',r.nextPageToken,'loadSourceList')}`:'<div class="empty">No sources yet.</div>';
+  }catch(e){failBox('sr-list',e)}
+}
+async function showSource(id){
+  showDetail('<div class="empty">Loading source…</div>');
+  try{
+    const d=await cb('/sources/'+encodeURIComponent(id));const s=d.source;const o=d.original||{};
+    showDetail(`<h1>${esc(s.Title)}</h1><div class="page-sub"><span class="mono">${esc(s['Source ID'])}</span> · ${badge(s['Processing Status'])} ${badge(s['Access Scope'])}</div>
+      ${s['Processing Status']==='source-deleted'?'<div class="notice bad">The original was deleted in its source system. Knowledge citing it has been flagged for review.</div>':''}
+      <div class="three-col"><div><div class="card"><h2>Source detail</h2><dl class="dl">
+        <dt>Source type</dt><dd>${esc(s['Source Type'])}</dd><dt>Original system</dt><dd>${esc(s['Source System'])}</dd><dt>Original identifier</dt><dd class="mono">${esc(s['Original ID'])}</dd>
+        <dt>Source date</dt><dd>${esc(s['Source Date'])||'—'}</dd><dt>Owner</dt><dd>${esc(s.Owner)||'—'}</dd><dt>Access scope</dt><dd>${badge(s['Access Scope'])} <span class="small muted">restricted sources are visible to reviewers only (Kinetic policy)</span></dd>
+        <dt>Original content</dt><dd>${o.url?`<a href="${esc(o.url)}" target="_blank" rel="noopener noreferrer">Open in ${esc(s['Source System'])} ↗</a> <div class="small muted">${esc(o.detail||'')}</div>`:o.kind==='stored'?'<span class="small">Stored below (manual note)</span>':'<span class="muted">Not available</span>'}</dd>
+        <dt>Last synced</dt><dd>${esc(s['Last Synced At'])||'—'}</dd><dt>Ingest job</dt><dd>${s['Ingest Job ID']?`<a onclick="openJob(${jsArg(s['Ingest Job ID'])})">${esc(s['Ingest Job ID'])}</a>`:'—'}</dd>
+        ${s['Processing Error']?`<dt>Error</dt><dd class="small" style="color:var(--red)">${esc(s['Processing Error'])}</dd>`:''}</dl></div>
+        ${s.Excerpt?`<div class="card"><h2>${s['Source System']==='manual'?'Content':'Excerpt'}</h2><div class="statement small">${esc(s.Excerpt)}</div><div class="small muted" style="margin-top:8px">Treated as untrusted data — never as instructions to the historian.</div></div>`:''}
+      </div><div>
+        <div class="card"><h2>Associated knowledge <span class="muted">${d.knowledge.length}</span></h2>${d.knowledge.length?d.knowledge.map(k=>`<div class="finding ${esc(k['Review Status'])}" style="cursor:pointer" onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})">${kind(k['Knowledge Type'])} ${badge(k['Review Status'])}<div>${esc(k.Title)}</div></div>`).join(''):'<div class="empty">No knowledge cites this source yet.</div>'}
+          <button class="btn-secondary btn-sm" onclick="openPropose({companyId:${jsArg(s['Company ID'])},subjectType:'company',subjectId:${jsArg(s['Company ID'])}});setTimeout(()=>box('pk-src').value=${jsArg(s['Source ID'])},0)">+ Propose knowledge from this source</button></div>
+        <div class="card"><h2>Companies</h2>${d.companies.map(c=>`<div>${idRef('company',c['Company ID'],c.Name)}</div>`).join('')||'<div class="empty">None.</div>'}</div>
+        <div class="card"><h2>People</h2>${d.people.map(p=>`<div>${idRef('person',p['Person ID'],p['Full Name'])}</div>`).join('')||'<div class="empty">None.</div>'}</div>
+      </div></div>`,s.Title,'source',id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'Source not found, or you do not have permission to view it.':e.message)}</div>`)}
+}
+
+// ── review queue ──
+async function loadReview(){
+  if(!box('rq-status')){
+    box('c-review').innerHTML=`<h1>Review Queue</h1><div class="page-sub">Proposed knowledge waiting for a human decision. Every decision is recorded with the reviewer, time and comment.</div>
+    ${ME.roles.reviewer?'':'<div class="notice warn">You are not a reviewer. You can read the queue and request research; approvals need Corporate Brain::Reviewers.</div>'}
+    <div class="card"><div class="controls"><select id="rq-status" onchange="resetPg('rq');loadReviewList()">${['proposed','needs-research','disputed'].map(s=>`<option>${s}</option>`).join('')}</select><input id="rq-co" placeholder="Company ID" style="width:150px" onchange="resetPg('rq');loadReviewList()"></div><div id="rq-list"></div></div>`;
+  }
+  loadReviewList();
+}
+async function loadReviewList(){
+  loading('rq-list');
+  try{
+    const r=await cb(`/review-queue?status=${encodeURIComponent(box('rq-status').value)}&companyId=${encodeURIComponent(box('rq-co').value.trim())}&pageToken=${tok('rq')}`);
+    box('rq-list').innerHTML=r.items.length?r.items.map(k=>`<div class="finding ${esc(k['Review Status'])}"><div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;cursor:pointer" onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})">${kind(k['Knowledge Type'])} <strong>${esc(k.Title)}</strong> <span class="small muted mono">${esc(k['Knowledge ID'])}</span>
+      <div class="small" style="margin:4px 0">${esc(k.Statement).slice(0,400)}</div>
+      <div class="small muted">${esc(k['Extraction Method'])} · by ${esc(k._createdBy)} (${esc(k['Created Via'])}) · ${ago(k._createdAt)} · evidence: ${cites(list(k['Supporting Source IDs']).map(s=>({type:'source',id:s})))||'<span class="badge b-disputed">none</span>'}</div></div>
+      <div>${reviewButtons(k).replace(/doReview\(([^)]*)\)/g,(m,a)=>`doReview(${a},loadReviewList)`)}</div></div></div>`).join('')+pager('rq',r.nextPageToken,'loadReviewList'):'<div class="empty">Nothing in this queue.</div>';
+  }catch(e){failBox('rq-list',e)}
+}
+
+// ── historian ──
+function renderHistorian(){
+  if(box('hq'))return;
+  box('c-historian').innerHTML=`<h1>Corporate Historian</h1><div class="page-sub">Ask about Kinetic's history. Answers are built only from Corporate Brain records you can see — every finding cites its evidence, and anything not verified is labelled.</div>
+    <div class="card"><div class="ask-box"><textarea id="hq" placeholder="Tell me everything we know about Vattenfall" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askHistorian()}"></textarea><button class="btn-primary" onclick="askHistorian()">Ask</button></div>
+    <div class="chips small muted" style="margin-top:8px">Try: ${['Tell me everything we know about Vattenfall','Who were our primary contacts at Schneider Electric?','Which customers used Kinetic for employee onboarding?'].map(q=>`<button class="btn-secondary btn-sm" onclick="box('hq').value=${jsArg(q)};askHistorian()">${esc(q)}</button>`).join('')}</div></div>
+    <div id="h-answer"></div>`;
+}
+function askAbout(name){switchTab('historian');box('hq').value='Tell me everything we know about '+name;askHistorian()}
+let LAST_ANSWER=null;
+async function askHistorian(){
+  const q=box('hq').value.trim();if(!q)return;
+  box('h-answer').innerHTML='<div class="card"><div class="empty">Researching Corporate Brain records…</div></div>';
+  try{
+    const a=await cb('/historian/ask',{method:'POST',body:{question:q}});LAST_ANSWER=a;
+    const sec=(s)=>s.items.length?`<div class="answer-sec"><h3>${esc(s.title)} <span class="muted">(${s.items.length})</span></h3>${s.items.map(it=>`<div class="finding ${esc(it.status)}">${it.date!==undefined?`<div class="small">${fmtDate(it.date,it.precision)}</div>`:''}${it.kind?kind(it.kind)+' ':''}${badge(it.status)} ${esc(it.title&&it.title!==it.text?it.title:'')}<div class="small" style="margin:4px 0">${esc(it.text).slice(0,600)}</div>${it.verifiedBy?`<div class="small muted">verified by ${esc(it.verifiedBy)}</div>`:''}${it.contradicts&&it.contradicts.length?`<div class="small" style="color:var(--red)">contradicted by ${cites(it.contradicts.map(c=>({type:'knowledge',id:c})))}</div>`:''}<div>${cites(it.citations)}</div></div>`).join('')}</div>`:'';
+    box('h-answer').innerHTML=`<div class="card">
+      <h2>${a.subject?`${esc(a.subject.name)} <span class="pill">${esc(a.subject.type)}</span> <a class="small" onclick="openRef(${jsArg(a.subject.type)},${jsArg(a.subject.id)})">open profile</a>`:'Answer'}</h2>
+      ${a.ambiguous?`<div class="notice warn">Also matched: ${a.ambiguous.map(x=>idRef(x.type,x.id,x.name)).join(', ')}</div>`:''}
+      <div class="notice info">${esc(a.summary)}</div>
+      ${a.sections.map(sec).join('')}
+      ${a.narrative?(a.narrative.text?`<div class="answer-sec"><h3>Narrative <span class="badge b-proposed">${esc(a.narrative.label)}</span> <span class="muted small">${esc(a.narrative.provider)} · ${esc(a.narrative.model||'')}</span></h3><div class="narrative">${esc(a.narrative.text)}</div><button class="btn-secondary btn-sm" style="margin-top:8px" onclick="saveNarrative()">Save as proposed narrative</button></div>`:`<div class="small muted" style="margin-top:12px">${esc(a.narrative.note||'')}</div>`):''}
+    </div>
+    <div class="two-col"><div class="card"><h2>Unanswered questions <span class="muted">${a.unanswered.length}</span></h2>${a.unanswered.length?a.unanswered.map(u=>`<div class="finding"><strong>${esc(u.question)}</strong><div class="small muted">${esc(u.research)}</div></div>`).join('')+`<button class="btn-primary btn-sm" onclick="createResearch()">Create research job for these</button>`:'<div class="empty">All core questions answered with verified evidence.</div>'}</div>
+    <div class="card"><h2>Suggested follow-up research</h2>${a.followups.map(f=>`<div class="small" style="margin-bottom:6px">• ${esc(f)}</div>`).join('')}<div class="small muted" style="margin-top:10px">Mode: ${esc(a.mode)} · ${a.evidenceCount} evidence records considered</div></div></div>`;
+  }catch(e){failBox('h-answer',e)}
+}
+async function createResearch(){
+  const a=LAST_ANSWER;if(!a)return;
+  try{const r=await cb('/historian/research',{method:'POST',body:{question:a.question,openQuestions:a.unanswered,subjectType:a.subject?.type||'',subjectId:a.subject?.id||''}});toast('Research job '+r.job['Job ID']+' created');}catch(e){toast(e.message,true)}
+}
+async function saveNarrative(){
+  const a=LAST_ANSWER;if(!a?.narrative?.text)return;
+  const ids=[...new Set((a.narrative.text.match(/SR-[A-F0-9]{20}/g)||[]))];
+  try{const r=await cb('/entities/knowledge-entries',{method:'POST',body:{values:{knowledgeType:'narrative',title:'Narrative: '+(a.subject?.name||a.question).slice(0,200),statement:a.narrative.text,sourceIds:ids,subjectType:a.subject?.type||'',subjectId:a.subject?.id||'',companyId:a.subject?.type==='company'?a.subject.id:'',extractionMethod:'ai-generative ('+a.narrative.provider+')'}},headers:{'X-CB-Agent':'historian-'+a.narrative.provider}});
+    toast('Saved as proposed '+r.item['Knowledge ID']);}catch(e){toast(e.message,true)}
+}
+
+// ── ingestion ──
+async function loadIngest(){
+  if(!box('jb-list')){
+    box('c-ingest').innerHTML=`<h1>Ingestion &amp; Research Jobs</h1><div class="page-sub">Bounded, resumable jobs. Each source record is processed once (hashed source identity); changed, deleted or restricted originals are detected on re-sync.</div>
+      <div class="two-col"><div class="card"><h2>Connectors</h2><div id="cn-list"><div class="empty">Loading…</div></div></div>
+      <div class="card"><h2>New job</h2><div class="controls" style="flex-direction:column;align-items:stretch">
+        <select id="nj-conn"><option value="kinetic">Kinetic Platform records (server pull)</option><option value="github">GitHub commits (server pull)</option><option value="google-drive">Google Drive (agent-mediated / pull if configured)</option><option value="gmail">Gmail (agent-mediated / pull if configured)</option></select>
+        <input id="nj-title" placeholder="Title (e.g. Vattenfall — Drive documents)">
+        <input id="nj-subject" placeholder="Subject company ID (optional)">
+        <textarea id="nj-scope" class="inp" style="min-height:70px" placeholder='Scope JSON, e.g. {"repo":"kineticdata/kinetic-sdk-rb","maxPages":1} or {"kapp":"crm","form":"accounts"} or {"query":"Vattenfall"}'></textarea>
+        <button class="btn-primary" onclick="createJob()">Create job</button></div>
+        <div class="small muted">Gmail jobs require a restricted query — whole-mailbox ingestion is refused.</div></div></div>
+      <div class="card"><h2>Jobs</h2><div class="controls"><select id="jb-status" onchange="resetPg('jb');loadJobList()"><option value="">All statuses</option>${['queued','running','paused','completed','failed','blocked','cancelled'].map(s=>`<option>${s}</option>`).join('')}</select></div><div id="jb-list"></div></div>`;
+  }
+  cb('/connectors').then(d=>{box('cn-list').innerHTML=d.connectors.map(cn=>`<div class="conn"><div class="dot ${cn.configured?(cn.pull?'ok':'warn'):'off'}"></div><div><strong>${esc(cn.name)}</strong> <span class="pill">${cn.pull?'server pull':'push'}</span><div class="small muted">${esc(cn.detail)}</div></div></div>`).join('')+`<div class="small muted" style="margin-top:8px">Historian model provider: <strong>${esc(d.modelProvider||'none configured (extractive answers)')}</strong></div>`}).catch(e=>failBox('cn-list',e));
+  loadJobList();
+}
+async function loadJobList(){
+  loading('jb-list');
+  try{
+    const r=await cb(`/entities/research-jobs?status=${encodeURIComponent(box('jb-status').value)}&pageToken=${tok('jb')}`);
+    box('jb-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Job</th><th>Type</th><th>Connector</th><th>Progress</th><th>Status</th></tr></thead><tbody>${r.items.map(j=>`<tr onclick="openJob(${jsArg(j['Job ID'])})"><td><strong>${esc(j.Title)}</strong><div class="small muted mono">${esc(j['Job ID'])} · ${ago(j._createdAt)}</div></td><td>${esc(j['Job Type'])}</td><td>${esc(j.Connector||'—')}</td><td class="small">${esc(j['Items Processed']||0)} new/updated · ${esc(j['Items Skipped']||0)} skipped · ${esc(j['Items Failed']||0)} failed</td><td>${badge(j.Status)}</td></tr>`).join('')}</tbody></table></div>${pager('jb',r.nextPageToken,'loadJobList')}`:'<div class="empty">No jobs yet.</div>';
+  }catch(e){failBox('jb-list',e)}
+}
+async function createJob(){
+  let scope={};try{scope=box('nj-scope').value.trim()?JSON.parse(box('nj-scope').value):{}}catch(e){toast('Scope must be valid JSON',true);return}
+  const conn=box('nj-conn').value;
+  try{const r=await cb('/jobs',{method:'POST',body:{connector:conn,title:box('nj-title').value.trim()||conn+' ingestion',scope,subjectType:box('nj-subject').value.trim()?'company':'',subjectId:box('nj-subject').value.trim()}});toast('Job '+r.job['Job ID']+' created');openJob(r.job['Job ID'])}catch(e){toast(e.message,true)}
+}
+async function openJob(id){
+  showDetail('<div class="empty">Loading job…</div>');
+  try{
+    const d=await cb('/jobs/'+encodeURIComponent(id));const j=d.job;const errs=list(j.Errors);
+    if(!window._conns)window._conns=(await cb('/connectors').catch(()=>({connectors:[]}))).connectors;
+    const pull=!!window._conns.find(c=>c.id===j.Connector&&c.pull);
+    showDetail(`<div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1"><h1>${esc(j.Title)}</h1><div class="page-sub"><span class="mono">${esc(j['Job ID'])}</span> · ${esc(j['Job Type'])} · ${esc(j.Connector||'no connector')} · ${badge(j.Status)}</div></div>
+      ${j.Connector&&j['Job Type']==='ingestion'&&!['completed','cancelled','running'].includes(j.Status)?`<button class="btn-primary" onclick="runJob(${jsArg(id)})">${j.Status==='paused'?'Resume':'Run'}</button>`:''}
+      ${['failed','blocked','cancelled','completed'].includes(j.Status)?`<button class="btn-secondary" onclick="jobAction(${jsArg(id)},'retry')">Re-queue</button>`:''}
+      ${!['completed','cancelled'].includes(j.Status)?`<button class="btn-secondary" onclick="jobAction(${jsArg(id)},'cancel')">Cancel</button>`:''}
+      <button class="btn-secondary" onclick="openJob(${jsArg(id)})">Refresh</button></div>
+      <div class="kpi-row"><div class="kpi ink"><div class="val">${esc(j['Items Discovered']||0)}</div><div class="label">Discovered</div></div><div class="kpi green"><div class="val">${esc(j['Items Processed']||0)}</div><div class="label">New / updated</div></div><div class="kpi"><div class="val">${esc(j['Items Skipped']||0)}</div><div class="label">Skipped (already processed)</div></div><div class="kpi red"><div class="val">${esc(j['Items Failed']||0)}</div><div class="label">Failed</div></div></div>
+      <div class="two-col"><div class="card"><h2>Job</h2><dl class="dl"><dt>Scope</dt><dd class="mono">${esc(j.Scope)}</dd><dt>Checkpoint</dt><dd class="mono">${esc(j.Checkpoint)||'—'}</dd><dt>Subject</dt><dd>${idRef(j['Subject Type']||'company',j['Subject ID'])}</dd><dt>Requested by</dt><dd>${esc(j['Requested By'])}</dd><dt>Started</dt><dd>${esc(j['Started At'])||'—'}</dd><dt>Completed</dt><dd>${esc(j['Completed At'])||'—'}</dd><dt>Attempts</dt><dd>${esc(j.Attempts||0)}</dd><dt>Summary</dt><dd>${esc(j.Summary)||'—'}</dd></dl>
+        ${!pull&&j['Job Type']==='ingestion'?`<div class="notice info" style="margin-top:12px">This job is fed by an authorized agent: <span class="mono">POST /api/corporate-brain/jobs/${esc(id)}/batch</span> with up to 25 normalized records per batch.</div>`:''}
+        ${list(j['Open Questions']).length?`<h2 style="margin-top:14px">Open questions</h2>${JSON.parse(j['Open Questions']).map(q=>`<div class="small">• ${esc(q.question||q)}<div class="muted">${esc(q.research||'')}</div></div>`).join('')}`:''}</div>
+      <div class="card"><h2>Errors <span class="muted">${errs.length}</span></h2>${errs.length?errs.map(e=>`<div class="small" style="margin-bottom:6px"><span class="muted">${esc(e.at||'')}</span> ${esc(e.originalId||'')}<div style="color:var(--red)">${esc(e.error||JSON.stringify(e))}</div></div>`).join(''):'<div class="empty">No errors.</div>'}</div></div>
+      <div class="two-col"><div class="card"><h2>Sources from this job <span class="muted">first 25</span></h2>${d.sources.length?d.sources.map(s=>`<div style="margin-bottom:6px;cursor:pointer" onclick="openRef('source',${jsArg(s['Source ID'])})">${badge(s['Processing Status'])} ${esc(s.Title)}</div>`).join(''):'<div class="empty">None.</div>'}</div>
+      <div class="card"><h2>Proposed knowledge <span class="muted">first 25</span></h2>${d.knowledge.length?d.knowledge.map(k=>`<div style="margin-bottom:6px;cursor:pointer" onclick="openRef('knowledge',${jsArg(k['Knowledge ID'])})">${badge(k['Review Status'])} ${esc(k.Title)}</div>`).join(''):'<div class="empty">None.</div>'}</div></div>`,j.Title,'job',id);
+    if(j.Status==='running')setTimeout(()=>{if(box('c-detail').classList.contains('active')&&history_.at(-1)?.id===id)openJob(id)},4000);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}
+async function runJob(id){try{await cb('/jobs/'+encodeURIComponent(id)+'/run',{method:'POST'});toast('Job started — processing in the background');setTimeout(()=>openJob(id),1500)}catch(e){toast(e.message,true)}}
+async function jobAction(id,a){try{await cb('/jobs/'+encodeURIComponent(id)+'/'+a,{method:'POST'});toast('Job '+(a==='retry'?'re-queued':'cancelled'));openJob(id)}catch(e){toast(e.message,true)}}
+
+// ── search ──
+async function runSearch(q){
+  current='search';history_.length=0;
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));box('c-search').classList.add('active');
+  document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.remove('active'));
+  box('c-search').innerHTML=`<h1>Search</h1><div class="page-sub">Kinetic-native search: indexed filters, name prefix and a bounded keyword scan. Semantic search will plug in here when the platform provides it.</div>
+    <div class="card"><div class="controls"><input id="sq" value="${esc(q)}" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')doSearch()">
+    <select id="sq-type"><option value="">All entity types</option>${['company','person','knowledge','event','source','project','product','decision','communication'].map(t=>`<option>${t}</option>`).join('')}</select>
+    <select id="sq-status"><option value="">Any status</option>${['proposed','verified','disputed','needs-research','rejected'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <input id="sq-from" placeholder="From date" style="width:110px"><input id="sq-to" placeholder="To date" style="width:110px"><input id="sq-co" placeholder="Company ID" style="width:130px">
+    <button class="btn-primary" onclick="doSearch()">Search</button></div><div id="sq-res"></div></div>`;
+  doSearch();
+}
+async function doSearch(){
+  loading('sq-res');
+  try{
+    const qs=new URLSearchParams({q:box('sq').value.trim(),types:box('sq-type').value,status:box('sq-status').value,from:box('sq-from').value.trim(),to:box('sq-to').value.trim(),companyId:box('sq-co').value.trim()});
+    const r=await cb('/search?'+qs);
+    box('sq-res').innerHTML=`<div class="small muted" style="margin-bottom:8px">${r.total} result(s) · providers: ${r.providers.map(esc).join(', ')} · semantic: <em>${esc(r.semantic.note)}</em></div>${r.notes.length?`<div class="notice warn small">${r.notes.map(esc).join('<br>')}</div>`:''}
+      ${r.hits.length?`<table class="clickable"><tbody>${r.hits.map(h=>`<tr onclick="openRef(${jsArg(h.type)},${jsArg(h.id)})"><td style="width:110px"><span class="pill">${esc(h.type)}</span></td><td><strong>${esc(h.title)}</strong><div class="small muted">${esc(h.snippet)}</div></td><td class="small">${esc(h.date)}</td><td>${h.status?badge(h.status):''}</td><td class="small muted">${esc(h.matchedBy)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No matches.</div>'}`;
+  }catch(e){failBox('sq-res',e)}
+}
+
+// ── detail navigation (company → person → communication → source) ──
+function showDetail(html,title,type,id){
+  if(title){const last=history_.at(-1);if(!last||last.id!==id)history_.push({title,type,id});history.replaceState(null,'','#ref/'+type+'/'+encodeURIComponent(id))}
+  document.querySelectorAll('.console').forEach(c=>c.classList.remove('active'));box('c-detail').classList.add('active');
+  const crumbs=`<div class="crumbs"><a onclick="switchTab(${jsArg(current)})">← ${esc((TABS.find(t=>t[0]===current)||['','Back'])[1])}</a>${history_.map((h,i)=>` › <a onclick="history_.length=${i};openRef(${jsArg(h.type)},${jsArg(h.id)})">${esc(String(h.title).slice(0,40))}</a>`).join('')}</div>`;
+  box('c-detail').innerHTML=crumbs+html;window.scrollTo(0,0);
+}
+function openRef(type,id){
+  if(!id)return;
+  ({company:showCompany,person:showPerson,knowledge:showKnowledge,source:showSource,event:showEvent,job:openJob,communication:showCommunication,project:showGeneric('projects','Project ID'),product:showGeneric('products','Product ID'),decision:showGeneric('decisions','Decision ID')}[type]||(()=>toast('No view for '+type,true)))(id);
+}
+function showGeneric(form,idField){return async function(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{const rec=await findEntity(form,idField,id);if(!rec)throw new Error('Not found');const def=formDef(form);
+    showDetail(`<div style="display:flex;gap:12px"><div style="flex:1"><h1>${esc(rec.Name||rec.Title||id)}</h1><div class="page-sub mono">${esc(id)}</div></div><button class="btn-secondary" onclick="editById(${jsArg(form)},${jsArg(rec._id)},()=>openRef(${jsArg({projects:'project',products:'product',decisions:'decision'}[form])},${jsArg(id)}))">Edit</button></div>
+      <div class="card"><dl class="dl">${def.fields.filter(f=>rec[f.name]).map(f=>`<dt>${esc(f.name)}</dt><dd class="statement">${/Company ID$/.test(f.name)?idRef('company',rec[f.name]):f.name==='Source IDs'?cites(list(rec[f.name]).map(s=>({type:'source',id:s}))):esc(rec[f.name])}</dd>`).join('')}</dl></div>`,rec.Name||rec.Title||id,{projects:'project',products:'product',decisions:'decision'}[form],id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.message)}</div>`)}
+}}
+async function showCommunication(id){
+  const rec=await findEntity('communications','Communication ID',id).catch(()=>null);
+  if(rec&&rec['Source ID'])return showSource(rec['Source ID']);
+  showDetail('<div class="notice bad">Communication not found</div>');
+}
+
+// session bootstrap — launcher session first (same-origin proxy adds X-Kinetic-Server), then our own
+(function(){
+  const s=sessionStorage.getItem('kinetic_session')||sessionStorage.getItem('base_session');
+  const own=sessionStorage.getItem('cb_session');
+  try{
+    if(s){const ss=JSON.parse(s);API={server:'',auth:ss.auth,user:ss.user,displayName:ss.displayName||ss.user};enterApp().catch(e=>{box('li-err').textContent=e.message});return}
+    if(own){API=JSON.parse(own);enterApp().catch(()=>sessionStorage.removeItem('cb_session'))}
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

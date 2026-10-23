@@ -875,11 +875,14 @@ function injectScripts(html, appSlug) {
 })();
 </script>`;
 
-  // Inject head script after <head> (or after first <meta>)
-  html = html.replace(/<head[^>]*>/i, (match) => match + "\n" + headScript);
+  // Inject head script after <head>; a page without one gets it prepended.
+  if (/<head[^>]*>/i.test(html)) html = html.replace(/<head[^>]*>/i, (match) => match + "\n" + headScript);
+  else html = headScript + "\n" + html;
 
-  // Inject body script before </body>
-  html = html.replace(/<\/body>/i, bodyScript + "\n</body>");
+  // Inject body script before </body>; a page without one gets it appended —
+  // otherwise the Home link and user menu silently never appear.
+  if (/<\/body>/i.test(html)) html = html.replace(/<\/body>/i, bodyScript + "\n</body>");
+  else html = html + "\n" + bodyScript;
 
   // Rewrite the default server URL input to be empty (since we're same-origin)
   html = html.replace(/value="http:\/\/localhost:\d+"/g, 'value=""');
@@ -1137,16 +1140,30 @@ const server = http.createServer((req, res) => {
       ];
 
       function buildPages(fields) {
-        const elements = fields.map(f => ({
-          type: "field", name: f.name, label: f.name,
-          key: crypto.randomBytes(16).toString("hex"),
-          dataType: "string", renderType: "text",
-          enabled: true, visible: true,
-          required: f.required || false, rows: f.rows || 1,
-          constraints: [], events: [], renderAttributes: {},
-          defaultDataSource: "none", defaultValue: "", defaultResourceName: "",
-          requiredMessage: "", omitWhenHidden: null, pattern: null,
-        }));
+        const elements = fields.map(f => {
+          const el = {
+            type: "field", name: f.name, label: f.name,
+            key: crypto.randomBytes(16).toString("hex"),
+            dataType: "string", renderType: f.renderType || "text",
+            enabled: true, visible: true,
+            required: f.required || false,
+            constraints: [], events: [], renderAttributes: {},
+            defaultDataSource: "none", defaultValue: "", defaultResourceName: "",
+            requiredMessage: "", omitWhenHidden: null, pattern: null,
+          };
+          // Attachment fields carry dataType "file" and allowMultiple, and must NOT
+          // carry `rows` — including it returns 400 Invalid Form.
+          if (el.renderType === "attachment") {
+            el.dataType = "file";
+            el.defaultValue = null;
+            el.defaultResourceName = null;
+            el.requiredMessage = null;
+            el.allowMultiple = f.allowMultiple !== false;
+          } else {
+            el.rows = f.rows || 1;
+          }
+          return el;
+        });
         elements.push({ type: "button", name: "Submit Button", label: "Submit", renderType: "submit-page", visible: true, enabled: true, renderAttributes: {} });
         return [{ name: "Page 1", type: "page", renderType: "submittable", elements, events: [] }];
       }

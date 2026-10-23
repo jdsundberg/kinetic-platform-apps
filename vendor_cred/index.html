@@ -443,7 +443,8 @@ function badge(status) {
   return `<span class="badge ${cls}">${esc(status)}</span>`;
 }
 
-function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 
 function toast(msg, type) {
   const t = document.getElementById('toast');

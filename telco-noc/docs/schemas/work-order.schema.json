@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noc.example/schemas/work-orders.schema.json",
+  "title": "Work order",
+  "type": "object",
+  "properties": {
+    "Tenant ID": {
+      "type": "string",
+      "description": "Owning tenant. Leading part of every index; enforced by KSL policy + server scoping."
+    },
+    "Work Order ID": {
+      "type": "string"
+    },
+    "Incident ID": {
+      "type": "string"
+    },
+    "Change ID": {
+      "type": "string"
+    },
+    "Work Type": {
+      "type": "string",
+      "enum": [
+        "Fiber Repair",
+        "Site Visit",
+        "Equipment Replacement",
+        "Power Restoration",
+        "Inspection"
+      ]
+    },
+    "State": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Dispatched",
+        "Accepted",
+        "En Route",
+        "On Site",
+        "Work Complete",
+        "Verified",
+        "Cancelled"
+      ]
+    },
+    "Priority": {
+      "type": "string",
+      "enum": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    "Summary": {
+      "type": "string"
+    },
+    "Site ID": {
+      "type": "string"
+    },
+    "Resource ID": {
+      "type": "string"
+    },
+    "Location Description": {
+      "type": "string"
+    },
+    "Latitude": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "Longitude": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?$"
+    },
+    "Access Instructions": {
+      "type": "string"
+    },
+    "Safety Notes": {
+      "type": "string"
+    },
+    "Parts": {
+      "type": "string"
+    },
+    "Completion Criteria": {
+      "type": "string"
+    },
+    "Assigned Tech": {
+      "type": "string"
+    },
+    "Crew": {
+      "type": "string"
+    },
+    "Dispatch Approved By": {
+      "type": "string"
+    },
+    "Dispatched At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "ETA": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Accepted At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Arrived At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Completed At": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC ISO-8601 with Z"
+    },
+    "Findings": {
+      "type": "string",
+      "description": "Observed cause from site — may confirm incident root cause"
+    },
+    "Completion Notes": {
+      "type": "string"
+    },
+    "Evidence": {
+      "type": "string"
+    },
+    "Replay Batch": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "Tenant ID",
+    "Work Order ID",
+    "Work Type",
+    "State",
+    "Priority",
+    "Summary",
+    "Completion Criteria"
+  ],
+  "additionalProperties": false,
+  "description": "Kinetic submission values for form work-orders (all values are strings on the wire). Schema version 1.0."
+}

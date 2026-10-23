@@ -318,7 +318,8 @@ const PAGE_STATE = {
 let LOCATIONS_CACHE = [];
 
 /* ── Helpers ── */
-function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub, field) { return sub.values?.[field] || ''; }
 function toast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = type || ''; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
 function badge(val) {
