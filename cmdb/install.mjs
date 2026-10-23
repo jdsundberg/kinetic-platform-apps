@@ -2,9 +2,9 @@
 /**
  * CMDB direct installer.
  *
- *   node apps/cmdb/install.mjs [--server URL] [--user U] [--pass P] [--seed] [--reset]
+ *   node apps/cmdb/install.mjs [--config FILE] [--server URL] [--user U] [--pass P] [--seed] [--reset]
  *
- * Defaults: ai-labs.kinopsdev.io / john / john7 / --seed=true
+ * Connection comes from cmdb/kinetic-connection.json (see connection.mjs). Seeds by default.
  *
  * Same install logic as base/server.mjs /api/appmgr/install/{slug} but
  * runs as a standalone script so we don't need to restart the launcher.
@@ -12,6 +12,7 @@
 import https from "node:https";
 import fs from "node:fs";
 import path from "node:path";
+import { loadConnection } from "./connection.mjs";
 import crypto from "node:crypto";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -22,12 +23,9 @@ function arg(name, dflt) {
   if (i >= 0) return args[i + 1];
   return dflt;
 }
-const SERVER = arg("server", "https://ai-labs.kinopsdev.io");
-const USER = arg("user", "john");
-const PASS = arg("pass", "john7");
+const { server: SERVER, user: USER, auth: AUTH } = loadConnection(args);
 const DO_SEED = args.includes("--seed") || !args.includes("--no-seed");
 const RESET = args.includes("--reset");
-const AUTH = "Basic " + Buffer.from(`${USER}:${PASS}`).toString("base64");
 const __dir = path.dirname(new URL(import.meta.url).pathname);
 const APP_DEF = JSON.parse(fs.readFileSync(path.join(__dir, "app.json"), "utf-8"));
 const SEED = fs.existsSync(path.join(__dir, "seed-data.json"))

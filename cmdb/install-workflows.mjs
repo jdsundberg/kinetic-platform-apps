@@ -21,20 +21,19 @@
  *
  * Each routine: same shape but final node is the routine return.
  *
- * Run:  node apps/cmdb/install-workflows.mjs [--server URL] [--user U] [--pass P]
+ * Run:  node apps/cmdb/install-workflows.mjs [--config FILE] [--server URL] [--user U] [--pass P]
+ *       Connection comes from cmdb/kinetic-connection.json (see connection.mjs).
  */
 import https from "node:https";
 import path from "node:path";
+import { loadConnection } from "./connection.mjs";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const args = process.argv.slice(2);
 function arg(name, dflt) { const i = args.indexOf("--" + name); return i >= 0 ? args[i + 1] : dflt; }
-const SERVER = arg("server", "https://ai-labs.kinopsdev.io");
-const USER = arg("user", "john");
-const PASS = arg("pass", "john7");
+const { server: SERVER, user: USER, auth: AUTH } = loadConnection(args);
 const KAPP = "cmdb";
-const AUTH = "Basic " + Buffer.from(`${USER}:${PASS}`).toString("base64");
 
 function req(method, p, body, base = "/app/api/v1") {
   return new Promise((resolve, reject) => {
@@ -709,8 +708,8 @@ async function main() {
 
   console.log(`\n  Done.\n`);
   console.log(`  Try:`);
-  console.log(`    curl -u ${USER}:${PASS} '${SERVER}/app/kapps/${KAPP}/webApis/lookup?timeout=10&ciNumber=SRV-0001&class=servers'`);
-  console.log(`    curl -u ${USER}:${PASS} '${SERVER}/app/kapps/${KAPP}/webApis/impact?timeout=10&class=databases&id=DB-0001'\n`);
+  console.log(`    curl -u ${USER}:<password> '${SERVER}/app/kapps/${KAPP}/webApis/lookup?timeout=10&ciNumber=SRV-0001&class=servers'`);
+  console.log(`    curl -u ${USER}:<password> '${SERVER}/app/kapps/${KAPP}/webApis/impact?timeout=10&class=databases&id=DB-0001'\n`);
 }
 
 main().catch(e => { console.error("FATAL", e); process.exit(1); });

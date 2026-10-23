@@ -24,13 +24,15 @@
  *   3. Restore index definitions and trigger "Build Index" at the end.
  *
  * Usage:
- *   node apps/cmdb/seed-f500.mjs [--concurrency 20] [--per-form-workers 10] [--dry-run]
+ *   node apps/cmdb/seed-f500.mjs [--config FILE] [--concurrency 20] [--per-form-workers 10] [--dry-run]
+ *   Connection comes from cmdb/kinetic-connection.json (see connection.mjs).
  *
  * Estimated wall time on ai-labs with custom indexes dropped: 25–40 minutes.
  */
 import https from "node:https";
 import fs from "node:fs";
 import path from "node:path";
+import { loadConnection } from "./connection.mjs";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -38,11 +40,8 @@ const args = process.argv.slice(2);
 function flag(name) { return args.includes("--" + name); }
 function arg(name, dflt) { const i = args.indexOf("--" + name); return i >= 0 ? args[i + 1] : dflt; }
 
-const SERVER = arg("server", "https://ai-labs.kinopsdev.io");
-const USER = arg("user", "john");
-const PASS = arg("pass", "john7");
+const { server: SERVER, user: USER, auth: AUTH } = loadConnection(args);
 const KAPP = "cmdb";
-const AUTH = "Basic " + Buffer.from(`${USER}:${PASS}`).toString("base64");
 const PER_FORM_WORKERS = parseInt(arg("per-form-workers", "10"), 10);
 const DRY_RUN = flag("dry-run");
 const SKIP_INDEX = flag("keep-indexes");
