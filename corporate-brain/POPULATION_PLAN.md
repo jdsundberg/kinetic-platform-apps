@@ -137,3 +137,15 @@ Each wave is a research job in Corporate Brain (Ingestion tab) titled `Populatio
   repos, releases and tags tell the product's story (what shipped when, why, by whom) more than the customer story.
   Corporate Brain already models products, product-linked events and decisions, so a Product Historian could be a
   view over the same data or its own app; to be decided when Wave 6 is picked up.
+
+## Decision (2026-10-23, John) — Drive company folders are a source of companies
+- "All companies that exist in the Companies folder on Google Drive should be included — even if I never emailed with them."
+  Trigger: Stanford (real customer: 2009 POC, signed PO/SOW) was missing because it had no Gmail label.
+- The shared drive's company tree ("2. Customers", "1. Inactive Customers", and sibling category folders) is now a
+  company list alongside John's Gmail labels: every company folder becomes a company (category folder → relationship
+  basis), and its files are loaded like Wave 5 (`ingest/drive-companies/`).
+- **Answers on the Drive mapping (John, 2026-10-23):** FCPS = Fairfax County; CHI = Catholic Health (merged); PGE =
+  Pacific Gas and Electric; NMCI is its own company, not the Navy; Allen Noble is a person (record inactive, folder not
+  loaded); **military sub-units are their own companies, never merged into the service** (AFSC, USAICISA-P, NAVSEA,
+  AMEDD, 7th Signal Command, PEO EIS, DEVCOM, 3ID, ACC-APG, PEO MLB, PEO Digital, NAVSUP, CDAO, USCIS, Platform One…).
+  APCE unresolved. Program/bid folders ("US Army – Citadel", "DISA – Storefront") stay with the organization.

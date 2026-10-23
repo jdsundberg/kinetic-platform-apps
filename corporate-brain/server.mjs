@@ -26,6 +26,19 @@ const meCache = new Map();     // auth|server -> { at, me }
 const statsCache = new Map();  // auth|server -> { at, data }
 const inflight = new Map();
 const TTL = 60 * 1000;
+const tlCache = new Map();     // auth|server|year -> { at, data } — one year's events, light fields, for the timeline
+const TL_TTL = 5 * 60 * 1000;
+
+// Event Date → { date, level }: "2014" is year-level, "2014-07" month-level, "2014-07-17" day-level.
+// Date Precision year/month coarsens a fuller date; anything unparseable is undated.
+function eventWhen(e) {
+  const m = String(e["Event Date"] || "").match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/);
+  if (!m) return { date: "", level: "none" };
+  const prec = e["Date Precision"] || "";
+  if (!m[2] || prec === "year") return { date: m[1], level: "year" };
+  if (!m[3] || prec === "month") return { date: `${m[1]}-${m[2]}`, level: "month" };
+  return { date: `${m[1]}-${m[2]}-${m[3]}`, level: "day" };
+}
 
 // Fields only the review workflow may change; fields that identify evidence never change.
 const PROTECTED = {
@@ -69,7 +82,26 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     const historian = createHistorian(store, services, retrieval);
     const requireMember = () => { if (!me.roles.member) throw Object.assign(new Error("Corporate Brain is private. Ask an administrator to add you to Corporate Brain::Members."), { status: 403 }); };
     const requireReviewer = () => { if (!me.roles.reviewer) throw Object.assign(new Error("Only Corporate Brain reviewers can do this"), { status: 403 }); };
-    const bust = () => statsCache.delete(scopeKey);
+    const bust = () => { statsCache.delete(scopeKey); tlCache.clear(); };
+
+    // One year's active events as light points, sorted by date: a single indexed range query on
+    // [Record Status, Event Date] ("2014" … "2014~" covers year-, month- and day-level dates). Cached per login.
+    const timelineYear = async (year) => {
+      const key = `${scopeKey}|${year}`, hit = tlCache.get(key);
+      if (hit && Date.now() - hit.at < TL_TTL && qp("fresh") !== "1") return hit.data;
+      if (!inflight.has("tl|" + key)) inflight.set("tl|" + key, (async () => {
+        const r = await store.collect("historical-events", `values[Record Status] = "active" AND values[Event Date] BETWEEN (${kq(year)}, ${kq(year + "~")})`,
+          { maxPages: 120, orderBy: "values[Record Status],values[Event Date]", direction: "ASC" });
+        const events = r.items.map(e => ({ id: e["Event ID"], ...eventWhen(e), approx: e["Date Precision"] === "approximate",
+          type: e["Event Type"] || "other", status: e["Verification Status"] || "proposed", title: e.Title || "", desc: String(e.Description || "").slice(0, 220) }))
+          .filter(p => p.date.startsWith(year))
+          .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+        const data = { year, events, truncated: r.truncated };
+        tlCache.set(key, { at: Date.now(), data });
+        return data;
+      })().finally(() => setTimeout(() => inflight.delete("tl|" + key), 0)));
+      return inflight.get("tl|" + key);
+    };
 
     let m;
     if (route === "/me" && method === "GET") return send(200, { ...me, agent: agentName || null });
@@ -97,6 +129,24 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     }
 
     // ── search ──
+    // Company explorer: alphabetical pages of 25 for a letter (a–z, "#" for digits), a typed name prefix, or all.
+    // Keyset paging on Name Key (`after` = last key shown): sorted scans must stay bounded away from blank keys, and
+    // pageTokens aren't passed back on sorted queries. Name keys are unique per active company (duplicates are refused).
+    if (route === "/companies/alpha" && method === "GET") {
+      const letter = (qp("letter") || "").toLowerCase(), prefix = nameKey(qp("prefix") || ""), after = qp("after") || "";
+      const bump = (s) => s.slice(0, -1) + String.fromCharCode(s.charCodeAt(s.length - 1) + 1);   // first key past every s…
+      let lo = "", hi = "";
+      if (prefix) { lo = prefix; hi = bump(prefix); }
+      else if (letter === "#") { lo = "0"; hi = ":"; }   // ":" sorts right after "9"
+      else if (/^[a-z]$/.test(letter)) { lo = letter; hi = bump(letter); }
+      const parts = [], st = qp("status");
+      if (st) parts.push(`values[Customer Status] = ${kq(st)}`); else parts.push(`values[Record Status] = "active"`);
+      parts.push(after && after >= lo ? `values[Name Key] > ${kq(after)}` : lo ? `values[Name Key] >= ${kq(lo)}` : `values[Name Key] > ""`);
+      if (hi) parts.push(`values[Name Key] < ${kq(hi)}`);
+      const r = await store.page("companies", { q: parts.join(" AND "), orderBy: st ? "values[Customer Status],values[Name Key]" : "values[Record Status],values[Name Key]", direction: "ASC", limit: 25 });
+      const items = r.items.filter(c => !c["Merged Into"]);
+      return send(200, { items, next: r.items.length === 25 ? r.items[24]["Name Key"] : "" });
+    }
     if (route === "/search" && method === "GET") {
       const types = qp("types") ? qp("types").split(",").filter(t => SEARCHABLE[t]) : [];
       const r = await retrieval.search({ q: qp("q"), types, companyId: qp("companyId"), status: qp("status"), kind: qp("kind"), from: qp("from"), to: qp("to"), limit: 50 });
@@ -188,6 +238,12 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       if (!d) return send(404, { error: "Source not found or you do not have access to it" });
       const conn = CONNECTORS[d.source["Source System"]];
       return send(200, { ...d, original: conn?.original ? conn.original(d.source) : { available: false } });
+    }
+    // Horizontal timeline: every event in one year (month, type and paging are filtered in the browser).
+    if (route === "/timeline/year" && method === "GET") {
+      const year = qp("year");
+      if (!/^\d{4}$/.test(year)) return send(400, { error: "year must be YYYY" });
+      return send(200, await timelineYear(year));
     }
     if (route === "/timeline" && method === "GET") {
       return send(200, await services.timeline({ companyId: qp("companyId"), productId: qp("productId"), projectId: qp("projectId"), eventType: qp("eventType"), from: qp("from"), to: qp("to"), pageToken: qp("pageToken") }));

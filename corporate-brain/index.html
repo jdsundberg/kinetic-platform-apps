@@ -127,6 +127,41 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 .tl-item.verified:before{background:var(--green);border-color:var(--green)}
 .tl-date{font-size:12px;font-weight:700;color:var(--blue)}
 .tl-title{font-size:14px;margin:2px 0}
+/* horizontal timeline */
+.tl-types{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tl-chip{border:1px solid var(--border);background:#fff;border-radius:14px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--gray);cursor:pointer;font-family:inherit}
+.tl-chip:hover{border-color:var(--orange)}
+.tl-chip.on{background:#EEEAFB;border-color:#C9BEF5;color:#3B2A8F}
+.tl-chip .n{font-weight:500;opacity:.7;margin-left:5px;font-variant-numeric:tabular-nums}
+.tl-crumbs{font-size:13px;color:var(--gray);margin-bottom:6px}
+.tl-crumbs a{cursor:pointer;font-weight:600}
+.tl-chart{overflow-x:auto}
+.tl-chart svg{display:block}
+.tl-grid{stroke:#ECEAF4;stroke-width:1}
+.tl-base{stroke:#C9C5D9;stroke-width:1}
+.tl-ax{font-size:11px;fill:var(--gray);font-variant-numeric:tabular-nums}
+.tl-ax.future{fill:#C4C4C4}
+.tl-ax.now{fill:var(--blue);font-weight:700}
+.tl-bar{fill:var(--orange)}
+.tl-hit,.tl-hitc{fill:transparent}
+.tl-col{cursor:pointer;outline:none}
+.tl-col:hover .tl-bar,.tl-col:focus .tl-bar{fill:var(--orange-light)}
+.tl-col:focus-visible .tl-hit{stroke:var(--orange);stroke-width:2}
+.tl-col.future{cursor:default}
+.tl-dotg{cursor:pointer;outline:none}
+.tl-dot{fill:var(--orange);stroke:#fff;stroke-width:2}
+.tl-dot.verified{fill:var(--green)}
+.tl-dot.approx{fill:#fff;stroke:#9B8AE6;stroke-dasharray:2 2}
+.tl-dotg:hover .tl-dot,.tl-dotg:focus-visible .tl-dot{r:7}
+.tl-yr{cursor:pointer;outline:none}
+.tl-yrdot{fill:#fff;stroke:var(--orange);stroke-width:2}
+.tl-yr:hover .tl-yrdot,.tl-yr:focus-visible .tl-yrdot{fill:var(--orange);r:7}
+.tl-yrdot.now{stroke:var(--kinetic)}
+.tl-today{stroke:var(--kinetic);stroke-width:1.5}
+.tl-note{margin-top:8px;line-height:1.6}
+.tl-note a{cursor:pointer;font-weight:600}
+.tl-tip{position:fixed;z-index:300;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow-lg);border-radius:8px;padding:8px 10px;font-size:12px;pointer-events:none;max-width:300px;line-height:1.5}
+.tl-tip-hint{margin-top:4px;color:var(--orange);font-weight:600}
 /* historian */
 .ask-box{display:flex;gap:10px}
 .ask-box textarea{flex:1;min-height:58px;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;resize:vertical}
@@ -160,6 +195,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 .statement{white-space:pre-wrap;line-height:1.5}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-top:8px}
 .legend span:before{content:'';display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+.az{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}.az-btn{min-width:34px;padding:5px 8px;border:1px solid var(--border);background:#fff;color:inherit;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px}.az-btn:hover{border-color:var(--kinetic)}.az-btn.active{background:var(--kinetic);border-color:var(--kinetic);color:#fff}.az-all{margin-left:8px}
 </style>
 </head>
 <body>
@@ -381,21 +417,33 @@ function closeModal(){box('modal-bg').classList.remove('open')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
 // ── companies ──
+// Company Explorer: pick a letter, type a name, or View all — alphabetical, 25 per page (keyset cursors on Name Key).
+let CO={letter:'',prefix:'',cursors:[''],idx:0};
 function loadCompanies(){
   if(!box('cf-q')){
+    const letters=['#',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
     box('c-companies').innerHTML=`<h1>Company Explorer</h1><div class="page-sub">Customers, prospects, partners and vendors. Customer status is only set from evidence — "Unknown" is a valid answer.</div>
-    <div class="card"><div class="controls"><input id="cf-q" placeholder="Name starts with…" oninput="clearTimeout(this._t);this._t=setTimeout(()=>{resetPg('co');loadCompanyList()},300)">
-    <select id="cf-status" onchange="resetPg('co');loadCompanyList()"><option value="">All statuses</option>${CHOICES['Customer Status'].map(s=>`<option>${s}</option>`).join('')}</select>
-    <div class="spacer-h"></div><button class="btn-primary" onclick="openEdit('companies',null,()=>loadCompanyList())">+ Add company</button></div><div id="co-list"></div></div>`;
+    <div class="card"><div class="az" id="co-az">${letters.map(l=>`<button class="az-btn" data-l="${l}" onclick="coPick(${jsArg(l)})" title="${l==='#'?'Names starting with a digit':'Names starting with '+l}">${l==='#'?'0–9':l}</button>`).join('')}<button class="az-btn az-all" data-l="all" onclick="coPick('all')">View all</button></div>
+    <div class="controls"><input id="cf-q" placeholder="Type a company name…" oninput="clearTimeout(this._t);this._t=setTimeout(coType,300)">
+    <select id="cf-status" onchange="coGo()"><option value="">All statuses</option>${CHOICES['Customer Status'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <div class="spacer-h"></div><button class="btn-primary" onclick="openEdit('companies',null,()=>loadCompanyList())">+ Add company</button></div><div id="co-list"><div class="empty">Pick a letter, type a name, or choose <strong>View all</strong>.</div></div></div>`;
   }
-  loadCompanyList();
+  if(CO.letter||CO.prefix) loadCompanyList();
 }
+function coMark(){document.querySelectorAll('#co-az .az-btn').forEach(b=>b.classList.toggle('active',!CO.prefix&&b.dataset.l===CO.letter))}
+function coPick(l){CO.letter=l;CO.prefix='';box('cf-q').value='';coGo()}
+function coType(){const v=box('cf-q').value.trim();CO.prefix=v;if(!v&&!CO.letter){coMark();box('co-list').innerHTML='<div class="empty">Pick a letter, type a name, or choose <strong>View all</strong>.</div>';return}coGo()}
+function coGo(){CO.cursors=[''];CO.idx=0;coMark();loadCompanyList()}
 async function loadCompanyList(){
+  if(!CO.letter&&!CO.prefix){coGo();return}
   loading('co-list');
   try{
-    const q=box('cf-q').value.trim(),st=box('cf-status').value;
-    const r=await cb(`/entities/companies?prefix=${encodeURIComponent(q)}&status=${encodeURIComponent(st)}&pageToken=${tok('co')}`);
-    box('co-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Company</th><th>Customer status</th><th>Industry</th><th>Country</th><th>First known</th><th></th></tr></thead><tbody>${r.items.map(c=>`<tr onclick="openRef('company',${jsArg(c['Company ID'])})"><td><strong>${esc(c.Name)}</strong><div class="small muted mono">${esc(c['Company ID'])}</div></td><td>${badge(c['Customer Status'])}</td><td>${esc(c.Industry)}</td><td>${esc(c.Country)}</td><td>${c['First Known Date']?fmtDate(c['First Known Date']):'<span class="muted">—</span>'}</td><td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editById('companies',${jsArg(c._id)},loadCompanyList)">Edit</button></td></tr>`).join('')}</tbody></table></div>${pager('co',r.nextPageToken,'loadCompanyList')}`:'<div class="empty">No companies match. Add one, or ingest evidence to discover them.</div>';
+    const st=box('cf-status').value, sel=CO.prefix?`prefix=${encodeURIComponent(CO.prefix)}`:CO.letter==='all'?'':`letter=${encodeURIComponent(CO.letter)}`;
+    const r=await cb(`/companies/alpha?${sel}&status=${encodeURIComponent(st)}&after=${encodeURIComponent(CO.cursors[CO.idx]||'')}`);
+    CO.cursors[CO.idx+1]=r.next||null;
+    const what=CO.prefix?`starting “${esc(CO.prefix)}”`:CO.letter==='all'?'all companies':CO.letter==='#'?'starting with a digit':`starting with ${esc(CO.letter)}`;
+    const pagerHtml=`<div class="pager"><span>Page ${CO.idx+1} · ${what}</span><button class="btn-secondary btn-sm" ${CO.idx===0?'disabled':''} onclick="CO.idx--;loadCompanyList()">‹ Prev</button><button class="btn-secondary btn-sm" ${r.next?'':'disabled'} onclick="CO.idx++;loadCompanyList()">Next ›</button></div>`;
+    box('co-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Company</th><th>Customer status</th><th>Industry</th><th>Country</th><th>First known</th><th></th></tr></thead><tbody>${r.items.map(c=>`<tr onclick="openRef('company',${jsArg(c['Company ID'])})"><td><strong>${esc(c.Name)}</strong><div class="small muted mono">${esc(c['Company ID'])}</div></td><td>${badge(c['Customer Status'])}</td><td>${esc(c.Industry)}</td><td>${esc(c.Country)}</td><td>${c['First Known Date']?fmtDate(c['First Known Date']):'<span class="muted">—</span>'}</td><td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();editById('companies',${jsArg(c._id)},loadCompanyList)">Edit</button></td></tr>`).join('')}</tbody></table></div>${pagerHtml}`:`<div class="empty">No companies ${what}. Add one, or ingest evidence to discover them.</div>`;
   }catch(e){failBox('co-list',e)}
 }
 async function editById(form,subId,after){try{const r=await cb('/entities/'+form+'/'+subId);openEdit(form,r.item,after)}catch(e){toast(e.message,true)}}
@@ -422,10 +470,10 @@ async function showCompany(id){
             <dt>Industry</dt><dd>${esc(c.Industry)||'<span class="muted">—</span>'}</dd><dt>Country</dt><dd>${esc(c.Country)||'<span class="muted">—</span>'}</dd>
             <dt>Domain</dt><dd>${esc(c.Domain)||'<span class="muted">—</span>'}</dd><dt>First known</dt><dd>${c['First Known Date']?fmtDate(c['First Known Date']):'<span class="muted">not established</span>'}</dd>
             <dt>Description</dt><dd class="statement">${esc(c.Description)||'<span class="muted">—</span>'}</dd></dl></div>
+          <div class="card"><h2>Lessons learned</h2>${kTable(lessons,'No lessons recorded.')}</div>
           <div class="card"><h2>Relationship timeline <span class="muted">${d.timeline.length} events</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openEdit('historical-events',null,()=>openRef('company',${jsArg(c['Company ID'])}))">+ Event</button></h2>${timelineHtml(d.timeline)}</div>
           <div class="card"><h2>Historical narratives</h2>${kTable(narratives,'No narratives yet. Ask the historian, then save a reviewed narrative.')}</div>
           <div class="card"><h2>All knowledge <span class="muted">${kn.length}</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openPropose({companyId:${jsArg(c['Company ID'])},subjectType:'company',subjectId:${jsArg(c['Company ID'])}})">+ Propose knowledge</button></h2>${kTable(kn.filter(k=>!['narrative','lesson'].includes(k['Knowledge Type'])),'No knowledge entries yet.')}</div>
-          <div class="card"><h2>Lessons learned</h2>${kTable(lessons,'No lessons recorded.')}</div>
         </div>
         <div>
           <div class="card"><h2>Important contacts <span class="muted">${d.people.length}</span><span class="spacer-h"></span><button class="btn-secondary btn-sm" onclick="openEdit('people',null,()=>openRef('company',${jsArg(c['Company ID'])}))">+</button></h2>${d.people.length?`<table class="clickable"><tbody>${d.people.map(p=>`<tr onclick="openRef('person',${jsArg(p['Person ID'])})"><td><strong>${esc(p['Full Name'])}</strong><div class="small muted">${esc(p.Title||p.Email||'')}</div></td></tr>`).join('')}</tbody></table>`:'<div class="empty">No contacts recorded.</div>'}</div>
@@ -483,26 +531,168 @@ async function showPerson(id){
 }
 
 // ── timeline ──
+// Left to right. Entering the tab loads nothing: it shows the years 2003 → this year. Picking a year loads every
+// event in that year once (light fields, one request); months, event types and the 25-row list then filter in the browser.
+const TL_FIRST_YEAR=2003;
+let TL={year:'',month:'',types:[],offset:0,data:null,draw:null,seq:0,cache:{}};   // cache: year → loaded events
+function tlYearsList(){const out=[];for(let y=new Date().getFullYear();y>=TL_FIRST_YEAR;y--)out.push(String(y));return out}
 function loadTimeline(){
-  if(!box('tf-co')){
-    box('c-timeline').innerHTML=`<h1>Historical Timeline</h1><div class="page-sub">Significant events in date order. Approximate and unknown dates are marked — they are never presented as exact.</div>
+  if(!box('tl-chart')){
+    box('c-timeline').innerHTML=`<h1>Historical Timeline</h1><div class="page-sub">Pick a year to load its events, then a month to see them by day. Approximate and unknown dates are marked — they are never presented as exact.</div>
     <div class="card"><div class="controls">
-      <input id="tf-co" placeholder="Company ID" style="width:150px"><input id="tf-pr" placeholder="Project ID" style="width:130px"><input id="tf-pd" placeholder="Product ID" style="width:130px">
-      <select id="tf-type"><option value="">All event types</option>${CHOICES['Event Type'].map(t=>`<option>${t}</option>`).join('')}</select>
-      <input id="tf-from" placeholder="From (YYYY or YYYY-MM-DD)" style="width:180px"><input id="tf-to" placeholder="To" style="width:120px">
-      <button class="btn-secondary" onclick="resetPg('tl');loadTimelineList()">Apply</button><div class="spacer-h"></div>
-      <button class="btn-primary" onclick="openEdit('historical-events',null,()=>loadTimelineList())">+ Add event</button></div><div id="tl-list"></div></div>`;
+      <select id="tl-year" aria-label="Year" onchange="tlSet({year:this.value,month:''})"><option value="">Select a year</option>${tlYearsList().map(y=>`<option>${y}</option>`).join('')}</select>
+      <select id="tl-month" aria-label="Month" onchange="tlSet({month:this.value})" disabled><option value="">All months</option>${MON.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('')}</select>
+      <div class="spacer-h"></div>
+      <button class="btn-primary" onclick="openEdit('historical-events',null,()=>{if(TL.year)tlLoadYear(true)})">+ Add event</button></div>
+      <div class="tl-types" id="tl-types"></div>
+      <div class="tl-crumbs" id="tl-crumbs"></div>
+      <div class="tl-chart" id="tl-chart"></div>
+      <div class="tl-note small muted" id="tl-note"></div></div>
+    <div class="card" id="tl-list-card" hidden><h2 id="tl-list-h">Events</h2><div id="tl-list"></div></div>`;
+    let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if(TL.draw&&box('c-timeline').classList.contains('active'))TL.draw()},150)});
   }
-  loadTimelineList();
+  tlRender();
 }
-async function loadTimelineList(){
-  loading('tl-list');
+function tlSet(p){
+  const yearChanged='year' in p&&p.year!==TL.year;
+  Object.assign(TL,{offset:0},p);
+  if(yearChanged){TL.data=TL.cache[TL.year]||null;if(TL.year&&!TL.data)return tlLoadYear()}
+  tlRender();
+}
+async function tlLoadYear(fresh){
+  const seq=++TL.seq,year=TL.year;
+  tlCrumbs();tlSelects();box('tl-types').innerHTML='';box('tl-note').textContent='';box('tl-list-card').hidden=true;
+  box('tl-chart').innerHTML=`<div class="empty">Loading ${esc(year)}…</div>`;
   try{
-    const qs=new URLSearchParams({companyId:box('tf-co').value.trim(),projectId:box('tf-pr').value.trim(),productId:box('tf-pd').value.trim(),eventType:box('tf-type').value,from:box('tf-from').value.trim(),to:box('tf-to').value.trim(),pageToken:pg('tl').tokens[pg('tl').idx]||''});
-    const r=await cb('/timeline?'+qs);
-    box('tl-list').innerHTML=timelineHtml(r.items)+pager('tl',r.nextPageToken,'loadTimelineList');
-  }catch(e){failBox('tl-list',e)}
+    const d=await cb(`/timeline/year?year=${encodeURIComponent(year)}${fresh?'&fresh=1':''}`);
+    if(seq!==TL.seq)return;          // a newer year was picked meanwhile
+    TL.cache[year]=d;TL.data=d;tlRender();
+  }catch(e){if(seq===TL.seq)failBox('tl-chart',e)}
 }
+function tlToggleType(t){
+  if(t===''){TL.types=[]}else{const s=new Set(TL.types);s.has(t)?s.delete(t):s.add(t);TL.types=s.size===CHOICES['Event Type'].length?[]:[...s]}
+  tlSet({});
+}
+function tlSelects(){box('tl-year').value=TL.year;const ms=box('tl-month');ms.disabled=!TL.year;ms.value=TL.month}
+// events of the loaded year that pass the type filter (and the month, when one is picked)
+function tlEvents(withMonth){const ev=TL.data?TL.data.events:[];return ev.filter(p=>(!TL.types.length||TL.types.includes(p.type))&&(!withMonth||!TL.month||p.date.startsWith(TL.year+'-'+TL.month)))}
+function tlRender(){
+  tlCrumbs();tlSelects();
+  if(!TL.year){
+    box('tl-types').innerHTML='';box('tl-note').textContent='';box('tl-list-card').hidden=true;
+    TL.draw=tlYearsAxis;TL.draw();return;
+  }
+  if(!TL.data)return;
+  const counts={};for(const p of TL.data.events)counts[p.type]=(counts[p.type]||0)+1;
+  box('tl-types').innerHTML=`<button class="tl-chip ${TL.types.length?'':'on'}" aria-pressed="${!TL.types.length}" onclick="tlToggleType('')">All types</button>`+CHOICES['Event Type'].map(t=>{const on=TL.types.includes(t);return `<button class="tl-chip ${on?'on':''}" aria-pressed="${on}" onclick="tlToggleType(${jsArg(t)})">${esc(t)}<span class="n">${counts[t]||0}</span></button>`}).join('');
+  const inYear=tlEvents(false),inView=tlEvents(true);
+  TL.draw=TL.month?()=>tlDots(inView):()=>tlYear(inYear);
+  TL.draw();
+  const notes=[];
+  if(!TL.month){const n=inYear.filter(p=>p.level==='year').length;if(n)notes.push(`${n} event${n===1?' is':'s are'} dated only to ${TL.year}; they're in the list below but not in a month.`)}
+  else{const n=inView.filter(p=>p.level==='month').length;if(n)notes.push(`${n} event${n===1?' is':'s are'} dated only to ${MON[+TL.month-1]} ${TL.year}; they're in the list below but not on a day.`)}
+  if(TL.data.truncated)notes.push(`Only the first 3,000 events of ${TL.year} are loaded.`);
+  box('tl-note').innerHTML=notes.join('<br>');
+  tlList(inView);
+}
+function tlCrumbs(){
+  if(!TL.year){box('tl-crumbs').innerHTML='<strong>Years</strong> <span class="muted">· pick one to load its events</span>';return}
+  const parts=[`<a onclick="tlSet({year:'',month:''})">Years</a>`,TL.month?`<a onclick="tlSet({month:''})">${TL.year}</a>`:`<strong>${TL.year}</strong>`];
+  if(TL.month)parts.push(`<strong>${MON[+TL.month-1]}</strong>`);
+  box('tl-crumbs').innerHTML=parts.join(' › ');
+}
+function tlList(items){
+  box('tl-list-card').hidden=false;
+  const label=TL.month?`Events in ${MON[+TL.month-1]} ${TL.year}`:`Events in ${TL.year}`;
+  box('tl-list-h').innerHTML=`${esc(label)} <span class="muted">${items.length} event${items.length===1?'':'s'}</span>`;
+  if(!items.length){box('tl-list').innerHTML='<div class="empty">No events in this period.</div>';return}
+  const page=items.slice(TL.offset,TL.offset+25),a=TL.offset+1,b=TL.offset+page.length;
+  box('tl-list').innerHTML=`<div class="table-wrap"><table class="clickable"><thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Status</th></tr></thead><tbody>${page.map(p=>`<tr onclick="openRef('event',${jsArg(p.id)})"><td style="width:150px;white-space:nowrap">${fmtDate(p.date,p.approx?'approximate':p.level==='day'?'':p.level)}</td><td>${kind(p.type)}</td><td><strong>${esc(p.title)}</strong>${p.desc?`<div class="small muted">${esc(p.desc)}</div>`:''}</td><td>${badge(p.status)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="pager"><span>${a}–${b} of ${items.length}</span><button class="btn-secondary btn-sm" ${TL.offset?'':'disabled'} onclick="tlPage(-1)">‹ Prev</button><button class="btn-secondary btn-sm" ${b<items.length?'':'disabled'} onclick="tlPage(1)">Next ›</button></div>`;
+}
+function tlPage(d){TL.offset=Math.max(0,TL.offset+25*d);tlList(tlEvents(true))}
+// ── timeline drawing (inline SVG; one tooltip) ──
+function tlNice(v){for(let k=1;;k*=10)for(const m of [1,2,4,6,8,10])if(m*k>=v)return m*k}
+function tlFrame(h){const el=box('tl-chart'),W=Math.max(320,el.clientWidth||800);return {el,W,H:h,L:34,R:12,T:22,B:26}}
+function tlToday(){const d=new Date();return {y:String(d.getFullYear()),m:String(d.getMonth()+1).padStart(2,'0'),d:d.getDate()}}
+// No data: one clickable slot per year, oldest left, this year right.
+function tlYearsAxis(){
+  const years=tlYearsList().reverse(),f=tlFrame(84),iw=f.W-f.L-f.R,band=iw/years.length,base=44,now=tlToday();
+  const every=Math.max(1,Math.ceil(years.length*40/iw));
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" width="${f.W}" height="${f.H}" role="group" aria-label="Years"><line class="tl-base" x1="${f.L}" x2="${f.W-f.R}" y1="${base}" y2="${base}"/>`;
+  years.forEach((y,i)=>{const cx=f.L+band*i+band/2,isNow=y===now.y;
+    s+=`<g class="tl-yr" data-y="${y}" tabindex="0" role="button" aria-label="Load ${y}"><rect class="tl-hit" x="${f.L+band*i}" y="8" width="${band}" height="${f.H-8}"/><circle class="tl-yrdot${isNow?' now':''}" cx="${cx}" cy="${base}" r="5"/>`+
+      ((i%every===0||i===years.length-1)?`<text class="tl-ax${isNow?' now':''}" x="${cx}" y="${base+24}" text-anchor="middle">${y}</text>`:'')+`</g>`});
+  const x=f.L+band*(years.length-1)+band/2;s+=`<text class="tl-ax now" x="${x}" y="${base-14}" text-anchor="middle">Today</text>`;
+  f.el.innerHTML=s+'</svg>';
+  f.el.querySelectorAll('.tl-yr').forEach(g=>{const y=g.dataset.y,pick=()=>{tlTipHide();tlSet({year:y,month:''})};
+    const tip=e=>tlTip(e,[[y,'']],'Click to load '+y);
+    g.addEventListener('pointermove',tip);g.addEventListener('focus',tip);g.addEventListener('pointerleave',tlTipHide);g.addEventListener('blur',tlTipHide);
+    g.addEventListener('click',pick);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}})});
+}
+function tlBars(cols,onPick,aria){
+  const f=tlFrame(210),iw=f.W-f.L-f.R,ih=f.H-f.T-f.B,base=f.T+ih;
+  const nice=tlNice(Math.max(1,...cols.map(c=>c.n))),band=iw/cols.length,bw=Math.max(3,Math.min(24,band-4));
+  const every=Math.max(1,Math.ceil(cols.length*44/iw));
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" width="${f.W}" height="${f.H}" role="img" aria-label="${esc(aria)}">`;
+  (nice>1?[0,nice/2,nice]:[0,1]).forEach(v=>{const y=base-ih*v/nice;s+=`<line class="${v?'tl-grid':'tl-base'}" x1="${f.L}" x2="${f.W-f.R}" y1="${y}" y2="${y}"/><text class="tl-ax" x="${f.L-6}" y="${y+4}" text-anchor="end">${v}</text>`});
+  cols.forEach((c,i)=>{
+    const cx=f.L+band*i+band/2;
+    s+=`<g class="tl-col${c.future?' future':''}" data-i="${i}" tabindex="${c.future?-1:0}" role="button" aria-label="${esc(c.title+': '+c.n+' events')}">`;
+    s+=`<rect class="tl-hit" x="${f.L+band*i}" y="${f.T}" width="${band}" height="${ih}"/>`;
+    if(c.n){const h=Math.max(3,ih*c.n/nice),x=cx-bw/2,y=base-h,r=Math.min(4,bw/2,h);s+=`<path class="tl-bar" d="M${x},${base}V${y+r}Q${x},${y} ${x+r},${y}H${x+bw-r}Q${x+bw},${y} ${x+bw},${y+r}V${base}Z"/>`}
+    if(i%every===0||i===cols.length-1||c.now)s+=`<text class="tl-ax${c.future?' future':''}${c.now?' now':''}" x="${cx}" y="${f.H-8}" text-anchor="middle">${esc(c.tick)}</text>`;
+    s+='</g>';
+  });
+  if(cols.todayX!=null){const x=f.L+band*cols.todayX;s+=`<line class="tl-today" x1="${x}" x2="${x}" y1="${f.T-6}" y2="${base}"/><text class="tl-ax now" x="${x}" y="${f.T-10}" text-anchor="middle">Today</text>`}
+  f.el.innerHTML=s+'</svg>';
+  f.el.querySelectorAll('.tl-col').forEach(g=>{const c=cols[+g.dataset.i];
+    const tip=e=>tlTip(e,[[c.n+(c.n===1?' event':' events'),c.title],...Object.entries(c.byType||{}).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>[String(v),k])],c.future?'':c.hint);
+    g.addEventListener('pointermove',tip);g.addEventListener('focus',tip);g.addEventListener('pointerleave',tlTipHide);g.addEventListener('blur',tlTipHide);
+    if(!c.future){g.addEventListener('click',()=>{tlTipHide();onPick(c)});g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tlTipHide();onPick(c)}})}
+  });
+}
+function tlYear(events){
+  const now=tlToday(),cur=TL.year===now.y;
+  const months=MON.map((m,i)=>({month:String(i+1).padStart(2,'0'),n:0,byType:{}}));
+  for(const p of events)if(p.level!=='year'){const b=months[+p.date.slice(5,7)-1];b.n++;b.byType[p.type]=(b.byType[p.type]||0)+1}
+  const cols=months.map(m=>({...m,tick:MON[+m.month-1],title:MON[+m.month-1]+' '+TL.year,future:cur&&m.month>now.m,hint:'Click to see this month by day'}));
+  if(cur)cols.todayX=(+now.m-1)+now.d/new Date(+now.y,+now.m,0).getDate();
+  tlBars(cols,c=>tlSet({month:c.month}),'Events per month in '+TL.year);
+}
+function tlDots(markers){
+  const days=new Date(+TL.year,+TL.month,0).getDate(),byDay={};
+  for(const m of markers)if(m.level==='day')(byDay[+m.date.slice(8,10)]=byDay[+m.date.slice(8,10)]||[]).push(m);
+  const ROWS=12,gap=15,stack=Math.min(ROWS,Math.max(4,...Object.values(byDay).map(a=>a.length)));
+  const f=tlFrame(22+26+stack*gap+16),iw=f.W-f.L-f.R,base=f.H-f.B,band=iw/days,now=tlToday();
+  let s=`<svg viewBox="0 0 ${f.W} ${f.H}" width="${f.W}" height="${f.H}" role="img" aria-label="${esc('Events by day in '+MON[+TL.month-1]+' '+TL.year)}"><line class="tl-base" x1="${f.L}" x2="${f.W-f.R}" y1="${base}" y2="${base}"/>`;
+  for(let d=1;d<=days;d++){
+    const cx=f.L+band*(d-1)+band/2,fut=TL.year===now.y&&TL.month===now.m&&d>now.d;
+    if(d===1||d%5===0||d===days)s+=`<text class="tl-ax${fut?' future':''}" x="${cx}" y="${f.H-8}" text-anchor="middle">${d}</text>`;
+    const list=byDay[d]||[];
+    list.slice(0,ROWS).forEach((m,k)=>{const cy=base-10-k*gap;s+=`<g class="tl-dotg" data-id="${esc(m.id)}" tabindex="0" role="button" aria-label="${esc(m.title)}"><circle class="tl-hitc" cx="${cx}" cy="${cy}" r="11"/><circle class="tl-dot ${m.approx?'approx':m.status==='verified'?'verified':''}" cx="${cx}" cy="${cy}" r="5"/></g>`});
+    if(list.length>ROWS)s+=`<text class="tl-ax" x="${cx}" y="${base-10-ROWS*gap+4}" text-anchor="middle">+${list.length-ROWS}</text>`;
+  }
+  if(TL.year===now.y&&TL.month===now.m){const x=f.L+band*(now.d-1)+band/2;s+=`<line class="tl-today" x1="${x}" x2="${x}" y1="${f.T-6}" y2="${base}"/><text class="tl-ax now" x="${x}" y="${f.T-10}" text-anchor="middle">Today</text>`}
+  f.el.innerHTML=s+'</svg><div class="legend"><span style="--c:#5B3FD1">exact date</span><span style="--c:#2E7D32">verified</span><span style="--c:#9B8AE6">approximate date</span></div>';
+  const all=Object.fromEntries(markers.map(m=>[m.id,m]));
+  f.el.querySelectorAll('.tl-dotg').forEach(g=>{const m=all[g.dataset.id];
+    const tip=e=>tlTip(e,[[m.title,''],[m.type+' · '+m.status,''],[m.date+(m.approx?' (approximate)':''),'']],'Click to open');
+    const open=()=>{tlTipHide();openRef('event',m.id)};
+    g.addEventListener('pointermove',tip);g.addEventListener('focus',tip);g.addEventListener('pointerleave',tlTipHide);g.addEventListener('blur',tlTipHide);
+    g.addEventListener('click',open);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+  });
+}
+function tlTip(e,rows,hint){
+  let t=box('tl-tip');if(!t){t=document.createElement('div');t.id='tl-tip';t.className='tl-tip';document.body.appendChild(t)}
+  t.replaceChildren();
+  rows.forEach(([a,b],i)=>{const d=document.createElement('div');if(i===0){const s=document.createElement('strong');s.textContent=a;d.append(s)}else d.append(document.createTextNode(a));if(b)d.append(document.createTextNode((i===0?' · ':' ')+b));if(i)d.className='muted';t.append(d)});
+  if(hint){const d=document.createElement('div');d.className='tl-tip-hint';d.textContent=hint;t.append(d)}
+  t.hidden=false;
+  const r=e.currentTarget.getBoundingClientRect(),x=e.clientX||r.left+r.width/2,y=e.clientY||r.top;
+  t.style.left=Math.max(8,Math.min(window.innerWidth-t.offsetWidth-8,x+14))+'px';t.style.top=Math.max(8,y-t.offsetHeight-14)+'px';
+}
+function tlTipHide(){const t=box('tl-tip');if(t)t.hidden=true}
 async function showEvent(id){
   showDetail('<div class="empty">Loading event…</div>');
   try{
