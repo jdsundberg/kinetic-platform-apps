@@ -286,7 +286,8 @@ async function api(path, opts = {}) {
   return t ? JSON.parse(t) : {};
 }
 
-function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub, f) { return (sub.values && sub.values[f]) || ''; }
 function toast(msg, err) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show' + (err ? ' error' : ''); setTimeout(() => el.className = 'toast', 3000); }
 function openModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal').style.display = 'block'; }

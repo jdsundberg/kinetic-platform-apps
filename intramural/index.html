@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>St. Olaf Intramurals</title>
@@ -110,6 +113,8 @@ select:focus,input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 
 #toast.show{opacity:1}
 @media(max-width:760px){.modal-grid{grid-template-columns:1fr}.nav-tabs button{padding:8px 9px}}
 </style>
+</head>
+<body>
 
 <!-- ══════════════ LOGIN ══════════════ -->
 <div id="login-screen">
@@ -232,7 +237,8 @@ const DIVISIONS=['Open A','Open B','Rec','Competitive'];
 const VENUES=['Manitou Field','Skoglund Center','Skoglund Gym','Skoglund Gym B','Tostrud Rink','Tostrud Fields','Old Main Field'];
 
 // ── helpers ──
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){return sub&&sub.values?(sub.values[f]||''):''}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function stars(n){n=Math.max(0,Math.min(5,parseInt(n)||0));return '★'.repeat(n)+'<span class="muted">'+'☆'.repeat(5-n)+'</span>'}
@@ -578,3 +584,5 @@ async function delSub(id,fn){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 </script>
+</body>
+</html>

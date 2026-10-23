@@ -1,0 +1,595 @@
+{
+ "project": {
+  "brand": "Kinetic",
+  "name": "Corporate Brain",
+  "tagline": "Populating Kinetic Data's institutional memory from Gmail, Drive and GitHub"
+ },
+ "space": "ai-labs.kinopsdev.io",
+ "updated": "2026-10-23T20:10:55.629Z",
+ "current": "Wave 5 — searching John's Drive for 376 companies beyond the top 20 (10 agents, ~38 companies each)",
+ "complete": false,
+ "percent": 61,
+ "phases": [
+  {
+   "id": "plan",
+   "name": "Population plan",
+   "status": "done",
+   "desc": "Sources sized, waves defined, decisions recorded",
+   "items": [
+    "✓ Gmail re-authorized; sized: 297 Companies, 84 Partners, 46 Vendor labels; support@ group; 223 GitHub repos",
+    "✓ POPULATION_PLAN.md written; each wave tracked as a research job in Corporate Brain",
+    "✓ Exclusions confirmed: Personal, chats, Employees, Possible employees/independents, Investors, Finance, Insurance",
+    "✓ Reviewers: John + James Davies (Corporate Brain::Reviewers)",
+    "✓ Customer success deferred; other people's mailboxes later with consent"
+   ]
+  },
+  {
+   "id": "w0",
+   "name": "Wave 0 — Company skeleton",
+   "status": "done",
+   "desc": "Companies / Partners / Vendor Gmail labels → organizations (no email content)",
+   "items": [
+    "✓ Batch loader (resumable, 25/batch, sensitive-label filter) + label→record builder",
+    "✓ FRB recorded as Federal Reserve Bank (John, 2026-10-22)",
+    "Loading 450 label sources (Companies ×4 in parallel, then Partners, Vendor)",
+    "✓ Companies labels: 320 label sources loaded in 4 parallel jobs, 0 failures",
+    "✓ Partners labels loading (50/84), then Vendor (46)",
+    "✓ 450 label sources loaded (6 jobs, 0 failures) → 399 organizations + label→company map",
+    "✓ Partner / Vendor status set only where John filed the org solely under that folder",
+    "✓ Extractor fix: labels are folders, not documents (bad 'Staples RFP' entry rejected, test added)",
+    "✓ 8 possible duplicates listed for review (e.g. Duke / Duke Energy, US Army / US Army National Guard)",
+    "✓ John's review: 6 pairs confirmed different; JFHQ CCRI merged into JFHQ, CCRI recorded as a JFHQ project",
+    "✓ SAIC / Partners SAIC-GSA — awaiting decision",
+    "✓ SAIC-GSA merged into SAIC as a project (John) — all duplicate candidates resolved"
+   ]
+  },
+  {
+   "id": "w1",
+   "name": "Wave 1 — Top 20 customers",
+   "status": "done",
+   "desc": "Gmail label + Drive docs per customer at Vattenfall depth",
+   "items": [
+    "✓ Runbook + proposal helper + automated-sender filter",
+    "Trial run: Vattenfall (email) + Aegon — quality check before fan-out",
+    "✓ Trial: Vattenfall email (73 threads, 18 proposals) + Aegon (198 threads, 45 docs, 18 proposals)",
+    "✓ Tooling fixes from trial: converter script, loader privacy scrub, cached domain lookup, member source scoping",
+    "Fan-out: 19 companies across 5 parallel agents (Telus … Dell)",
+    "✓ All 21 companies done: 2,585 of 2,586 records loaded (1 uncited Dell invite), 669 knowledge entries awaiting review",
+    "Open for John: Caretech merge, US Army domain (army.mil vs Guard), EDS vs HP, Dell's NTT DATA/NRC evidence"
+   ]
+  },
+  {
+   "id": "w2",
+   "name": "Wave 2 — John's sent mail",
+   "status": "done",
+   "desc": "By year 2007→2026, external recipients, commitments & decisions",
+   "items": [
+    "✓ Tooling: per-thread company from Gmail labels, business-only filter, sensitive-domain auto-skip, commitments + decisions in propose.mjs",
+    "✓ Fix: privacy scrub no longer drops att.com / mail.mil participants as 'personal'",
+    "✓ John's decisions applied: Caretech merge, EDS≠HP, NRC + NTT DATA split from Dell, Baxalta, US Army domain cleared",
+    "Fetch sent mail 2007–2026 (≈2,400 threads/yr, metadata + snippet only)",
+    "Learn company domains from labelled threads (only ~38 companies have one today)",
+    "Load year by year, ≤5 loaders at once (≤1,500 business threads per year)",
+    "Read decision/commitment threads → proposed commitments + decisions",
+    "Gate: sample 25 commitments per year for John/James",
+    "✓ Fetch: ~32,000 sent threads 2007–2026 saved (read-only); 3 mis-saved pages caught and quarantined",
+    "✓ 112 company domains learned from labelled threads (reviewed; 3 wrong ones removed) — ingest/wave2/domains-applied.md",
+    "✓ Privacy: only threads linked to a company are loaded; 288 sensitive domains (finance, investors, legal, insurance, family) skipped",
+    "285 unlinked business domains listed for John to classify — ingest/wave2/unlinked-domains.md",
+    "✓ Fetch complete for 2007 (mail starts May 2007) and 2009–2026; 2008 Feb–May in progress",
+    "✓ Loaded: 4,096 new sent-mail threads 2007–2026 (5,238 checked on the server, all present) + 50-thread top-up",
+    "✓ Read: 186 proposals — 62 commitments, 42 decisions, 81 facts, 1 claim (review list: ingest/wave2/commitments-review.md)",
+    "Open for John: classify unlinked business domains (ingest/wave2/unlinked-domains.md); AT&T quote filed under ATT Consulting label — right?"
+   ]
+  },
+  {
+   "id": "w3",
+   "name": "Wave 3 — support@ history",
+   "status": "done",
+   "desc": "Support threads → cases, escalations, lessons (restricted)",
+   "items": [
+    "✓ Tooling: auto-acknowledgement skip, escalation picker, support@ load scripts, WAVE3_RUNBOOK.md",
+    "Fetch support@ threads by year (≤2,000 per year)",
+    "Load only threads linked to a company (restricted), ≤5 loaders",
+    "Read escalations → proposed support events, lessons, commitments",
+    "Gate: John/James review escalation summaries; confirm nothing sensitive in excerpts",
+    "✓ Fetch: 521 support@ threads 2008–2026 in John's mailbox (small — full support history lives in the support@ group / ticket system)",
+    "✓ Loaded 145 support threads linked to a company (41 new; rest already in from Waves 1–2) — 195 checked present incl. top-up",
+    "✓ Read: 28 proposals — 21 escalation facts, 6 lessons, 1 commitment (review list: ingest/wave3/escalations-review.md)",
+    "✓ Fix: threads John filed under a company label are no longer dropped by the domain block list (GEICO, State Farm, Aon, Medica are customers); 52-thread top-up loaded, 3 finance/investor threads kept out",
+    "Gap: John's mailbox only holds support@ mail he was copied on — full history needs the support@ group or ticket system"
+   ]
+  },
+  {
+   "id": "w4",
+   "name": "Wave 4 — Customer success",
+   "status": "todo",
+   "desc": "Waiting on John to locate the customer-success email source",
+   "items": [
+    "Blocked: customer-success email source to be identified by John",
+    "Deferred by John (2026-10-23) — needs Cassie Lunenberg's or Matt Howe's mailbox (with consent)"
+   ]
+  },
+  {
+   "id": "w5",
+   "name": "Wave 5 — Drive beyond top 20",
+   "status": "active",
+   "desc": "Contracts, POs, SOWs, proposals, decision docs",
+   "items": [
+    "✓ Tooling: company batches, Drive converter (sensitive titles out, ≤50 files/company, company folders listed), WAVE5_RUNBOOK.md",
+    "Phase A: find each company's files + folder contents (metadata only)",
+    "Load batches, ≤5 at once (contract-type titles auto-proposed as 'on file')",
+    "Phase B: read ≤25 contracts/POs/SOWs/proposals per batch → proposed facts + commitments"
+   ]
+  },
+  {
+   "id": "w6",
+   "name": "Wave 6 — GitHub catalog",
+   "status": "todo",
+   "desc": "223 repos → products / projects, releases on the timeline",
+   "items": [
+    "Deferred by John (2026-10-23) — maybe later",
+    "Idea (John): GitHub may suit a Product Historian rather than the company historian"
+   ]
+  },
+  {
+   "id": "w7",
+   "name": "Wave 7 — Interviews",
+   "status": "todo",
+   "desc": "Historian's unanswered questions → recollections",
+   "items": []
+  }
+ ],
+ "stats": {
+  "Forms": "12",
+  "Indexes": "152",
+  "API routes": "30",
+  "Sources": "6,700+",
+  "Knowledge entries": "21",
+  "People": "10",
+  "Workflows": "3",
+  "Tests": "54 passing",
+  "Companies": "402",
+  "Knowledge proposed": "990",
+  "Decisions": "42"
+ },
+ "apps": [
+  {
+   "slug": "corporate-brain",
+   "name": "Corporate Brain",
+   "ready": true
+  }
+ ],
+ "log": [
+  {
+   "t": "2026-10-23T06:27:50.655Z",
+   "msg": "Wave 1: Baxter — 71 threads, 59 docs, 14 proposals"
+  },
+  {
+   "t": "2026-10-23T06:28:41.703Z",
+   "msg": "Wave 1: Telus — 200 threads, 41 docs, 15 proposals"
+  },
+  {
+   "t": "2026-10-23T06:28:41.927Z",
+   "msg": "Wave 1: Schneider — 130 threads, 34 docs, 14 proposals"
+  },
+  {
+   "t": "2026-10-23T06:28:42.152Z",
+   "msg": "Wave 1: DoITT — 132 threads, 29 docs, 13 proposals"
+  },
+  {
+   "t": "2026-10-23T06:28:42.368Z",
+   "msg": "Wave 1: Caretech — 101 threads, 32 docs, 10 proposals"
+  },
+  {
+   "t": "2026-10-23T06:28:59.627Z",
+   "msg": "Wave 1: COX — 71 threads, 47 docs, 13 proposals"
+  },
+  {
+   "t": "2026-10-23T06:32:49.710Z",
+   "msg": "Wave 1: FRB — 62 threads, 43 docs, 13 proposals"
+  },
+  {
+   "t": "2026-10-23T06:38:04.790Z",
+   "msg": "Wave 1 batch done: Lockheed Martin, PayPal, Baxter, FRB — 57 proposals"
+  },
+  {
+   "t": "2026-10-23T06:38:05.536Z",
+   "msg": "Finished: Wave 1 — Top 20 customers"
+  },
+  {
+   "t": "2026-10-23T15:18:14.459Z",
+   "msg": "John's decisions applied: Caretech ← Partners/a-Caretech merged (Customer, never a partner); EDS ≠ HP; NRC + new NTT DATA split out of Dell (3 entries, 5 sources re-homed); Baxalta created (spun off from Baxter)"
+  },
+  {
+   "t": "2026-10-23T15:21:45.888Z",
+   "msg": "US Army domain cleared (army.mil is shared with the Guard); senders on shared .mil domains now take the thread's labelled company"
+  },
+  {
+   "t": "2026-10-23T15:31:34.367Z",
+   "msg": "Started: Wave 2 — John's sent mail"
+  },
+  {
+   "t": "2026-10-23T15:31:36.927Z",
+   "msg": "Wave 2 started: tooling extended, tests 40 API + 14 unit pass, fetch of sent mail 2007–2026 under way"
+  },
+  {
+   "t": "2026-10-23T15:44:29.613Z",
+   "msg": "Wave 2: loading 2012–2026 — personal/finance mail filtered; only company-linked threads go in"
+  },
+  {
+   "t": "2026-10-23T15:57:03.232Z",
+   "msg": "Wave 2: loader throttle fixed (xargs -P 5 after a zsh job-count bug launched 15 at once); 5 reading agents started"
+  },
+  {
+   "t": "2026-10-23T15:59:36.938Z",
+   "msg": "Wave 2: 2024-2026 — 34 threads loaded (22+2+10), 1 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T16:37:41.909Z",
+   "msg": "Wave 2: 2018 — 306 threads loaded (JB-4865407A73), 5 commitments, 3 decisions (+2 facts)"
+  },
+  {
+   "t": "2026-10-23T16:39:21.231Z",
+   "msg": "Wave 2: 2022 — 251 threads loaded, 2 commitments, 3 decisions"
+  },
+  {
+   "t": "2026-10-23T16:47:05.070Z",
+   "msg": "Wave 2: 2019 — 301 threads loaded, 7 commitments, 5 decisions"
+  },
+  {
+   "t": "2026-10-23T16:47:05.306Z",
+   "msg": "Wave 2: 2021 — 263 threads loaded, 3 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T17:20:12.555Z",
+   "msg": "Wave 2: 2020 — 341 threads loaded, 2 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T17:31:37.389Z",
+   "msg": "Wave 2: 2016 — 177 threads loaded (JB-E7804E4204), 2 commitments (+1 Schneider renewal), 2 decisions, 6 facts"
+  },
+  {
+   "t": "2026-10-23T17:33:50.188Z",
+   "msg": "Wave 2: 2017 — 137 threads loaded (JB-0861D25AB5), 2 commitments, 2 decisions, 4 facts"
+  },
+  {
+   "t": "2026-10-23T17:36:59.924Z",
+   "msg": "Wave 2: 2023 — 52 threads loaded, 1 commitments, 1 decisions"
+  },
+  {
+   "t": "2026-10-23T17:44:50.551Z",
+   "msg": "Wave 2: 2014 — 289 threads loaded, 3 commitments, 4 decisions"
+  },
+  {
+   "t": "2026-10-23T17:44:50.776Z",
+   "msg": "Wave 2: 2015 — 213 threads loaded, 3 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T17:45:59.427Z",
+   "msg": "Wave 2: 2013 — 250 threads loaded, 5 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T17:51:52.757Z",
+   "msg": "Wave 2: 2012 — 289 threads loaded, 3 commitments, 3 decisions"
+  },
+  {
+   "t": "2026-10-23T18:05:28.307Z",
+   "msg": "Wave 2: 2007 — 135 threads loaded, 3 commitments, 1 decisions"
+  },
+  {
+   "t": "2026-10-23T18:05:31.590Z",
+   "msg": "Wave 2: 2007 correction — 2 commitments (not 3), 5 facts, 1 decision"
+  },
+  {
+   "t": "2026-10-23T18:14:24.135Z",
+   "msg": "Wave 2: 2008 — 311 threads loaded, 5 commitments, 1 decisions"
+  },
+  {
+   "t": "2026-10-23T18:23:03.362Z",
+   "msg": "Wave 2: 2009 — 499 threads loaded, 5 commitments, 3 decisions"
+  },
+  {
+   "t": "2026-10-23T18:23:29.467Z",
+   "msg": "Wave 2: 2011 — 659 threads loaded, 4 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T18:32:44.716Z",
+   "msg": "Wave 2: 2010 — 831 threads loaded, 5 commitments, 2 decisions"
+  },
+  {
+   "t": "2026-10-23T19:07:06.501Z",
+   "msg": "Finished: Wave 2 — John's sent mail"
+  },
+  {
+   "t": "2026-10-23T19:07:06.728Z",
+   "msg": "Wave 2 complete: ~32k sent threads scanned, 5,238 business threads linked to companies loaded, 186 proposals, 112 company domains learned"
+  },
+  {
+   "t": "2026-10-23T19:12:31.478Z",
+   "msg": "Ingestion jobs renamed by mailbox owner (\"John Sundberg — sent mail 2015\", \"John Sundberg — Gmail — Telus\"); loader now requires --mailbox for Gmail/Drive; 27 leftover test jobs removed and test cleanup fixed"
+  },
+  {
+   "t": "2026-10-23T19:40:19.211Z",
+   "msg": "Started: Wave 3 — support@ history"
+  },
+  {
+   "t": "2026-10-23T19:40:20.617Z",
+   "msg": "Wave 3 (support@) started"
+  },
+  {
+   "t": "2026-10-23T19:47:18.643Z",
+   "msg": "Wave 3: 521 support@ threads fetched; 145 linked to a company; loading + escalation reading under way"
+  },
+  {
+   "t": "2026-10-23T19:48:56.152Z",
+   "msg": "Wave 3: 2022 — 3 support threads loaded, 2 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:48:56.413Z",
+   "msg": "Wave 3: 2021 — 1 support threads loaded, 0 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:49:04.222Z",
+   "msg": "Wave 3: 2012 — 6 support threads loaded, 0 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:49:04.528Z",
+   "msg": "Wave 3: 2013 — 6 support threads loaded, 2 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:49:04.797Z",
+   "msg": "Wave 3: 2014 — 7 support threads loaded, 1 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:49:25.003Z",
+   "msg": "Wave 3: 2026 — 7 support threads loaded, 1 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:13.979Z",
+   "msg": "Wave 3: 2009 — 25 support threads loaded, 1 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:14.223Z",
+   "msg": "Wave 3: 2010 — 20 support threads loaded, 4 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:14.489Z",
+   "msg": "Wave 3: 2011 — 33 support threads loaded, 4 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:19.989Z",
+   "msg": "Wave 3: 2018 — 10 support threads loaded, 3 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:20.281Z",
+   "msg": "Wave 3: 2019 — 6 support threads loaded, 0 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:50:20.538Z",
+   "msg": "Wave 3: 2020 — 5 support threads loaded, 0 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:51:39.696Z",
+   "msg": "Wave 3: 2016 — 8 support threads loaded, 2 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:51:39.964Z",
+   "msg": "Wave 3: 2017 — 4 support threads loaded, 0 escalations, 1 lessons"
+  },
+  {
+   "t": "2026-10-23T19:51:40.212Z",
+   "msg": "Wave 3: 2015 — 4 support threads loaded, 1 escalations, 0 lessons"
+  },
+  {
+   "t": "2026-10-23T19:54:00.482Z",
+   "msg": "Finished: Wave 3 — support@ history"
+  },
+  {
+   "t": "2026-10-23T19:54:00.709Z",
+   "msg": "Wave 3 complete: 521 support@ threads, 145 linked, 28 proposals (escalations: HHC go-live license outage 2016, Caretech bad renewal keys 2018, Queens Library cert expiry 2026)"
+  },
+  {
+   "t": "2026-10-23T20:07:51.162Z",
+   "msg": "John: Waves 4 (customer success) and 6 (GitHub) deferred — customer-success mail is in Cassie Lunenberg's or Matt Howe's mailbox"
+  },
+  {
+   "t": "2026-10-23T20:10:54.510Z",
+   "msg": "Started: Wave 5 — Drive beyond top 20"
+  },
+  {
+   "t": "2026-10-23T20:10:55.629Z",
+   "msg": "Wave 5 (Drive beyond top 20) started — 376 companies in 10 batches"
+  }
+ ],
+ "session": {
+  "title": "Data population — waves 0–7",
+  "started": "2026-10-23T02:05:21.842Z"
+ },
+ "history": [
+  {
+   "title": "Corporate Brain MVP build",
+   "started": "2026-10-23T00:27:25.136Z",
+   "ended": "2026-10-23T01:20:32.833Z",
+   "complete": true,
+   "percent": 100,
+   "current": "Automated tests, docs, browser walkthrough",
+   "phases": [
+    {
+     "id": "discovery",
+     "name": "Discovery",
+     "status": "done",
+     "desc": "Inspect ai-labs, repos, API contracts, connectors",
+     "items": [
+      "✓ ai-labs reachable — Kinetic 7.0.0-rc4, space ai-labs, no existing corporate-brain kapp",
+      "✓ Task engine handlers: kinetic_core_api_connection_v1, smtp_email_send_v1 (+12 vendor connectors)",
+      "✓ Google Drive connector authorized — real Vattenfall evidence found (2018 license agreement, Berlin notes)",
+      "Gmail connector — needs re-authentication (/mcp) — Drive used as first working connector",
+      "No LLM API key on host — historian runs extractive (citation-only) with pluggable model provider",
+      "✓ Conventions: apps/ auto-discovery, :3011 launcher, server.mjs export handler, X-Kinetic-Server per-request routing",
+      "✓ Search capability: KQL equality + starts-with (=*) on indexes; no full-text → bounded keyword scan behind RetrievalService",
+      "✓ Audit: native submission activities + review history field"
+     ]
+    },
+    {
+     "id": "model",
+     "name": "Native data model",
+     "status": "done",
+     "desc": "corporate-brain kapp, 11 forms, indexes",
+     "items": [
+      "Deploying kapp corporate-brain + 12 forms (11 entities + audit log)",
+      "✓ Kapp corporate-brain + 12 forms (11 entities + append-only audit log), 205 fields",
+      "✓ 152 index definitions built, incl. unique (Source System, Original ID) for idempotent ingestion",
+      "✓ Private by default: 4 teams, 7 KSL policies (members / reviewers / admins / restricted sources)",
+      "✓ Persistence + duplicate rejection verified (case-safe hashed Source ID is the dedup key)"
+     ]
+    },
+    {
+     "id": "ui",
+     "name": "Application UI",
+     "status": "done",
+     "desc": "Dashboard, companies, people, timeline, knowledge, sources, search",
+     "items": [
+      "Backend: truth model, retrieval service, entity API",
+      "✓ Backend: truth model, retrieval service, entity resolution, review + audit",
+      "✓ Ingestion pipeline + 5 connectors (manual, Kinetic, GitHub, Google Drive, Gmail)",
+      "✓ Corporate Historian: cited answers, gap analysis, optional model narrative",
+      "API server routes",
+      "✓ API server: 30 routes, caller-credential security, agent header, 25-per-page lists",
+      "✓ API smoke test against ai-labs passed (me, stats, search, timeline, historian)",
+      "Web app: dashboard, explorers, timeline, knowledge, sources, review, historian, ingestion",
+      "✓ Web app: 9 tabs + detail views, add/edit on every entity, ≤25 rows per page"
+     ]
+    },
+    {
+     "id": "historian",
+     "name": "Historian agent",
+     "status": "done",
+     "desc": "Source-grounded research over Kinetic records with citations",
+     "items": []
+    },
+    {
+     "id": "ingest",
+     "name": "Ingestion",
+     "status": "done",
+     "desc": "Connector framework, idempotent jobs, first working connector",
+     "items": []
+    },
+    {
+     "id": "review",
+     "name": "Verification & workflows",
+     "status": "done",
+     "desc": "Review queue, audit trail, Task workflows",
+     "items": [
+      "✓ Review queue: approve / reject / dispute / request research / supersede, every decision recorded",
+      "✓ Task workflow: Verification Guard (reverts verification without a human reviewer or evidence)",
+      "✓ Task workflow: Contradiction Review (contradicting proposals → disputed)",
+      "✓ Task workflow: Ingestion Retry (failed jobs re-queued, max 3 attempts)",
+      "✓ 6/6 live workflow tests passed"
+     ]
+    },
+    {
+     "id": "pilot",
+     "name": "Pilot & deploy",
+     "status": "done",
+     "desc": "Vattenfall pilot, tests, docs, deploy",
+     "items": [
+      "Ingesting 24 Vattenfall documents from Google Drive (agent-mediated, bounded scope)",
+      "✓ 24 real Drive documents ingested → 12 events, 9 rule-based + 12 agent-proposed knowledge entries, 10 people",
+      "✓ Idempotency verified: re-run skipped 24/24 sources, 0 duplicate knowledge",
+      "✓ 13/13 unit tests (truth model, identity, extraction, validation)",
+      "✓ 37/37 API tests: idempotency, change/delete detection, provenance, review, GitHub pull, permissions",
+      "✓ Found + fixed 2 privacy gaps (Submission Support / Form Modification bypass) — documented in skills",
+      "✓ 27/27 Playwright UI checks: every tab, company→person→source drill-down, historian, search, propose→approve, new-session persistence",
+      "✓ Contradiction workflow verified through the real app path",
+      "Writing README, ARCHITECTURE, DATA_MODEL, DEPLOYMENT, INGESTION, SECURITY, FUTURE_NATIVE_VECTOR_SEARCH",
+      "✓ Docs: README, ARCHITECTURE, DATA_MODEL, DEPLOYMENT, INGESTION, SECURITY, FUTURE_NATIVE_VECTOR_SEARCH",
+      "✓ Code review: 4 issues fixed, 3 limitations documented; all suites re-run green"
+     ]
+    }
+   ],
+   "log": [
+    {
+     "t": "2026-10-23T00:27:25.136Z",
+     "msg": "Build started"
+    },
+    {
+     "t": "2026-10-23T00:27:33.983Z",
+     "msg": "Started: Discovery"
+    },
+    {
+     "t": "2026-10-23T00:27:34.187Z",
+     "msg": "Connected to ai-labs.kinopsdev.io as john"
+    },
+    {
+     "t": "2026-10-23T00:28:41.717Z",
+     "msg": "Found real Vattenfall evidence in Google Drive"
+    },
+    {
+     "t": "2026-10-23T00:29:41.786Z",
+     "msg": "Finished: Discovery"
+    },
+    {
+     "t": "2026-10-23T00:29:41.984Z",
+     "msg": "Started: Native data model"
+    },
+    {
+     "t": "2026-10-23T00:32:49.684Z",
+     "msg": "Finished: Native data model"
+    },
+    {
+     "t": "2026-10-23T00:32:49.895Z",
+     "msg": "Started: Application UI"
+    },
+    {
+     "t": "2026-10-23T00:47:41.883Z",
+     "msg": "Corporate Brain app live at :3011/corporate-brain/"
+    },
+    {
+     "t": "2026-10-23T00:47:42.086Z",
+     "msg": "Finished: Application UI"
+    },
+    {
+     "t": "2026-10-23T00:47:42.303Z",
+     "msg": "Started: Pilot & deploy"
+    },
+    {
+     "t": "2026-10-23T00:56:06.431Z",
+     "msg": "Finished: Ingestion"
+    },
+    {
+     "t": "2026-10-23T00:56:06.650Z",
+     "msg": "Finished: Historian agent"
+    },
+    {
+     "t": "2026-10-23T00:56:06.872Z",
+     "msg": "Started: Verification & workflows"
+    },
+    {
+     "t": "2026-10-23T00:59:51.453Z",
+     "msg": "Finished: Verification & workflows"
+    },
+    {
+     "t": "2026-10-23T00:59:51.685Z",
+     "msg": "Started: Pilot & deploy"
+    },
+    {
+     "t": "2026-10-23T01:10:53.969Z",
+     "msg": "All test suites green: 13 unit · 39 API · 6 workflow · 27 UI"
+    },
+    {
+     "t": "2026-10-23T01:20:32.333Z",
+     "msg": "Finished: Pilot & deploy"
+    },
+    {
+     "t": "2026-10-23T01:20:32.582Z",
+     "msg": "Build complete"
+    },
+    {
+     "t": "2026-10-23T01:20:32.833Z",
+     "msg": "Corporate Brain MVP deployed on ai-labs"
+    }
+   ]
+  }
+ ]
+}

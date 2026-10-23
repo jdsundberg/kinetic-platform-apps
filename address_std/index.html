@@ -249,12 +249,8 @@ let API = '', AUTH = '', USERNAME = '';
 let stateLookup = {}; // { "CALIFORNIA": "CA", ... }
 let stateAbbrevs = new Set(); // {"AL","AK",...}
 
-function esc(s) {
-  if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = String(s);
-  return d.innerHTML;
-}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub, field) { return sub?.values?.[field] || ''; }
 
 /* ── Auth ── */

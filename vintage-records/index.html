@@ -276,7 +276,8 @@ let API={url:'',auth:'',user:'',displayName:''};
 const KAPP='vintage-records';
 const PS={rec:{pt:null,p:1,h:[]},sched:{pt:null,p:1,h:[]},emp:{pt:null,p:1,h:[]},rat:{pt:null,p:1,h:[]},menu:{pt:null,p:1,h:[]},order:{pt:null,p:1,h:[]},sell:{pt:null,p:1,h:[]},store:{pt:null,p:1,h:[]}};
 
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(s,f){return s.values?.[f]||''}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 function badge(val){if(!val)return'';const c=String(val).toLowerCase().replace(/\s+/g,'-');return `<span class="badge badge-${esc(c)}">${esc(val)}</span>`}

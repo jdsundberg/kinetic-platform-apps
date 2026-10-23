@@ -1,0 +1,339 @@
+{
+  "name": "Minnetonka Cowork",
+  "slug": "cowork",
+  "description": "Coworking space in Minnetonka, MN. Rent open-office single desks by the day, week or month, and schedule six 6-person conference rooms (some with TVs) with double-booking protection.",
+  "category": "Real Estate",
+  "icon": "building",
+  "color": "#1E5A7A",
+  "bg": "#E3EEF4",
+  "forms": [
+    {
+      "slug": "members",
+      "name": "Members",
+      "description": "People and companies who rent desks and book conference rooms",
+      "submissionLabelExpression": "${values('Full Name')} - ${values('Company')}",
+      "fields": [
+        {
+          "name": "Member ID",
+          "required": true
+        },
+        {
+          "name": "Full Name",
+          "required": true
+        },
+        {
+          "name": "Company"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "Plan"
+        },
+        {
+          "name": "Join Date"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Status]",
+          "values[Plan]",
+          "values[Full Name]",
+          "values[Company]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Plan]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "desks",
+      "name": "Desks",
+      "description": "Open-office single desks available to rent by the day, week or month",
+      "submissionLabelExpression": "${values('Desk Name')} - ${values('Zone')}",
+      "fields": [
+        {
+          "name": "Desk ID",
+          "required": true
+        },
+        {
+          "name": "Desk Name",
+          "required": true
+        },
+        {
+          "name": "Zone"
+        },
+        {
+          "name": "Features"
+        },
+        {
+          "name": "Day Rate"
+        },
+        {
+          "name": "Week Rate"
+        },
+        {
+          "name": "Month Rate"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Desk Name]",
+          "values[Zone]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Zone]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "desk-rentals",
+      "name": "Desk Rentals",
+      "description": "Desk rentals: day pass, weekly or monthly, one desk per date range",
+      "submissionLabelExpression": "${values('Desk')} - ${values('Member')} (${values('Start Date')} to ${values('End Date')})",
+      "fields": [
+        {
+          "name": "Rental ID",
+          "required": true
+        },
+        {
+          "name": "Desk",
+          "required": true
+        },
+        {
+          "name": "Zone"
+        },
+        {
+          "name": "Member"
+        },
+        {
+          "name": "Company"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Rental Type"
+        },
+        {
+          "name": "Start Date",
+          "required": true
+        },
+        {
+          "name": "End Date",
+          "required": true
+        },
+        {
+          "name": "Rate"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Desk]",
+          "values[Rental Type]",
+          "values[Status]",
+          "values[Member]",
+          "values[Start Date]",
+          "values[End Date]"
+        ],
+        "compound": [
+          [
+            "values[Desk]",
+            "values[Rental Type]"
+          ],
+          [
+            "values[Desk]",
+            "values[Status]"
+          ],
+          [
+            "values[Rental Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Desk]",
+            "values[Rental Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Desk]",
+            "values[End Date]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "rooms",
+      "name": "Conference Rooms",
+      "description": "Six 6-person conference rooms, some with TVs",
+      "submissionLabelExpression": "${values('Room Name')} (${values('Capacity')} seats)",
+      "fields": [
+        {
+          "name": "Room ID",
+          "required": true
+        },
+        {
+          "name": "Room Name",
+          "required": true
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Has TV"
+        },
+        {
+          "name": "TV Size"
+        },
+        {
+          "name": "Video Conferencing"
+        },
+        {
+          "name": "Whiteboard"
+        },
+        {
+          "name": "Hourly Rate"
+        },
+        {
+          "name": "Location"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Room Name]",
+          "values[Has TV]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Has TV]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "room-bookings",
+      "name": "Room Bookings",
+      "description": "Conference room reservations in 30-minute increments, 7am to 7pm",
+      "submissionLabelExpression": "${values('Room')} ${values('Booking Date')} ${values('Start Time')}-${values('End Time')} - ${values('Booked By')}",
+      "fields": [
+        {
+          "name": "Booking ID",
+          "required": true
+        },
+        {
+          "name": "Room",
+          "required": true
+        },
+        {
+          "name": "Booking Date",
+          "required": true
+        },
+        {
+          "name": "Start Time",
+          "required": true
+        },
+        {
+          "name": "End Time",
+          "required": true
+        },
+        {
+          "name": "Hours"
+        },
+        {
+          "name": "Booked By"
+        },
+        {
+          "name": "Company"
+        },
+        {
+          "name": "Email"
+        },
+        {
+          "name": "Attendees"
+        },
+        {
+          "name": "Meeting Title"
+        },
+        {
+          "name": "Needs TV"
+        },
+        {
+          "name": "Rate"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Room]",
+          "values[Booking Date]",
+          "values[Status]",
+          "values[Booked By]"
+        ],
+        "compound": [
+          [
+            "values[Room]",
+            "values[Booking Date]"
+          ],
+          [
+            "values[Room]",
+            "values[Status]"
+          ],
+          [
+            "values[Booking Date]",
+            "values[Status]"
+          ],
+          [
+            "values[Room]",
+            "values[Booking Date]",
+            "values[Status]"
+          ]
+        ]
+      }
+    }
+  ]
+}

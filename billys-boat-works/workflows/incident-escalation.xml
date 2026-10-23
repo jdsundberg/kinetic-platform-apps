@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="1">
+        <name>Incident Escalation</name>
+        <author>BillysBoatWorks</author>
+        <notes>Fires when a safety incident is filed. Serious and critical incidents escalate to
+corporate risk immediately and are flagged for review; all incidents are audited.</notes>
+        <lastID>3</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="60" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>false</visible><parameters/>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="Serious or critical?" type="Complete" value="['Serious','Critical'].include?(@values['Severity'].to_s)">kinetic_core_api_connection_v1_1</task>
+                    <task label="Low or moderate" type="Complete" value="!['Serious','Critical'].include?(@values['Severity'].to_s)">kinetic_core_api_connection_v1_2</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Escalate To Risk" x="300" y="110">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/notifications/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Notification ID":"NTF-INC-<%= @run['Id'] %>","Channel":"Email","Template":"Safety Incident Escalation","Recipient Type":"Corporate","Recipient":"Corporate Risk","Recipient Address":"risk@billysboatworks.com","Franchise":"<%= @values['Franchise'] %>","Subject":"<%= @values['Severity'] %> incident: <%= @values['Incident Type'] %> at <%= @values['Location'] %>","Scheduled At":"<%= Time.now.strftime('%Y-%m-%d') %>","Status":"Queued","Body":"Incident <%= @values['Incident ID'] %> reported by <%= @values['Reported By'] %>. Injuries: <%= @values['Injuries'] %>. Authorities notified: <%= @values['Authorities Notified'] %>. Corporate review required."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then audit" type="Complete" value="">kinetic_core_api_connection_v1_2</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Write Audit" x="560" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/audit-log/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Audit ID":"AUD-INC-<%= @run['Id'] %>","Entity Type":"Incident","Entity Reference":"<%= @values['Incident ID'] %>","Action":"Incident escalation workflow","Field Changed":"Corporate Reviewed","Previous Value":"<%= @values['Corporate Reviewed'] %>","New Value":"<%= ['Serious','Critical'].include?(@values['Severity'].to_s) ? 'Escalated - review required' : 'No escalation' %>","Changed By":"Incident Escalation workflow","Changed At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>","Franchise":"<%= @values['Franchise'] %>","Reason":"<%= @values['Severity'] %> <%= @values['Incident Type'] %> at <%= @values['Location'] %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_3" name="Escalation Complete" x="800" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="input" label="Input" required="true" tooltip="Echo">Incident <%= @values['Incident ID'] %> (<%= @values['Severity'] %>) processed.</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents/>
+            </task>
+        </request>
+    </taskTree>
+</tree>

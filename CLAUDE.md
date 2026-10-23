@@ -170,19 +170,27 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
 - **`collectByQuery` signature differs**: base server takes `(kapp, formSlug, kql, auth)`, standalone takes `(formSlug, kql, auth)`
 - Don't assume standalone ports matter — users access everything through :3011
 - Custom APIs are auto-mounted from the app's exported `apiPrefix`/`handleAPI` — do NOT duplicate handler code into `base/server.mjs`
+- **`index.html` must be a full document** — `<!doctype html><html><head>…</head><body>…</body></html>`. The launcher injects its Home (back-to-launcher) icon and user menu before `</body>`; pages that started straight with `<meta>` and had no `</body>` silently lost both (band-scheduler, billys, boat-rental, intramural, cowork — fixed 2026-09-27; the launcher now also appends as a fallback)
 
 ## Required Patterns (from code review)
 
 ### XSS Escaping — Every App Must Have This
 ```javascript
-function esc(s) {
-  if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = String(s);
-  return d.innerHTML;
-}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
+
+// For a value passed as a JS argument inside an inline handler (onclick="fn(...)").
+function jsArg(x){return esc(JSON.stringify(String(x==null?'':x)))}
 ```
 Wrap every `${value}` in `esc()` when rendering to `innerHTML`. No exceptions.
+
+**Do not use the `textContent` → `innerHTML` trick.** It escapes `& < >` but **not quotes**, so any
+value that lands in an attribute breaks it: a TV size of `65"` in `value="${esc(x)}"` shows as `65`
+and saving silently drops the quote; a `"` in a `title="…"` truncates it.
+
+**Inline handlers need `jsArg()`, not `'${esc(x)}'`.** The browser decodes `&#39;` back to `'`
+before running the handler, so `onclick="pick('${esc(name)}')"` still breaks on "Gray's Bay".
+Write `onclick="pick(${jsArg(name)})"` — or better, pass an id and look the record up.
 
 ### `/me` Response Is Flat
 ```javascript

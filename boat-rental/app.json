@@ -1,0 +1,466 @@
+{
+  "name": "Northwoods Boat Rental",
+  "slug": "boat-rental",
+  "description": "Boat rentals across Northern Minnesota lakes. Ski boats, fishing boats and pontoons booked by half day or full day with double-booking protection, plus lake and boat feedback and a quarterly mailing list.",
+  "category": "Hospitality",
+  "icon": "waves",
+  "color": "#0F766E",
+  "bg": "#E0F2F1",
+  "forms": [
+    {
+      "slug": "lakes",
+      "name": "Lakes",
+      "description": "Northern Minnesota lakes where the fleet operates \u2014 launches, marinas and fishery",
+      "submissionLabelExpression": "${values('Lake Name')} - ${values('County')} County",
+      "fields": [
+        {
+          "name": "Lake ID",
+          "required": true
+        },
+        {
+          "name": "Lake Name",
+          "required": true
+        },
+        {
+          "name": "County"
+        },
+        {
+          "name": "Nearest Town"
+        },
+        {
+          "name": "Acres"
+        },
+        {
+          "name": "Max Depth"
+        },
+        {
+          "name": "Boat Launch"
+        },
+        {
+          "name": "Marina"
+        },
+        {
+          "name": "Fish Species"
+        },
+        {
+          "name": "Amenities"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[County]",
+          "values[Lake Name]",
+          "values[Nearest Town]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[County]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "boats",
+      "name": "Boats",
+      "description": "Rental fleet \u2014 ski boats, fishing boats and pontoons stationed on each lake",
+      "submissionLabelExpression": "${values('Boat Name')} - ${values('Boat Type')} (${values('Lake')})",
+      "fields": [
+        {
+          "name": "Boat ID",
+          "required": true
+        },
+        {
+          "name": "Boat Name",
+          "required": true
+        },
+        {
+          "name": "Boat Type"
+        },
+        {
+          "name": "Make"
+        },
+        {
+          "name": "Model"
+        },
+        {
+          "name": "Year"
+        },
+        {
+          "name": "Capacity"
+        },
+        {
+          "name": "Horsepower"
+        },
+        {
+          "name": "Lake"
+        },
+        {
+          "name": "Half Day Rate"
+        },
+        {
+          "name": "Full Day Rate"
+        },
+        {
+          "name": "Engine Hours"
+        },
+        {
+          "name": "Last Service"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Boat Name]",
+          "values[Boat Type]",
+          "values[Lake]",
+          "values[Status]",
+          "values[Year]"
+        ],
+        "compound": [
+          [
+            "values[Boat Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "reservations",
+      "name": "Reservations",
+      "description": "Half day and full day boat bookings \u2014 one boat cannot hold overlapping blocks on a date",
+      "submissionLabelExpression": "${values('Boat')} - ${values('Reservation Date')} (${values('Time Block')})",
+      "fields": [
+        {
+          "name": "Reservation ID",
+          "required": true
+        },
+        {
+          "name": "Reservation Date"
+        },
+        {
+          "name": "Time Block"
+        },
+        {
+          "name": "Boat"
+        },
+        {
+          "name": "Boat Type"
+        },
+        {
+          "name": "Lake"
+        },
+        {
+          "name": "Customer Name"
+        },
+        {
+          "name": "Customer Email"
+        },
+        {
+          "name": "Customer Phone"
+        },
+        {
+          "name": "Party Size"
+        },
+        {
+          "name": "Rate"
+        },
+        {
+          "name": "Deposit"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Boat Type]",
+          "values[Boat]",
+          "values[Customer Email]",
+          "values[Customer Name]",
+          "values[Lake]",
+          "values[Reservation Date]",
+          "values[Status]",
+          "values[Time Block]"
+        ],
+        "compound": [
+          [
+            "values[Boat]",
+            "values[Reservation Date]"
+          ],
+          [
+            "values[Status]",
+            "values[Reservation Date]"
+          ],
+          [
+            "values[Lake]",
+            "values[Status]"
+          ],
+          [
+            "values[Boat Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]"
+          ],
+          [
+            "values[Lake]",
+            "values[Time Block]"
+          ],
+          [
+            "values[Boat Type]",
+            "values[Time Block]"
+          ],
+          [
+            "values[Time Block]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]",
+            "values[Time Block]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Time Block]",
+            "values[Status]"
+          ],
+          [
+            "values[Boat Type]",
+            "values[Time Block]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Boat Type]",
+            "values[Time Block]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "feedback",
+      "name": "Feedback",
+      "description": "Renter feedback on both the boat and the lake \u2014 condition, staff and whether they would rent again",
+      "submissionLabelExpression": "${values('Feedback Type')} - ${values('Submitted By')} (${values('Overall Rating')})",
+      "fields": [
+        {
+          "name": "Feedback ID",
+          "required": true
+        },
+        {
+          "name": "Date"
+        },
+        {
+          "name": "Feedback Type"
+        },
+        {
+          "name": "Boat"
+        },
+        {
+          "name": "Boat Type"
+        },
+        {
+          "name": "Lake"
+        },
+        {
+          "name": "Reservation"
+        },
+        {
+          "name": "Submitted By"
+        },
+        {
+          "name": "Submitted Email"
+        },
+        {
+          "name": "Overall Rating"
+        },
+        {
+          "name": "Boat Rating"
+        },
+        {
+          "name": "Lake Rating"
+        },
+        {
+          "name": "Cleanliness Rating"
+        },
+        {
+          "name": "Staff Rating"
+        },
+        {
+          "name": "Would Rent Again"
+        },
+        {
+          "name": "Comment",
+          "rows": 3
+        },
+        {
+          "name": "Status"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Boat]",
+          "values[Date]",
+          "values[Feedback Type]",
+          "values[Lake]",
+          "values[Overall Rating]",
+          "values[Status]",
+          "values[Would Rent Again]"
+        ],
+        "compound": [
+          [
+            "values[Boat]",
+            "values[Status]"
+          ],
+          [
+            "values[Lake]",
+            "values[Status]"
+          ],
+          [
+            "values[Feedback Type]",
+            "values[Status]"
+          ],
+          [
+            "values[Feedback Type]",
+            "values[Lake]"
+          ],
+          [
+            "values[Feedback Type]",
+            "values[Lake]",
+            "values[Status]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "mailing-list",
+      "name": "Mailing List",
+      "description": "Quarterly newsletter subscribers \u2014 interests, preferred lake and which quarter they were last mailed",
+      "submissionLabelExpression": "${values('First Name')} ${values('Last Name')} - ${values('Email')}",
+      "fields": [
+        {
+          "name": "Subscriber ID",
+          "required": true
+        },
+        {
+          "name": "First Name"
+        },
+        {
+          "name": "Last Name"
+        },
+        {
+          "name": "Email",
+          "required": true
+        },
+        {
+          "name": "Phone"
+        },
+        {
+          "name": "City"
+        },
+        {
+          "name": "State"
+        },
+        {
+          "name": "Preferred Lake"
+        },
+        {
+          "name": "Interests"
+        },
+        {
+          "name": "Source"
+        },
+        {
+          "name": "Subscribed Date"
+        },
+        {
+          "name": "Last Mailed"
+        },
+        {
+          "name": "Last Quarter Mailed"
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Notes",
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Email]",
+          "values[Interests]",
+          "values[Last Name]",
+          "values[Last Quarter Mailed]",
+          "values[Preferred Lake]",
+          "values[Source]",
+          "values[State]",
+          "values[Status]"
+        ],
+        "compound": [
+          [
+            "values[Status]",
+            "values[Last Quarter Mailed]"
+          ],
+          [
+            "values[Status]",
+            "values[Preferred Lake]"
+          ],
+          [
+            "values[Status]",
+            "values[Interests]"
+          ],
+          [
+            "values[Interests]",
+            "values[Preferred Lake]"
+          ],
+          [
+            "values[Status]",
+            "values[Interests]",
+            "values[Preferred Lake]"
+          ]
+        ]
+      }
+    }
+  ]
+}

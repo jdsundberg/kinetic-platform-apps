@@ -493,12 +493,8 @@ function isVirtual(slug) { return virtualTables.some(t => t.slug === (slug || ac
 function findTable(slug) { slug = slug || activeTable; if (activeKappOverride) { return virtualTables.find(t => t.slug === slug) || tables.find(t => t.slug === slug); } return tables.find(t => t.slug === slug) || virtualTables.find(t => t.slug === slug); }
 
 /* ── Helpers ── */
-function esc(s) {
-  if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = String(s);
-  return d.innerHTML;
-}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 
 // Attribute-safe escaper (esc() doesn't encode " which breaks HTML attributes)
 function escAttr(s) {

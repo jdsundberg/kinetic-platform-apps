@@ -1,0 +1,3201 @@
+{
+  "name": "Telco NOC — Network Operations",
+  "slug": "telco-noc",
+  "category": "Telecom",
+  "description": "Telecom NOC: alarms → correlation → one incident → topology traversal → service & customer impact → field work → comms → verified recovery. Multi-tenant, provenance-aware, AI suggestions with citations.",
+  "icon": "radio-tower",
+  "color": "#0B2A4A",
+  "bg": "#E8EEF5",
+  "forms": [
+    {
+      "slug": "tenants",
+      "name": "Tenants",
+      "description": "Isolation boundary: one operator organization (or wholesale partner) whose data is invisible to other tenants.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Status",
+          "required": true
+        },
+        {
+          "name": "Data Region",
+          "required": false
+        },
+        {
+          "name": "Retention Policy",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Default Timezone",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [],
+        "unique": [
+          [
+            "values[Tenant ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "teams",
+      "name": "Resolver Teams",
+      "description": "Operator organization and resolver groups that own incidents, work and escalation.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Team ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Organization",
+          "required": false
+        },
+        {
+          "name": "Function",
+          "required": false
+        },
+        {
+          "name": "Regions",
+          "required": false
+        },
+        {
+          "name": "Escalation Team ID",
+          "required": false
+        },
+        {
+          "name": "Queue Email",
+          "required": false
+        },
+        {
+          "name": "Status",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Team ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Function]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Team ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "oncall",
+      "name": "On-Call Assignments",
+      "description": "Who is on call for which team, role and region over which UTC interval. Drives assignment and escalation.",
+      "submissionLabelExpression": "${values('User')} — ${values('Team ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Assignment ID",
+          "required": true
+        },
+        {
+          "name": "Team ID",
+          "required": true
+        },
+        {
+          "name": "User",
+          "required": true
+        },
+        {
+          "name": "Display Name",
+          "required": false
+        },
+        {
+          "name": "Role",
+          "required": true
+        },
+        {
+          "name": "Region",
+          "required": false
+        },
+        {
+          "name": "Starts At",
+          "required": true
+        },
+        {
+          "name": "Ends At",
+          "required": true
+        },
+        {
+          "name": "Escalation Level",
+          "required": false
+        },
+        {
+          "name": "Contact Phone",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Team ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[User]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Team ID]",
+            "values[Role]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Assignment ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "geo-areas",
+      "name": "Regions & Markets",
+      "description": "Region → Market hierarchy used for roll-ups, on-call routing and executive views.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Area ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Area Type",
+          "required": true
+        },
+        {
+          "name": "Parent Area ID",
+          "required": false
+        },
+        {
+          "name": "Boundary GeoJSON",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Centroid Lat",
+          "required": false
+        },
+        {
+          "name": "Centroid Lon",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Area Type]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Parent Area ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Area ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "sites",
+      "name": "Sites",
+      "description": "A physical location (hub, CO, cell site, hut, customer premises) with address, coordinates and access/safety data for field work.",
+      "submissionLabelExpression": "${values('Site ID')} ${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Site ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Site Type",
+          "required": true
+        },
+        {
+          "name": "Market ID",
+          "required": true
+        },
+        {
+          "name": "Region ID",
+          "required": true
+        },
+        {
+          "name": "Street",
+          "required": false
+        },
+        {
+          "name": "City",
+          "required": false
+        },
+        {
+          "name": "State",
+          "required": false
+        },
+        {
+          "name": "Postal Code",
+          "required": false
+        },
+        {
+          "name": "Latitude",
+          "required": true
+        },
+        {
+          "name": "Longitude",
+          "required": true
+        },
+        {
+          "name": "Geo Source",
+          "required": false
+        },
+        {
+          "name": "Access Instructions",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Access Hours",
+          "required": false
+        },
+        {
+          "name": "Safety Notes",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Landlord",
+          "required": false
+        },
+        {
+          "name": "Backup Power",
+          "required": false
+        },
+        {
+          "name": "Lifecycle",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Site ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Site Type]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Market ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Region ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Market ID]",
+            "values[Site Type]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Site ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "resources",
+      "name": "Network Resources",
+      "description": "Every physical, logical and virtual network resource — fiber spans, ROADMs, ports, wavelengths, OTN/Ethernet links, routers, interfaces, circuits, RAN nodes, cells, power plants, network functions, paths. One table, typed by Resource Type (TMF639-style Resource with specialization).",
+      "submissionLabelExpression": "${values('Resource ID')} ${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Resource ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Resource Class",
+          "required": true
+        },
+        {
+          "name": "Resource Type",
+          "required": true
+        },
+        {
+          "name": "Site ID",
+          "required": false
+        },
+        {
+          "name": "A Site ID",
+          "required": false
+        },
+        {
+          "name": "Z Site ID",
+          "required": false
+        },
+        {
+          "name": "Parent Resource ID",
+          "required": false
+        },
+        {
+          "name": "Vendor",
+          "required": false
+        },
+        {
+          "name": "Model",
+          "required": false
+        },
+        {
+          "name": "Serial",
+          "required": false
+        },
+        {
+          "name": "Aliases",
+          "required": false
+        },
+        {
+          "name": "Admin State",
+          "required": false
+        },
+        {
+          "name": "Oper State",
+          "required": false
+        },
+        {
+          "name": "Health",
+          "required": false
+        },
+        {
+          "name": "Health Updated At",
+          "required": false
+        },
+        {
+          "name": "Criticality",
+          "required": false
+        },
+        {
+          "name": "Route Length Km",
+          "required": false
+        },
+        {
+          "name": "Characteristics",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Lifecycle",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Resource ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Resource Type]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Site ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Health]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[A Site ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Z Site ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Resource Type]",
+            "values[Health]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Site ID]",
+            "values[Resource Type]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Site ID]",
+            "values[Health]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Resource Type]",
+            "values[Health]",
+            "values[Site ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Resource ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "relationships",
+      "name": "Topology Relationships",
+      "description": "Time-aware, provenance-carrying dependency edges. 'From' depends on 'To'. Includes resource→resource and service instance→resource edges so impact traversal is one graph.",
+      "submissionLabelExpression": "${values('From ID')} → ${values('To ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Relationship ID",
+          "required": true
+        },
+        {
+          "name": "From ID",
+          "required": true
+        },
+        {
+          "name": "From Kind",
+          "required": true
+        },
+        {
+          "name": "To ID",
+          "required": true
+        },
+        {
+          "name": "Relationship Type",
+          "required": true
+        },
+        {
+          "name": "Redundancy Group",
+          "required": false
+        },
+        {
+          "name": "Protection Role",
+          "required": false
+        },
+        {
+          "name": "Valid From",
+          "required": true
+        },
+        {
+          "name": "Valid To",
+          "required": false
+        },
+        {
+          "name": "Status",
+          "required": false
+        },
+        {
+          "name": "Last Verified At",
+          "required": true
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[From ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[To ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[To ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[From ID]",
+            "values[Status]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Relationship ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "identifiers",
+      "name": "External Identifier Map",
+      "description": "Maps every identifier an OSS/BSS/monitoring system uses (NE:AID strings, hostnames+ifnames, vendor IDs, GIS IDs, billing IDs) to the stable internal ID. Alarm resource resolution reads only this table.",
+      "submissionLabelExpression": "${values('External ID')} → ${values('Internal ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Mapping ID",
+          "required": true
+        },
+        {
+          "name": "External ID",
+          "required": true
+        },
+        {
+          "name": "Source System",
+          "required": true
+        },
+        {
+          "name": "Entity Type",
+          "required": true
+        },
+        {
+          "name": "Internal ID",
+          "required": true
+        },
+        {
+          "name": "Match Kind",
+          "required": false
+        },
+        {
+          "name": "Valid From",
+          "required": true
+        },
+        {
+          "name": "Valid To",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        },
+        {
+          "name": "Last Verified At",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[External ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Internal ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Mapping ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "offerings",
+      "name": "Service Offerings",
+      "description": "Catalog of sellable services and their default SLA.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Offering ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Category",
+          "required": false
+        },
+        {
+          "name": "Default SLA ID",
+          "required": false
+        },
+        {
+          "name": "Status",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Offering ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Offering ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "service-instances",
+      "name": "Service Instances",
+      "description": "A deployed, customer-facing (CFS) or resource-facing (RFS) service. CFS instances are what customers buy; they depend on resources via relationships.",
+      "submissionLabelExpression": "${values('Service Instance ID')} ${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Service Instance ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Offering ID",
+          "required": true
+        },
+        {
+          "name": "Service Class",
+          "required": true
+        },
+        {
+          "name": "Status",
+          "required": false
+        },
+        {
+          "name": "Primary Site ID",
+          "required": false
+        },
+        {
+          "name": "Protection",
+          "required": false
+        },
+        {
+          "name": "Monitoring",
+          "required": false
+        },
+        {
+          "name": "Bandwidth",
+          "required": false
+        },
+        {
+          "name": "Health",
+          "required": false
+        },
+        {
+          "name": "Health Updated At",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Service Instance ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Offering ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Health]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Primary Site ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Offering ID]",
+            "values[Health]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Service Instance ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "subscriptions",
+      "name": "Customer Subscriptions",
+      "description": "Links a customer account to a service instance under a contract + SLA. Consumer RAN coverage is modelled as aggregate segment subscriptions (Subscriber Count), never individual subscribers.",
+      "submissionLabelExpression": "${values('Subscription ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Subscription ID",
+          "required": true
+        },
+        {
+          "name": "Account ID",
+          "required": true
+        },
+        {
+          "name": "Service Instance ID",
+          "required": true
+        },
+        {
+          "name": "SLA ID",
+          "required": true
+        },
+        {
+          "name": "Contract ID",
+          "required": false
+        },
+        {
+          "name": "Contract End",
+          "required": false
+        },
+        {
+          "name": "Status",
+          "required": false
+        },
+        {
+          "name": "Valid From",
+          "required": true
+        },
+        {
+          "name": "Valid To",
+          "required": false
+        },
+        {
+          "name": "Monthly Recurring Charge",
+          "required": false
+        },
+        {
+          "name": "Subscriber Count",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Account ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Service Instance ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Service Instance ID]",
+            "values[Status]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Subscription ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "customers",
+      "name": "Customer Accounts",
+      "description": "Billing/relationship account. Carries segment, tier, public-safety flag and comms preferences used for audience selection.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Account ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Segment",
+          "required": true
+        },
+        {
+          "name": "Tier",
+          "required": false
+        },
+        {
+          "name": "Public Safety",
+          "required": false
+        },
+        {
+          "name": "Account Manager",
+          "required": false
+        },
+        {
+          "name": "Region ID",
+          "required": false
+        },
+        {
+          "name": "Preferred Channel",
+          "required": false
+        },
+        {
+          "name": "Status Page Opt In",
+          "required": false
+        },
+        {
+          "name": "Status",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Account ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Segment]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Tier]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Account ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "contacts",
+      "name": "Customer Contacts",
+      "description": "People to notify. PII — restricted visibility; masked in AI prompts and exports.",
+      "submissionLabelExpression": "${values('Contact ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Contact ID",
+          "required": true
+        },
+        {
+          "name": "Account ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Role",
+          "required": false
+        },
+        {
+          "name": "Email",
+          "required": false
+        },
+        {
+          "name": "Phone",
+          "required": false
+        },
+        {
+          "name": "Preferred Channel",
+          "required": false
+        },
+        {
+          "name": "Notify On",
+          "required": false
+        },
+        {
+          "name": "Consent Recorded At",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Account ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Contact ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "slas",
+      "name": "SLAs",
+      "description": "Service level terms used to compute exposure, credits and breach ETA.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "SLA ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Availability Target Pct",
+          "required": true
+        },
+        {
+          "name": "Measurement Window",
+          "required": false
+        },
+        {
+          "name": "MTTR Target Hours",
+          "required": false
+        },
+        {
+          "name": "Credit Pct Per Hour",
+          "required": false
+        },
+        {
+          "name": "Credit Cap Pct",
+          "required": false
+        },
+        {
+          "name": "Response Minutes",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[SLA ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[SLA ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "raw-alarms",
+      "name": "Raw Alarm Events",
+      "description": "Immutable intake log: exactly one record per accepted source event (idempotency key), with the original payload for provenance and replay.",
+      "submissionLabelExpression": "${values('Idempotency Key')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Raw ID",
+          "required": true
+        },
+        {
+          "name": "Idempotency Key",
+          "required": true
+        },
+        {
+          "name": "Source System",
+          "required": true
+        },
+        {
+          "name": "Source Event ID",
+          "required": true
+        },
+        {
+          "name": "Schema Version",
+          "required": true
+        },
+        {
+          "name": "Event Time",
+          "required": true
+        },
+        {
+          "name": "Received At",
+          "required": true
+        },
+        {
+          "name": "Processing State",
+          "required": true
+        },
+        {
+          "name": "Reject Reason",
+          "required": false
+        },
+        {
+          "name": "Fingerprint",
+          "required": false
+        },
+        {
+          "name": "Alarm ID",
+          "required": false
+        },
+        {
+          "name": "Late",
+          "required": false
+        },
+        {
+          "name": "Clock Skew",
+          "required": false
+        },
+        {
+          "name": "Payload",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Idempotency Key]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Processing State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Source System]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Idempotency Key]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Raw ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "alarms",
+      "name": "Normalized Alarms",
+      "description": "One record per alarm condition instance (fingerprint while active). Repeats increment Occurrence Count instead of creating records.",
+      "submissionLabelExpression": "${values('Alarm ID')} ${values('Alarm Type')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Alarm ID",
+          "required": true
+        },
+        {
+          "name": "Fingerprint",
+          "required": true
+        },
+        {
+          "name": "Resource ID",
+          "required": false
+        },
+        {
+          "name": "Resource Ref",
+          "required": true
+        },
+        {
+          "name": "Resource Match",
+          "required": true
+        },
+        {
+          "name": "Site ID",
+          "required": false
+        },
+        {
+          "name": "Alarm Type",
+          "required": true
+        },
+        {
+          "name": "Probable Cause",
+          "required": false
+        },
+        {
+          "name": "Specific Problem",
+          "required": false
+        },
+        {
+          "name": "Severity",
+          "required": true
+        },
+        {
+          "name": "Vendor Severity",
+          "required": false
+        },
+        {
+          "name": "Service Affecting",
+          "required": false
+        },
+        {
+          "name": "State",
+          "required": true
+        },
+        {
+          "name": "First Occurred At",
+          "required": true
+        },
+        {
+          "name": "Last Occurred At",
+          "required": true
+        },
+        {
+          "name": "Cleared At",
+          "required": false
+        },
+        {
+          "name": "Occurrence Count",
+          "required": false
+        },
+        {
+          "name": "Source Systems",
+          "required": false
+        },
+        {
+          "name": "Related Resource Ref",
+          "required": false
+        },
+        {
+          "name": "Related Resource ID",
+          "required": false
+        },
+        {
+          "name": "Correlation Group ID",
+          "required": false
+        },
+        {
+          "name": "Correlation Role",
+          "required": false
+        },
+        {
+          "name": "Incident ID",
+          "required": false
+        },
+        {
+          "name": "Suppressed By Change ID",
+          "required": false
+        },
+        {
+          "name": "Last Raw ID",
+          "required": false
+        },
+        {
+          "name": "Normalization Notes",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Alarm ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Fingerprint]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Correlation Role]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Correlation Group ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Resource ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Fingerprint]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]",
+            "values[Correlation Role]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[Correlation Role]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[State]",
+            "values[Correlation Role]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Alarm ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "correlation-groups",
+      "name": "Correlation Groups",
+      "description": "A set of alarms explained by one root resource failure, with the reasoning and evidence that produced it.",
+      "submissionLabelExpression": "${values('Group ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Group ID",
+          "required": true
+        },
+        {
+          "name": "Rule",
+          "required": true
+        },
+        {
+          "name": "Root Resource ID",
+          "required": true
+        },
+        {
+          "name": "Root Confidence",
+          "required": false
+        },
+        {
+          "name": "Root Basis",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Alarm Count",
+          "required": false
+        },
+        {
+          "name": "Resource Count",
+          "required": false
+        },
+        {
+          "name": "First Alarm At",
+          "required": false
+        },
+        {
+          "name": "Last Alarm At",
+          "required": false
+        },
+        {
+          "name": "State",
+          "required": false
+        },
+        {
+          "name": "Incident ID",
+          "required": false
+        },
+        {
+          "name": "Evidence",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Group ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Root Resource ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Root Resource ID]",
+            "values[State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Group ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "metrics",
+      "name": "Metric Observations",
+      "description": "Normalized KPI / probe samples used to confirm impact and verify customer service recovery.",
+      "submissionLabelExpression": "${values('Subject ID')} ${values('Metric')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Observation ID",
+          "required": true
+        },
+        {
+          "name": "Subject ID",
+          "required": true
+        },
+        {
+          "name": "Metric",
+          "required": true
+        },
+        {
+          "name": "Value",
+          "required": true
+        },
+        {
+          "name": "Unit",
+          "required": true
+        },
+        {
+          "name": "Original Value",
+          "required": false
+        },
+        {
+          "name": "Original Unit",
+          "required": false
+        },
+        {
+          "name": "Observed At",
+          "required": true
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "Quality",
+          "required": false
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Subject ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Metric]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Subject ID]",
+            "values[Metric]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Observation ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "incidents",
+      "name": "Incidents",
+      "description": "The operational response record. One per correlated failure, not per alarm.",
+      "submissionLabelExpression": "${values('Incident ID')} ${values('Title')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "State",
+          "required": true
+        },
+        {
+          "name": "Priority",
+          "required": true
+        },
+        {
+          "name": "Major Incident",
+          "required": false
+        },
+        {
+          "name": "Major Declared At",
+          "required": false
+        },
+        {
+          "name": "Major Declared By",
+          "required": false
+        },
+        {
+          "name": "Owner",
+          "required": false
+        },
+        {
+          "name": "Owner Team ID",
+          "required": false
+        },
+        {
+          "name": "Escalation Level",
+          "required": false
+        },
+        {
+          "name": "Root Resource ID",
+          "required": false
+        },
+        {
+          "name": "Correlation Group ID",
+          "required": false
+        },
+        {
+          "name": "Probable Cause",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Probable Cause Confidence",
+          "required": false
+        },
+        {
+          "name": "Observed Root Cause",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Cause Confirmed By",
+          "required": false
+        },
+        {
+          "name": "Cause Confirmed At",
+          "required": false
+        },
+        {
+          "name": "Impact Summary",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Customers Affected",
+          "required": false
+        },
+        {
+          "name": "Services Affected",
+          "required": false
+        },
+        {
+          "name": "SLA Exposure USD",
+          "required": false
+        },
+        {
+          "name": "Detected At",
+          "required": true
+        },
+        {
+          "name": "Acknowledged At",
+          "required": false
+        },
+        {
+          "name": "Mitigated At",
+          "required": false
+        },
+        {
+          "name": "Network Recovered At",
+          "required": false
+        },
+        {
+          "name": "Service Recovered At",
+          "required": false
+        },
+        {
+          "name": "Verification State",
+          "required": false
+        },
+        {
+          "name": "Resolved At",
+          "required": false
+        },
+        {
+          "name": "Closed At",
+          "required": false
+        },
+        {
+          "name": "Comms State",
+          "required": false
+        },
+        {
+          "name": "Next Update Due At",
+          "required": false
+        },
+        {
+          "name": "Problem ID",
+          "required": false
+        },
+        {
+          "name": "Region ID",
+          "required": false
+        },
+        {
+          "name": "Market ID",
+          "required": false
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Priority]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Owner]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Owner Team ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Root Resource ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Region ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Major Incident]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]",
+            "values[Priority]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Root Resource ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Owner Team ID]",
+            "values[State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "incident-updates",
+      "name": "Incident Timeline",
+      "description": "Append-only timeline: state changes, assignments, escalations, runbook steps (runbook execution), field updates, comms, verification, AI suggestions and decisions.",
+      "submissionLabelExpression": "${values('Incident ID')} ${values('Update Type')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Update ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Update Type",
+          "required": true
+        },
+        {
+          "name": "At",
+          "required": true
+        },
+        {
+          "name": "Author",
+          "required": true
+        },
+        {
+          "name": "Actor Type",
+          "required": false
+        },
+        {
+          "name": "Summary",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Details",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Visibility",
+          "required": false
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Update Type]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Update ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "runbooks",
+      "name": "Runbooks",
+      "description": "Versioned diagnostic/restoration procedures matched to resource types and alarm types.",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Runbook ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Version",
+          "required": false
+        },
+        {
+          "name": "Applies To Resource Types",
+          "required": false
+        },
+        {
+          "name": "Applies To Alarm Types",
+          "required": false
+        },
+        {
+          "name": "Steps",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Owner Team ID",
+          "required": false
+        },
+        {
+          "name": "Requires Approval Steps",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Runbook ID]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Runbook ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "problems",
+      "name": "Problems & Known Errors",
+      "description": "Underlying cause across one or more incidents; becomes a Known Error when root cause + workaround are documented.",
+      "submissionLabelExpression": "${values('Problem ID')} ${values('Title')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Problem ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "State",
+          "required": false
+        },
+        {
+          "name": "Related Incident IDs",
+          "required": false
+        },
+        {
+          "name": "Resource IDs",
+          "required": false
+        },
+        {
+          "name": "Root Cause",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Workaround",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Known Error",
+          "required": false
+        },
+        {
+          "name": "Owner",
+          "required": false
+        },
+        {
+          "name": "PIR Due At",
+          "required": false
+        },
+        {
+          "name": "PIR Summary",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Actions",
+          "required": false,
+          "rows": 3
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Problem ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Problem ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "changes",
+      "name": "Change Requests",
+      "description": "Planned work incl. maintenance window, risk and alarm suppression scope. Also records approval, deployment and rollback events in Timeline.",
+      "submissionLabelExpression": "${values('Change ID')} ${values('Title')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Change ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "Change Type",
+          "required": false
+        },
+        {
+          "name": "State",
+          "required": false
+        },
+        {
+          "name": "Risk",
+          "required": false
+        },
+        {
+          "name": "Risk Score",
+          "required": false
+        },
+        {
+          "name": "Risk Factors",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Affected Resource IDs",
+          "required": true
+        },
+        {
+          "name": "Window Start",
+          "required": true
+        },
+        {
+          "name": "Window End",
+          "required": true
+        },
+        {
+          "name": "Suppress Alarms",
+          "required": false
+        },
+        {
+          "name": "Owner",
+          "required": false
+        },
+        {
+          "name": "Approver",
+          "required": false
+        },
+        {
+          "name": "Approved At",
+          "required": false
+        },
+        {
+          "name": "Customer Impact Expected",
+          "required": false
+        },
+        {
+          "name": "Rollback Plan",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Implementation Result",
+          "required": false
+        },
+        {
+          "name": "Related Incident ID",
+          "required": false
+        },
+        {
+          "name": "Timeline",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Change ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]",
+            "values[Risk]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Change ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "work-orders",
+      "name": "Work Orders",
+      "description": "Actionable field work: where, what, access, safety, parts, completion criteria, evidence. Dispatch, assignment and site visit are tracked as states + timestamps on the order.",
+      "submissionLabelExpression": "${values('Work Order ID')} ${values('Summary')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Work Order ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": false
+        },
+        {
+          "name": "Change ID",
+          "required": false
+        },
+        {
+          "name": "Work Type",
+          "required": true
+        },
+        {
+          "name": "State",
+          "required": true
+        },
+        {
+          "name": "Priority",
+          "required": true
+        },
+        {
+          "name": "Summary",
+          "required": true
+        },
+        {
+          "name": "Site ID",
+          "required": false
+        },
+        {
+          "name": "Resource ID",
+          "required": false
+        },
+        {
+          "name": "Location Description",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Latitude",
+          "required": false
+        },
+        {
+          "name": "Longitude",
+          "required": false
+        },
+        {
+          "name": "Access Instructions",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Safety Notes",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Parts",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Completion Criteria",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Assigned Tech",
+          "required": false
+        },
+        {
+          "name": "Crew",
+          "required": false
+        },
+        {
+          "name": "Dispatch Approved By",
+          "required": false
+        },
+        {
+          "name": "Dispatched At",
+          "required": false
+        },
+        {
+          "name": "ETA",
+          "required": false
+        },
+        {
+          "name": "Accepted At",
+          "required": false
+        },
+        {
+          "name": "Arrived At",
+          "required": false
+        },
+        {
+          "name": "Completed At",
+          "required": false
+        },
+        {
+          "name": "Findings",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Completion Notes",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Evidence",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Work Order ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Assigned Tech]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Assigned Tech]",
+            "values[State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Work Order ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "parts",
+      "name": "Parts Inventory",
+      "description": "Spares by depot, with reserved quantity (inventory reservation). Reservations are referenced from work order Parts JSON.",
+      "submissionLabelExpression": "${values('Name')} @ ${values('Depot')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Part ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Depot",
+          "required": true
+        },
+        {
+          "name": "Qty On Hand",
+          "required": true
+        },
+        {
+          "name": "Qty Reserved",
+          "required": false
+        },
+        {
+          "name": "Unit",
+          "required": false
+        },
+        {
+          "name": "Source System",
+          "required": false
+        },
+        {
+          "name": "External IDs",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Last Seen At",
+          "required": false
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Part ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Depot]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Part ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "impacts",
+      "name": "Impact Assessments",
+      "description": "Per incident × service instance × subscription: the impact class, the evidence, the topology path used, SLA exposure and recovery state.",
+      "submissionLabelExpression": "${values('Service Instance ID')} ${values('Impact Class')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Impact ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Service Instance ID",
+          "required": true
+        },
+        {
+          "name": "Subscription ID",
+          "required": false
+        },
+        {
+          "name": "Account ID",
+          "required": false
+        },
+        {
+          "name": "Account Name",
+          "required": false
+        },
+        {
+          "name": "Segment",
+          "required": false
+        },
+        {
+          "name": "Public Safety",
+          "required": false
+        },
+        {
+          "name": "Impact Class",
+          "required": true
+        },
+        {
+          "name": "Basis",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Path",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Topology As Of",
+          "required": true
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        },
+        {
+          "name": "SLA ID",
+          "required": false
+        },
+        {
+          "name": "Impact Started At",
+          "required": false
+        },
+        {
+          "name": "Impact Ended At",
+          "required": false
+        },
+        {
+          "name": "Minutes Impacted",
+          "required": false
+        },
+        {
+          "name": "SLA Exposure USD",
+          "required": false
+        },
+        {
+          "name": "SLA Breach At",
+          "required": false
+        },
+        {
+          "name": "Recovery State",
+          "required": false
+        },
+        {
+          "name": "Verified At",
+          "required": false
+        },
+        {
+          "name": "Verification Evidence",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Impact ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Account ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Impact Class]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Service Instance ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Recovery State]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[Impact Class]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Account ID]",
+            "values[Recovery State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Impact ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "notifications",
+      "name": "Customer Notifications",
+      "description": "A communication to an audience: draft → approval → delivery, with who approved and what was sent.",
+      "submissionLabelExpression": "${values('Notification ID')} ${values('Sequence')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Notification ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": true
+        },
+        {
+          "name": "Sequence",
+          "required": true
+        },
+        {
+          "name": "Audience",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Audience Size",
+          "required": false
+        },
+        {
+          "name": "Channel",
+          "required": true
+        },
+        {
+          "name": "Subject",
+          "required": false
+        },
+        {
+          "name": "Body",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Status",
+          "required": true
+        },
+        {
+          "name": "Drafted By",
+          "required": false
+        },
+        {
+          "name": "AI Recommendation ID",
+          "required": false
+        },
+        {
+          "name": "Approved By",
+          "required": false
+        },
+        {
+          "name": "Approved At",
+          "required": false
+        },
+        {
+          "name": "Sent At",
+          "required": false
+        },
+        {
+          "name": "Delivery Results",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Notification ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[Status]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Notification ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "audit",
+      "name": "Audit Events",
+      "description": "Who/what did what to which record, when and why — users, engine, workflows, integrations and AI.",
+      "submissionLabelExpression": "${values('Action')} ${values('Entity ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Audit ID",
+          "required": true
+        },
+        {
+          "name": "At",
+          "required": true
+        },
+        {
+          "name": "Actor",
+          "required": true
+        },
+        {
+          "name": "Actor Type",
+          "required": true
+        },
+        {
+          "name": "Action",
+          "required": true
+        },
+        {
+          "name": "Entity Type",
+          "required": true
+        },
+        {
+          "name": "Entity ID",
+          "required": true
+        },
+        {
+          "name": "Before",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "After",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Reason",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Request ID",
+          "required": false
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Entity ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Action]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Actor]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Audit ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "integrations",
+      "name": "Integration Sources",
+      "description": "Every upstream/downstream system: mode, health, freshness. Drives the freshness banners in the UI.",
+      "submissionLabelExpression": "${values('Name')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Source ID",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "required": true
+        },
+        {
+          "name": "Source Type",
+          "required": true
+        },
+        {
+          "name": "Mode",
+          "required": true
+        },
+        {
+          "name": "Status",
+          "required": true
+        },
+        {
+          "name": "Last Success At",
+          "required": false
+        },
+        {
+          "name": "Last Error",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Freshness SLA Minutes",
+          "required": false
+        },
+        {
+          "name": "Records Last Run",
+          "required": false
+        },
+        {
+          "name": "Endpoint",
+          "required": false
+        },
+        {
+          "name": "Authority",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Source ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Status]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Source ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "conflicts",
+      "name": "Reconciliation Conflicts",
+      "description": "Two sources disagree about a fact that matters for impact. Kept open until resolved; impact uses the policy value but flags lower confidence.",
+      "submissionLabelExpression": "${values('Entity ID')} ${values('Field')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Conflict ID",
+          "required": true
+        },
+        {
+          "name": "Entity Type",
+          "required": true
+        },
+        {
+          "name": "Entity ID",
+          "required": true
+        },
+        {
+          "name": "Field",
+          "required": true
+        },
+        {
+          "name": "Source A",
+          "required": false
+        },
+        {
+          "name": "Value A",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Seen A At",
+          "required": false
+        },
+        {
+          "name": "Source B",
+          "required": false
+        },
+        {
+          "name": "Value B",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Seen B At",
+          "required": false
+        },
+        {
+          "name": "Resolution Policy",
+          "required": false
+        },
+        {
+          "name": "Policy Value",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "State",
+          "required": false
+        },
+        {
+          "name": "Resolved By",
+          "required": false
+        },
+        {
+          "name": "Resolved At",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Conflict ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Entity ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[State]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Conflict ID]"
+          ]
+        ]
+      }
+    },
+    {
+      "slug": "ai-recommendations",
+      "name": "AI Recommendations",
+      "description": "Every AI output with citations, fact/inference separation, confidence, and the operator's accept/reject decision (operator feedback).",
+      "submissionLabelExpression": "${values('Kind')} ${values('Incident ID')}",
+      "fields": [
+        {
+          "name": "Tenant ID",
+          "required": true
+        },
+        {
+          "name": "Recommendation ID",
+          "required": true
+        },
+        {
+          "name": "Incident ID",
+          "required": false
+        },
+        {
+          "name": "Kind",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Facts",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Inferences",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Confidence",
+          "required": false
+        },
+        {
+          "name": "Citations",
+          "required": true,
+          "rows": 3
+        },
+        {
+          "name": "Generator",
+          "required": true
+        },
+        {
+          "name": "Status",
+          "required": false
+        },
+        {
+          "name": "Requires Approval Action",
+          "required": false
+        },
+        {
+          "name": "Decided By",
+          "required": false
+        },
+        {
+          "name": "Decided At",
+          "required": false
+        },
+        {
+          "name": "Feedback",
+          "required": false,
+          "rows": 3
+        },
+        {
+          "name": "Citation Check",
+          "required": false
+        },
+        {
+          "name": "Replay Batch",
+          "required": false
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Tenant ID]"
+        ],
+        "compound": [
+          [
+            "values[Tenant ID]",
+            "values[Recommendation ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Kind]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Status]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Replay Batch]"
+          ],
+          [
+            "values[Tenant ID]",
+            "values[Incident ID]",
+            "values[Kind]"
+          ]
+        ],
+        "unique": [
+          [
+            "values[Tenant ID]",
+            "values[Recommendation ID]"
+          ]
+        ]
+      }
+    }
+  ]
+}

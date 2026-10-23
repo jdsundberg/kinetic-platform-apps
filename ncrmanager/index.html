@@ -212,7 +212,8 @@ const KAPP='ncrmanager';
 let API={url:'',auth:'',user:'',displayName:'',spaceSlug:''};
 let PERSONA='';
 const PERSONAS=['Maria Okafor','James Reyes','Aisha Kim','Chen Kim','David Schmidt','Priya Patel','Sofia Haddad','Grace Lindqvist','Ivan Petrov','Leila Cohen','Sean Murphy'];
-function esc(s){if(s==null)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub,f){return sub.values?.[f]||''}
 function n_(x){const f=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(f)?0:f}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}

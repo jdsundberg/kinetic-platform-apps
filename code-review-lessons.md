@@ -35,15 +35,16 @@ The codebase shows a clear evolutionary arc. Patterns improved over time but wer
 
 **Standard pattern (3 lines):**
 ```javascript
-function esc(s) {
-  if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = String(s);
-  return d.innerHTML;
-}
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 ```
 
 **Rule:** Every `${value}` inside a template literal that renders to `innerHTML` must be wrapped in `esc()`.
+
+**Update (2026-09-27):** the original version of this helper used `d.textContent = s; return d.innerHTML`,
+which does **not** escape `"` or `'` — values in `value="…"`/`title="…"` attributes were truncated
+(e.g. a TV size `65"`). All 74 apps were switched to the version above. For values passed as JS
+arguments in inline handlers use `jsArg()` (see apps/CLAUDE.md).
 
 ### 2. The `/me` Response Is Flat
 

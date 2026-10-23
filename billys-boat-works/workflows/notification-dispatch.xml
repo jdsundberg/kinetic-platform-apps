@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="1">
+        <name>Notification Dispatch</name>
+        <author>BillysBoatWorks</author>
+        <notes>Drains queued Email notifications through SMTP and stamps the record Sent or Failed.
+Only acts on Channel=Email and Status=Queued, so the status stamp it writes cannot re-trigger it.
+Non-email channels are left queued for their own transport.
+
+DEMO SAFETY: the seeded customer records carry invented addresses on real consumer domains
+(yahoo, gmail, comcast...). Only addresses on the deliverable allowlist are actually sent; every
+other queued email is stamped Suppressed so a demo dataset can never mail a stranger. Widen the
+allowlist in the Start node connectors when this runs against real customers.</notes>
+        <lastID>5</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="60" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>false</visible><parameters/>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="Queued email to a real inbox?" type="Complete" value="@values['Channel'].to_s == 'Email' &amp;&amp; @values['Status'].to_s == 'Queued' &amp;&amp; @values['Recipient Address'].to_s.downcase.end_with?('@kineticdata.com')">smtp_email_send_v1_1</task>
+                    <task label="Demo address - suppress" type="Complete" value="@values['Channel'].to_s == 'Email' &amp;&amp; @values['Status'].to_s == 'Queued' &amp;&amp; !@values['Recipient Address'].to_s.downcase.end_with?('@kineticdata.com')">kinetic_core_api_connection_v1_5</task>
+                    <task label="Not an email to send" type="Complete" value="!(@values['Channel'].to_s == 'Email' &amp;&amp; @values['Status'].to_s == 'Queued')">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+
+            <task definition_id="smtp_email_send_v1" id="smtp_email_send_v1_1" name="Send Email" x="290" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                    <parameter id="from" label="From" required="true" tooltip="Sender">john.sundberg@gmail.com</parameter>
+                    <parameter id="to" label="To" required="true" tooltip="Recipient"><%= @values['Recipient Address'] %></parameter>
+                    <parameter id="bcc" label="Bcc" required="false" tooltip="Bcc"></parameter>
+                    <parameter id="subject" label="Subject" required="false" tooltip="Subject"><%= @values['Subject'] %></parameter>
+                    <parameter id="htmlbody" label="HTML Body" required="false" tooltip="HTML body"></parameter>
+                    <parameter id="textbody" label="Text Body" required="false" tooltip="Text body"><%= @values['Body'] %>
+
+--
+BillysBoatWorks
+<%= @values['Franchise'] %>
+Notification <%= @values['Notification ID'] %> - template <%= @values['Template'] %></parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="Sent?" type="Complete" value="@results['Send Email'].fetch('Handler Error Message','').to_s.empty?">kinetic_core_api_connection_v1_2</task>
+                    <task label="Send failed" type="Complete" value="!@results['Send Email'].fetch('Handler Error Message','').to_s.empty?">kinetic_core_api_connection_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Mark Sent" x="540" y="120">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">PUT</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/submissions/" + @submission['Id'].to_s %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"values":{"Status":"Sent","Sent At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Mark Failed" x="540" y="280">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">PUT</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/submissions/" + @submission['Id'].to_s %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"values":{"Status":"Failed","Sent At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_5" name="Suppress Demo Address" x="540" y="380">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">PUT</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/submissions/" + @submission['Id'].to_s %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"values":{"Status":"Suppressed","Sent At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_4" name="Dispatch Complete" x="800" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="input" label="Input" required="true" tooltip="Echo">Notification <%= @values['Notification ID'] %> via <%= @values['Channel'] %> to <%= @values['Recipient Address'] %>.</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents/>
+            </task>
+        </request>
+    </taskTree>
+</tree>

@@ -1029,7 +1029,8 @@ function closeDetail() {
 /* ═══════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════ */
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function fmt(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
 function shortTime(ts) { if (!ts) return '—'; try { const d = new Date(ts); return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',hour12:false}); } catch { return ts; } }
 

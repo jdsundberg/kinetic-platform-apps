@@ -1,0 +1,48 @@
+<tree schema_version="1.0">
+  <sourceName>Kinetic Request CE</sourceName>
+  <sourceGroup>GUID</sourceGroup>
+  <type>Tree</type>
+  <status>Active</status>
+  <taskTree builder_version="" schema_version="1.0" version="1">
+    <name>Deliver Approved Notification</name><author></author><notes></notes>
+    <lastID>5</lastID>
+    <request>
+    <task definition_id="system_start_v1" id="start" name="Start" x="60" y="40">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="Approved and approver recorded?" type="Complete" value="@values['Status'] == 'Approved' &amp;&amp; !@values['Approved By'].to_s.empty?">kinetic_core_api_connection_v1_1</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Mark Sent (simulated channel)" x="60" y="150">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters><parameter id="error_handling">Error Message</parameter><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= @submission['Id'] %&gt;</parameter><parameter id="body">&lt;%= require 'json'; require 'time'; { 'values' =&gt; { 'Status' =&gt; 'Sent', 'Sent At' =&gt; Time.now.utc.iso8601, 'Delivery Results' =&gt; { 'channel' =&gt; @values['Channel'], 'simulated' =&gt; true, 'reason' =&gt; 'notify-gw integration not configured in pilot', 'recipients' =&gt; @values['Audience Size'].to_i, 'delivered' =&gt; @values['Audience Size'].to_i, 'failed' =&gt; 0 }.to_json } }.to_json %&gt;</parameter><parameter id="extra_headers"></parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="then find incident" type="Complete" value="">kinetic_core_api_connection_v1_2</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Find Incident" x="60" y="260">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters><parameter id="error_handling">Error Message</parameter><parameter id="method">GET</parameter><parameter id="path">/app/api/v1/kapps/telco-noc/forms/incidents/submissions?limit=1&amp;include=values&amp;q=&lt;%= require 'uri'; URI.encode_www_form_component('values[Tenant ID]="' + @values['Tenant ID'].to_s + '" AND values[Incident ID]="' + @values['Incident ID'].to_s + '"').gsub('+','%20') %&gt;</parameter><parameter id="body"></parameter><parameter id="extra_headers"></parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="then set comms state" type="Complete" value="">kinetic_core_api_connection_v1_3</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Set Comms Sent" x="60" y="370">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters><parameter id="error_handling">Error Message</parameter><parameter id="method">PUT</parameter><parameter id="path">/app/api/v1/submissions/&lt;%= (@results['Find Incident']['Response Body'] =~ /"id":"([0-9a-f-]{36})"/ ? $1 : 'missing') %&gt;</parameter><parameter id="body">&lt;%= require 'json'; require 'time'; { 'values' =&gt; { 'Comms State' =&gt; 'Sent', 'Next Update Due At' =&gt; (Time.now.utc + (@values['Sequence'] == 'Resolution' ? 0 : 3600)).iso8601 } }.to_json %&gt;</parameter><parameter id="extra_headers"></parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="then log timeline" type="Complete" value="">kinetic_core_api_connection_v1_4</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_4" name="Log Comms Sent" x="60" y="480">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters><parameter id="error_handling">Error Message</parameter><parameter id="method">POST</parameter><parameter id="path">/app/api/v1/kapps/telco-noc/forms/incident-updates/submissions</parameter><parameter id="body">&lt;%= require 'json'; require 'time'; { 'coreState' =&gt; 'Submitted', 'values' =&gt; { 'Tenant ID' =&gt; @values['Tenant ID'], 'Update ID' =&gt; 'UPD-' + @values['Notification ID'] + '-SENT', 'Incident ID' =&gt; @values['Incident ID'], 'Update Type' =&gt; 'Comms', 'At' =&gt; Time.now.utc.iso8601, 'Author' =&gt; 'workflow', 'Actor Type' =&gt; 'Workflow', 'Summary' =&gt; @values['Sequence'].to_s + ' customer notification ' + @values['Notification ID'] + ' sent via ' + @values['Channel'].to_s + ' to ' + @values['Audience Size'].to_s + ' recipients (approved by ' + @values['Approved By'].to_s + ').', 'Details' =&gt; { 'notification' =&gt; @values['Notification ID'] }.to_json, 'Visibility' =&gt; 'Internal', 'Replay Batch' =&gt; @values['Replay Batch'].to_s } }.to_json %&gt;</parameter><parameter id="extra_headers"></parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents><task label="then audit" type="Complete" value="">kinetic_core_api_connection_v1_5</task></dependents>
+    </task>
+    <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_5" name="Audit Comms Sent" x="60" y="590">
+      <version>1</version><configured>true</configured><defers>false</defers><deferrable>false</deferrable><visible>false</visible>
+      <parameters><parameter id="error_handling">Error Message</parameter><parameter id="method">POST</parameter><parameter id="path">/app/api/v1/kapps/telco-noc/forms/audit/submissions</parameter><parameter id="body">&lt;%= require 'json'; require 'time'; { 'coreState' =&gt; 'Submitted', 'values' =&gt; { 'Tenant ID' =&gt; @values['Tenant ID'], 'Audit ID' =&gt; 'AUD-' + @values['Notification ID'] + '-SENT', 'At' =&gt; Time.now.utc.iso8601, 'Actor' =&gt; 'workflow:' + @run['Id'].to_s, 'Actor Type' =&gt; 'Workflow', 'Action' =&gt; 'notification.sent', 'Entity Type' =&gt; 'Notification', 'Entity ID' =&gt; @values['Notification ID'], 'After' =&gt; { 'Status' =&gt; 'Sent' }.to_json, 'Reason' =&gt; 'approved by ' + @values['Approved By'].to_s, 'Request ID' =&gt; 'run-' + @run['Id'].to_s, 'Replay Batch' =&gt; @values['Replay Batch'].to_s } }.to_json %&gt;</parameter><parameter id="extra_headers"></parameter></parameters>
+      <messages><message type="Complete"></message></messages>
+      <dependents></dependents>
+    </task>
+    </request>
+  </taskTree>
+</tree>

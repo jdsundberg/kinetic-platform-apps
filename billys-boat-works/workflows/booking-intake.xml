@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree schema_version="1.0">
+    <sourceName>Kinetic Request CE</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <type>Tree</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="1">
+        <name>Booking Intake</name>
+        <author>BillysBoatWorks</author>
+        <notes>Fires when a reservation is submitted. Queues the booking confirmation, chases an
+unsigned waiver before the trip, and records the booking in the audit trail.</notes>
+        <lastID>4</lastID>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="60" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>false</visible><parameters/>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then confirm the booking" type="Complete" value="">kinetic_core_api_connection_v1_1</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_1" name="Queue Confirmation" x="260" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/notifications/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Notification ID":"NTF-WF-<%= @run['Id'] %>","Channel":"Email","Template":"Booking Confirmation","Recipient Type":"Customer","Recipient":"<%= @values['Customer Name'] %>","Recipient Address":"<%= @values['Customer Email'] %>","Reservation":"<%= @values['Reservation ID'] %>","Confirmation Code":"<%= @values['Confirmation Code'] %>","Franchise":"<%= @values['Franchise'] %>","Subject":"Your <%= @values['Category'] %> is booked for <%= @values['Start Date'] %>","Scheduled At":"<%= @values['Start Date'] %>","Status":"Queued","Body":"Pick up at <%= @values['Location'] %> at <%= @values['Start Time'] %>. Bring photo ID. Total <%= @values['Total'] %>."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="Waiver still unsigned?" type="Complete" value="@values['Waiver Signed'].to_s != 'Yes'">kinetic_core_api_connection_v1_2</task>
+                    <task label="Waiver already signed" type="Complete" value="@values['Waiver Signed'].to_s == 'Yes'">kinetic_core_api_connection_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_2" name="Chase Waiver" x="480" y="110">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/notifications/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Notification ID":"NTF-WV-<%= @run['Id'] %>","Channel":"SMS","Template":"Waiver Request","Recipient Type":"Customer","Recipient":"<%= @values['Customer Name'] %>","Recipient Address":"<%= @values['Customer Phone'] %>","Reservation":"<%= @values['Reservation ID'] %>","Confirmation Code":"<%= @values['Confirmation Code'] %>","Franchise":"<%= @values['Franchise'] %>","Subject":"One signature before your trip","Scheduled At":"<%= @values['Start Date'] %>","Status":"Queued","Body":"Sign your rental agreement before pickup so we can get you on the water faster."}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then audit" type="Complete" value="">kinetic_core_api_connection_v1_3</task>
+                </dependents>
+            </task>
+
+            <task definition_id="kinetic_core_api_connection_v1" id="kinetic_core_api_connection_v1_3" name="Write Audit" x="700" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="method" label="Method" menu="GET,POST,PUT,PATCH,DELETE" required="true" tooltip="HTTP method">POST</parameter>
+                    <parameter id="path" label="Path" required="true" tooltip="Path"><%= "/app/api/v1/kapps/billys/forms/audit-log/submissions" %></parameter>
+                    <parameter id="body" label="Body" required="false" tooltip="Body">{"coreState":"Submitted","values":{"Audit ID":"AUD-BK-<%= @run['Id'] %>","Entity Type":"Reservation","Entity Reference":"<%= @values['Confirmation Code'] %>","Action":"Booking intake workflow","Field Changed":"Status","Previous Value":"","New Value":"<%= @values['Status'] %>","Changed By":"Booking Intake workflow","Changed At":"<%= Time.now.strftime('%Y-%m-%d %H:%M') %>","Franchise":"<%= @values['Franchise'] %>","Reason":"Booked via <%= @values['Source'] %> for <%= @values['Start Date'] %>"}}</parameter>
+                    <parameter id="extra_headers" label="Extra Headers" required="false" tooltip="Headers"></parameter>
+                    <parameter id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Errors">Error Message</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents>
+                    <task label="then finish" type="Complete" value="">utilities_echo_v1_4</task>
+                </dependents>
+            </task>
+
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_4" name="Intake Complete" x="920" y="200">
+                <version>1</version><configured>true</configured><defers>false</defers>
+                <deferrable>false</deferrable><visible>true</visible>
+                <parameters>
+                    <parameter id="input" label="Input" required="true" tooltip="Echo">Booking <%= @values['Confirmation Code'] %> intake complete. Waiver signed: <%= @values['Waiver Signed'] %>.</parameter>
+                </parameters>
+                <messages><message type="Complete"></message></messages>
+                <dependents/>
+            </task>
+        </request>
+    </taskTree>
+</tree>

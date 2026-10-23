@@ -333,7 +333,8 @@ const PAGE_STATE = {
 let BEERS_CACHE = [];
 
 /* ── Helpers ── */
-function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 function v(sub, field) { return (sub && sub.values && sub.values[field]) || ''; }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 function badge(val) { if (!val) return ''; const cls = String(val).toLowerCase().replace(/\s+/g, '-'); return `<span class="badge badge-${esc(cls)}">${esc(val)}</span>`; }

@@ -422,7 +422,8 @@ function api(method, path, body) {
 function fmtNum(n) { return (n||0).toLocaleString(); }
 function fmtDate(iso) { if (!iso) return '-'; const d=new Date(iso); return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
 function fmtDateShort(iso) { if (!iso) return '-'; return new Date(iso).toLocaleDateString(); }
-function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+// Escapes quotes too — values land in attributes (value="…", title="…"), not just text.
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;")}
 
 function badgeFor(val, type) {
   const cls = {
