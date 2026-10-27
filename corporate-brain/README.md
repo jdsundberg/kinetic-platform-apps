@@ -5,7 +5,7 @@ Corporate Brain is Kinetic Data's institutional memory. It records companies, pe
 | | |
 |---|---|
 | App (launcher on this Mac) | http://ai-labs.kineticdata.com:3011/corporate-brain/ (LAN: http://192.168.86.204:3011/corporate-brain/) |
-| Kinetic space | https://ai-labs.kinopsdev.io, kapp `corporate-brain` (12 forms) |
+| Kinetic space | https://ai-labs.kinopsdev.io, kapp `corporate-brain` (19 forms — 12 core + 7 Sales Brain) |
 | API prefix | `/api/corporate-brain/*` (served by `server.mjs` through the `:3011` launcher) |
 | Live build page | `build/index.html` (also served at http://192.168.86.204:3061/) |
 
@@ -36,10 +36,10 @@ Corporate Brain is Kinetic Data's institutional memory. It records companies, pe
 
 ## Tests (latest run: all passing)
 ```
-node --test apps/corporate-brain/tests/core.test.mjs           # 13 unit tests: truth model, identity, extraction, validation
-KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/api.test.mjs        # 39 API/provenance/permission checks (incl. GitHub pull, contradiction workflow)
+node --test apps/corporate-brain/tests/core.test.mjs           # 15 unit tests: truth model, identity, extraction, validation, sales rules
+KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/api.test.mjs        # 64 API/provenance/permission checks (incl. GitHub pull, contradiction workflow, Sales Brain + deal-price privacy)
 KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/workflows.test.mjs  # 6 live Task workflow checks
-cd tests && KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node test-corporate-brain.mjs [shotDir]  # 27 Playwright UI checks
+cd tests && KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node test-corporate-brain.mjs [shotDir]  # 41 Playwright UI checks (incl. the Sales tab)
 ```
 The API and UI tests create clearly labelled TEST records and temporary users, then remove them. Audit-log rows are append-only and are kept.
 

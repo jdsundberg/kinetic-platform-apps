@@ -12,6 +12,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const f = (name, opts = {}) => ({ name, ...opts });
 const long = name => f(name, { rows: 4 });
 const PROV = [f("Record Status"), long("Source IDs"), f("Created Via")];
+const SALES_REVIEW = [f("Knowledge ID"), f("Verification Status")];
 
 export const FORMS = [
   {
@@ -81,12 +82,12 @@ export const FORMS = [
       f("Subject ID"), f("Company ID"), f("Title", { required: true }), long("Statement"), long("Supporting Source IDs"),
       f("Extraction Method"), f("Model Confidence"), f("Review Status"), f("Verified By"), f("Verified At"),
       f("Superseded By"), f("Supersedes"), long("Contradicts"), long("Review History"), f("Job ID"),
-      f("Last Reviewed At"), f("Record Status"), f("Created Via")],
+      f("Last Reviewed At"), f("Record Status"), f("Created Via"), f("Lens")],
     unique: ["values[Knowledge ID]"],
-    single: ["values[Review Status]", "values[Knowledge Type]", "values[Subject ID]", "values[Company ID]", "values[Job ID]", "values[Record Status]"],
+    single: ["values[Review Status]", "values[Knowledge Type]", "values[Subject ID]", "values[Company ID]", "values[Job ID]", "values[Record Status]", "values[Lens]"],
     compound: [["values[Subject ID]", "values[Review Status]"], ["values[Company ID]", "values[Review Status]"],
       ["values[Knowledge Type]", "values[Review Status]"], ["values[Company ID]", "values[Knowledge Type]"],
-      ["values[Company ID]", "values[Knowledge Type]", "values[Review Status]"]],
+      ["values[Company ID]", "values[Knowledge Type]", "values[Review Status]"], ["values[Lens]", "values[Review Status]"]],
   },
   {
     slug: "sources", name: "Sources", idField: "Source ID", label: "Title",
@@ -138,6 +139,78 @@ export const FORMS = [
     single: ["values[Status]", "values[Job Type]", "values[Subject ID]", "values[Connector]", "values[Record Status]"],
     compound: [["values[Status]", "values[Job Type]"]],
   },
+  // ── Sales lens: how Kinetic sells and why. Each record is backed by a knowledge entry (Lens "sales") that carries
+  // its review; the record's Verification Status follows that entry, the same way events follow theirs.
+  {
+    slug: "sales-principles", name: "Sales Principles", idField: "Principle ID", label: "Title",
+    description: "Rules Kinetic follows when selling, in the founders' words, backed by the deals where they showed up",
+    fields: [f("Principle ID", { required: true }), f("Title", { required: true }), long("Statement"), f("Theme"),
+      f("In Effect From"), f("In Effect To"), f("Date Precision"), long("Deal IDs"), long("Rationale"), long("Exceptions"),
+      f("Superseded By"), ...SALES_REVIEW, ...PROV],
+    unique: ["values[Principle ID]"],
+    single: ["values[Verification Status]", "values[Theme]", "values[Knowledge ID]", "values[Record Status]"],
+    compound: [["values[Verification Status]", "values[Theme]"]],
+  },
+  {
+    slug: "pricing-models", name: "Pricing Models", idField: "Pricing Model ID", label: "Name",
+    description: "Licensing and pricing models over time: when each started and ended, its price points and why it changed",
+    fields: [f("Pricing Model ID", { required: true }), f("Name", { required: true }), f("Name Key"), f("Licensing Basis"),
+      f("Product ID"), f("Start Date"), f("End Date"), f("Date Precision"), long("Price Points"), long("Why Introduced"),
+      long("Why Changed"), f("Replaced By"), ...SALES_REVIEW, ...PROV],
+    unique: ["values[Pricing Model ID]"],
+    single: ["values[Verification Status]", "values[Knowledge ID]", "values[Record Status]", "values[Licensing Basis]"],
+    compound: [["values[Record Status]", "values[Start Date]"]],
+  },
+  {
+    slug: "deals", name: "Deals", idField: "Deal ID", label: "Title",
+    description: "One opportunity: the ask, the competition, the outcome and the reason (prices live in Deal Pricing)",
+    fields: [f("Deal ID", { required: true }), f("Title", { required: true }), f("Company ID"), f("Deal Date"),
+      f("Date Precision"), f("Deal Type"), long("Ask"), long("Competitor IDs"), f("Outcome"), long("Outcome Reason"),
+      f("Pricing Model ID"), f("Partner Model ID"), f("Copper Opportunity ID"), ...SALES_REVIEW, ...PROV],
+    unique: ["values[Deal ID]"],
+    single: ["values[Verification Status]", "values[Company ID]", "values[Outcome]", "values[Knowledge ID]",
+      "values[Record Status]", "values[Copper Opportunity ID]"],
+    compound: [["values[Verification Status]", "values[Outcome]"], ["values[Company ID]", "values[Deal Date]"]],
+  },
+  {
+    // Deal-level prices are commercially sensitive: readable only by reviewers and the Sales, Legal and Executive
+    // teams (CB Deal Pricing policy), so they sit on their own form rather than on the deal.
+    slug: "deal-pricing", name: "Deal Pricing", idField: "Deal Pricing ID", label: "Deal ID",
+    description: "Quoted and final prices, discounts and terms for a deal — restricted to Sales, Legal and Executive",
+    fields: [f("Deal Pricing ID", { required: true }), f("Deal ID", { required: true }), f("Company ID"), f("Quoted Price"),
+      f("Final Price"), f("Currency"), f("Discount"), long("Discount Reason"), long("Terms"), ...PROV],
+    unique: ["values[Deal Pricing ID]"],
+    single: ["values[Deal ID]", "values[Company ID]"],
+    compound: [],
+  },
+  {
+    slug: "sales-objections", name: "Sales Objections", idField: "Objection ID", label: "Title",
+    description: "What customers pushed back on, and the responses that worked or failed",
+    fields: [f("Objection ID", { required: true }), f("Title", { required: true }), long("Objection"), f("Category"),
+      long("Responses"), long("Deal IDs"), f("Competitor ID"), ...SALES_REVIEW, ...PROV],
+    unique: ["values[Objection ID]"],
+    single: ["values[Verification Status]", "values[Category]", "values[Knowledge ID]", "values[Record Status]"],
+    compound: [["values[Verification Status]", "values[Category]"]],
+  },
+  {
+    slug: "competitors", name: "Competitors", idField: "Competitor ID", label: "Name",
+    description: "Who Kinetic met in deals, and where it won or lost against them",
+    fields: [f("Competitor ID", { required: true }), f("Name", { required: true }), f("Name Key"), f("Company ID"),
+      f("Category"), long("Where We Win"), long("Where We Lose"), long("Deal IDs"), ...SALES_REVIEW, ...PROV],
+    unique: ["values[Competitor ID]"],
+    single: ["values[Verification Status]", "values[Name Key]", "values[Knowledge ID]", "values[Record Status]"],
+    compound: [["values[Record Status]", "values[Name Key]"]],
+  },
+  {
+    slug: "partner-models", name: "Partner Models", idField: "Partner Model ID", label: "Name",
+    description: "Reseller, referral, OEM and teaming arrangements and their terms over time",
+    fields: [f("Partner Model ID", { required: true }), f("Name", { required: true }), f("Name Key"), f("Partner Type"),
+      f("Start Date"), f("End Date"), f("Date Precision"), long("Terms"), long("Partner Company IDs"), long("Rationale"),
+      ...SALES_REVIEW, ...PROV],
+    unique: ["values[Partner Model ID]"],
+    single: ["values[Verification Status]", "values[Partner Type]", "values[Knowledge ID]", "values[Record Status]"],
+    compound: [["values[Verification Status]", "values[Partner Type]"]],
+  },
   {
     slug: "audit-log", name: "Audit Log", idField: "Audit ID", label: "Action",
     description: "Append-only record of material changes by users and agents (review decisions, merges, ingestion writes)",
@@ -157,15 +230,34 @@ export const FORM_BY_SLUG = Object.fromEntries(FORMS.map(x => [x.slug, x]));
 export const ENTITY_FORMS = {
   company: "companies", person: "people", communication: "communications", event: "historical-events",
   decision: "decisions", knowledge: "knowledge-entries", source: "sources", project: "projects", product: "products", job: "research-jobs",
+  principle: "sales-principles", pricingmodel: "pricing-models", deal: "deals", objection: "sales-objections",
+  competitor: "competitors", partnermodel: "partner-models",
 };
+
+// Sales lens: entity type → its form and the Knowledge Type of the entry that carries its review.
+// Deal pricing is deliberately not an entity type: it is only reachable through its deal, by permitted roles.
+export const SALES_KINDS = {
+  principle: { form: "sales-principles", knowledgeType: "principle", label: "Principle" },
+  pricingmodel: { form: "pricing-models", knowledgeType: "pricing-model", label: "Pricing model" },
+  deal: { form: "deals", knowledgeType: "deal", label: "Deal" },
+  objection: { form: "sales-objections", knowledgeType: "objection", label: "Objection" },
+  competitor: { form: "competitors", knowledgeType: "competitor", label: "Competitor" },
+  partnermodel: { form: "partner-models", knowledgeType: "partner-model", label: "Partner model" },
+};
+export const SALES_FORMS = new Set(Object.values(SALES_KINDS).map(k => k.form));
+// A principle is a pattern, not an anecdote: it needs this many linked deals before it can be verified (John, 2026-10-27).
+export const PRINCIPLE_MIN_DEALS = 2;
 
 export const ID_PREFIX = {
   companies: "CO", people: "PE", relationships: "RL", communications: "CM", "historical-events": "EV", decisions: "DC",
   "knowledge-entries": "KN", sources: "SR", projects: "PR", products: "PD", "research-jobs": "JB", "audit-log": "AU",
+  "sales-principles": "SP", "pricing-models": "PM", deals: "DL", "deal-pricing": "DP", "sales-objections": "OB",
+  competitors: "CP", "partner-models": "PT",
 };
 
 export const REVIEW_STATUSES = ["proposed", "verified", "disputed", "rejected", "superseded", "needs-research"];
-export const KNOWLEDGE_TYPES = ["fact", "interpretation", "narrative", "lesson", "claim", "recollection", "summary"];
+export const KNOWLEDGE_TYPES = ["fact", "interpretation", "narrative", "lesson", "claim", "commitment", "recollection", "summary",
+  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model"];
 export const DATE_PRECISIONS = ["exact", "month", "year", "approximate", "unknown"];
 
 export function toAppJson() {

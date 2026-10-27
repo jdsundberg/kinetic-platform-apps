@@ -3,7 +3,7 @@
 // Creates what is missing and adds what is new; never deletes forms, fields, indexes or submissions.
 //   1. kapp            2. teams (Members / Reviewers / Admins)   3. security policy definitions
 //   4. forms + fields  5. index definitions (merged, unique flags) + build   6. kapp/form security policies
-import { FORMS, KAPP, toAppJson } from "./model.mjs";
+import { FORMS, KAPP, SALES_FORMS, toAppJson } from "./model.mjs";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -24,10 +24,14 @@ async function api(method, p, body) {
 }
 const ok = (m) => console.log("  ✓ " + m), warn = (m) => console.log("  • " + m), fail = (m) => { console.log("  ✗ " + m); process.exitCode = 1; };
 
-export const TEAMS = ["Corporate Brain", "Corporate Brain::Members", "Corporate Brain::Reviewers", "Corporate Brain::Admins"];
+export const TEAMS = ["Corporate Brain", "Corporate Brain::Members", "Corporate Brain::Reviewers", "Corporate Brain::Admins",
+  // Sales Brain audiences (John, 2026-10-27). Sales, Legal and Executive may see deal-level prices; Marketing sees the playbook only.
+  // These teams grant no Corporate Brain access by themselves — readers are added to Members too until playbook-only access exists.
+  "Corporate Brain::Sales", "Corporate Brain::Marketing", "Corporate Brain::Legal", "Corporate Brain::Executive"];
 const IS_ADMIN = "identity('spaceAdmin') || identity('teams').indexOf('Corporate Brain::Admins') >= 0";
 const IS_REVIEWER = `${IS_ADMIN} || identity('teams').indexOf('Corporate Brain::Reviewers') >= 0`;
 const IS_MEMBER = `${IS_REVIEWER} || identity('teams').indexOf('Corporate Brain::Members') >= 0`;
+const IS_PRICING = `${IS_REVIEWER} || identity('teams').indexOf('Corporate Brain::Sales') >= 0 || identity('teams').indexOf('Corporate Brain::Legal') >= 0 || identity('teams').indexOf('Corporate Brain::Executive') >= 0`;
 export const POLICIES = [
   { name: "CB Member", type: "Kapp", rule: IS_MEMBER, message: "Corporate Brain is private. Ask an administrator to add you to the Corporate Brain::Members team." },
   { name: "CB Admin", type: "Kapp", rule: IS_ADMIN, message: "Only Corporate Brain administrators can change the application." },
@@ -43,6 +47,12 @@ export const POLICIES = [
     rule: `(${IS_REVIEWER}) || ((${IS_MEMBER}) && values('Access Scope') !== 'restricted')`,
     message: "This source is restricted to Corporate Brain reviewers." },
   { name: "CB Append Only", type: "Submission", rule: IS_ADMIN, message: "The audit log is append-only." },
+  // Same rule as knowledge: members edit their own sales records only while they are still under review.
+  { name: "CB Sales Modification", type: "Submission",
+    rule: `${IS_REVIEWER} || ((${IS_MEMBER}) && submission('createdBy') === identity('username') && ['proposed','needs-research'].indexOf(values('Verification Status')) >= 0)`,
+    message: "Only reviewers can change a sales record after it has been reviewed." },
+  { name: "CB Deal Pricing", type: "Submission", rule: `(${IS_MEMBER}) && (${IS_PRICING})`,
+    message: "Deal prices are visible only to the Sales, Legal and Executive teams and Corporate Brain reviewers." },
 ];
 
 function buildPages(fields) {
@@ -150,6 +160,8 @@ async function main() {
     "knowledge-entries": [{ endpoint: "Submission Modification", name: "CB Knowledge Modification" }],
     sources: [{ endpoint: "Submission Access", name: "CB Restricted Source" }, { endpoint: "Submission Modification", name: "CB Restricted Source" }],
     "audit-log": [{ endpoint: "Submission Modification", name: "CB Append Only" }],
+    "deal-pricing": [{ endpoint: "Submission Access", name: "CB Deal Pricing" }, { endpoint: "Submission Modification", name: "CB Deal Pricing" }],
+    ...Object.fromEntries([...SALES_FORMS].map(f => [f, [{ endpoint: "Submission Modification", name: "CB Sales Modification" }]])),
   };
   for (const [slug, sp] of Object.entries(formPolicies)) {
     const r = await api("PUT", `/kapps/${KAPP.slug}/forms/${slug}`, { securityPolicies: sp });

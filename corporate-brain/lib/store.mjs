@@ -4,6 +4,8 @@
 import { FORM_BY_SLUG, KAPP } from "../model.mjs";
 import { newId } from "./core.mjs";
 
+export const PRICING_TEAMS = ["Corporate Brain::Sales", "Corporate Brain::Legal", "Corporate Brain::Executive"];
+
 export const kq = (s) => '"' + String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
 
 export class KineticError extends Error {
@@ -95,12 +97,16 @@ export function createStore(kineticRequest, auth, { kapp = KAPP.slug } = {}) {
   async function me() {
     const d = await req("GET", `/me?include=memberships`, null, "me");
     const teams = (d.memberships || []).map(m => m.team?.name).filter(Boolean);
+    const admin = !!d.spaceAdmin || teams.includes("Corporate Brain::Admins");
+    const reviewer = admin || teams.includes("Corporate Brain::Reviewers");
     return {
       username: d.username, displayName: d.displayName || d.username, email: d.email, spaceAdmin: !!d.spaceAdmin, teams,
       roles: {
-        admin: !!d.spaceAdmin || teams.includes("Corporate Brain::Admins"),
-        reviewer: !!d.spaceAdmin || teams.includes("Corporate Brain::Admins") || teams.includes("Corporate Brain::Reviewers"),
-        member: !!d.spaceAdmin || teams.some(t => t.startsWith("Corporate Brain::")),
+        admin, reviewer,
+        // mirrors the CB Member policy exactly; the sales audience teams (Sales, Marketing, Legal, Executive) don't grant membership on their own
+        member: reviewer || teams.includes("Corporate Brain::Members"),
+        // mirrors CB Deal Pricing: deal-level prices are for reviewers and the Sales, Legal and Executive teams (John, 2026-10-27)
+        pricing: reviewer || PRICING_TEAMS.some(t => teams.includes(t)),
       },
     };
   }

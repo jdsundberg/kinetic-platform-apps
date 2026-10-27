@@ -118,6 +118,14 @@ export const CONNECTORS = {
     },
     original: (src) => ({ available: true, kind: "link", url: src["Original URL"], detail: "Opens in Gmail for the mailbox owner only" }),
   },
+
+  // Sales Brain (phase 3): opportunities read through the Copper MCP connector by an authorized agent, read-only.
+  // The excerpt carries pipeline, stage, status and dates only; opportunity values go to restricted Deal Pricing.
+  copper: {
+    id: "copper", name: "Copper CRM", mode: "push",
+    status: () => ({ configured: true, pull: false, detail: "Agent-mediated, read-only: an authorized agent reads opportunities through the Copper MCP connector. Values are never put in the source excerpt." }),
+    original: (src) => ({ available: true, kind: "link", url: src["Original URL"], detail: "Opens in Copper; Copper enforces the viewer's own permissions" }),
+  },
 };
 
 export function driveRecord(f, scope = {}) {

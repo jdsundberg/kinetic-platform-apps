@@ -8,6 +8,8 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | `Corporate Brain::Members` | member | Read non-restricted records; propose knowledge; add notes; create jobs and ingest; edit their own still-proposed knowledge; request research (tracked as a research job) |
 | `Corporate Brain::Reviewers` | reviewer | All of the above, plus approve, reject, dispute and supersede; read and modify restricted sources; edit reviewed knowledge |
 | `Corporate Brain::Admins` | admin | Everything, including products and form changes |
+| `Corporate Brain::Sales`, `::Legal`, `::Executive` | pricing | See and record **deal-level prices** (Sales Brain). No Corporate Brain access on their own: members are added to `Members` as well |
+| `Corporate Brain::Marketing` | — | Sales Brain playbook audience (no prices). Grants nothing yet; playbook-only access is planned for Sales Brain phase 4 |
 | (space admin) | admin | Bypasses all policies |
 
 ## Policy definitions (kapp level, `deploy.mjs`)
@@ -21,6 +23,8 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | CB Knowledge Modification | Submission | reviewer, **or** (member **and** creator **and** Review Status ∈ proposed / needs-research) |
 | CB Restricted Source | Submission | reviewer, **or** (member **and** `Access Scope` ≠ `restricted`) |
 | CB Append Only | Submission | admin |
+| CB Sales Modification | Submission | reviewer, **or** (member **and** creator **and** Verification Status ∈ proposed / needs-research) |
+| CB Deal Pricing | Submission | member **and** (reviewer **or** Sales / Legal / Executive team) |
 
 ## Bindings
 | Level | Endpoint → policy |
@@ -29,6 +33,8 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | knowledge-entries | Submission Modification → CB Knowledge Modification |
 | sources | Submission Access, Submission Modification → CB Restricted Source |
 | audit-log | Submission Modification → CB Append Only |
+| sales-principles, pricing-models, deals, sales-objections, competitors, partner-models | Submission Modification → CB Sales Modification |
+| deal-pricing | Submission Access, Submission Modification → CB Deal Pricing |
 
 `Submission Support` and `Default Form Modification` grant access to *all* submissions and override form-level rules. Binding them to members was the cause of two privacy gaps found in testing. Both are now admin-only.
 
@@ -45,6 +51,16 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 - **Audit log** writes come only from the server; there is no client create, and updates are refused.
 - **Products** can only be written by admins.
 - **Citations:** proposing knowledge checks that every cited source exists **and is visible to the caller**.
+
+## Sales Brain controls
+- A sales record and its review entry (Lens `sales`) are created together, and a bad citation creates neither.
+- The record's `Verification Status` follows the review. Generic edits cannot set it or change the `Knowledge ID` link.
+- A **principle** cannot be verified until it links at least 2 deals (`PRINCIPLE_MIN_DEALS`, decided by John on 2026-10-27).
+- **Deal prices** live on their own form, `deal-pricing`:
+  - They are not reachable through `/entities` or `/ref`. They are read and written only through `/sales/deal/{id}`.
+  - That route also requires the pricing role.
+  - Audit rows record which fields changed, never the amounts, because members can read the audit log.
+  - Tested: a plain member gets 0 rows from a direct Core query, and a `Sales` member sees the prices.
 
 ## Workflow enforcement (Kinetic Task)
 - **Verification Guard:** catches direct Core API writes that bypass the app. Any knowledge marked `verified` without a `Verified By`, or without evidence when evidence is required, is reverted to `needs-research`, with a review-history entry and an audit row. Tested live by setting `verified` through the Core API.

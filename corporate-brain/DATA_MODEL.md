@@ -133,6 +133,16 @@ Kapp `corporate-brain`, 12 forms. The only source of truth is `model.mjs`; `node
 
 (* = required)
 
+**Sales Brain forms.** See SALES_BRAIN.md for how they fit together. Each form below except `deal-pricing` also carries `Knowledge ID`, which links to its review entry with `Lens = sales`. It also carries `Verification Status`, which follows that entry's review, plus the provenance fields.
+- `sales-principles`: `Principle ID`*, `Title`*, `Statement`, `Theme`, `In Effect From`, `In Effect To`, `Date Precision`, `Deal IDs` (at least 2 are needed to verify), `Rationale`, `Exceptions`, `Superseded By`
+- `pricing-models`: `Pricing Model ID`*, `Name`*, `Licensing Basis`, `Product ID`, `Start Date`, `End Date`, `Price Points` (list pricing), `Why Introduced`, `Why Changed`, `Replaced By`
+- `deals`: `Deal ID`*, `Title`*, `Company ID`, `Deal Date`, `Deal Type`, `Ask`, `Competitor IDs`, `Outcome` (won / lost / walked-away / no-bid / open / unknown), `Outcome Reason`, `Pricing Model ID`, `Partner Model ID`, `Copper Opportunity ID`
+- `deal-pricing` (restricted): `Deal Pricing ID`*, `Deal ID`*, `Company ID`, `Quoted Price`, `Final Price`, `Currency`, `Discount`, `Discount Reason`, `Terms`
+- `sales-objections`: `Objection ID`*, `Title`*, `Objection`, `Category`, `Responses`, `Deal IDs`, `Competitor ID`
+- `competitors`: `Competitor ID`*, `Name`*, `Company ID`, `Category`, `Where We Win`, `Where We Lose`, `Deal IDs`
+- `partner-models`: `Partner Model ID`*, `Name`*, `Partner Type`, `Start Date`, `End Date`, `Terms`, `Partner Company IDs`, `Rationale`
+- `knowledge-entries` gains `Lens` (`sales`, or empty) and the index `[Lens, Review Status]` for the sales review queue.
+
 ## Indexes
 `deploy.mjs` merges these with existing definitions plus the system indexes (`createdBy`, `updatedBy`, `submittedBy`, `closedBy`, and unique `handle`).
 

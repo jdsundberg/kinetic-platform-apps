@@ -2,7 +2,7 @@
 //   node --test apps/corporate-brain/tests/core.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sourceIdFor, nameKey, reviewTransition, newKnowledgeValues, parseDateMention, parseList, linkContradiction } from "../lib/core.mjs";
+import { sourceIdFor, nameKey, reviewTransition, newKnowledgeValues, parseDateMention, parseList, linkContradiction, salesVerifyError } from "../lib/core.mjs";
 import { extractCandidates, classifyDocument } from "../lib/extract.mjs";
 import { validateRecord, SHARED_DOMAIN } from "../lib/ingest.mjs";
 import { structuredQuery } from "../lib/retrieval.mjs";
@@ -115,4 +115,16 @@ test("list values round-trip", () => {
   assert.deepEqual(parseList('["a","b"]'), ["a", "b"]);
   assert.deepEqual(parseList("a, b"), ["a", "b"]);
   assert.deepEqual(parseList(""), []);
+});
+
+test("sales lens: a principle needs two linked deals and evidence before it can be verified", () => {
+  assert.match(salesVerifyError("principle", { "Deal IDs": "[]" }), /at least 2 linked deals/);
+  assert.match(salesVerifyError("principle", { "Deal IDs": '["DL-1"]' }), /it has 1/);
+  assert.equal(salesVerifyError("principle", { "Deal IDs": '["DL-1","DL-2"]' }), "");
+  assert.equal(salesVerifyError("deal", {}), "", "only principles carry the two-deal rule");
+  const noEvidence = reviewTransition(entry({ "Knowledge Type": "principle", "Supporting Source IDs": "[]" }), "approve", { reviewer: "john" });
+  assert.equal(noEvidence.ok, false, "sales records need a supporting source like facts do");
+  const v = newKnowledgeValues({ knowledgeType: "deal", title: "Deal: X", statement: "S", lens: "sales" }, { actor: "john" });
+  assert.equal(v.Lens, "sales");
+  assert.equal(v["Review Status"], "proposed");
 });

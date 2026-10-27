@@ -9,7 +9,7 @@
  * Agents (e.g. Claude Code using MCP connectors) call the same API with an extra
  * `X-CB-Agent: <name>` header: their writes are recorded as agent actions and they can never verify.
  */
-import { FORMS, FORM_BY_SLUG, KAPP, ENTITY_FORMS } from "./model.mjs";
+import { FORMS, FORM_BY_SLUG, KAPP, ENTITY_FORMS, SALES_KINDS, SALES_FORMS } from "./model.mjs";
 import { createStore, kq, KineticError } from "./lib/store.mjs";
 import { createServices } from "./lib/services.mjs";
 import { createRetrieval, SEARCHABLE, providers } from "./lib/retrieval.mjs";
@@ -45,8 +45,13 @@ const PROTECTED = {
   "knowledge-entries": ["Knowledge ID", "Review Status", "Verified By", "Verified At", "Review History", "Superseded By", "Last Reviewed At", "Created Via"],
   sources: ["Source ID", "Source System", "Original ID", "Content Hash", "Ingest Job ID", "Created Via"],
   "research-jobs": ["Job ID", "Items Discovered", "Items Processed", "Items Skipped", "Items Failed", "Checkpoint", "Created Via"],
+  // a sales record's status follows its knowledge entry's review; the link to that entry never changes
+  ...Object.fromEntries([...SALES_FORMS].map(f => [f, ["Knowledge ID", "Verification Status", "Created Via"]])),
+  "deal-pricing": ["Deal Pricing ID", "Deal ID", "Created Via"],
 };
-const NO_CLIENT_CREATE = new Set(["audit-log", "sources"]); // sources come from ingestion / notes
+// Sales list filters: query parameter → field. Each pairs with Verification Status through a compound index.
+const SALES_FILTERS = { "sales-principles": { theme: "Theme" }, deals: { outcome: "Outcome" }, "sales-objections": { category: "Category" }, "partner-models": { type: "Partner Type" } };
+const NO_CLIENT_CREATE = new Set(["audit-log", "sources", "deal-pricing"]); // sources come from ingestion / notes; prices through their deal
 const ADMIN_ONLY_WRITE = new Set(["products"]);
 
 export async function handleAPI(req, res, pathname, auth, helpers) {
@@ -158,6 +163,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     if ((m = route.match(/^\/entities\/([\w-]+)$/))) {
       const form = m[1]; const def = FORM_BY_SLUG[form];
       if (!def) return send(404, { error: `Unknown entity form ${form}` });
+      if (form === "deal-pricing") return send(404, { error: "Deal prices are read and written through their deal: /sales/deal/{id}" });
       if (method === "GET") {
         const parts = []; let orderBy = "";
         const filt = (field, val) => { if (val) parts.push(`values[${field}] = ${kq(val)}`); };
@@ -169,6 +175,11 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         if (form === "research-jobs") filt("Status", qp("status"));
         if (form === "historical-events") filt("Event Type", qp("kind"));
         if (form === "audit-log") filt("Entity ID", qp("entityId"));
+        if (SALES_FORMS.has(form)) {
+          filt("Verification Status", qp("status"));
+          for (const [param, field] of Object.entries(SALES_FILTERS[form] || {})) filt(field, qp(param));
+          if (form === "deals" && !qp("status") && !qp("outcome")) filt("Company ID", qp("companyId"));
+        }
         if (qp("prefix") && ["companies", "people", "projects", "products"].includes(form)) {
           parts.push(`values[Name Key] =* ${kq(nameKey(qp("prefix")))}`); orderBy = "values[Name Key]";
           if (parts.length > 1) { const pf = parts.pop(); const first = parts[0].match(/values\[([^\]]+)\]/)[1]; parts.push(pf); orderBy = `values[${first}],values[Name Key]`; }
@@ -181,6 +192,11 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         if (NO_CLIENT_CREATE.has(form)) return send(400, { error: form === "sources" ? "Sources are created by ingestion jobs or POST /notes" : "The audit log is written by the server" });
         if (ADMIN_ONLY_WRITE.has(form) && !me.roles.admin) return send(403, { error: "Only administrators manage products" });
         if (form === "knowledge-entries") { const k = await services.proposeKnowledge(values); bust(); return send(201, { item: k }); }
+        if (SALES_FORMS.has(form)) {
+          const kind = Object.keys(SALES_KINDS).find(k => SALES_KINDS[k].form === form);
+          const r = await services.proposeSales(kind, values, { sourceIds: b.sourceIds || [], note: b.note || "" });
+          bust(); return send(201, r);
+        }
         if (form === "research-jobs") { const j = await ingestion.createJob({ title: values.Title, jobType: values["Job Type"] || "research", connector: values.Connector, scope: parseJson(values.Scope, {}), subjectType: values["Subject Type"], subjectId: values["Subject ID"], batchSize: +values["Batch Size"] || 10 }); bust(); return send(201, { item: j }); }
         for (const k of Object.keys(values)) if (!def.fields.some(f => f.name === k)) delete values[k];
         if (values.Name && def.fields.some(f => f.name === "Name Key")) values["Name Key"] = nameKey(values.Name);
@@ -198,6 +214,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     if ((m = route.match(/^\/entities\/([\w-]+)\/([\w-]+)$/))) {
       const [, form, subId] = m; const def = FORM_BY_SLUG[form];
       if (!def) return send(404, { error: `Unknown entity form ${form}` });
+      if (form === "deal-pricing") return send(404, { error: "Deal prices are read and written through their deal: /sales/deal/{id}" });
       const cur = await store.bySubmissionId(subId);
       if (!cur || cur._form !== form) return send(404, { error: "Record not found" });
       if (method === "GET") return send(200, { item: cur });
@@ -211,6 +228,9 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         if (form === "knowledge-entries" && !["proposed", "needs-research"].includes(cur["Review Status"]) && !me.roles.reviewer)
           return send(403, { error: "Only reviewers can edit knowledge after review" });
         if ((form === "historical-events" || form === "decisions") && "Verification Status" in values && !me.roles.reviewer) delete values["Verification Status"];
+        if (SALES_FORMS.has(form) && !["proposed", "needs-research", ""].includes(cur["Verification Status"] || "") && !me.roles.reviewer)
+          return send(403, { error: "Only reviewers can change a sales record after it has been reviewed" });
+        for (const k of Object.keys(values)) if (/IDs$/.test(k) && SALES_FORMS.has(form)) values[k] = JSON.stringify([...new Set(String(values[k]).replace(/[\[\]"]/g, "").split(/[\s,]+/).filter(Boolean))]);
         if (form === "companies" && "Customer Status" in values && values["Customer Status"] !== cur["Customer Status"] && !String(values["Customer Status Basis"] ?? cur["Customer Status Basis"]).trim())
           return send(400, { error: "Changing customer status needs a basis (the evidence or reason)" });
         if (values.Name && def.fields.some(f => f.name === "Name Key")) values["Name Key"] = nameKey(values.Name);
@@ -219,6 +239,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
         if (!Object.keys(changed).length) return send(200, { item: cur, unchanged: true });
         const item = await store.update(subId, changed);
         await services.audit("update", form, cur[def.idField], { details: { changed: Object.fromEntries(Object.keys(changed).map(k => [k, { from: cur[k] || "", to: changed[k] }])) } });
+        if (SALES_FORMS.has(form)) await services.refreshSalesKnowledge(Object.keys(SALES_KINDS).find(k => SALES_KINDS[k].form === form), { ...cur, ...changed });
         bust(); return send(200, { item });
       }
     }
@@ -267,11 +288,62 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       bust(); return send(200, { item: rel });
     }
 
+    // ── sales lens ──
+    if (route === "/sales/summary" && method === "GET") {
+      const key = scopeKey + "|sales", hit = statsCache.get(key);
+      if (hit && Date.now() - hit.at < TTL && qp("fresh") !== "1") return send(200, { ...hit.data, cached: true });
+      const kinds = {};
+      await Promise.all(Object.entries(SALES_KINDS).map(async ([kind, d]) => {
+        const [total, verified] = await Promise.all([store.count(d.form), store.count(d.form, `values[Verification Status] = "verified"`)]);
+        kinds[kind] = { label: d.label, total, verified };
+      }));
+      const queue = await store.count("knowledge-entries", `values[Lens] = "sales" AND values[Review Status] = "proposed"`);
+      const data = { kinds, queue, pricing: me.roles.pricing, generatedAt: new Date().toISOString() };
+      statsCache.set(key, { at: Date.now(), data });
+      return send(200, data);
+    }
+    // Pricing models as one timeline, oldest first (a small form; server-side bounded walk, sorted here so undated models still show)
+    if (route === "/sales/pricing-timeline" && method === "GET") {
+      const r = await store.collect("pricing-models", `values[Record Status] = "active"`, { maxPages: 8 });
+      const key = (x) => String(x["Start Date"] || "9999");
+      return send(200, { items: r.items.sort((a, b) => key(a).localeCompare(key(b)) || String(a.Name).localeCompare(b.Name)), truncated: r.truncated });
+    }
+    if ((m = route.match(/^\/sales\/(\w+)$/)) && method === "POST") {
+      if (!SALES_KINDS[m[1]]) return send(404, { error: `Unknown sales record type ${m[1]}` });
+      const b = await body();
+      const r = await services.proposeSales(m[1], b.values || {}, { sourceIds: b.sourceIds || [], note: b.note || "", extractionMethod: b.extractionMethod || "", jobId: b.jobId || "" });
+      bust(); statsCache.delete(scopeKey + "|sales"); return send(201, r);
+    }
+    if ((m = route.match(/^\/sales\/(\w+)\/([\w-]+)$/)) && method === "GET") {
+      const d = await services.salesDetail(m[1], m[2], { pricing: me.roles.pricing });
+      return d ? send(200, { ...d, canSeePricing: me.roles.pricing }) : send(404, { error: "Not found" });
+    }
+    // Deal-level prices: reviewers and the Sales, Legal and Executive teams only (Kinetic's CB Deal Pricing policy enforces the same)
+    if ((m = route.match(/^\/sales\/deal\/([\w-]+)\/pricing$/)) && method === "POST") {
+      if (!me.roles.pricing) return send(403, { error: "Deal prices are visible only to the Sales, Legal and Executive teams and reviewers" });
+      const deal = await store.byId("deals", m[1]); if (!deal) return send(404, { error: "Deal not found" });
+      const b = await body(); const v = b.values || {};
+      const values = {};
+      for (const k of ["Quoted Price", "Final Price", "Currency", "Discount", "Discount Reason", "Terms"]) if (v[k] !== undefined) values[k] = String(v[k]).trim();
+      const ex = (await store.page("deal-pricing", { q: `values[Deal ID] = ${kq(m[1])}`, limit: 1 })).items[0];
+      let item;
+      if (ex) {
+        item = await store.update(ex._id, values);
+        await services.audit("update", "deal-pricing", ex["Deal Pricing ID"], { details: { deal: m[1], fields: Object.keys(values) } });
+      } else {
+        item = await store.create("deal-pricing", { ...values, "Deal ID": m[1], "Company ID": deal["Company ID"] || "", "Record Status": "active",
+          "Source IDs": deal["Source IDs"] || "[]", "Created Via": actor.type });
+        await services.audit("create", "deal-pricing", item["Deal Pricing ID"], { details: { deal: m[1], fields: Object.keys(values) } });
+      }
+      return send(200, { item });
+    }
+
     // ── review ──
     if (route === "/review-queue" && method === "GET") {
       const status = qp("status") || "proposed";
       const q = [`values[Review Status] = ${kq(status)}`];
-      if (qp("companyId")) q.unshift(`values[Company ID] = ${kq(qp("companyId"))}`);
+      if (qp("lens")) q.unshift(`values[Lens] = ${kq(qp("lens"))}`);
+      else if (qp("companyId")) q.unshift(`values[Company ID] = ${kq(qp("companyId"))}`);
       return send(200, await store.page("knowledge-entries", { q: q.join(" AND "), pageToken: qp("pageToken") }));
     }
     if ((m = route.match(/^\/knowledge\/([\w-]+)\/review$/)) && method === "POST") {

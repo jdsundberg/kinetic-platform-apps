@@ -12,7 +12,7 @@ const ADMIN = basic();
 let pass = 0, fail = 0;
 const check = (name, ok, extra = "") => { ok ? pass++ : fail++; console.log(`${ok ? "✓" : "✗"} ${name}${extra ? " — " + extra : ""}`); };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const created = { users: [], companyId: null, jobIds: [] };
+const created = { users: [], companyId: null, jobIds: [], sales: [] };   // sales: [form, idField, id, knowledgeId]
 
 async function cleanup() {
   const del = async (form, q) => {
@@ -28,6 +28,11 @@ async function cleanup() {
     await del("companies", `values[Company ID] = "${created.companyId}"`);
   }
   for (const j of created.jobIds) { await del("sources", `values[Ingest Job ID] = "${j}"`); await del("knowledge-entries", `values[Job ID] = "${j}"`); await del("research-jobs", `values[Job ID] = "${j}"`); }
+  for (const [form, idField, id, kid] of created.sales) {
+    await del(form, `values[${idField}] = "${id}"`);
+    if (kid) await del("knowledge-entries", `values[Knowledge ID] = "${kid}"`);
+    if (form === "deals") await del("deal-pricing", `values[Deal ID] = "${id}"`);
+  }
   for (const u of created.users) await kineticRequest("DELETE", `/users/${encodeURIComponent(u)}`, null, ADMIN);
 }
 
@@ -158,6 +163,72 @@ try {
     const tamper = await kineticRequest("PUT", `/submissions/${auditRow.id}`, { values: { Comment: "tampered" } }, basic(MEMBER, pw));
     check("audit log is append-only for members", tamper.status === 403 || tamper.status === 401, `status ${tamper.status}`);
   }
+
+  // ── sales lens ──
+  const mkSales = async (kind, values, sourceIds, auth = ADMIN) => {
+    const r = await call("POST", `/sales/${kind}`, { values, sourceIds }, { auth });
+    const form = { deal: "deals", principle: "sales-principles", objection: "sales-objections" }[kind];
+    const idField = { deal: "Deal ID", principle: "Principle ID", objection: "Objection ID" }[kind];
+    if (r.body?.item) created.sales.push([form, idField, r.body.item[idField], r.body.knowledge?.["Knowledge ID"]]);
+    return r;
+  };
+  const d1 = await mkSales("deal", { Title: `TEST deal one ${stamp}`, "Company ID": CO, "Deal Date": "2010-05", Outcome: "walked-away", "Outcome Reason": "Would not change the support model" }, [SID]);
+  check("a sales record is created with a proposed review entry (Lens sales)", d1.status === 201 && d1.body.item["Verification Status"] === "proposed" && d1.body.knowledge?.Lens === "sales" && d1.body.knowledge?.["Subject Type"] === "deal" && d1.body.knowledge?.["Knowledge ID"] === d1.body.item["Knowledge ID"], `status ${d1.status} ${d1.body.error || ""}`);
+  check("the review entry states the deal's outcome and reason", /Outcome: walked-away/.test(d1.body.knowledge?.Statement || "") && /support model/.test(d1.body.knowledge?.Statement || ""));
+  const badSrc = await mkSales("deal", { Title: `TEST deal bad source ${stamp}` }, ["SR-DOESNOTEXIST0000000"]);
+  check("a sales record citing a missing source creates nothing", badSrc.status === 400 && !badSrc.body.item);
+  const d2 = await mkSales("deal", { Title: `TEST deal two ${stamp}`, "Company ID": CO, Outcome: "won" }, [SID]);
+  const D1 = d1.body.item["Deal ID"], D2 = d2.body.item["Deal ID"];
+  const p1 = await mkSales("principle", { Title: `TEST principle ${stamp}`, Statement: "We would rather walk than change the support model", "Deal IDs": D1 }, [SID]);
+  const P = p1.body.item, PK = p1.body.knowledge?.["Knowledge ID"];
+  check("principle created with its deal list stored as a JSON list", p1.status === 201 && JSON.parse(P["Deal IDs"]).length === 1, `status ${p1.status} ${p1.body.error || ""}`);
+  const early = await call("POST", `/knowledge/${PK}/review`, { action: "approve" });
+  check("a principle with one deal cannot be verified (needs 2)", early.status === 400 && /at least 2 linked deals/.test(early.body.error || ""), `status ${early.status} ${early.body.error || ""}`);
+  const edit = await call("PUT", `/entities/sales-principles/${P._id}`, { values: { "Deal IDs": `${D1}, ${D2}` } });
+  check("editing the deal list normalizes it", edit.status === 200 && JSON.parse(edit.body.item["Deal IDs"]).length === 2, `status ${edit.status}`);
+  const pkAfter = (await call("GET", `/knowledge/${PK}`)).body.entry;
+  check("an edit while under review refreshes the review entry's statement", (pkAfter?.Statement || "").includes(D2));
+  const agentOk = await call("POST", `/knowledge/${PK}/review`, { action: "approve" }, { agent: "test-agent" });
+  check("an agent cannot verify a sales principle", agentOk.status === 400 || agentOk.status === 403);
+  const ok2 = await call("POST", `/knowledge/${PK}/review`, { action: "approve", comment: "test" });
+  const pDetail = await call("GET", `/sales/principle/${P["Principle ID"]}`);
+  check("with two deals a reviewer can verify; the principle's status follows", ok2.status === 200 && pDetail.body.item?.["Verification Status"] === "verified" && pDetail.body.deals.length === 2, `status ${ok2.status} ${ok2.body.error || ""}`);
+  const dDetail = await call("GET", `/sales/deal/${D1}`);
+  check("a deal shows the principles that cite it", dDetail.status === 200 && dDetail.body.principles.some(x => x["Principle ID"] === P["Principle ID"]));
+  const queue = await call("GET", `/review-queue?lens=sales&status=proposed`);
+  check("the sales review queue lists only sales entries", queue.status === 200 && queue.body.items.length > 0 && queue.body.items.every(k => k.Lens === "sales"));
+  const listed = await call("GET", `/entities/deals?status=proposed&outcome=won`);
+  check("deals filter by status + outcome", listed.status === 200 && listed.body.items.every(x => x.Outcome === "won" && x["Verification Status"] === "proposed") && listed.body.items.some(x => x["Deal ID"] === D2), `status ${listed.status} ${listed.body.error || ""}`);
+  const sum = await call("GET", `/sales/summary?fresh=1`);
+  check("sales summary counts each record type", sum.status === 200 && Object.keys(sum.body.kinds).length === 6 && sum.body.pricing === true);
+  const tl = await call("GET", `/sales/pricing-timeline`);
+  check("pricing timeline responds", tl.status === 200 && Array.isArray(tl.body.items));
+  const genericPricing = await call("GET", `/entities/deal-pricing`);
+  check("deal pricing is not reachable through the generic entity API", genericPricing.status === 404);
+  const price = await call("POST", `/sales/deal/${D1}/pricing`, { values: { "Quoted Price": "50000", "Final Price": "42000", Currency: "USD", Discount: "16%" } });
+  const withPrice = await call("GET", `/sales/deal/${D1}`);
+  check("a reviewer records and sees deal prices", price.status === 200 && withPrice.body.pricing?.[0]?.["Final Price"] === "42000", `status ${price.status} ${price.body.error || ""}`);
+  const auditPrice = await kineticRequest("GET", `/kapps/corporate-brain/forms/audit-log/submissions?limit=5&include=values&q=${encodeURIComponent(`values[Entity ID] = "${price.body.item?.["Deal Pricing ID"]}"`)}`, null, ADMIN);
+  check("prices are not copied into the (member-readable) audit log", (auditPrice.data.submissions || []).length > 0 && (auditPrice.data.submissions || []).every(a => !/42000|50000/.test(a.values.Details || "")));
+  // pricing visibility: a plain member vs a member of Corporate Brain::Sales
+  const salesUser = `cb-test-sales-${stamp}`.toLowerCase();
+  if ((await kineticRequest("POST", "/users", { username: salesUser, displayName: salesUser, email: `${salesUser}@example.invalid`, password: pw, enabled: true, spaceAdmin: false }, ADMIN)).status < 300) created.users.push(salesUser);
+  for (const team of ["Corporate Brain::Members", "Corporate Brain::Sales"]) await kineticRequest("POST", "/memberships", { team: { name: team }, user: { username: salesUser } }, ADMIN);
+  const mDeal = await call("GET", `/sales/deal/${D1}`, null, { auth: basic(MEMBER, pw) });
+  check("a member without a pricing team sees the deal but not its prices", mDeal.status === 200 && mDeal.body.canSeePricing === false && !mDeal.body.pricing, `status ${mDeal.status}`);
+  const mPost = await call("POST", `/sales/deal/${D1}/pricing`, { values: { "Final Price": "1" } }, { auth: basic(MEMBER, pw) });
+  check("a member without a pricing team cannot record prices", mPost.status === 403);
+  const mCore = await kineticRequest("GET", `/kapps/corporate-brain/forms/deal-pricing/submissions?limit=5&include=values&q=${encodeURIComponent(`values[Deal ID] = "${D1}"`)}`, null, basic(MEMBER, pw));
+  check("Kinetic itself hides deal prices from a plain member (direct Core API)", mCore.status >= 400 || (mCore.data.submissions || []).length === 0, `status ${mCore.status}, ${(mCore.data.submissions || []).length} rows`);
+  const sDeal = await call("GET", `/sales/deal/${D1}`, null, { auth: basic(salesUser, pw) });
+  check("a member of Corporate Brain::Sales sees deal prices", sDeal.status === 200 && sDeal.body.canSeePricing === true && sDeal.body.pricing?.[0]?.["Final Price"] === "42000", `status ${sDeal.status} ${sDeal.body.error || ""}`);
+  const mEdit = await call("PUT", `/entities/sales-principles/${P._id}`, { values: { Statement: "changed" } }, { auth: basic(MEMBER, pw) });
+  check("members cannot change a verified sales principle", mEdit.status === 403, `status ${mEdit.status}`);
+  const mEditCore = await kineticRequest("PUT", `/submissions/${P._id}`, { values: { Statement: "changed" } }, basic(MEMBER, pw));
+  check("…nor through the Core API (CB Sales Modification)", mEditCore.status === 403 || mEditCore.status === 401, `status ${mEditCore.status}`);
+  const mObj = await mkSales("objection", { Title: `TEST objection ${stamp}`, Objection: "Renewal pricing is shocking", Category: "renewal" }, [], basic(MEMBER, pw));
+  const mObjEdit = mObj.body.item ? await kineticRequest("PUT", `/submissions/${mObj.body.item._id}`, { values: { Responses: "Showed the 3-year plan" } }, basic(MEMBER, pw)) : { status: 0 };
+  check("members can propose and edit their own sales records while under review", mObj.status === 201 && mObjEdit.status < 300, `create ${mObj.status} ${mObj.body.error || ""}, edit ${mObjEdit.status}`);
 } catch (e) {
   fail++; console.log("✗ unexpected error:", e.stack || e.message);
 } finally {

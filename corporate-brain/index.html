@@ -231,6 +231,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
     <div id="c-knowledge" class="console"></div>
     <div id="c-sources" class="console"></div>
     <div id="c-review" class="console"></div>
+    <div id="c-sales" class="console"></div>
     <div id="c-historian" class="console"></div>
     <div id="c-ingest" class="console"></div>
     <div id="c-search" class="console"></div>
@@ -246,7 +247,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 let API={server:'',auth:'',user:'',displayName:''};
 let ME=null, MODEL=null;
 const PREFIX='/api/corporate-brain';
-const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['historian','Historian'],['ingest','Ingestion']];
+const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['sales','Sales'],['historian','Historian'],['ingest','Ingestion']];
 const pages={};          // per-list pagination: {tokens:[...], idx}
 let current='dash';
 const history_=[];       // detail breadcrumbs
@@ -316,7 +317,7 @@ function switchTab(tab){
   box('c-'+tab).classList.add('active');
   document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
   if(TABS.some(t=>t[0]===tab))history.replaceState(null,'','#'+tab);
-  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
+  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,sales:loadSales,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
 }
 
 // ── pagination (≤25 per page, pageToken stack) ──
@@ -378,24 +379,38 @@ const CHOICES={
   'Project Status':['','Planned','Active','Completed','Cancelled','Unknown'],
   'Product Status':['','Active','Retired','Renamed','Unknown'],
   'Channel':['email','meeting','call','chat','letter','other'],
+  'Theme':['','pricing','licensing','discounting','support model','services','partners','bidding','negotiation','positioning','other'],
+  'Licensing Basis':['','per server','per project','per employee','per bed','platform + workflows','subscription','other'],
+  'Deal Type':['','new','renewal','expansion','RFP','partner-led','services','other'],
+  'Outcome':['','won','lost','walked-away','no-bid','abandoned','open','unknown'],
+  'Partner Type':['','reseller','referral','OEM','teaming','SI','other'],
 };
-const REF_FIELDS={'Company ID':'company','Primary Company ID':'company','Project ID':'project','Product ID':'product','Subject ID':null};
+// field choices that differ by form (Category means different things on objections and competitors)
+const FORM_CHOICES={'sales-objections':{'Category':['','price','renewal','competitor','product fit','end of life','security','legal terms','support','other']}};
+const choicesFor=(form,name)=>(FORM_CHOICES[form]||{})[name]||CHOICES[name];
+const SALES_FORMS=new Set(['sales-principles','pricing-models','deals','sales-objections','competitors','partner-models']);
+const REF_FIELDS={'Company ID':'company','Primary Company ID':'company','Project ID':'project','Product ID':'product','Subject ID':null,'Pricing Model ID':'pricingmodel','Partner Model ID':'partnermodel','Competitor ID':'competitor','Replaced By':'pricingmodel'};
+// list-valued reference fields on sales records → the entity type each ID opens
+const REF_LISTS={'Deal IDs':'deal','Competitor IDs':'competitor','Partner Company IDs':'company'};
 function formDef(slug){return MODEL?.forms.find(f=>f.slug===slug)}
 function openEdit(form,rec,onSaved){
   const def=formDef(form); if(!def){toast('Form definition not loaded',true);return}
   const idField=def.fields[0].name;
-  const fields=def.fields.filter(f=>!SYSTEM_FIELDS.has(f.name)&&f.name!==idField&&!(form==='knowledge-entries'&&['Review Status','Supporting Source IDs','Contradicts','Supersedes','Job ID','Model Confidence','Extraction Method'].includes(f.name)));
   const isNew=!rec;
+  const fields=def.fields.filter(f=>!SYSTEM_FIELDS.has(f.name)&&f.name!==idField&&!(form==='knowledge-entries'&&['Review Status','Supporting Source IDs','Contradicts','Supersedes','Job ID','Model Confidence','Extraction Method','Lens'].includes(f.name))&&!(SALES_FORMS.has(form)&&['Knowledge ID','Verification Status'].includes(f.name)));
+  // a new sales record cites its evidence up front: the review entry created with it needs sources to be verified
+  if(isNew&&SALES_FORMS.has(form))fields.push({name:'Source IDs',rows:0});
   const locked=form==='historical-events'&&rec&&rec['Verification Status']==='verified';
   const field=(f)=>{
     const val=rec?rec[f.name]||'':(f.name==='Company ID'&&window._ctxCompany?window._ctxCompany:'');
     const id='fe-'+f.name.replace(/\W+/g,'_');
     let input;
-    if(CHOICES[f.name]&&!(f.name==='Verification Status'&&!ME.roles.reviewer))input=`<select id="${id}">${CHOICES[f.name].map(o=>`<option ${o===val?'selected':''} value="${esc(o)}">${esc(o||'—')}</option>`).join('')}</select>`;
+    const ch=choicesFor(form,f.name);
+    if(ch&&!(f.name==='Verification Status'&&!ME.roles.reviewer))input=`<select id="${id}">${ch.map(o=>`<option ${o===val?'selected':''} value="${esc(o)}">${esc(o||'—')}</option>`).join('')}</select>`;
     else if(f.name==='Verification Status')input=`<input id="${id}" value="${esc(val||'proposed')}" disabled>`;
-    else if(f.rows)input=`<textarea id="${id}">${esc(val)}</textarea>`;
-    else input=`<input id="${id}" value="${esc(val)}">`;
-    const help=f.name.endsWith('Date')?'YYYY, YYYY-MM or YYYY-MM-DD — record only what the evidence shows':REF_FIELDS[f.name]!==undefined?'Stable ID, e.g. CO-…':f.name==='Customer Status Basis'?'Required when status changes: the evidence or reason':'';
+    else if(f.rows&&!REF_LISTS[f.name])input=`<textarea id="${id}">${esc(val)}</textarea>`;
+    else input=`<input id="${id}" value="${esc(REF_LISTS[f.name]||f.name==='Source IDs'?list(val).join(', '):val)}">`;
+    const help=/Date$|Effect From$|Effect To$/.test(f.name)?'YYYY, YYYY-MM or YYYY-MM-DD — record only what the evidence shows':REF_FIELDS[f.name]!==undefined?'Stable ID, e.g. CO-…':REF_LISTS[f.name]?'Stable IDs, comma-separated'+(f.name==='Deal IDs'&&form==='sales-principles'?' — a principle needs at least 2 deals to be verified':''):f.name==='Source IDs'?'SR-… IDs of the evidence, comma-separated — needed before a reviewer can verify':f.name==='Customer Status Basis'?'Required when status changes: the evidence or reason':'';
     return `<label>${esc(f.name)}${f.required?' *':''}</label>${input}${help?`<div class="help">${esc(help)}</div>`:''}`;
   };
   box('modal').innerHTML=`<header><h3>${isNew?'Add':'Edit'} ${esc(def.name.replace(/s$/,''))}</h3>${rec?`<span class="mono muted">${esc(rec[idField])}</span>`:''}</header>
@@ -964,6 +979,140 @@ async function openJob(id){
 async function runJob(id){try{await cb('/jobs/'+encodeURIComponent(id)+'/run',{method:'POST'});toast('Job started — processing in the background');setTimeout(()=>openJob(id),1500)}catch(e){toast(e.message,true)}}
 async function jobAction(id,a){try{await cb('/jobs/'+encodeURIComponent(id)+'/'+a,{method:'POST'});toast('Job '+(a==='retry'?'re-queued':'cancelled'));openJob(id)}catch(e){toast(e.message,true)}}
 
+
+// ── sales lens ──
+// How Kinetic sells and why: six record types on the shared evidence. Each record carries a knowledge entry
+// (Lens "sales") whose review sets the record's status; only Corporate Brain reviewers (John, James) verify.
+const SK={
+  principle:{form:'sales-principles',idf:'Principle ID',label:'Title',name:'Principle'},
+  pricingmodel:{form:'pricing-models',idf:'Pricing Model ID',label:'Name',name:'Pricing model'},
+  deal:{form:'deals',idf:'Deal ID',label:'Title',name:'Deal'},
+  objection:{form:'sales-objections',idf:'Objection ID',label:'Title',name:'Objection'},
+  competitor:{form:'competitors',idf:'Competitor ID',label:'Name',name:'Competitor'},
+  partnermodel:{form:'partner-models',idf:'Partner Model ID',label:'Name',name:'Partner model'},
+};
+const SALES_VIEWS=[['playbook','Playbook','principle'],['pricing','Pricing timeline','pricingmodel'],['deals','Deals','deal'],['objections','Objections','objection'],['competitors','Competitors','competitor'],['partners','Partner models','partnermodel'],['sreview','Review queue','']];
+// per view: the filter beside status (query param + field whose choices it offers)
+const SALES_FILTER={playbook:['theme','Theme'],deals:['outcome','Outcome'],objections:['category','Category'],partners:['type','Partner Type']};
+let SALES_VIEW='playbook';
+function loadSales(){
+  if(!box('sl-body')){
+    box('c-sales').innerHTML=`<h1>Sales Brain</h1><div class="page-sub">How Kinetic sells and why: principles, pricing over time, deals, objections, competitors and partner models — each tied to evidence and verified only by John or James.</div>
+      <div class="kpi-row" id="sl-kpis"></div>
+      <div class="az" id="sl-views">${SALES_VIEWS.map(([id,label])=>`<button class="az-btn" data-v="${id}" onclick="salesView(${jsArg(id)})">${esc(label)}</button>`).join('')}</div>
+      <div class="card" id="sl-body"></div>`;
+  }
+  loadSalesKpis();salesView(SALES_VIEW);
+}
+async function loadSalesKpis(fresh){
+  try{
+    const d=await cb('/sales/summary'+(fresh?'?fresh=1':''));
+    const k=(kind,view)=>{const x=d.kinds[kind];return `<div class="kpi ink" onclick="salesView(${jsArg(view)})"><div class="val">${n(x.total)}</div><div class="label">${esc(x.label)}s</div><div class="sub">${n(x.verified)} verified</div></div>`};
+    box('sl-kpis').innerHTML=k('principle','playbook')+k('pricingmodel','pricing')+k('deal','deals')+k('objection','objections')+k('competitor','competitors')+k('partnermodel','partners')+`<div class="kpi amber" onclick="salesView('sreview')"><div class="val">${n(d.queue)}</div><div class="label">Awaiting review</div></div>`;
+  }catch(e){box('sl-kpis').innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
+}
+function salesView(view){
+  SALES_VIEW=view;
+  document.querySelectorAll('#sl-views .az-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===view));
+  if(view==='sreview'){box('sl-body').innerHTML=`<h2>Sales review queue</h2><div class="small muted" style="margin-bottom:10px">Proposed sales records waiting for John or James. A principle needs at least 2 linked deals before it can be approved.</div>
+    <div class="controls"><select id="sr-status" onchange="resetPg('srq');loadSalesReview()">${['proposed','needs-research','disputed'].map(s=>`<option>${s}</option>`).join('')}</select></div><div id="sl-list"></div>`;resetPg('srq');return loadSalesReview()}
+  const kind=SALES_VIEWS.find(v=>v[0]===view)[2], def=SK[kind], filt=SALES_FILTER[view];
+  const fch=filt?choicesFor(def.form,filt[1]):null;
+  box('sl-body').innerHTML=`<div class="controls">${view==='pricing'?'':`<select id="sl-status" onchange="resetPg('sl');loadSalesList()"><option value="">All statuses</option>${['verified','proposed','needs-research','disputed','rejected','superseded'].map(s=>`<option>${s}</option>`).join('')}</select>`}
+    ${fch?`<select id="sl-filt" onchange="resetPg('sl');loadSalesList()"><option value="">All ${esc(filt[1].toLowerCase())}s</option>${fch.filter(Boolean).map(o=>`<option>${esc(o)}</option>`).join('')}</select>`:''}
+    <div class="spacer-h"></div><button class="btn-primary" onclick="openEdit(${jsArg(def.form)},null,r=>openRef(${jsArg(kind)},r[${jsArg(def.idf)}]))">+ ${esc(def.name)}</button></div><div id="sl-list"></div>`;
+  resetPg('sl');loadSalesList();
+}
+const idCount=(x)=>list(x).length;
+const snip=(t,nn=160)=>{t=String(t||'');return esc(t.length>nn?t.slice(0,nn)+'…':t)};
+async function loadSalesList(){
+  const view=SALES_VIEW, kind=SALES_VIEWS.find(v=>v[0]===view)[2], def=SK[kind];
+  loading('sl-list');
+  try{
+    if(view==='pricing'){
+      const r=await cb('/sales/pricing-timeline');
+      box('sl-list').innerHTML=r.items.length?`<div class="tl">${r.items.map(p=>`<div class="tl-item ${p['Verification Status']==='verified'?'verified':p['Start Date']?'':'unknown'}" onclick="openRef('pricingmodel',${jsArg(p['Pricing Model ID'])})">
+        <div class="tl-date">${p['Start Date']?fmtDate(p['Start Date'],p['Date Precision']):'<span class="muted">start unknown</span>'} → ${p['End Date']?fmtDate(p['End Date'],p['Date Precision']):`<span class="muted">${p['Start Date']?'no end recorded':'—'}</span>`}</div>
+        <div class="tl-title"><strong>${esc(p.Name)}</strong> ${p['Licensing Basis']?`<span class="pill">${esc(p['Licensing Basis'])}</span>`:''} ${badge(p['Verification Status'])}</div>
+        ${p['Price Points']?`<div class="small">${snip(p['Price Points'],240)}</div>`:''}${p['Why Changed']?`<div class="small muted">Why it changed: ${snip(p['Why Changed'],240)}</div>`:''}</div>`).join('')}</div>${r.truncated?'<div class="small muted">Showing the first 200 models.</div>':''}`
+        :'<div class="empty">No pricing models yet. Add one, or wait for the phase 2 re-read of the evidence.</div>';
+      return;
+    }
+    const filt=SALES_FILTER[view];
+    const qs=new URLSearchParams({status:box('sl-status').value,...(filt?{[filt[0]]:box('sl-filt').value}:{})});
+    const r=await cb(`/entities/${def.form}?${qs}&pageToken=${tok('sl')}`);
+    const cols={
+      principle:[['Principle',x=>`<strong>${esc(x.Title)}</strong><div class="small muted">${snip(x.Statement)}</div>`],['Theme',x=>esc(x.Theme)||'<span class="muted">—</span>'],['Deals',x=>`${idCount(x['Deal IDs'])}${idCount(x['Deal IDs'])<2&&x['Verification Status']!=='verified'?' <span class="badge b-proposed">needs 2</span>':''}`]],
+      deal:[['Deal',x=>`<strong>${esc(x.Title)}</strong><div class="small muted">${snip(x['Outcome Reason']||x.Ask)}</div>`],['Company',x=>idRef('company',x['Company ID'])],['Date',x=>x['Deal Date']?fmtDate(x['Deal Date'],x['Date Precision']):'<span class="muted">—</span>'],['Type',x=>esc(x['Deal Type'])],['Outcome',x=>x.Outcome?`<span class="pill">${esc(x.Outcome)}</span>`:'<span class="muted">—</span>']],
+      objection:[['Objection',x=>`<strong>${esc(x.Title)}</strong><div class="small muted">${snip(x.Objection)}</div>`],['Category',x=>esc(x.Category)],['What worked',x=>`<span class="small">${snip(x.Responses,120)}</span>`],['Deals',x=>idCount(x['Deal IDs'])]],
+      competitor:[['Competitor',x=>`<strong>${esc(x.Name)}</strong>`],['Category',x=>esc(x.Category)],['Where we win',x=>`<span class="small">${snip(x['Where We Win'],120)}</span>`],['Where we lose',x=>`<span class="small">${snip(x['Where We Lose'],120)}</span>`]],
+      partnermodel:[['Partner model',x=>`<strong>${esc(x.Name)}</strong><div class="small muted">${snip(x.Terms)}</div>`],['Type',x=>esc(x['Partner Type'])],['Dates',x=>`${x['Start Date']?fmtDate(x['Start Date'],x['Date Precision']):'?'} → ${x['End Date']?fmtDate(x['End Date'],x['Date Precision']):'?'}`],['Partners',x=>idCount(x['Partner Company IDs'])]],
+    }[kind];
+    box('sl-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr>${cols.map(c=>`<th>${esc(c[0])}</th>`).join('')}<th>Status</th><th></th></tr></thead><tbody>${r.items.map(x=>`<tr onclick="openRef(${jsArg(kind)},${jsArg(x[def.idf])})">${cols.map(c=>`<td>${c[1](x)}</td>`).join('')}<td>${badge(x['Verification Status'])}</td><td>${salesEditable(x)?`<button class="btn-secondary btn-sm" onclick="event.stopPropagation();editById(${jsArg(def.form)},${jsArg(x._id)},loadSalesList)">Edit</button>`:''}</td></tr>`).join('')}</tbody></table></div>${pager('sl',r.nextPageToken,'loadSalesList')}`
+      :`<div class="empty">No ${esc(def.name.toLowerCase())}s match. Add one, or wait for the phase 2 re-read of the evidence.</div>`;
+  }catch(e){failBox('sl-list',e)}
+}
+function salesEditable(x){return ME.roles.reviewer||['proposed','needs-research',''].includes(x['Verification Status']||'')}
+async function loadSalesReview(){
+  loading('sl-list');
+  try{
+    const r=await cb(`/review-queue?lens=sales&status=${encodeURIComponent(box('sr-status').value)}&pageToken=${tok('srq')}`);
+    box('sl-list').innerHTML=r.items.length?r.items.map(k=>`<div class="finding ${esc(k['Review Status'])}"><div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;cursor:pointer" onclick="openRef(${jsArg(k['Subject Type'])},${jsArg(k['Subject ID'])})">${kind(k['Knowledge Type'])} <strong>${esc(k.Title)}</strong> <span class="small muted mono">${esc(k['Subject ID'])}</span>
+      <div class="small" style="margin:4px 0;white-space:pre-line">${snip(k.Statement,400)}</div>
+      <div class="small muted">${esc(k['Extraction Method'])} · by ${esc(k._createdBy)} (${esc(k['Created Via'])}) · ${ago(k._createdAt)} · evidence: ${cites(list(k['Supporting Source IDs']).map(s=>({type:'source',id:s})))||'<span class="badge b-disputed">none</span>'}</div></div>
+      <div>${reviewButtons(k).replace(/doReview\(([^)]*)\)/g,(m,a)=>`doReview(${a},()=>{loadSalesReview();loadSalesKpis(true)})`)}</div></div></div>`).join('')+pager('srq',r.nextPageToken,'loadSalesReview'):'<div class="empty">Nothing in this queue.</div>';
+  }catch(e){failBox('sl-list',e)}
+}
+function salesValue(field,val,rec){
+  if(REF_LISTS[field])return list(val).map(x=>idRef(REF_LISTS[field],x)).join(', ')||'<span class="muted">—</span>';
+  if(REF_FIELDS[field])return idRef(REF_FIELDS[field],val);
+  if(field==='Superseded By')return idRef('principle',val);
+  if(/Date$|Effect From$|Effect To$/.test(field))return fmtDate(val,rec&&rec['Date Precision']);
+  return esc(val);
+}
+async function showSales(kindName,id){
+  const def=SK[kindName];
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    const d=await cb(`/sales/${kindName}/${encodeURIComponent(id)}`);const x=d.item,k=d.knowledge;
+    const fdef=formDef(def.form);
+    const hide=new Set([def.idf,def.label,'Name Key','Knowledge ID','Verification Status','Record Status','Created Via','Source IDs','Date Precision']);
+    const back=()=>openRef(kindName,id);
+    const st=x['Verification Status'];
+    const dealRow=dl=>`<div class="finding ${esc(dl['Verification Status'])}" style="cursor:pointer" onclick="openRef('deal',${jsArg(dl['Deal ID'])})">${badge(dl['Verification Status'])} <strong>${esc(dl.Title)}</strong> ${dl.Outcome?`<span class="pill">${esc(dl.Outcome)}</span>`:''}<div class="small muted">${dl['Deal Date']?fmtDate(dl['Deal Date'],dl['Date Precision']):''} ${snip(dl['Outcome Reason'],200)}</div></div>`;
+    const citedBy=(arr,type,label)=>arr&&arr.length?`<div class="card"><h2>${esc(label)} citing this deal <span class="muted">${arr.length}</span></h2>${arr.map(p=>`<div style="margin-bottom:6px;cursor:pointer" onclick="openRef(${jsArg(type)},${jsArg(p[type==='principle'?'Principle ID':'Objection ID'])})">${badge(p['Verification Status'])} ${esc(p.Title)}</div>`).join('')}</div>`:'';
+    const pr=(d.pricing||[])[0];
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(x[def.label])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${kind(def.name)} ${badge(st)}</div></div>
+      ${salesEditable(x)?`<button class="btn-secondary" onclick="editById(${jsArg(def.form)},${jsArg(x._id)},()=>openRef(${jsArg(kindName)},${jsArg(id)}))">Edit</button>`:''}</div>
+      ${d.verifyBlocker&&st!=='verified'?`<div class="notice warn">${esc(d.verifyBlocker)}. Add deal IDs with Edit.</div>`:''}
+      <div class="three-col"><div>
+        <div class="card"><h2>${esc(def.name)}</h2><dl class="dl">${fdef.fields.filter(f=>!hide.has(f.name)&&x[f.name]&&x[f.name]!=='[]').map(f=>`<dt>${esc(f.name)}</dt><dd class="statement">${salesValue(f.name,x[f.name],x)}</dd>`).join('')||'<dt></dt><dd class="muted">No details yet.</dd>'}
+          <dt>Created</dt><dd>${esc(x._createdBy)} via ${esc(x['Created Via'])} · ${ago(x._createdAt)}</dd></dl></div>
+        <div class="card"><h2>Evidence <span class="muted">${d.sources.length}</span></h2>${d.sources.length?d.sources.map(s=>`<div class="finding" style="cursor:pointer" onclick="openRef('source',${jsArg(s['Source ID'])})"><div class="small muted">${esc(s['Source System'])} · ${esc(s['Source Type'])} · ${esc(s['Source Date'])}</div><strong>${esc(s.Title)}</strong></div>`).join(''):'<div class="notice warn">No evidence cited yet. A reviewer cannot verify this until a source is attached.</div>'}</div>
+        ${d.deals.length?`<div class="card"><h2>Deals <span class="muted">${d.deals.length}</span></h2>${d.deals.map(dealRow).join('')}</div>`:''}
+        ${citedBy(d.principles,'principle','Principles')}${citedBy(d.objections,'objection','Objections')}
+      </div><div>
+        <div class="card"><h2>Review</h2>${k?`<div class="small" style="margin-bottom:8px">Review entry ${idRef('knowledge',k['Knowledge ID'])} ${badge(k['Review Status'])}${k['Verified By']?` · verified by <strong>${esc(k['Verified By'])}</strong>`:''}</div>${reviewButtons(k).replace(/doReview\(([^)]*)\)/g,(m,a)=>`doReview(${a},()=>openRef(${jsArg(kindName)},${jsArg(id)}))`)}`:'<div class="notice bad">No review entry is linked to this record.</div>'}</div>
+        ${kindName==='deal'&&d.canSeePricing?`<div class="card"><h2>Pricing <span class="pill">Sales · Legal · Executive</span></h2>${pr?`<dl class="dl">${['Quoted Price','Final Price','Currency','Discount','Discount Reason','Terms'].filter(f=>pr[f]).map(f=>`<dt>${esc(f)}</dt><dd class="statement">${esc(pr[f])}</dd>`).join('')}</dl>`:'<div class="empty">No prices recorded.</div>'}<button class="btn-secondary btn-sm" style="margin-top:8px" onclick="openDealPricing(${jsArg(id)},${jsArg(JSON.stringify(pr||{}))})">${pr?'Edit prices':'+ Add prices'}</button></div>`:''}
+      </div></div>`,x[def.label],kindName,id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?def.name+' not found.':e.message)}</div>`)}
+}
+function openDealPricing(dealId,cur){
+  cur=JSON.parse(cur||'{}');
+  const F=['Quoted Price','Final Price','Currency','Discount','Discount Reason','Terms'];
+  box('modal').innerHTML=`<header><h3>Deal prices</h3><span class="mono muted">${esc(dealId)}</span></header><div class="body">
+    <div class="notice info">Deal-level prices are visible only to the Sales, Legal and Executive teams and reviewers.</div>
+    ${F.map(f=>`<label>${esc(f)}</label>${/Reason|Terms/.test(f)?`<textarea id="dp-${f.replace(/\W+/g,'_')}">${esc(cur[f]||'')}</textarea>`:`<input id="dp-${f.replace(/\W+/g,'_')}" value="${esc(cur[f]||(f==='Currency'?'USD':''))}">`}`).join('')}</div>
+    <footer><span class="err" id="dp-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="dp-go">Save</button></footer>`;
+  openModal();
+  box('dp-go').onclick=async()=>{
+    box('dp-go').disabled=true;
+    const values={};for(const f of F)values[f]=box('dp-'+f.replace(/\W+/g,'_')).value.trim();
+    try{await cb('/sales/deal/'+encodeURIComponent(dealId)+'/pricing',{method:'POST',body:{values}});closeModal();toast('Prices saved');openRef('deal',dealId)}
+    catch(e){box('dp-err').textContent=e.message;box('dp-go').disabled=false}
+  };
+}
+
 // ── search ──
 async function runSearch(q){
   current='search';history_.length=0;
@@ -996,7 +1145,7 @@ function showDetail(html,title,type,id){
 }
 function openRef(type,id){
   if(!id)return;
-  ({company:showCompany,person:showPerson,knowledge:showKnowledge,source:showSource,event:showEvent,job:openJob,communication:showCommunication,project:showGeneric('projects','Project ID'),product:showGeneric('products','Product ID'),decision:showGeneric('decisions','Decision ID')}[type]||(()=>toast('No view for '+type,true)))(id);
+  ({company:showCompany,person:showPerson,knowledge:showKnowledge,source:showSource,event:showEvent,job:openJob,communication:showCommunication,project:showGeneric('projects','Project ID'),principle:id=>showSales('principle',id),pricingmodel:id=>showSales('pricingmodel',id),deal:id=>showSales('deal',id),objection:id=>showSales('objection',id),competitor:id=>showSales('competitor',id),partnermodel:id=>showSales('partnermodel',id),product:showGeneric('products','Product ID'),decision:showGeneric('decisions','Decision ID')}[type]||(()=>toast('No view for '+type,true)))(id);
 }
 function showGeneric(form,idField){return async function(id){
   showDetail('<div class="empty">Loading…</div>');

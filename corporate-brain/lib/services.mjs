@@ -1,7 +1,7 @@
 // Domain services over the Kinetic store: entity resolution, relationships, review, audit, dossiers.
 import { kq } from "./store.mjs";
-import { newId, nameKey, parseList, listValue, reviewTransition, newKnowledgeValues, sortableDate, linkContradiction } from "./core.mjs";
-import { ENTITY_FORMS } from "../model.mjs";
+import { newId, nameKey, parseList, listValue, reviewTransition, newKnowledgeValues, sortableDate, linkContradiction, salesVerifyError } from "./core.mjs";
+import { ENTITY_FORMS, FORM_BY_SLUG, SALES_KINDS } from "../model.mjs";
 
 // People and relationships keep a provenance sample, not every source they appear in: a busy person (e.g. the
 // mailbox owner) would otherwise be rewritten by every ingested email — a write hot spot under parallel loads.
@@ -131,12 +131,86 @@ export function createServices(store, actor) {
     if (!k) throw Object.assign(new Error("Knowledge entry not found"), { status: 404 });
     const t = reviewTransition(k, action, { reviewer: who, actorType: actor.type, comment, supersededBy });
     if (!t.ok) throw Object.assign(new Error(t.error), { status: 400 });
+    const sales = SALES_KINDS[k["Subject Type"]];
+    const salesRec = sales ? await store.byId(sales.form, k["Subject ID"]) : null;
+    if (t.to === "verified" && sales) {
+      const err = salesRec ? salesVerifyError(k["Knowledge Type"], salesRec) : `The ${sales.label.toLowerCase()} record ${k["Subject ID"]} was not found`;
+      if (err) throw Object.assign(new Error(err), { status: 400 });
+    }
     const updated = await store.update(k._id, t.values);
     await audit(`review:${action}`, "knowledge", knowledgeId, { from: t.from, to: t.to, comment });
     // keep event/decision verification in step with the knowledge that backs them
     const ev = (await store.collect("historical-events", `values[Knowledge ID] = ${kq(knowledgeId)}`, { maxPages: 2 })).items;
     for (const e of ev) await store.update(e._id, { "Verification Status": t.to });
+    if (salesRec) await store.update(salesRec._id, { "Verification Status": t.to });
     return { entry: updated, from: t.from, to: t.to };
+  }
+
+  // ── sales lens ──
+  // The words a sales record's knowledge entry carries: what a reviewer reads and verifies against the evidence.
+  const SALES_SUMMARY = {
+    principle: ["Statement", "Rationale", "Exceptions", "In Effect From", "In Effect To", "Deal IDs"],
+    pricingmodel: ["Licensing Basis", "Start Date", "End Date", "Price Points", "Why Introduced", "Why Changed"],
+    deal: ["Company ID", "Deal Date", "Deal Type", "Ask", "Outcome", "Outcome Reason", "Competitor IDs"],
+    objection: ["Objection", "Category", "Responses", "Deal IDs"],
+    competitor: ["Category", "Where We Win", "Where We Lose", "Deal IDs"],
+    partnermodel: ["Partner Type", "Start Date", "End Date", "Terms", "Rationale", "Partner Company IDs"],
+  };
+  function salesStatement(kind, v) {
+    return SALES_SUMMARY[kind].filter(f => String(v[f] || "").trim() && v[f] !== "[]")
+      .map(f => `${f}: ${/IDs$/.test(f) ? parseList(v[f]).join(", ") : String(v[f]).trim()}`).join("\n");
+  }
+  // Creates the record and the proposed knowledge entry (Lens "sales") that carries its review. Cited sources are
+  // checked first, so a bad citation creates neither.
+  async function proposeSales(kind, input, { sourceIds = [], note = "", extractionMethod = "", jobId = "" } = {}) {
+    const def = SALES_KINDS[kind];
+    if (!def) throw Object.assign(new Error(`Unknown sales record type ${kind}`), { status: 400 });
+    const form = FORM_BY_SLUG[def.form];
+    const values = {};
+    for (const fld of form.fields) if (input[fld.name] !== undefined && input[fld.name] !== null) values[fld.name] = typeof input[fld.name] === "string" ? input[fld.name].trim() : input[fld.name];
+    for (const fld of form.fields) if (/IDs$/.test(fld.name) && values[fld.name] !== undefined) values[fld.name] = listValue(parseList(values[fld.name]));
+    const label = values[form.label] || "";
+    if (!label) throw Object.assign(new Error(`${form.label} is required`), { status: 400 });
+    if (form.fields.some(x => x.name === "Name Key")) values["Name Key"] = nameKey(label);
+    const sids = parseList(sourceIds.length ? sourceIds : input["Source IDs"]);
+    for (const sid of sids) if (!(await store.byId("sources", sid))) throw Object.assign(new Error(`Supporting source ${sid} not found or not visible`), { status: 400 });
+    const id = newId(def.form), knowledgeId = newId("knowledge-entries");
+    const statement = salesStatement(kind, values) || label;
+    const rec = await store.create(def.form, { ...values, [form.idField]: id, "Knowledge ID": knowledgeId, "Verification Status": "proposed",
+      "Record Status": "active", "Source IDs": listValue(sids), "Created Via": actor.type });
+    const knowledge = await proposeKnowledge({ knowledgeId, knowledgeType: def.knowledgeType, subjectType: kind, subjectId: id,
+      companyId: values["Company ID"] || "", title: `${def.label}: ${label}`, statement, sourceIds: sids, lens: "sales",
+      extractionMethod: extractionMethod || (actor.type === "user" ? "manual" : "agent"), jobId, note });
+    await audit("create", kind, id, { details: { knowledgeId, sources: sids } });
+    return { item: rec, knowledge };
+  }
+  // A record edited while still under review keeps its knowledge entry's words in step.
+  async function refreshSalesKnowledge(kind, rec) {
+    const k = rec["Knowledge ID"] ? await store.byId("knowledge-entries", rec["Knowledge ID"]) : null;
+    if (!k || !["proposed", "needs-research"].includes(k["Review Status"])) return;
+    const form = FORM_BY_SLUG[SALES_KINDS[kind].form];
+    // evidence added to the record joins its review entry (only sources the caller can see; never removes any)
+    const add = [];
+    for (const sid of parseList(rec["Source IDs"])) if (!parseList(k["Supporting Source IDs"]).includes(sid) && await store.byId("sources", sid)) add.push(sid);
+    await store.update(k._id, { Title: `${SALES_KINDS[kind].label}: ${rec[form.label] || ""}`.slice(0, 250),
+      Statement: salesStatement(kind, rec) || rec[form.label] || "", "Company ID": rec["Company ID"] || k["Company ID"] || "",
+      ...(add.length ? { "Supporting Source IDs": listValue([...parseList(k["Supporting Source IDs"]), ...add]) } : {}) });
+  }
+  async function salesDetail(kind, id, { pricing = false } = {}) {
+    const def = SALES_KINDS[kind]; if (!def) return null;
+    const rec = await store.byId(def.form, id); if (!rec) return null;
+    const knowledge = rec["Knowledge ID"] ? await store.byId("knowledge-entries", rec["Knowledge ID"]) : null;
+    const dealIds = [...parseList(rec["Deal IDs"])].slice(0, 25);
+    const deals = (await Promise.all(dealIds.map(d => store.byId("deals", d).catch(() => null)))).filter(Boolean);
+    const sources = (await Promise.all(parseList(rec["Source IDs"]).slice(0, 25).map(s => store.byId("sources", s).catch(() => null)))).filter(Boolean);
+    const out = { kind, item: rec, knowledge, deals, sources, verifyBlocker: knowledge ? salesVerifyError(knowledge["Knowledge Type"], rec) : "" };
+    if (kind === "deal") {
+      // what this deal is cited by: principles and objections are found by scanning the (small) sales forms
+      const cites = async (form) => (await store.collect(form, `values[Record Status] = "active"`, { maxPages: 8 })).items.filter(x => parseList(x["Deal IDs"]).includes(id));
+      [out.principles, out.objections] = await Promise.all([cites("sales-principles"), cites("sales-objections")]);
+      if (pricing) out.pricing = (await store.page("deal-pricing", { q: `values[Deal ID] = ${kq(id)}`, limit: 5 })).items;
+    }
+    return out;
   }
 
   async function knowledgeDetail(knowledgeId) {
@@ -235,5 +309,5 @@ export function createServices(store, actor) {
     return r ? (r.Name || r["Full Name"] || r.Title || r.Subject || id) : "";
   }
 
-  return { audit, findCompanies, resolveCompany, resolvePerson, link, linksOf, proposeKnowledge, review, knowledgeDetail, companyDossier, personProfile, sourceDetail, timeline, entityTitle };
+  return { audit, findCompanies, resolveCompany, resolvePerson, link, linksOf, proposeKnowledge, review, knowledgeDetail, proposeSales, refreshSalesKnowledge, salesDetail, companyDossier, personProfile, sourceDetail, timeline, entityTitle };
 }

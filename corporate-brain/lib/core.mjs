@@ -1,7 +1,7 @@
 // Pure logic shared by the server, ingestion, historian and tests — no I/O here.
 // IDs, the evidence/truth model (review state machine), and small value helpers.
 import crypto from "crypto";
-import { ID_PREFIX } from "../model.mjs";
+import { ID_PREFIX, PRINCIPLE_MIN_DEALS } from "../model.mjs";
 
 // ── identifiers ──
 export function newId(form) {
@@ -53,7 +53,19 @@ const TRANSITIONS = {
   superseded: [],
 };
 // Knowledge types that assert something about the past and therefore need evidence to be verified.
-const EVIDENCE_REQUIRED = new Set(["fact", "narrative", "lesson", "summary", "interpretation", "commitment"]);
+const EVIDENCE_REQUIRED = new Set(["fact", "narrative", "lesson", "summary", "interpretation", "commitment",
+  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model"]);
+
+// Extra conditions a sales record must meet before its knowledge entry can be verified (checked by the
+// review service, which loads the record). Returns an error message, or "" when the record qualifies.
+export function salesVerifyError(knowledgeType, record) {
+  if (knowledgeType === "principle") {
+    const deals = parseList(record?.["Deal IDs"]);
+    if (deals.length < PRINCIPLE_MIN_DEALS)
+      return `A principle needs at least ${PRINCIPLE_MIN_DEALS} linked deals before it can be verified (it has ${deals.length}) — one deal is an anecdote, not a pattern`;
+  }
+  return "";
+}
 
 export function reviewTransition(entry, action, { reviewer, actorType = "user", comment, supersededBy, now = new Date().toISOString() } = {}) {
   const v = entry.values || entry;
@@ -108,6 +120,7 @@ export function newKnowledgeValues(input, { actor, actorType = "user", now = new
     "Review History": JSON.stringify([{ at: now, by: actor, action: "propose", from: "", to: "proposed", comment: input.note || "" }]),
     "Record Status": "active",
     "Created Via": actorType,
+    "Lens": input.lens || input["Lens"] || "",
   };
 }
 
