@@ -19,6 +19,13 @@ async function getJson(url, headers = {}) {
 }
 
 export const CONNECTORS = {
+  // RFP Intelligence uploads: the file itself is kept as a Kinetic attachment on its rfp-documents record, so that copy is
+  // the controlled original every citation points back to (Drive-originated files keep their Drive link as well).
+  "rfp-upload": {
+    id: "rfp-upload", name: "RFP document uploads", mode: "push",
+    status: () => ({ configured: true, detail: "Procurement documents uploaded in RFP Intelligence. The original file is stored as an attachment on its RFP document record." }),
+    original: () => ({ available: true, kind: "stored", detail: "The original file is attached to its RFP document record (RFP Intelligence → RFP Library)" }),
+  },
   manual: {
     id: "manual", name: "Interviews & notes", mode: "push",
     status: () => ({ configured: true, detail: "Recollections and notes entered in Corporate Brain. The note itself is the controlled archival copy." }),

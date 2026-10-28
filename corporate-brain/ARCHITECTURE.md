@@ -57,6 +57,14 @@ Lists sent to the browser are always one page of 25 or fewer, using `pageToken` 
 ## Ingestion
 See INGESTION.md. The steps are: discover → normalize → hashed Source ID dedup → resolve company and people → save the source reference → extract candidates → proposed knowledge, events and communications → audit → job progress. Server pull runs in the background of the launcher process (`POST /jobs/{id}/run` returns 202), never inside the browser request.
 
+## RFP Intelligence (`lib/docparse.mjs`, `lib/rfp-extract.mjs`, `lib/rfp.mjs`)
+Import → parse (Node built-ins: zip/XML for .docx/.xlsx, CSV, text, PDF text with Flate/ASCII85/ToUnicode) → extract
+questions and verbatim answers with locations → people confirm (citations re-checked) → search (per-login index;
+`rfp.search()` is the one retrieval interface, ready for a Kinetic Search API semantic provider) → reviewer approves
+reusable answers (verified knowledge, Lens `rfp`) → new-RFP analysis drafts from approved/confirmed text only. Original
+files are Kinetic attachments (multipart upload/download through `kineticTarget()`). Extraction and analysis run in the
+launcher process in the background (202), resumable and idempotent. Details: RFP_INTELLIGENCE.md.
+
 ## Kinetic Task workflows (form-level, `workflows/`)
 | Workflow | Form / event | Effect |
 |---|---|---|

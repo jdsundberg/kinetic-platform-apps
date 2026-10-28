@@ -17,6 +17,7 @@ export async function kineticRequest(method, apiPath, body, auth) {
 }
 const helpers = {
   kineticRequest,
+  kineticTarget: () => BASE,
   jsonResp(res, status, data) { res.status = status; res.body = data; },
   readBody(req) { return new Promise(resolve => { const c = []; req.on("data", d => c.push(d)); req.on("end", () => resolve(Buffer.concat(c).toString())); }); },
 };
@@ -26,7 +27,7 @@ export async function call(method, path, payload, { auth = basic(), agent = "" }
   const req = Readable.from(payload ? [Buffer.from(JSON.stringify(payload))] : []);
   req.method = method; req.url = apiPrefix + path;
   req.headers = { authorization: auth, ...(agent ? { "x-cb-agent": agent } : {}) };
-  const res = {};
+  const res = { writeHead(status, headers) { res.status = status; res.headers = headers; }, end(b) { res.body = b; } };
   const handled = await handleAPI(req, res, apiPrefix + path.split("?")[0], auth, helpers);
   if (handled === false) return { status: 404, body: { error: "route not handled" } };
   return { status: res.status, body: res.body };

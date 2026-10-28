@@ -196,6 +196,23 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-top:8px}
 .legend span:before{content:'';display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
 .az{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}.az-btn{min-width:34px;padding:5px 8px;border:1px solid var(--border);background:#fff;color:inherit;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px}.az-btn:hover{border-color:var(--kinetic)}.az-btn.active{background:var(--kinetic);border-color:var(--kinetic);color:#fff}.az-all{margin-left:8px}
+/* RFP Intelligence */
+.answer-box{border:1px solid var(--border);border-left:3px solid #C4C4C4;border-radius:8px;padding:8px 10px;margin:4px 0;background:#fff}
+.answer-box.confirmed{border-left-color:var(--green)}.answer-box.candidate{border-left-color:#D97706}.answer-box.needs_review{border-left-color:var(--red)}.answer-box.corrected,.answer-box.rejected{opacity:.65}
+.ok-mark{color:var(--green);font-weight:700}
+.cite-link{font-weight:600;cursor:pointer}
+.row-rejected td{opacity:.5;text-decoration:line-through}
+.sub-h{font-size:12px;color:var(--blue);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 6px}
+.flag{color:#8E1B1B;margin-top:3px}
+.legend-box{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.8}
+.lbl{display:block;font-size:12px;color:var(--gray);font-weight:600;margin:10px 0 4px}
+.st-strong{background:#E8F5E9;color:#2E7D32}.st-partial{background:#FFF7E0;color:#8D5B00}.st-weak{background:#F1F3F4;color:#5F6368}.st-none{background:#F1F3F4;color:#9AA0A6}
+.cls-historical-evidence{background:#E8EAFD;color:#3730A3}.cls-current-approved{background:#E8F5E9;color:#2E7D32}.cls-superseded{background:#F1F3F4;color:#5F6368;text-decoration:line-through}.cls-unapproved-draft{background:#FFF7E0;color:#8D5B00}.cls-ai-generated-draft{background:#FCE7F3;color:#9D174D}
+.b-confirmed,.b-approved,.b-accepted,.b-answered,.b-ready{background:#E8F5E9;color:#2E7D32}
+.b-candidate,.b-draft,.b-ai-draft,.b-stored,.b-analyzing,.b-extracting,.b-edited{background:#FFF7E0;color:#8D5B00}
+.b-needs_review,.b-needs-review,.b-needs-evidence,.b-partial{background:#FDECEA;color:#C62828}
+.b-unanswered,.b-historical-only,.b-unsupported,.b-reference{background:#F1F3F4;color:#5F6368}
+.b-outdated,.b-corrected,.b-rejected-draft{background:#F1F3F4;color:#5F6368;text-decoration:line-through}
 </style>
 </head>
 <body>
@@ -232,6 +249,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
     <div id="c-sources" class="console"></div>
     <div id="c-review" class="console"></div>
     <div id="c-sales" class="console"></div>
+    <div id="c-rfp" class="console"></div>
     <div id="c-historian" class="console"></div>
     <div id="c-ingest" class="console"></div>
     <div id="c-search" class="console"></div>
@@ -247,7 +265,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 let API={server:'',auth:'',user:'',displayName:''};
 let ME=null, MODEL=null;
 const PREFIX='/api/corporate-brain';
-const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['sales','Sales'],['historian','Historian'],['ingest','Ingestion']];
+const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['sales','Sales'],['rfp','RFP Intelligence'],['historian','Historian'],['ingest','Ingestion']];
 const pages={};          // per-list pagination: {tokens:[...], idx}
 let current='dash';
 const history_=[];       // detail breadcrumbs
@@ -282,8 +300,8 @@ async function cb(path,opts={}){
   return d;
 }
 const box=(id)=>document.getElementById(id);
-function loading(id){box(id).innerHTML='<div class="empty">Loading…</div>'}
-function failBox(id,e){box(id).innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
+function loading(id){const b=box(id);if(b)b.innerHTML='<div class="empty">Loading…</div>'}
+function failBox(id,e){const b=box(id);if(!b)return;b.innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
 function cites(arr){return (arr||[]).filter(c=>c&&c.id).map(c=>`<span class="cite" title="${esc(c.title||c.id)}" onclick="event.stopPropagation();openRef(${jsArg(c.type)},${jsArg(c.id)})">${esc(c.id)}</span>`).join('')}
 function idRef(type,id,label){return id?`<a onclick="event.stopPropagation();openRef(${jsArg(type)},${jsArg(id)})">${esc(label||id)}</a>`:'<span class="muted">—</span>'}
 
@@ -317,7 +335,7 @@ function switchTab(tab){
   box('c-'+tab).classList.add('active');
   document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
   if(TABS.some(t=>t[0]===tab))history.replaceState(null,'','#'+tab);
-  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,sales:loadSales,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
+  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,sales:loadSales,rfp:loadRfp,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
 }
 
 // ── pagination (≤25 per page, pageToken stack) ──
@@ -1113,6 +1131,507 @@ function openDealPricing(dealId,cur){
   };
 }
 
+// ── RFP Intelligence ──
+// Historical procurement questions with the exact answer Kinetic gave and where it sits in the original document;
+// approved reusable answers (reviewer-approved, with evidence); new-RFP analysis with labelled AI drafts.
+// lists load asynchronously: if the view changed meanwhile, the write goes to a detached element instead of failing
+const rbox=(id)=>document.getElementById(id)||document.createElement('div');
+const RFP_VIEWS=[['library','RFP Library'],['questions','Question Library'],['answers','Answer Library'],['import','Import Documents'],['search','Search'],['analysis','New RFP Analysis'],['review','Knowledge Review']];
+let RFP_VIEW='library', RFPMETA=null;
+const rfpOff={};   // offset paging per list (the server returns ≤25 per call)
+const catLabel=c=>(RFPMETA?.categories||[]).find(x=>x[0]===c)?.[1]||c||'';
+const catOptions=(sel,blank='All categories')=>`<option value="">${esc(blank)}</option>${(RFPMETA?.categories||[]).map(([k,l])=>`<option value="${esc(k)}" ${k===sel?'selected':''}>${esc(l)}</option>`).join('')}`;
+const unknown=x=>x?esc(x):'<span class="muted">unknown</span>';
+function offPager(key,r,reload){
+  const off=rfpOff[key]||0;
+  return `<div class="pager"><span>${r.total?`${off+1}–${Math.min(off+25,r.total)} of ${r.total}`:'0'}</span><button class="btn-secondary btn-sm" ${off===0?'disabled':''} onclick="rfpOff['${key}']=Math.max(0,${off}-25);${reload}()">‹ Prev</button><button class="btn-secondary btn-sm" ${r.next==null?'disabled':''} onclick="rfpOff['${key}']=${r.next??0};${reload}()">Next ›</button></div>`;
+}
+function strengthPill(s){return s?`<span class="badge st-${esc(s)}" title="${esc((RFPMETA?.strength||[]).find(x=>x.name===s)?.meaning||'No overlap with any historical question')}">${esc(s)}</span>`:''}
+function clsPill(c){const t={'historical-evidence':'Historical evidence','current-approved':'Current approved answer','superseded':'Superseded','unapproved-draft':'Draft (not approved)','ai-generated-draft':'AI-generated draft'}[c]||c;return `<span class="badge cls-${esc(c)}">${esc(t)}</span>`}
+// Opens the stored original (a Kinetic attachment) — PDFs at the cited page.
+async function openOriginal(docId,page){
+  const w=window.open('','_blank');
+  try{
+    const headers={Authorization:'Basic '+API.auth};if(API.server)headers['X-Kinetic-Server']=API.server;
+    const r=await fetch(`${PREFIX}/rfp/documents/${encodeURIComponent(docId)}/file`,{headers});
+    if(!r.ok){const t=await r.text();throw new Error((()=>{try{return JSON.parse(t).error}catch(e){return t.slice(0,120)}})())}
+    const url=URL.createObjectURL(await r.blob());
+    if(w)w.location=url+(page?`#page=${page}`:'');else location.href=url;
+  }catch(e){if(w)w.close();toast('Could not open the original: '+e.message,true)}
+}
+function citeLink(docId,locJson,label){
+  let loc={};try{loc=typeof locJson==='string'?JSON.parse(locJson||'{}'):(locJson||{})}catch(e){}
+  return docId?`<a class="cite-link" onclick="event.stopPropagation();openOriginal(${jsArg(docId)},${loc.page?Number(loc.page):0})" title="Open the original document">${esc(label||'open original')} ↗</a>`:esc(label||'');
+}
+async function rfpMeta(){if(!RFPMETA)RFPMETA=await cb('/rfp/meta');return RFPMETA}
+async function loadRfp(){
+  await rfpMeta().catch(e=>toast(e.message,true));
+  if(!box('rf-body')){
+    rbox('c-rfp').innerHTML=`<h1>RFP Intelligence</h1><div class="page-sub">Every question Kinetic has been asked in an RFP, RFQ, RFI or questionnaire — the exact answer given, and where it sits in the original document. Historical answers are evidence; only reviewer-approved answers are current knowledge.</div>
+      <div class="kpi-row" id="rf-kpis"></div>
+      <div class="az" id="rf-views">${RFP_VIEWS.map(([id,label])=>`<button class="az-btn" data-v="${id}" onclick="rfpView(${jsArg(id)})">${esc(label)}</button>`).join('')}</div>
+      <div class="card" id="rf-body"></div>`;
+  }
+  loadRfpKpis();rfpView(RFP_VIEW);
+}
+async function loadRfpKpis(){
+  try{
+    const d=await cb('/rfp/summary');
+    const k=(v,l,sub,view,cls='ink')=>`<div class="kpi ${cls}" onclick="rfpView(${jsArg(view)})"><div class="val">${v}</div><div class="label">${esc(l)}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+    rbox('rf-kpis').innerHTML=k(d.rfps,'Historical RFPs',`${d.analyses} new-RFP analyses`,'library')+k(d.questions,'Questions',`${d.answered} with a historical answer`,'questions')
+      +k(d.confirmed,'Confirmed rows',`${d.needsReview} need review`,'review',d.needsReview?'amber':'green')+k(d.grouped,'Grouped questions','under canonical questions','review')
+      +k(d.approved,'Approved answers',`${d.awaitingApproval} awaiting approval · ${d.drafts} drafts`,'answers','green');
+  }catch(e){rbox('rf-kpis').innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
+}
+function rfpView(view){
+  RFP_VIEW=view;
+  if(current!=='rfp'){switchTab('rfp');return}
+  document.querySelectorAll('#rf-views .az-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===view));
+  ({library:rfLibrary,questions:rfQuestions,answers:rfAnswers,import:rfImport,search:rfSearch,analysis:rfAnalyses,review:rfReview}[view])();
+}
+
+// RFP Library
+function rfLibrary(){
+  rbox('rf-body').innerHTML=`<div class="controls"><input id="rl-q" placeholder="Customer, RFP or solicitation number" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter'){rfpOff.rl=0;rfLibList()}">
+    <select id="rl-type" onchange="rfpOff.rl=0;rfLibList()"><option value="">All types</option>${['rfp','rfq','rfi','questionnaire','other'].map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}</select>
+    <select id="rl-status" onchange="rfpOff.rl=0;rfLibList()"><option value="">Any outcome</option>${['unknown','submitted','won','lost','no-bid','cancelled','in-progress'].map(t=>`<option>${t}</option>`).join('')}</select>
+    <select id="rl-lib" onchange="rfpOff.rl=0;rfLibList()"><option value="historical">Historical library</option><option value="analysis">New-RFP analyses</option><option value="all">All</option></select>
+    <select id="rl-sort" onchange="rfLibList()"><option value="received">Sort: received (newest)</option><option value="due">Sort: due date</option><option value="submitted">Sort: submitted</option><option value="customer">Sort: customer</option><option value="name">Sort: name</option><option value="questions">Sort: most questions</option></select>
+    <div class="spacer-h"></div><button class="btn-primary" onclick="editRfp()">+ RFP</button></div><div id="rl-list"></div>`;
+  rfpOff.rl=0;rfLibList();
+}
+async function rfLibList(){
+  loading('rl-list');
+  try{
+    const qs=new URLSearchParams({q:box('rl-q').value.trim(),type:box('rl-type').value,status:box('rl-status').value,library:box('rl-lib').value,sort:box('rl-sort').value,offset:rfpOff.rl||0});
+    const r=await cb('/rfp/sources?'+qs);
+    rbox('rl-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Customer / agency</th><th>RFP</th><th>Solicitation</th><th>Type</th><th>Received</th><th>Due</th><th>Submitted</th><th>Outcome</th><th>Docs</th><th>Questions</th><th>Answered</th><th>Approved</th></tr></thead><tbody>${r.items.map(x=>`<tr onclick="openRef('rfp',${jsArg(x['RFP Source ID'])})">
+      <td>${x['Company ID']?idRef('company',x['Company ID'],x['Customer Name']||x['Company ID']):unknown(x['Customer Name'])}</td><td><strong>${esc(x['Opportunity Name'])}</strong>${x['Access Scope']==='restricted'?' '+badge('restricted'):''}${x['Library Status']==='analysis'?' <span class="pill">analysis</span>':''}</td>
+      <td class="mono">${unknown(x['Solicitation Number'])}</td><td>${esc((x['Procurement Type']||'').toUpperCase())}</td><td>${unknown(x['Received At'])}</td><td>${unknown(x['Due At'])}</td><td>${unknown(x['Submitted At'])}</td>
+      <td>${x['Opportunity Status']&&x['Opportunity Status']!=='unknown'?`<span class="pill" title="${esc(x['Status Basis'])}">${esc(x['Opportunity Status'])}</span>`:'<span class="muted">unknown</span>'}</td>
+      <td>${list(x['Document IDs']).length}</td><td>${n(x['Question Count'])}</td><td>${n(x['Answered Count'])}</td><td>${n(x['Approved Count'])}</td></tr>`).join('')}</tbody></table></div>${offPager('rl',r,'rfLibList')}`
+      :`<div class="empty">No RFPs yet. Use <a onclick="rfpView('import')">Import Documents</a> to add a historical RFP and its response.</div>`;
+  }catch(e){failBox('rl-list',e)}
+}
+function editRfp(cur,after){
+  cur=cur||{};
+  const F=[['Opportunity Name','RFP name'],['Customer Name','Customer or agency'],['Company ID','Company ID (optional link)'],['Solicitation Number','Solicitation number'],['Received At','Date received (YYYY-MM-DD, blank if unknown)'],['Due At','Submission deadline'],['Submitted At','Submission date, if known'],['Deal ID','Sales deal ID (optional)']];
+  rbox('modal').innerHTML=`<header><h3>${cur['RFP Source ID']?'Edit RFP':'New RFP'}</h3><span class="mono muted">${esc(cur['RFP Source ID']||'')}</span></header><div class="body">
+    ${F.map(([f,l])=>`<label>${esc(l)}</label><input id="re-${f.replace(/\W+/g,'_')}" value="${esc(cur[f]||'')}">`).join('')}
+    <label>Procurement type</label><select id="re-type">${['rfp','rfq','rfi','questionnaire','other'].map(t=>`<option value="${t}" ${(cur['Procurement Type']||'rfp')===t?'selected':''}>${t.toUpperCase()}</option>`).join('')}</select>
+    <label>Outcome</label><select id="re-status">${['unknown','in-progress','submitted','won','lost','no-bid','cancelled'].map(t=>`<option ${(cur['Opportunity Status']||'unknown')===t?'selected':''}>${t}</option>`).join('')}</select>
+    <div class="help">Leave it unknown unless you know it. A response document existing does not mean it was submitted or won.</div>
+    <label>Basis for the outcome (required unless unknown)</label><textarea id="re-basis">${esc(cur['Status Basis']||'')}</textarea>
+    <label>Notes</label><textarea id="re-notes">${esc(cur.Notes||'')}</textarea>
+    ${!cur['RFP Source ID']&&ME.roles.reviewer?`<label><input type="checkbox" id="re-restricted" style="width:auto"> Restricted (reviewers only — e.g. pricing volumes)</label>`:''}</div>
+    <footer><span class="err" id="re-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="re-go">Save</button></footer>`;
+  openModal();
+  box('re-go').onclick=async()=>{
+    box('re-go').disabled=true;
+    const values={};for(const [f] of F)values[f]=box('re-'+f.replace(/\W+/g,'_')).value.trim();
+    values['Procurement Type']=box('re-type').value;values['Opportunity Status']=box('re-status').value;values['Status Basis']=box('re-basis').value.trim();values.Notes=box('re-notes').value.trim();
+    try{
+      const r=cur['RFP Source ID']?await cb('/rfp/sources/'+encodeURIComponent(cur['RFP Source ID']),{method:'PUT',body:{values}}):await cb('/rfp/sources',{method:'POST',body:{values,restricted:!!box('re-restricted')?.checked}});
+      closeModal();toast('RFP saved');(after||(()=>openRef('rfp',r.item['RFP Source ID'])))(r.item);
+    }catch(e){box('re-err').textContent=e.message;box('re-go').disabled=false}
+  };
+}
+async function showRfp(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    const d=await cb('/rfp/sources/'+encodeURIComponent(id));const x=d.rfp;
+    const docRow=doc=>`<tr onclick="openRef('rfpdocument',${jsArg(doc['Document ID'])})"><td><strong>${esc(doc['File Name'])}</strong><div class="small muted">${esc(FORMATS_LABEL[doc['File Type']]||doc['File Type'])} · ${Math.round((+doc['File Size']||0)/1024)} KB${doc['Page Count']?` · ${esc(doc['Page Count'])} pages`:''}</div></td><td><span class="pill">${esc(doc['Document Role'])}</span></td><td>${esc(doc.Revision||'1')}${doc['Supersedes Document ID']?` <span class="small muted">(replaces ${esc(doc['Supersedes Document ID'])})</span>`:''}</td><td>${badge(doc['Extraction Status'])}</td><td>${n(doc['Question Count'])}</td><td>${n(doc['Answered Count'])}</td><td>${+doc['Needs Review Count']?`<span class="badge b-needs_review">${esc(doc['Needs Review Count'])}</span>`:'0'}</td><td><button class="btn-secondary btn-sm" onclick="event.stopPropagation();openOriginal(${jsArg(doc['Document ID'])})">Original ↗</button></td></tr>`;
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(x['Opportunity Name'])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${esc((x['Procurement Type']||'').toUpperCase())} ${x['Access Scope']==='restricted'?badge('restricted'):''} ${x['Library Status']==='analysis'?'<span class="pill">new-RFP analysis</span>':''}</div></div>
+      <button class="btn-secondary" onclick="editRfp(window._rfpCur,()=>openRef('rfp',${jsArg(id)}))">Edit</button><button class="btn-primary" onclick="RFP_IMPORT_TARGET=${jsArg(id)};rfpView('import')">+ Import documents</button></div>
+      <div class="three-col"><div>
+        <div class="card"><h2>Documents <span class="muted">${d.documents.length}</span></h2>${d.documents.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>File</th><th>Role</th><th>Revision</th><th>Extraction</th><th>Questions</th><th>Answered</th><th>Review</th><th></th></tr></thead><tbody>${d.documents.map(docRow).join('')}</tbody></table></div>`:'<div class="empty">No documents yet.</div>'}</div>
+        <div class="card"><h2>Questions</h2><div id="rq-list"></div></div>
+      </div><div>
+        <div class="card"><h2>Procurement</h2><dl class="dl">
+          <dt>Customer / agency</dt><dd>${x['Company ID']?idRef('company',x['Company ID'],x['Customer Name']||x['Company ID']):unknown(x['Customer Name'])}</dd>
+          <dt>Solicitation</dt><dd class="mono">${unknown(x['Solicitation Number'])}</dd><dt>Received</dt><dd>${unknown(x['Received At'])}</dd><dt>Due</dt><dd>${unknown(x['Due At'])}</dd><dt>Submitted</dt><dd>${unknown(x['Submitted At'])}</dd>
+          <dt>Outcome</dt><dd>${x['Opportunity Status']&&x['Opportunity Status']!=='unknown'?esc(x['Opportunity Status'])+`<div class="small muted">${esc(x['Status Basis'])}</div>`:'<span class="muted">unknown — not inferred from the documents</span>'}</dd>
+          ${x['Deal ID']?`<dt>Sales deal</dt><dd>${idRef('deal',x['Deal ID'])}</dd>`:''}
+          <dt>Questions</dt><dd>${n(x['Question Count'])} · ${n(x['Answered Count'])} answered · ${n(x['Approved Count'])} with an approved answer</dd>
+          <dt>Evidence</dt><dd>${cites(list(x['Source IDs']).map(s=>({type:'source',id:s})))||'<span class="muted">—</span>'}</dd>
+          ${x.Notes?`<dt>Notes</dt><dd class="statement">${esc(x.Notes)}</dd>`:''}</dl></div>
+      </div></div>`,x['Opportunity Name'],'rfp',id);
+    window._rfpCur=x;RQ_RFP=id;rfpOff.rq=0;loadRfpQuestions(id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'RFP not found or not visible to you.':e.message)}</div>`)}
+}
+const FORMATS_LABEL={docx:'Word',xlsx:'Excel',csv:'CSV',text:'Text',pdf:'PDF',unsupported:'Unsupported'};
+let RQ_RFP='';function rqReload(){loadRfpQuestions(RQ_RFP)}
+async function loadRfpQuestions(rfpId){
+  loading('rq-list');
+  try{
+    const r=await cb(`/rfp/questions?rfpId=${encodeURIComponent(rfpId)}&offset=${rfpOff.rq||0}`);
+    rbox('rq-list').innerHTML=r.items.length?qTable(r.items)+offPager('rq',r,'rqReload'):'<div class="empty">No questions extracted yet.</div>';
+  }catch(e){failBox('rq-list',e)}
+}
+function qTable(items){
+  return `<div class="table-wrap"><table class="clickable"><thead><tr><th>#</th><th>Question (original wording)</th><th>Historical answer</th><th>Category</th><th>Status</th></tr></thead><tbody>${items.map(q=>`<tr onclick="openRef('rfpquestion',${jsArg(q['Question ID'])})">
+    <td class="mono small">${esc(q['Question Number']||'')}</td><td><div class="statement">${snip(q['Question Text Original'],260)}</div><div class="small muted">${esc(q['Location Label'])}${q.Section?' · '+esc(q.Section):''}</div></td>
+    <td class="small">${q['Answer Preview']?`<div class="statement">${snip(q['Answer Preview'],200)}</div>`:'<span class="muted">unanswered</span>'}</td><td class="small">${esc(catLabel(q.Category))}</td>
+    <td>${badge(q['Extraction Status'])} ${q['Answer Status']==='needs_review'?badge('needs_review'):''} ${q['Possible Duplicate Of']?'<span class="pill" title="Possible duplicate of '+esc(q['Possible Duplicate Of'])+'">dup</span>':''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+// Extraction review for one document
+let RD_FILTER='';
+async function showRfpDocument(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    const d=await cb('/rfp/documents/'+encodeURIComponent(id));const doc=d.document;
+    const notes=(()=>{try{return JSON.parse(doc['Extraction Notes']||'[]')}catch(e){return[]}})();
+    const busy=['queued','extracting'].includes(doc['Extraction Status']);
+    const rows=d.rows.filter(r=>!RD_FILTER||(RD_FILTER==='needs_review'?(r.question['Extraction Status']==='needs_review'||r.answers.some(a=>a['Answer Status']==='needs_review')):RD_FILTER==='unanswered'?r.question['Answer Status']==='unanswered':r.question['Extraction Status']===RD_FILTER));
+    const off=rfpOff.rd||0, page=rows.slice(off,off+25);
+    const ansCell=(r)=>{const own=r.answers.filter(a=>!['rejected'].includes(a['Answer Status']));if(!own.length)return '<span class="muted">unanswered — nothing invented</span>';
+      return own.map(a=>`<div class="answer-box ${esc(a['Answer Status'])}"><div class="statement">${esc(a['Answer Text Original'])}</div>${a.Compliance?`<div class="small"><span class="pill">${esc(a.Compliance)}</span></div>`:''}
+        <div class="small muted">${citeLink(a['Document ID'],a['Source Location'],a['Location Label'])} · ${badge(a['Answer Status'])}${a['Citation Verified']==='yes'?' <span class="ok-mark" title="Text verified at this location in the original">✓ verified</span>':' <span class="badge b-disputed">not verified</span>'}${a['Document ID']!==id?` · <span class="small">from ${esc(a['Document Version'])}</span>`:''}${a['Correction Note']?` · <em>${esc(a['Correction Note'])}</em>`:''}</div></div>`).join('')};
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(doc['File Name'])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${esc(doc['Document Role'])} · revision ${esc(doc.Revision||'1')} · ${badge(doc['Extraction Status'])} · RFP ${idRef('rfp',doc['RFP Source ID'])} · source ${idRef('source',doc['Source ID'])}</div></div>
+      <button class="btn-secondary" onclick="openOriginal(${jsArg(id)})">Open original ↗</button>${doc['Extraction Status']!=='unsupported'?`<button class="btn-secondary" onclick="rerunExtraction(${jsArg(id)})">Re-run extraction</button>`:''}</div>
+      ${busy?'<div class="notice info">Extraction is running. This page refreshes on its own.</div>':''}
+      ${notes.length?`<div class="notice ${doc['Extraction Status']==='unsupported'||doc['Extraction Status']==='failed'?'bad':'info'} small">${notes.map(esc).join('<br>')}</div>`:''}
+      <div class="card"><h2>Review extracted questions and answers <span class="muted">${d.rows.length}</span></h2>
+        <div class="small muted" style="margin-bottom:10px">Text is shown exactly as it appears in the document. Confirming re-checks every citation against the original file. Rows marked <strong>needs review</strong> were paired by inference — confirm them one by one, re-point the answer, mark them unanswered, or reject non-questions. Confirmed answers can no longer be edited; a reviewer can record a correction as a new revision.</div>
+        <div class="controls"><select onchange="RD_FILTER=this.value;rfpOff.rd=0;showRfpDocument(${jsArg(id)})">${[['','All rows'],['needs_review','Needs review'],['extracted','Extracted, unconfirmed'],['confirmed','Confirmed'],['unanswered','Unanswered'],['rejected','Rejected']].map(([v,l])=>`<option value="${v}" ${RD_FILTER===v?'selected':''}>${l}</option>`).join('')}</select>
+          <div class="spacer-h"></div><button class="btn-secondary" onclick="confirmSelected(${jsArg(id)})">Confirm selected</button><button class="btn-primary btn-ok" onclick="confirmAll(${jsArg(id)})">Confirm all clear rows</button></div>
+        ${page.length?`<div class="table-wrap"><table><thead><tr><th><input type="checkbox" onclick="document.querySelectorAll('.rd-sel').forEach(c=>c.checked=this.checked)"></th><th>#</th><th>Question (exact)</th><th>Answer (exact) and where it is</th><th>Status</th><th></th></tr></thead><tbody>${page.map(r=>{const q=r.question;return `<tr class="${q['Extraction Status']==='rejected'?'row-rejected':''}">
+          <td>${['confirmed','rejected'].includes(q['Extraction Status'])&&!r.answers.some(a=>['candidate','needs_review'].includes(a['Answer Status']))?'':`<input type="checkbox" class="rd-sel" value="${esc(q['Question ID'])}">`}</td>
+          <td class="mono small">${esc(q['Question Number']||'')}<div class="muted">${esc(String(+q.Sequence||''))}</div></td>
+          <td style="max-width:360px"><div class="statement">${esc(q['Question Text Original'])}</div><div class="small muted">${q['Document ID']===id?citeLink(id,q['Source Location'],q['Location Label']):`from another document: ${idRef('rfpquestion',q['Question ID'])}`}${q.Section?' · '+esc(q.Section):''}</div>
+            <div class="small">${q.Category?`<span class="pill">${esc(catLabel(q.Category))}</span>`:''} ${q['Requirement Level']&&q['Requirement Level']!=='unspecified'?`<span class="pill" title="${esc(q['Requirement Basis'])}">${esc(q['Requirement Level'])}</span>`:''} ${q['Possible Duplicate Of']?`<span class="pill">possible duplicate of ${idRef('rfpquestion',q['Possible Duplicate Of'])} (${esc(q['Duplicate Score'])})</span>`:''}</div>
+            ${q['Extraction Reason']?`<div class="small muted"><em>${esc(q['Extraction Reason'])}</em></div>`:''}</td>
+          <td style="max-width:440px">${ansCell(r)}</td>
+          <td>${badge(q['Extraction Status'])}</td>
+          <td style="white-space:nowrap">${q['Extraction Status']==='confirmed'||q['Extraction Status']==='rejected'?`<button class="btn-secondary btn-sm" onclick="openRef('rfpquestion',${jsArg(q['Question ID'])})">Open</button>`:`<button class="btn-secondary btn-sm" onclick="rowAction(${jsArg(q['Question ID'])},'set-answer',${jsArg(id)})">Re-point answer</button><br><button class="btn-secondary btn-sm" onclick="rowAction(${jsArg(q['Question ID'])},'unanswered',${jsArg(id)})">Unanswered</button><br><button class="btn-secondary btn-sm" onclick="rowAction(${jsArg(q['Question ID'])},'reject',${jsArg(id)})">Not a question</button>`}</td></tr>`}).join('')}</tbody></table></div>
+          <div class="pager"><span>${off+1}–${Math.min(off+25,rows.length)} of ${rows.length}</span><button class="btn-secondary btn-sm" ${off===0?'disabled':''} onclick="rfpOff.rd=${Math.max(0,off-25)};showRfpDocument(${jsArg(id)})">‹ Prev</button><button class="btn-secondary btn-sm" ${off+25>=rows.length?'disabled':''} onclick="rfpOff.rd=${off+25};showRfpDocument(${jsArg(id)})">Next ›</button></div>`
+          :`<div class="empty">${busy?'Extracting…':'No rows match.'}</div>`}
+      </div>`,doc['File Name'],'rfpdocument',id);
+    clearTimeout(window._rdPoll);if(busy)window._rdPoll=setTimeout(()=>{if(location.hash.includes(encodeURIComponent(id)))showRfpDocument(id)},4000);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'Document not found or not visible to you.':e.message)}</div>`)}
+}
+async function rerunExtraction(id){try{await cb(`/rfp/documents/${encodeURIComponent(id)}/extract`,{method:'POST',body:{}});toast('Extraction restarted — existing rows are kept, missing ones are added');setTimeout(()=>showRfpDocument(id),1500)}catch(e){toast(e.message,true)}}
+async function confirmAll(id){
+  if(!confirm('Confirm every row the extractor was sure of? Rows needing review are skipped. Each citation is re-checked against the original first.'))return;
+  try{const r=await cb(`/rfp/documents/${encodeURIComponent(id)}/confirm`,{method:'POST',body:{all:true}});toast(`${r.confirmed} confirmed${r.refused.length?`, ${r.refused.length} refused (citation not found)`:''}`,!!r.refused.length);showRfpDocument(id)}catch(e){toast(e.message,true)}
+}
+async function confirmSelected(id){
+  const ids=[...document.querySelectorAll('.rd-sel:checked')].map(c=>c.value);if(!ids.length)return toast('Select rows first',true);
+  try{const r=await cb(`/rfp/documents/${encodeURIComponent(id)}/confirm`,{method:'POST',body:{questionIds:ids}});toast(`${r.confirmed} confirmed${r.refused.length?` — refused: ${r.refused.map(x=>x.reason).join('; ')}`:''}`,!!r.refused.length);showRfpDocument(id)}catch(e){toast(e.message,true)}
+}
+function rowAction(qid,action,docId){
+  const title={'set-answer':'Re-point the answer','unanswered':'Mark unanswered','reject':'Not a question'}[action];
+  rbox('modal').innerHTML=`<header><h3>${esc(title)}</h3><span class="mono muted">${esc(qid)}</span></header><div class="body">
+    ${action==='set-answer'?`<div class="notice info small">Paste the answer exactly as it appears in the original document. It is accepted only if that text is found in the document, and the citation is taken from where it is found.</div><label>Exact answer text</label><textarea id="ra-text" style="min-height:120px"></textarea>`:''}
+    <label>Note${action==='reject'?' (why this is not a question)':''}</label><input id="ra-note"></div>
+    <footer><span class="err" id="ra-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="ra-go">Save</button></footer>`;
+  openModal();
+  box('ra-go').onclick=async()=>{box('ra-go').disabled=true;
+    try{const r=await cb(`/rfp/questions/${encodeURIComponent(qid)}`,{method:'POST',body:{action,text:box('ra-text')?.value||'',note:box('ra-note').value.trim()}});closeModal();toast(action==='set-answer'?`Answer found at ${r.location}`:'Saved');docId?showRfpDocument(docId):openRef('rfpquestion',qid)}
+    catch(e){box('ra-err').textContent=e.message;box('ra-go').disabled=false}};
+}
+
+// Question Library
+function rfQuestions(){
+  rbox('rf-body').innerHTML=`<div class="controls"><select id="ql-cat" onchange="rfpOff.ql=0;rfQList()">${catOptions('')}</select>
+    <select id="ql-status" onchange="rfpOff.ql=0;rfQList()"><option value="">Any extraction status</option>${['confirmed','extracted','needs_review'].map(s=>`<option>${s}</option>`).join('')}</select>
+    <select id="ql-ans" onchange="rfpOff.ql=0;rfQList()"><option value="">Answered or not</option><option value="answered">Answered</option><option value="needs_review">Answer needs review</option><option value="unanswered">Unanswered</option></select>
+    <div class="spacer-h"></div><span class="small muted">Use <a onclick="rfpView('search')">Search</a> to find questions by meaning.</span></div><div id="ql-list"></div>`;
+  rfpOff.ql=0;rfQList();
+}
+async function rfQList(){
+  loading('ql-list');
+  try{const r=await cb(`/rfp/questions?${new URLSearchParams({category:box('ql-cat').value,status:box('ql-status').value,answer:box('ql-ans').value,offset:rfpOff.ql||0})}`);
+    rbox('ql-list').innerHTML=r.items.length?qTable(r.items)+offPager('ql',r,'rfQList'):'<div class="empty">No questions match.</div>';}catch(e){failBox('ql-list',e)}
+}
+async function showRfpQuestion(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    const d=await cb('/rfp/questions/'+encodeURIComponent(id));const q=d.question;
+    const ans=a=>`<div class="answer-box ${esc(a['Answer Status'])}"><div style="display:flex;gap:8px;align-items:flex-start"><div style="flex:1"><div class="statement">${esc(a['Answer Text Original'])}</div>${a.Compliance?`<div class="small" style="margin-top:4px"><span class="pill">${esc(a.Compliance)}</span></div>`:''}
+      <div class="small muted" style="margin-top:4px">${citeLink(a['Document ID'],a['Source Location'],a['Location Label'])} · ${esc(a['Document Version'])} · answer date ${unknown(a['Answer Date'])} · ${badge(a['Answer Status'])}${a['Citation Verified']==='yes'?' <span class="ok-mark">✓ verified</span>':''}${a['Confirmed By']?` · confirmed by ${esc(a['Confirmed By'])}`:''}${a['Revision Of']?` · revision of <span class="mono">${esc(a['Revision Of'])}</span>`:''}${a['Correction Note']?`<br><em>${esc(a['Correction Note'])}</em>`:''}</div></div>
+      <div style="display:flex;flex-direction:column;gap:4px">${a['Answer Status']==='confirmed'?`<button class="btn-primary btn-sm" onclick="promoteAnswer(${jsArg(a['Answer ID'])})">Promote to approved answer…</button>${ME.roles.reviewer?`<button class="btn-secondary btn-sm" onclick="correctAnswer(${jsArg(a['Answer ID'])},${jsArg(id)})">Record correction…</button>`:''}`:''}</div></div></div>`;
+    const canonCard=d.canonical?`<div class="card"><h2>Canonical question</h2><div><strong>${esc(d.canonical['Canonical Question'])}</strong> <span class="mono small muted">${esc(d.canonical['Canonical Question ID'])}</span></div>
+      <div class="small muted" style="margin:6px 0">${d.groupMates.length} other question(s) share this subject. Each keeps its own wording and answers — they are not assumed interchangeable.</div>
+      ${d.groupMates.slice(0,8).map(m=>`<div class="small" style="cursor:pointer;margin:3px 0" onclick="openRef('rfpquestion',${jsArg(m['Question ID'])})">• ${snip(m['Question Text Original'],160)}</div>`).join('')}
+      <h3 class="sub-h">Approved answers</h3>${d.approved.length?d.approved.map(a=>`<div class="finding ${a['Approval Status']==='approved'?'verified':'proposed'}" style="cursor:pointer" onclick="openRef('approvedanswer',${jsArg(a['Approved Answer ID'])})">${badge(a['Approval Status'])} ${clsPill(a['Approval Status']==='approved'?'current-approved':['superseded','outdated'].includes(a['Approval Status'])?'superseded':'unapproved-draft')}<div class="statement small" style="margin-top:4px">${snip(a['Approved Answer'],300)}</div></div>`).join(''):'<div class="small muted">None yet. Promote a confirmed historical answer.</div>'}
+      <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="linkCanon(${jsArg(d.canonical['Canonical Question ID'])},[${jsArg(id)}],true,()=>openRef('rfpquestion',${jsArg(id)}))">Remove from this group</button></div>`
+      :`<div class="card"><h2>Canonical question</h2><div class="small muted">Not grouped yet. Group questions that share a subject (their wording and answers stay separate).</div><button class="btn-secondary btn-sm" style="margin-top:8px" onclick="newCanon([${jsArg(id)}],${jsArg(q['Question Text Original'])},${jsArg(q.Category)},()=>openRef('rfpquestion',${jsArg(id)}))">Create canonical question…</button></div>`;
+    showDetail(`<h1 style="white-space:pre-wrap">${esc(q['Question Text Original'])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span>${q['Question Number']?` · #${esc(q['Question Number'])}`:''} · ${badge(q['Extraction Status'])} ${clsPill('historical-evidence')}</div>
+      <div class="three-col"><div>
+        <div class="card"><h2>Historical answers <span class="muted">${d.answers.length}</span></h2>${d.answers.length?d.answers.filter(a=>a['Answer Status']!=='rejected').map(ans).join(''):'<div class="notice warn">No answer was found for this question in the documents. It stays unanswered — nothing is invented.</div>'}
+          ${d.answers.some(a=>a['Answer Status']==='rejected')?`<details class="small"><summary>${d.answers.filter(a=>a['Answer Status']==='rejected').length} rejected candidate(s)</summary>${d.answers.filter(a=>a['Answer Status']==='rejected').map(ans).join('')}</details>`:''}</div>
+        <div class="card"><h2>Related questions <span class="muted">${d.related.length}</span></h2>${d.related.length?d.related.map(r=>`<div class="finding" style="cursor:pointer" onclick="openRef('rfpquestion',${jsArg(r.id)})">${strengthPill(r.strength)} <span class="small mono">${esc(r.score)}</span> ${snip(r.text,200)}<div class="small muted">${esc(r.customer||'')} · ${esc(r.rfp)} · ${r.answerPreview?'answered':'unanswered'}</div></div>`).join(''):'<div class="small muted">No similar questions in other RFPs yet.</div>'}
+          ${d.related.length?`<button class="btn-secondary btn-sm" onclick="newCanon([${jsArg(id)},...${esc(JSON.stringify(d.related.filter(r=>r.strength==='strong').map(r=>r.id)))}],${jsArg(q['Question Text Original'])},${jsArg(q.Category)},()=>openRef('rfpquestion',${jsArg(id)}))">Group with the strong matches…</button>`:''}</div>
+      </div><div>
+        <div class="card"><h2>Where it was asked</h2><dl class="dl"><dt>RFP</dt><dd>${idRef('rfp',q['RFP Source ID'],d.rfp?.['Opportunity Name'])}</dd><dt>Customer</dt><dd>${unknown(d.rfp?.['Customer Name'])}</dd>
+          <dt>Document</dt><dd>${idRef('rfpdocument',q['Document ID'],d.document?.['File Name'])}</dd><dt>Location</dt><dd>${citeLink(q['Document ID'],q['Source Location'],q['Location Label'])}</dd>
+          ${q.Section?`<dt>Section</dt><dd>${esc(q.Section)}</dd>`:''}<dt>Requirement</dt><dd>${esc(q['Requirement Level']||'unspecified')}${q['Requirement Basis']?` <span class="small muted">(${esc(q['Requirement Basis'])})</span>`:''}</dd>
+          <dt>Category</dt><dd>${esc(catLabel(q.Category))||'<span class="muted">—</span>'} <span class="small muted">${esc(q['Category Source']||'')}</span> <a onclick="editQMeta(${jsArg(id)},${jsArg(q.Category)},${jsArg(q.Tags)},${jsArg(q['Requirement Level'])})">change</a></dd>
+          ${list(q.Tags).length?`<dt>Tags</dt><dd>${list(q.Tags).map(t=>`<span class="pill">${esc(catLabel(t))}</span>`).join(' ')}</dd>`:''}
+          ${d.duplicateOf?`<dt>Possible duplicate</dt><dd>${idRef('rfpquestion',d.duplicateOf['Question ID'],String(d.duplicateOf['Question Text Original']).slice(0,80))} (${esc(q['Duplicate Score'])})</dd>`:''}
+          <dt>Extracted</dt><dd class="small">${esc(q['Extraction Reason'])}</dd>${q['Confirmed By']?`<dt>Confirmed</dt><dd>${esc(q['Confirmed By'])} · ${ago(q['Confirmed At'])}</dd>`:''}</dl></div>
+        ${canonCard}
+      </div></div>`,String(q['Question Text Original']).slice(0,60),'rfpquestion',id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'Question not found or not visible to you.':e.message)}</div>`)}
+}
+function editQMeta(id,cat,tags,level){
+  rbox('modal').innerHTML=`<header><h3>Category, tags and requirement level</h3></header><div class="body"><label>Category</label><select id="qm-cat">${catOptions(cat,'— none —')}</select>
+    <label>Tags (categories, comma separated; custom tags start with custom:)</label><input id="qm-tags" value="${esc(list(tags).join(', '))}">
+    <label>Requirement level</label><select id="qm-level">${['unspecified','mandatory','optional'].map(l=>`<option ${l===(level||'unspecified')?'selected':''}>${l}</option>`).join('')}</select><div class="help">Set mandatory/optional only when the RFP states it.</div></div>
+    <footer><span class="err" id="qm-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="qm-go">Save</button></footer>`;
+  openModal();
+  box('qm-go').onclick=async()=>{try{await cb(`/rfp/questions/${encodeURIComponent(id)}`,{method:'POST',body:{action:'meta',category:box('qm-cat').value,tags:box('qm-tags').value,level:box('qm-level').value}});closeModal();openRef('rfpquestion',id)}catch(e){box('qm-err').textContent=e.message}};
+}
+function newCanon(ids,text,cat,after){
+  rbox('modal').innerHTML=`<header><h3>Canonical question</h3></header><div class="body"><div class="notice info small">A canonical question names the shared subject. The ${ids.length} grouped question(s) keep their original wording and their own answers.</div>
+    <label>Canonical question</label><textarea id="cq-text">${esc(text)}</textarea><label>Category</label><select id="cq-cat">${catOptions(cat,'— none —')}</select></div>
+    <footer><span class="err" id="cq-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="cq-go">Create and group</button></footer>`;
+  openModal();
+  box('cq-go').onclick=async()=>{try{await cb('/rfp/canonical',{method:'POST',body:{text:box('cq-text').value,category:box('cq-cat').value,questionIds:ids}});closeModal();toast('Grouped');after&&after()}catch(e){box('cq-err').textContent=e.message}};
+}
+async function linkCanon(cid,ids,unlink,after){try{await cb(`/rfp/canonical/${encodeURIComponent(cid)}/link`,{method:'POST',body:{questionIds:ids,unlink}});toast(unlink?'Removed from group':'Added to group');after&&after()}catch(e){toast(e.message,true)}}
+function correctAnswer(aid,qid){
+  rbox('modal').innerHTML=`<header><h3>Record a correction</h3><span class="mono muted">${esc(aid)}</span></header><div class="body"><div class="notice warn small">The confirmed answer is kept unchanged and marked corrected. The correction becomes a new confirmed revision — and must be text found in the original document.</div>
+    <label>Corrected answer (exact text from the document)</label><textarea id="ca-text" style="min-height:120px"></textarea><label>Why</label><input id="ca-note"></div>
+    <footer><span class="err" id="ca-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="ca-go">Record correction</button></footer>`;
+  openModal();
+  box('ca-go').onclick=async()=>{try{const r=await cb(`/rfp/answers/${encodeURIComponent(aid)}/correct`,{method:'POST',body:{text:box('ca-text').value,note:box('ca-note').value}});closeModal();toast('Correction recorded at '+r.location);openRef('rfpquestion',qid)}catch(e){box('ca-err').textContent=e.message}};
+}
+async function promoteAnswer(aid){
+  try{const r=await cb('/rfp/approved/promote',{method:'POST',body:{answerId:aid}});toast('Draft approved answer created — edit it, then submit for review');openRef('approvedanswer',r.item['Approved Answer ID'])}catch(e){toast(e.message,true)}
+}
+
+// Answer Library
+let AL_KIND='approved';
+function rfAnswers(){
+  rbox('rf-body').innerHTML=`<div class="controls"><div class="az" style="margin:0"><button class="az-btn ${AL_KIND==='approved'?'active':''}" onclick="AL_KIND='approved';rfAnswers()">Approved answers</button><button class="az-btn ${AL_KIND==='historical'?'active':''}" onclick="AL_KIND='historical';rfAnswers()">Historical answers</button></div>
+    ${AL_KIND==='approved'?`<select id="al-status" onchange="rfpOff.al=0;rfAList()"><option value="">All statuses</option>${(RFPMETA?.approvalStatuses||['draft','needs-review','approved','outdated','superseded','historical-only']).map(s=>`<option>${s}</option>`).join('')}</select><select id="al-cat" onchange="rfpOff.al=0;rfAList()">${catOptions('')}</select>`
+      :`<select id="al-status" onchange="rfpOff.al=0;rfAList()"><option value="">All</option><option value="answered">Answered</option><option value="needs_review">Needs review</option></select>`}</div>
+    <div class="small muted" style="margin-bottom:10px">${AL_KIND==='approved'?'Current, reusable answers approved by a reviewer for stated product versions and environments. Only these are current knowledge.':'What Kinetic answered in past procurements, exactly as written. Evidence — not a statement of what is true today.'}</div><div id="al-list"></div>`;
+  rfpOff.al=0;rfAList();
+}
+async function rfAList(){
+  loading('al-list');
+  try{
+    if(AL_KIND==='approved'){
+      const r=await cb(`/rfp/approved?${new URLSearchParams({status:box('al-status').value,category:box('al-cat').value,offset:rfpOff.al||0})}`);
+      rbox('al-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Canonical question</th><th>Answer</th><th>Category</th><th>Owner</th><th>Review due</th><th>Status</th></tr></thead><tbody>${r.items.map(a=>`<tr onclick="openRef('approvedanswer',${jsArg(a['Approved Answer ID'])})">
+        <td><strong>${snip(a['Canonical Question'],160)}</strong></td><td class="small"><div class="statement">${snip(a['Approved Answer'],220)}</div>${a['Product Versions']?`<span class="pill">${esc(a['Product Versions'])}</span>`:''}</td><td class="small">${esc(catLabel(a.Category))}${a.Sensitive==='yes'?' <span class="pill" title="Makes a security, compliance, financial, legal or contractual commitment">sensitive</span>':''}</td>
+        <td class="small">${esc(a.Owner)}</td><td class="small">${a['Review Due At']?`${esc(a['Review Due At'])}${a['Review Due At']<new Date().toISOString().slice(0,10)?' <span class="badge b-disputed">overdue</span>':''}`:'—'}</td><td>${badge(a['Approval Status'])}</td></tr>`).join('')}</tbody></table></div>${offPager('al',r,'rfAList')}`:'<div class="empty">No approved answers yet. Open a confirmed historical answer and promote it.</div>';
+    }else{
+      const r=await cb(`/rfp/answers?${new URLSearchParams({status:box('al-status').value,offset:rfpOff.al||0})}`);
+      rbox('al-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Question</th><th>Historical answer (exact)</th><th>RFP</th><th>Where</th></tr></thead><tbody>${r.items.map(h=>`<tr onclick="openRef('rfpquestion',${jsArg(h.id)})"><td>${snip(h.text,180)}</td><td class="small"><div class="statement">${snip(h.answerPreview,240)}</div></td><td class="small">${esc(h.customer)}<div class="muted">${esc(h.rfp)}</div></td><td class="small">${esc(h.location)}</td></tr>`).join('')}</tbody></table></div>${offPager('al',r,'rfAList')}`:'<div class="empty">No historical answers yet.</div>';
+    }
+  }catch(e){failBox('al-list',e)}
+}
+async function showApproved(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    const d=await cb('/rfp/approved/'+encodeURIComponent(id));const a=d.answer,st=a['Approval Status'];
+    const can=(x)=>ME.roles.reviewer&&x;
+    const acts=[];
+    if(['draft'].includes(st)||(st==='needs-review'&&ME.roles.reviewer))acts.push(`<button class="btn-secondary btn-sm" onclick="editApproved(${jsArg(id)})">Edit</button>`);
+    if(st==='draft')acts.push(`<button class="btn-primary btn-sm" onclick="approvedAction(${jsArg(id)},'submit')">Submit for review</button>`);
+    if(can(st==='needs-review')){acts.push(`<button class="btn-primary btn-sm btn-ok" onclick="approvedAction(${jsArg(id)},'approve',${a.Sensitive==='yes'})">Approve…</button>`);acts.push(`<button class="btn-primary btn-sm btn-bad" onclick="approvedAction(${jsArg(id)},'reject')">Return to draft…</button>`)}
+    if(can(st==='approved'))acts.push(`<button class="btn-primary btn-sm btn-warn" onclick="approvedAction(${jsArg(id)},'outdate')">Mark outdated…</button>`);
+    if(can(['approved','outdated'].includes(st)))acts.push(`<button class="btn-secondary btn-sm" onclick="approvedAction(${jsArg(id)},'supersede')">Superseded by…</button>`);
+    if(can(['draft','needs-review','outdated'].includes(st)))acts.push(`<button class="btn-secondary btn-sm" onclick="approvedAction(${jsArg(id)},'historical-only')">Historical only…</button>`);
+    if(can(['outdated','historical-only'].includes(st)))acts.push(`<button class="btn-secondary btn-sm" onclick="approvedAction(${jsArg(id)},'reopen')">Reopen as draft…</button>`);
+    const hist=(()=>{try{return JSON.parse(a['Review History']||'[]')}catch(e){return[]}})();
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(a['Canonical Question'])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${badge(st)} ${clsPill(st==='approved'?'current-approved':['superseded','outdated'].includes(st)?'superseded':'unapproved-draft')} ${a.Sensitive==='yes'?'<span class="pill">sensitive — needs explicit review</span>':''}</div></div></div>
+      ${st==='superseded'?`<div class="notice warn">Superseded by ${idRef('approvedanswer',a['Superseded By'])}. Do not reuse this answer.</div>`:''}${st==='outdated'?'<div class="notice warn">Marked outdated. Do not reuse this answer until it is reviewed again.</div>':''}
+      <div class="three-col"><div>
+        <div class="card"><h2>Answer</h2><div class="statement">${esc(a['Approved Answer'])}</div><dl class="dl" style="margin-top:12px"><dt>Product versions</dt><dd>${unknown(a['Product Versions'])}</dd><dt>Environments</dt><dd>${unknown(a['Applicable Environments'])}</dd><dt>Conditions</dt><dd class="statement">${unknown(a['Deployment Conditions'])}</dd><dt>Category</dt><dd>${esc(catLabel(a.Category))}</dd></dl></div>
+        <div class="card"><h2>Evidence <span class="muted">${d.evidence.length}</span></h2>${d.evidence.map(e=>e._missing?`<div class="notice bad small">Evidence ${esc(e['Answer ID'])} not found or not visible</div>`:`<div class="answer-box confirmed"><div class="small muted">Historical answer to: <a onclick="openRef('rfpquestion',${jsArg(e['Question ID'])})">${snip(e._question?.['Question Text Original'],140)}</a></div><div class="statement">${esc(e['Answer Text Original'])}</div><div class="small muted">${citeLink(e['Document ID'],e['Source Location'],e['Location Label'])} · ${esc(e['Document Version'])} · ${badge(e['Answer Status'])}</div></div>`).join('')||'<div class="notice warn">No evidence attached.</div>'}</div>
+        <div class="card"><h2>Questions this answers <span class="muted">${d.questions.length}</span></h2>${d.questions.slice(0,15).map(q=>`<div class="small" style="cursor:pointer;margin:3px 0" onclick="openRef('rfpquestion',${jsArg(q['Question ID'])})">• ${snip(q['Question Text Original'],180)}</div>`).join('')}</div>
+      </div><div>
+        <div class="card"><h2>Approval</h2><dl class="dl"><dt>Owner</dt><dd>${unknown(a.Owner)}</dd><dt>Approved by</dt><dd>${a['Approved By']?esc(a['Approved By'])+' · '+ago(a['Approved At']):'<span class="muted">not approved</span>'}</dd><dt>Review due</dt><dd>${unknown(a['Review Due At'])}</dd>${a['Knowledge ID']?`<dt>In the Brain</dt><dd>${idRef('knowledge',a['Knowledge ID'])} ${d.knowledge?badge(d.knowledge['Review Status']):''}</dd>`:''}${a.Supersedes?`<dt>Supersedes</dt><dd>${idRef('approvedanswer',a.Supersedes)}</dd>`:''}</dl>
+          <div class="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${acts.join('')||'<span class="small muted">No actions available to you in this state.</span>'}</div>${!ME.roles.reviewer?'<div class="small muted" style="margin-top:6px">Only Corporate Brain reviewers approve answers.</div>':''}</div>
+        <div class="card"><h2>History</h2>${hist.map(h=>`<div class="small" style="margin-bottom:6px"><strong>${esc(h.action)}</strong> ${esc(h.from||'')} → ${esc(h.to)} · ${esc(h.by)} · ${ago(h.at)}${h.comment?`<div class="muted">${esc(h.comment)}</div>`:''}</div>`).join('')}
+          <h3 class="sub-h">Audit trail</h3>${d.audit.map(x=>`<div class="small muted">${esc(x['Occurred At']?.slice(0,16).replace('T',' '))} · ${esc(x.Action)} · ${esc(x.Actor)}</div>`).join('')}</div>
+      </div></div>`,String(a['Canonical Question']).slice(0,60),'approvedanswer',id);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'Approved answer not found.':e.message)}</div>`)}
+}
+async function editApproved(id){
+  const a=(await cb('/rfp/approved/'+encodeURIComponent(id))).answer;
+  const F=[['Approved Answer','Answer',1],['Product Versions','Product versions it applies to'],['Applicable Environments','Environments (e.g. hosted, customer-managed, GovCloud)'],['Deployment Conditions','Conditions and caveats',1],['Owner','Owner (username)'],['Review Due At','Review by (YYYY-MM-DD)'],['Historical Answer IDs','Evidence: confirmed historical answer IDs (comma separated)'],['Supersedes','Supersedes approved answer ID (optional)']];
+  rbox('modal').innerHTML=`<header><h3>Edit approved answer</h3><span class="mono muted">${esc(id)}</span></header><div class="body">
+    ${F.map(([f,l,big])=>`<label>${esc(l)}</label>${big?`<textarea id="ea-${f.replace(/\W+/g,'_')}" style="min-height:${f==='Approved Answer'?160:70}px">${esc(f==='Historical Answer IDs'?list(a[f]).join(', '):a[f]||'')}</textarea>`:`<input id="ea-${f.replace(/\W+/g,'_')}" value="${esc(f==='Historical Answer IDs'?list(a[f]).join(', '):a[f]||'')}">`}`).join('')}
+    <label>Category</label><select id="ea-cat">${catOptions(a.Category,'— none —')}</select>
+    <div class="help">Do not add capabilities, certifications, metrics or terms the evidence does not support.</div></div>
+    <footer><span class="err" id="ea-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="ea-go">Save</button></footer>`;
+  openModal();
+  box('ea-go').onclick=async()=>{const values={};for(const [f] of F)values[f]=box('ea-'+f.replace(/\W+/g,'_')).value;values.Category=box('ea-cat').value;
+    try{await cb('/rfp/approved/'+encodeURIComponent(id),{method:'PUT',body:{values}});closeModal();toast('Saved');openRef('approvedanswer',id)}catch(e){box('ea-err').textContent=e.message}};
+}
+function approvedAction(id,action,sensitive){
+  const needs={approve:'Review comment'+(sensitive?' (required for sensitive answers)':''),reject:'What needs to change (required)',outdate:'Why it is outdated (required)','historical-only':'Why (required)',reopen:'Why (required)',supersede:'Comment',submit:'Note (optional)'}[action];
+  rbox('modal').innerHTML=`<header><h3>${esc({approve:'Approve answer',reject:'Return to draft',outdate:'Mark outdated',supersede:'Superseded by another answer','historical-only':'Keep as historical only',reopen:'Reopen as draft',submit:'Submit for review'}[action])}</h3></header><div class="body">
+    ${action==='approve'&&sensitive?`<div class="notice warn">This answer makes a security, compliance, financial, legal or contractual commitment. Approve only after checking it against current, authoritative evidence.</div><label><input type="checkbox" id="aa-confirm" style="width:auto"> I have reviewed the commitment this answer makes</label>`:''}
+    ${action==='supersede'?'<label>Replacing approved answer ID</label><input id="aa-by">':''}
+    <label>${esc(needs)}</label><textarea id="aa-comment"></textarea></div>
+    <footer><span class="err" id="aa-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="aa-go">Confirm</button></footer>`;
+  openModal();
+  box('aa-go').onclick=async()=>{box('aa-go').disabled=true;
+    try{await cb(`/rfp/approved/${encodeURIComponent(id)}/${action}`,{method:'POST',body:{comment:box('aa-comment').value.trim(),confirmSensitive:!!box('aa-confirm')?.checked,supersededBy:box('aa-by')?.value.trim()||''}});closeModal();toast('Done');openRef('approvedanswer',id)}
+    catch(e){box('aa-err').textContent=e.message;box('aa-go').disabled=false}};
+}
+
+// Import Documents
+let RFP_IMPORT_TARGET='';
+async function rfImport(){
+  rbox('rf-body').innerHTML='<div class="empty">Loading…</div>';
+  let rfps=[];try{rfps=(await cb('/rfp/sources?library=historical&sort=name')).items;let off=25;while(rfps.length<200){const r=await cb('/rfp/sources?library=historical&sort=name&offset='+off);if(!r.items.length)break;rfps.push(...r.items);if(r.next==null)break;off=r.next}}catch(e){}
+  rbox('rf-body').innerHTML=`<h2>Import historical RFP documents</h2>
+    <div class="small muted" style="margin-bottom:12px">1 Select documents → 2 the originals are stored and registered as Corporate Brain sources → 3 structure is analysed → 4 questions and answers are extracted with their exact locations → 5 possible duplicates are flagged → 6 you review → 7 you confirm or correct → 8 confirmed records join the library. Re-importing the same file creates nothing; a changed file becomes a new revision.</div>
+    <div class="two-col"><div>
+      <label class="lbl">RFP</label><select id="ri-rfp" class="inp" style="width:100%" onchange="box('ri-new').style.display=this.value?'none':'block'"><option value="">+ New RFP…</option>${rfps.map(r=>`<option value="${esc(r['RFP Source ID'])}" ${r['RFP Source ID']===RFP_IMPORT_TARGET?'selected':''}>${esc(r['Customer Name']?r['Customer Name']+' — ':'')}${esc(r['Opportunity Name'])}</option>`).join('')}</select>
+      <div id="ri-new" style="display:${RFP_IMPORT_TARGET?'none':'block'}">
+        <label class="lbl">RFP name</label><input id="ri-name" class="inp" style="width:100%"><label class="lbl">Customer or agency</label><input id="ri-cust" class="inp" style="width:100%">
+        <label class="lbl">Solicitation number</label><input id="ri-sol" class="inp" style="width:100%">
+        <label class="lbl">Type</label><select id="ri-type" class="inp">${['rfp','rfq','rfi','questionnaire','other'].map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}</select>
+        <label class="lbl">Received (optional)</label><input id="ri-rec" class="inp" placeholder="YYYY-MM-DD"> <label class="lbl">Due (optional)</label><input id="ri-due" class="inp" placeholder="YYYY-MM-DD">
+        <div class="small muted" style="margin-top:6px">Submission date and outcome stay unknown unless you set them on the RFP.</div>
+      </div></div><div>
+      <label class="lbl">Documents (.docx, .xlsx, .csv, .txt, text-based .pdf — up to ${esc(RFPMETA?.maxFileMB||25)} MB each)</label><input type="file" id="ri-files" multiple accept=".docx,.xlsx,.csv,.txt,.pdf" onchange="rfImportFiles()">
+      <div id="ri-filelist" style="margin-top:10px"></div>
+      <label class="lbl">Document date (optional — the date the answers were given, if known)</label><input id="ri-date" class="inp" placeholder="YYYY-MM-DD">
+      ${ME.roles.reviewer?'<label class="lbl"><input type="checkbox" id="ri-restricted"> Restricted — reviewers only (e.g. price proposals)</label>':''}
+      <div style="margin-top:12px"><button class="btn-primary" id="ri-go" onclick="rfImportGo()">Import and extract</button></div>
+    </div></div><div id="ri-progress" style="margin-top:16px"></div>`;
+  RFP_IMPORT_TARGET='';
+}
+function rfImportFiles(){
+  const fs=[...box('ri-files').files];
+  rbox('ri-filelist').innerHTML=fs.map((f,i)=>`<div class="small" style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="flex:1">${esc(f.name)} <span class="muted">${Math.round(f.size/1024)} KB</span></span><select id="ri-role-${i}"><option value="response">Kinetic's response</option><option value="combined">Questions + our answers</option><option value="solicitation">Buyer's RFP (questions only)</option><option value="reference">Reference only (store, don't extract)</option></select></div>`).join('');
+}
+const fileB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(f)});
+async function rfImportGo(){
+  const fs=[...box('ri-files').files];if(!fs.length)return toast('Choose at least one document',true);
+  let rfpId=box('ri-rfp').value;
+  const btn=box('ri-go');btn.disabled=true;const prog=box('ri-progress');prog.innerHTML='';
+  try{
+    if(!rfpId){
+      if(!box('ri-name').value.trim()){btn.disabled=false;return toast('Name the RFP',true)}
+      const r=await cb('/rfp/sources',{method:'POST',body:{values:{'Opportunity Name':box('ri-name').value.trim(),'Customer Name':box('ri-cust').value.trim(),'Solicitation Number':box('ri-sol').value.trim(),'Procurement Type':box('ri-type').value,'Received At':box('ri-rec').value.trim(),'Due At':box('ri-due').value.trim()},restricted:!!box('ri-restricted')?.checked}});
+      rfpId=r.item['RFP Source ID'];
+    }
+    for(let i=0;i<fs.length;i++){
+      const f=fs[i],role=box('ri-role-'+i).value;
+      const row=document.createElement('div');row.className='finding';row.innerHTML=`<strong>${esc(f.name)}</strong> <span class="small muted">uploading…</span>`;prog.appendChild(row);
+      if(f.size>(RFPMETA?.maxFileMB||25)*1048576){row.innerHTML=`<strong>${esc(f.name)}</strong> <span class="badge b-failed">too large</span>`;continue}
+      try{
+        const r=await cb('/rfp/import',{method:'POST',body:{rfpId,role:role==='reference'?'reference':role,documentDate:box('ri-date').value.trim(),restricted:!!box('ri-restricted')?.checked,file:{name:f.name,type:f.type,base64:await fileB64(f)}}});
+        const did=r.document['Document ID'];
+        row.innerHTML=`<strong>${esc(f.name)}</strong> ${r.duplicate?'<span class="pill">already imported — nothing created</span>':r.unsupported?`<span class="badge b-failed">stored, not extractable</span> <span class="small">${esc((r.warnings||[]).join(' '))}</span>`:`<span class="pill">revision ${esc(r.document.Revision)}</span> <span class="badge b-running">extracting</span>`} <a onclick="openRef('rfpdocument',${jsArg(did)})">Review extraction →</a>`;
+      }catch(e){row.innerHTML=`<strong>${esc(f.name)}</strong> <span class="badge b-failed">failed</span> <span class="small">${esc(e.message)}</span>`}
+    }
+    prog.insertAdjacentHTML('beforeend',`<div style="margin-top:8px"><a onclick="openRef('rfp',${jsArg(rfpId)})">Open the RFP →</a></div>`);loadRfpKpis();
+  }catch(e){toast(e.message,true)}
+  btn.disabled=false;
+}
+
+// Search
+function rfSearch(){
+  rbox('rf-body').innerHTML=`<div class="controls"><input id="rs-q" placeholder="Ask in your own words — e.g. Do you support single sign-on with Okta?" style="flex:1;min-width:260px" onkeydown="if(event.key==='Enter'){rfpOff.rs=0;rfSearchGo()}">
+    <select id="rs-cat">${catOptions('')}</select><input id="rs-cust" placeholder="Customer" style="width:130px"><input id="rs-from" placeholder="From (YYYY)" style="width:100px"><input id="rs-to" placeholder="To (YYYY)" style="width:100px">
+    <select id="rs-ans"><option value="">Answered or not</option><option value="yes">With an answer</option><option value="no">Unanswered</option></select><button class="btn-primary" onclick="rfpOff.rs=0;rfSearchGo()">Search</button></div>
+    <div class="legend-box small">${(RFPMETA?.strength||[]).map(s=>`${strengthPill(s.name)} ${esc(s.meaning)}`).join('<br>')}</div><div id="rs-res"></div>`;
+  box('rs-q').focus();
+}
+async function rfSearchGo(){
+  loading('rs-res');
+  try{
+    const r=await cb('/rfp/search?'+new URLSearchParams({q:box('rs-q').value.trim(),category:box('rs-cat').value,customer:box('rs-cust').value.trim(),from:box('rs-from').value.trim(),to:box('rs-to').value.trim(),answered:box('rs-ans').value,offset:rfpOff.rs||0}));
+    rbox('rs-res').innerHTML=`${r.approved.length?`<h3 class="sub-h">Approved answers</h3>${r.approved.map(a=>`<div class="finding ${a.status==='approved'?'verified':'proposed'}" style="cursor:pointer" onclick="openRef('approvedanswer',${jsArg(a.id)})">${clsPill(a.contentClass)} ${strengthPill(a.strength)} <strong>${esc(a.question)}</strong><div class="statement small" style="margin-top:4px">${esc(a.text)}</div></div>`).join('')}`:''}
+      <h3 class="sub-h">Historical questions <span class="muted">${r.total}</span></h3>
+      ${r.hits.length?r.hits.map(h=>`<div class="finding" style="cursor:pointer" onclick="openRef('rfpquestion',${jsArg(h.id)})"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${clsPill('historical-evidence')} ${strengthPill(h.strength)} <span class="small mono muted">${esc(h.score||'')}</span> <span class="pill">${esc(catLabel(h.category)||'uncategorized')}</span> <span class="small muted">${esc(h.customer)} · ${esc(h.rfp)} · ${h.rfpDate?`${esc(h.rfpDateKind)} ${esc(h.rfpDate)}`:'date unknown'}</span></div>
+        <div style="margin-top:6px"><strong>${esc(h.text)}</strong></div>
+        ${h.answerPreview?`<div class="answer-box confirmed" style="margin-top:6px"><div class="statement small">${esc(h.answerPreview)}</div><div class="small muted">${citeLink(h.documentId,null,h.location)} · ${esc(h.answerStatus)}</div></div>`:'<div class="small muted" style="margin-top:4px">No historical answer.</div>'}
+        ${h.approved.length?`<div class="small" style="margin-top:6px">${clsPill('current-approved')} ${h.approved.map(a=>`<a onclick="event.stopPropagation();openRef('approvedanswer',${jsArg(a.id)})">${snip(a.text,200)}</a>`).join(' · ')}</div>`:''}
+        ${h.related.length?`<div class="small muted" style="margin-top:4px">Related: ${h.related.map(x=>`<a onclick="event.stopPropagation();openRef('rfpquestion',${jsArg(x.id)})">${esc(x.text)}</a>`).join(' · ')}</div>`:''}</div>`).join('')+offPager('rs',r,'rfSearchGo'):'<div class="empty">No matching questions.</div>'}
+      <div class="small muted" style="margin-top:8px">Search: ${esc(r.provider.name)}. ${esc(r.provider.note)}</div>`;
+  }catch(e){failBox('rs-res',e)}
+}
+
+// New RFP Analysis
+async function rfAnalyses(){
+  rbox('rf-body').innerHTML=`<div class="two-col"><div><h2>Analyse a new RFP</h2><div class="small muted" style="margin-bottom:10px">Upload the RFP and its attachments. Each requirement is matched against the question library; drafts are built only from approved or confirmed historical answers and are labelled AI-generated drafts. Requirements without adequate evidence get no draft.</div>
+      <label class="lbl">Title</label><input id="na-title" class="inp" style="width:100%"><label class="lbl">Customer or agency</label><input id="na-cust" class="inp" style="width:100%">
+      <label class="lbl">Solicitation number</label><input id="na-sol" class="inp" style="width:100%"><label class="lbl">Due (optional)</label><input id="na-due" class="inp" placeholder="YYYY-MM-DD">
+      <label class="lbl">Documents</label><input type="file" id="na-files" multiple accept=".docx,.xlsx,.csv,.txt,.pdf">
+      <div style="margin-top:12px"><button class="btn-primary" id="na-go" onclick="newAnalysisGo()">Analyse</button></div></div>
+    <div><h2>Analyses</h2><div id="na-list"></div></div></div>`;
+  try{const r=await cb('/rfp/analyses');rbox('na-list').innerHTML=r.items.length?r.items.map(a=>`<div class="finding" style="cursor:pointer" onclick="openRef('rfpanalysis',${jsArg(a['Analysis ID'])})"><strong>${esc(a.Title)}</strong> ${badge(a.Status)}<div class="small muted">${esc(a['Customer Name']||'')} · ${n(a['Item Count'])} requirements · ${n(a['Drafted Count'])} drafted · ${n(a['No Evidence Count'])} without evidence · ${ago(a._createdAt)}</div></div>`).join(''):'<div class="empty">No analyses yet.</div>'}catch(e){failBox('na-list',e)}
+}
+async function newAnalysisGo(){
+  const fs=[...box('na-files').files];if(!box('na-title').value.trim()||!fs.length)return toast('Give it a title and choose the RFP documents',true);
+  box('na-go').disabled=true;
+  try{
+    const files=[];for(const f of fs)files.push({name:f.name,type:f.type,base64:await fileB64(f)});
+    const r=await cb('/rfp/analyses',{method:'POST',body:{title:box('na-title').value.trim(),customer:box('na-cust').value.trim(),solicitation:box('na-sol').value.trim(),dueAt:box('na-due').value.trim(),files}});
+    toast('Analysis started');openRef('rfpanalysis',r.analysis['Analysis ID']);
+  }catch(e){toast(e.message,true);box('na-go').disabled=false}
+}
+let AN_FILTER='';
+async function showAnalysis(id){
+  showDetail('<div class="empty">Loading…</div>');
+  try{
+    await rfpMeta();
+    const d=await cb(`/rfp/analyses/${encodeURIComponent(id)}?${new URLSearchParams({filter:AN_FILTER,offset:rfpOff.an||0})}`);const a=d.analysis;
+    const busy=['queued','analyzing'].includes(a.Status);
+    const flags=x=>{try{return JSON.parse(x||'[]')}catch(e){return[]}};
+    const cit=x=>{try{return JSON.parse(x||'[]')}catch(e){return[]}};
+    showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(a.Title)}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${badge(a.Status)} · ${esc(a['Customer Name']||'')} ${a['Solicitation Number']?'· '+esc(a['Solicitation Number']):''} · RFP ${idRef('rfp',a['RFP Source ID'])}</div></div>
+      <button class="btn-primary" onclick="exportAnalysis(${jsArg(id)})">Export matrix (CSV)</button></div>
+      ${busy?'<div class="notice info">Analysing — this page refreshes on its own.</div>':''}
+      <div class="kpi-row"><div class="kpi ink"><div class="val">${n(a['Item Count'])}</div><div class="label">Requirements</div></div><div class="kpi green"><div class="val">${n(a['Drafted Count'])}</div><div class="label">AI-generated drafts</div></div><div class="kpi amber"><div class="val">${n(a['No Evidence Count'])}</div><div class="label">No adequate evidence</div></div><div class="kpi red"><div class="val">${n(a['Conflict Count'])}</div><div class="label">Possible conflicts</div></div></div>
+      <div class="notice warn small"><strong>Every proposed answer here is an AI-generated draft</strong>, copied from an approved answer or a confirmed historical answer it cites. Nothing is claimed beyond that evidence. Review each one before use. Match strength: ${(RFPMETA?.strength||[]).map(s=>`${strengthPill(s.name)} ${esc(s.meaning)}`).join(' · ')}.</div>
+      <div class="card"><div class="controls"><select onchange="AN_FILTER=this.value;rfpOff.an=0;showAnalysis(${jsArg(id)})">${[['','All requirements'],['ai-draft','Draft awaiting review'],['no-evidence','No evidence'],['conflicts','Possible conflicts'],['mandatory','Mandatory'],['accepted','Accepted'],['edited','Edited'],['needs-evidence','Needs evidence']].map(([v,l])=>`<option value="${v}" ${AN_FILTER===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${d.items.length?`<div class="table-wrap"><table><thead><tr><th>#</th><th>Requirement (original)</th><th>Proposed answer</th><th>Evidence</th><th>Review</th></tr></thead><tbody>${d.items.map(x=>`<tr>
+        <td class="mono small">${esc(x['Question Number']||String(+x.Sequence))}</td>
+        <td style="max-width:300px"><div class="statement">${esc(x['Question Text Original'])}</div><div class="small muted">${esc(x['Location Label'])}</div><div class="small">${x['Requirement Level']&&x['Requirement Level']!=='unspecified'?`<span class="pill" title="${esc(x['Requirement Basis'])}">${esc(x['Requirement Level'])}</span>`:''} ${x.Category?`<span class="pill">${esc(catLabel(x.Category))}</span>`:''}</div></td>
+        <td style="max-width:380px">${x['Draft Answer']?`${clsPill('ai-generated-draft')} <span class="small muted">from ${esc(x['Draft Basis'])}</span><div class="statement small" style="margin-top:4px">${esc(x['Final Answer']||x['Draft Answer'])}</div>`:`<span class="badge b-disputed">no adequate evidence</span> <span class="small muted">${esc(x['Draft Basis'])}</span>`}
+          ${flags(x.Conflicts).map(f=>`<div class="small flag">⚠ ${esc(f)}</div>`).join('')}</td>
+        <td style="max-width:280px" class="small">${strengthPill(x['Match Strength'])} <span class="mono muted">${esc(x['Match Score'])}</span>
+          ${cit(x.Citations).map(c=>`<div>${c.type==='approved-answer'?`<a onclick="openRef('approvedanswer',${jsArg(c.id)})">approved ${esc(c.id)}</a>`:`${citeLink(c.documentId,null,(c.rfp?c.rfp+', ':'')+(c.location||c.id))}`}</div>`).join('')}
+          <details><summary>${cit(x['Matched Questions']).length} matched questions</summary>${cit(x['Matched Questions']).map(m=>`<div style="margin:3px 0">${strengthPill(m.strength)} <a onclick="openRef('rfpquestion',${jsArg(m.id)})">${snip(m.text,120)}</a> <span class="muted">${esc(m.rfp)}${m.answered?'':' · unanswered'}</span></div>`).join('')}</details></td>
+        <td style="white-space:nowrap">${badge(x['Review Status'])}${x['Reviewed By']?`<div class="small muted">${esc(x['Reviewed By'])}</div>`:''}<div style="margin-top:4px">${x['Draft Answer']?`<button class="btn-secondary btn-sm" onclick="reviewItem(${jsArg(x['Analysis Item ID'])},'accept',${jsArg(id)})">Accept</button><br>`:''}<button class="btn-secondary btn-sm" onclick="editItem(${jsArg(x['Analysis Item ID'])},${jsArg(x['Final Answer']||x['Draft Answer'])},${jsArg(id)})">Write / edit</button><br><button class="btn-secondary btn-sm" onclick="reviewItem(${jsArg(x['Analysis Item ID'])},'needs-evidence',${jsArg(id)})">Needs evidence</button></div></td></tr>`).join('')}</tbody></table></div>${offPager('an',d,`showAnalysis_${id.replace(/\W/g,'_')}`)}`:`<div class="empty">${busy?'Analysing…':'Nothing matches.'}</div>`}</div>`,a.Title,'rfpanalysis',id);
+    window[`showAnalysis_${id.replace(/\W/g,'_')}`]=()=>showAnalysis(id);
+    clearTimeout(window._anPoll);if(busy)window._anPoll=setTimeout(()=>{if(location.hash.includes(encodeURIComponent(id)))showAnalysis(id)},4000);
+  }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'Analysis not found.':e.message)}</div>`)}
+}
+async function reviewItem(itemId,action,aid){try{await cb(`/rfp/analysis-items/${encodeURIComponent(itemId)}/review`,{method:'POST',body:{action}});showAnalysis(aid)}catch(e){toast(e.message,true)}}
+function editItem(itemId,text,aid){
+  rbox('modal').innerHTML=`<header><h3>Final answer</h3></header><div class="body"><div class="notice info small">Write the answer for this proposal. Do not claim capabilities, certifications, metrics, references or terms you cannot support.</div><textarea id="ei-text" style="min-height:180px">${esc(text)}</textarea></div>
+    <footer><span class="err" id="ei-err"></span><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" id="ei-go">Save</button></footer>`;
+  openModal();
+  box('ei-go').onclick=async()=>{try{await cb(`/rfp/analysis-items/${encodeURIComponent(itemId)}/review`,{method:'POST',body:{action:'edit',finalAnswer:box('ei-text').value}});closeModal();showAnalysis(aid)}catch(e){box('ei-err').textContent=e.message}};
+}
+async function exportAnalysis(id){
+  try{const headers={Authorization:'Basic '+API.auth};if(API.server)headers['X-Kinetic-Server']=API.server;
+    const r=await fetch(`${PREFIX}/rfp/analyses/${encodeURIComponent(id)}/export.csv`,{headers});if(!r.ok)throw new Error(r.status);
+    const url=URL.createObjectURL(await r.blob());const a=document.createElement('a');a.href=url;a.download=`requirements-matrix-${id}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  }catch(e){toast('Export failed: '+e.message,true)}
+}
+
+// Knowledge Review
+async function rfReview(){
+  rbox('rf-body').innerHTML=`<div class="two-col"><div><h2>Approved answers awaiting approval</h2><div id="rv-approve"></div><h2 style="margin-top:16px">Drafts</h2><div id="rv-drafts"></div><h2 style="margin-top:16px">Approved answers past their review date</h2><div id="rv-due"></div></div>
+    <div><h2>Extraction rows needing review</h2><div id="rv-docs"></div><h2 style="margin-top:16px">Suggested groups <span class="small muted">(similar questions across RFPs — you decide)</span></h2><div id="rv-groups"></div></div></div>`;
+  const row=a=>`<div class="finding ${a['Approval Status']==='approved'?'verified':'proposed'}" style="cursor:pointer" onclick="openRef('approvedanswer',${jsArg(a['Approved Answer ID'])})"><strong>${snip(a['Canonical Question'],140)}</strong> ${a.Sensitive==='yes'?'<span class="pill">sensitive</span>':''}<div class="small muted">${snip(a['Approved Answer'],160)}</div><div class="small muted">owner ${esc(a.Owner)} · ${ago(a._updatedAt)}</div></div>`;
+  cb('/rfp/approved?status=needs-review').then(r=>rbox('rv-approve').innerHTML=r.items.length?r.items.map(row).join(''):'<div class="empty">Nothing waiting.</div>').catch(e=>failBox('rv-approve',e));
+  cb('/rfp/approved?status=draft').then(r=>rbox('rv-drafts').innerHTML=r.items.length?r.items.map(row).join(''):'<div class="empty">No drafts.</div>').catch(e=>failBox('rv-drafts',e));
+  cb('/rfp/approved?status=approved').then(r=>{const due=r.items.filter(a=>a['Review Due At']&&a['Review Due At']<new Date().toISOString().slice(0,10));rbox('rv-due').innerHTML=due.length?due.map(row).join(''):'<div class="empty">None overdue.</div>'}).catch(e=>failBox('rv-due',e));
+  (async()=>{try{const rf=await cb('/rfp/sources?library=historical');const docs=[];for(const r of rf.items.slice(0,25)){const d=await cb('/rfp/sources/'+encodeURIComponent(r['RFP Source ID']));docs.push(...d.documents.filter(x=>+x['Needs Review Count']||['extracted','partial'].includes(x['Extraction Status'])).map(x=>({...x,_rfp:r})))}
+    rbox('rv-docs').innerHTML=docs.length?docs.map(x=>`<div class="finding proposed" style="cursor:pointer" onclick="openRef('rfpdocument',${jsArg(x['Document ID'])})"><strong>${esc(x['File Name'])}</strong> ${badge(x['Extraction Status'])}<div class="small muted">${esc(x._rfp['Opportunity Name'])} · ${n(x['Question Count'])} rows · ${n(x['Needs Review Count'])} need review</div></div>`).join(''):'<div class="empty">Every extracted document is confirmed.</div>'}catch(e){failBox('rv-docs',e)}})();
+  cb('/rfp/canonical/suggest').then(r=>rbox('rv-groups').innerHTML=r.groups.length?r.groups.slice(0,15).map(g=>`<div class="finding"><strong>${snip(g.lead.text,150)}</strong> <span class="small muted">${esc(g.lead.rfp)}</span>${g.members.map(m=>`<div class="small">${strengthPill(m.score>=0.6?'strong':'partial')} <a onclick="openRef('rfpquestion',${jsArg(m.id)})">${snip(m.text,140)}</a> <span class="muted">${esc(m.rfp)}</span></div>`).join('')}
+    <button class="btn-secondary btn-sm" style="margin-top:6px" onclick="newCanon(${esc(JSON.stringify([g.lead.id,...g.members.map(m=>m.id)]))},${jsArg(g.lead.text)},${jsArg(g.lead.category)},rfReview)">Group these…</button></div>`).join(''):'<div class="empty">No ungrouped similar questions across RFPs.</div>').catch(e=>failBox('rv-groups',e));
+}
+async function openRfpAnswer(id){try{const r=await cb('/ref/rfpanswer/'+encodeURIComponent(id));openRef('rfpquestion',r.item['Question ID'])}catch(e){toast(e.message,true)}}
+
 // ── search ──
 async function runSearch(q){
   current='search';history_.length=0;
@@ -1145,7 +1664,7 @@ function showDetail(html,title,type,id){
 }
 function openRef(type,id){
   if(!id)return;
-  ({company:showCompany,person:showPerson,knowledge:showKnowledge,source:showSource,event:showEvent,job:openJob,communication:showCommunication,project:showGeneric('projects','Project ID'),principle:id=>showSales('principle',id),pricingmodel:id=>showSales('pricingmodel',id),deal:id=>showSales('deal',id),objection:id=>showSales('objection',id),competitor:id=>showSales('competitor',id),partnermodel:id=>showSales('partnermodel',id),product:showGeneric('products','Product ID'),decision:showGeneric('decisions','Decision ID')}[type]||(()=>toast('No view for '+type,true)))(id);
+  ({company:showCompany,person:showPerson,knowledge:showKnowledge,source:showSource,event:showEvent,job:openJob,communication:showCommunication,project:showGeneric('projects','Project ID'),principle:id=>showSales('principle',id),pricingmodel:id=>showSales('pricingmodel',id),deal:id=>showSales('deal',id),objection:id=>showSales('objection',id),competitor:id=>showSales('competitor',id),partnermodel:id=>showSales('partnermodel',id),product:showGeneric('products','Product ID'),decision:showGeneric('decisions','Decision ID'),rfp:showRfp,rfpdocument:showRfpDocument,rfpquestion:showRfpQuestion,rfpanswer:openRfpAnswer,approvedanswer:showApproved,rfpanalysis:showAnalysis}[type]||(()=>toast('No view for '+type,true)))(id);
 }
 function showGeneric(form,idField){return async function(id){
   showDetail('<div class="empty">Loading…</div>');

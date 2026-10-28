@@ -5,7 +5,7 @@ Corporate Brain is Kinetic Data's institutional memory. It records companies, pe
 | | |
 |---|---|
 | App (launcher on this Mac) | http://ai-labs.kineticdata.com:3011/corporate-brain/ (LAN: http://192.168.86.204:3011/corporate-brain/) |
-| Kinetic space | https://ai-labs.kinopsdev.io, kapp `corporate-brain` (19 forms — 12 core + 7 Sales Brain) |
+| Kinetic space | https://ai-labs.kinopsdev.io, kapp `corporate-brain` (27 forms — 12 core + 7 Sales Brain + 8 RFP Intelligence) |
 | API prefix | `/api/corporate-brain/*` (served by `server.mjs` through the `:3011` launcher) |
 | Live build page | `build/index.html` (also served at http://192.168.86.204:3061/) |
 
@@ -32,12 +32,15 @@ Corporate Brain is Kinetic Data's institutional memory. It records companies, pe
   - Contradiction Review routes contradicting proposals to `disputed`.
   - Ingestion Retry re-queues failed jobs, up to 3 attempts.
 - **Historian:** finds the subject company or person, separates verified, unverified and disputed findings, builds a timeline and contacts, checks 10 core history questions and turns gaps into a research job.
+- **RFP Intelligence** (see RFP_INTELLIGENCE.md): import RFP/RFQ/RFI/questionnaire documents (.docx, .xlsx, .csv, .txt, text PDF; originals kept as Kinetic attachments) → questions and the exact historical answers extracted with cell/paragraph/page citations → human review and confirmation (citations re-checked against the original) → search → reviewer-approved reusable answers (verified knowledge, Lens `rfp`) → new-RFP analysis with labelled AI-generated drafts and CSV export.
 - **Privacy:** the kapp is private by default and a restricted source is hidden from non-reviewers by Kinetic policy. Both were verified with real non-admin users.
 
 ## Tests (latest run: all passing)
 ```
 node --test apps/corporate-brain/tests/core.test.mjs           # 15 unit tests: truth model, identity, extraction, validation, sales rules
 KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/api.test.mjs        # 64 API/provenance/permission checks (incl. GitHub pull, contradiction workflow, Sales Brain + deal-price privacy)
+node apps/corporate-brain/tests/rfp.test.mjs                   # 46 offline RFP Intelligence checks: parsing (Word/Excel/CSV/text/PDF), extraction, citations, similarity, categories
+KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/rfp-api.test.mjs    # 64 live RFP Intelligence checks: import → extract → confirm → correct → search → approve → analyse, permissions
 KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node apps/corporate-brain/tests/workflows.test.mjs  # 6 live Task workflow checks
 cd tests && KINETIC_URL=… KINETIC_USER=… KINETIC_PASS=… node test-corporate-brain.mjs [shotDir]  # 41 Playwright UI checks (incl. the Sales tab)
 ```

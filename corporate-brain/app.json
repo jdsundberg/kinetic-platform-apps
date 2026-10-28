@@ -1568,6 +1568,858 @@
       ]
     },
     {
+      "slug": "rfp-sources",
+      "name": "RFP Sources",
+      "description": "A procurement (RFP, RFQ, RFI, questionnaire) and its documents; unknown dates and outcomes stay unknown",
+      "submissionLabelExpression": "${values('Opportunity Name')}",
+      "fields": [
+        {
+          "name": "RFP Source ID",
+          "required": true
+        },
+        {
+          "name": "Opportunity Name",
+          "required": true
+        },
+        {
+          "name": "Customer Name"
+        },
+        {
+          "name": "Company ID"
+        },
+        {
+          "name": "Solicitation Number"
+        },
+        {
+          "name": "Procurement Type"
+        },
+        {
+          "name": "Received At"
+        },
+        {
+          "name": "Due At"
+        },
+        {
+          "name": "Submitted At"
+        },
+        {
+          "name": "Opportunity Status"
+        },
+        {
+          "name": "Status Basis",
+          "rows": 4
+        },
+        {
+          "name": "Deal ID"
+        },
+        {
+          "name": "Library Status"
+        },
+        {
+          "name": "Document IDs",
+          "rows": 4
+        },
+        {
+          "name": "Question Count"
+        },
+        {
+          "name": "Answered Count"
+        },
+        {
+          "name": "Approved Count"
+        },
+        {
+          "name": "Notes",
+          "rows": 4
+        },
+        {
+          "name": "Access Scope"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[RFP Source ID]",
+          "values[Record Status]",
+          "values[Company ID]",
+          "values[Solicitation Number]",
+          "values[Access Scope]",
+          "values[Procurement Type]",
+          "values[Library Status]"
+        ],
+        "compound": [
+          [
+            "values[Access Scope]",
+            "values[Record Status]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[RFP Source ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "rfp-documents",
+      "name": "RFP Documents",
+      "description": "One revision of one procurement document; the original file is kept as an attachment and never changed",
+      "submissionLabelExpression": "${values('File Name')}",
+      "fields": [
+        {
+          "name": "Document ID",
+          "required": true
+        },
+        {
+          "name": "RFP Source ID",
+          "required": true
+        },
+        {
+          "name": "File Name",
+          "required": true
+        },
+        {
+          "name": "File Type"
+        },
+        {
+          "name": "Document Role"
+        },
+        {
+          "name": "Revision"
+        },
+        {
+          "name": "Supersedes Document ID"
+        },
+        {
+          "name": "Content Hash"
+        },
+        {
+          "name": "Document Key"
+        },
+        {
+          "name": "Source ID"
+        },
+        {
+          "name": "Original URL"
+        },
+        {
+          "name": "Original File",
+          "renderType": "attachment",
+          "allowMultiple": false
+        },
+        {
+          "name": "File Size"
+        },
+        {
+          "name": "Page Count"
+        },
+        {
+          "name": "Document Date"
+        },
+        {
+          "name": "Extraction Status"
+        },
+        {
+          "name": "Extraction Notes",
+          "rows": 4
+        },
+        {
+          "name": "Question Count"
+        },
+        {
+          "name": "Answered Count"
+        },
+        {
+          "name": "Needs Review Count"
+        },
+        {
+          "name": "Import Job ID"
+        },
+        {
+          "name": "Access Scope"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Document ID]",
+          "values[Document Key]",
+          "values[RFP Source ID]",
+          "values[Source ID]",
+          "values[Content Hash]",
+          "values[Extraction Status]",
+          "values[Record Status]",
+          "values[Access Scope]"
+        ],
+        "compound": [
+          [
+            "values[Access Scope]",
+            "values[RFP Source ID]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Document ID]"
+        ],
+        [
+          "values[Document Key]"
+        ]
+      ]
+    },
+    {
+      "slug": "rfp-questions",
+      "name": "RFP Questions",
+      "description": "A question exactly as a procurement asked it, where it sits in the document, and its extraction review state",
+      "submissionLabelExpression": "${values('Question Number')}",
+      "fields": [
+        {
+          "name": "Question ID",
+          "required": true
+        },
+        {
+          "name": "RFP Source ID",
+          "required": true
+        },
+        {
+          "name": "Document ID"
+        },
+        {
+          "name": "Question Number"
+        },
+        {
+          "name": "Question Text Original",
+          "rows": 4
+        },
+        {
+          "name": "Question Text Normalized",
+          "rows": 4
+        },
+        {
+          "name": "Question Key"
+        },
+        {
+          "name": "Row Key"
+        },
+        {
+          "name": "Sequence"
+        },
+        {
+          "name": "Section"
+        },
+        {
+          "name": "Subsection"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Category Source"
+        },
+        {
+          "name": "Source Location",
+          "rows": 4
+        },
+        {
+          "name": "Location Label"
+        },
+        {
+          "name": "Requirement Level"
+        },
+        {
+          "name": "Requirement Basis"
+        },
+        {
+          "name": "Extraction Status"
+        },
+        {
+          "name": "Extraction Reason",
+          "rows": 4
+        },
+        {
+          "name": "Answer Status"
+        },
+        {
+          "name": "Answer Preview",
+          "rows": 4
+        },
+        {
+          "name": "Latest Answer ID"
+        },
+        {
+          "name": "Possible Duplicate Of"
+        },
+        {
+          "name": "Duplicate Score"
+        },
+        {
+          "name": "Canonical Question ID"
+        },
+        {
+          "name": "Citation Verified"
+        },
+        {
+          "name": "Confirmed By"
+        },
+        {
+          "name": "Confirmed At"
+        },
+        {
+          "name": "Access Scope"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Question ID]",
+          "values[Row Key]",
+          "values[RFP Source ID]",
+          "values[Document ID]",
+          "values[Canonical Question ID]",
+          "values[Question Key]",
+          "values[Extraction Status]",
+          "values[Category]",
+          "values[Access Scope]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[Access Scope]",
+            "values[RFP Source ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Document ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Canonical Question ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Question Key]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Question ID]"
+        ],
+        [
+          "values[Row Key]"
+        ]
+      ]
+    },
+    {
+      "slug": "rfp-answers",
+      "name": "RFP Historical Answers",
+      "description": "The exact answer Kinetic gave (or drafted) in one document revision; immutable once confirmed — corrections are new revisions",
+      "submissionLabelExpression": "${values('Answer ID')}",
+      "fields": [
+        {
+          "name": "Answer ID",
+          "required": true
+        },
+        {
+          "name": "Question ID",
+          "required": true
+        },
+        {
+          "name": "RFP Source ID"
+        },
+        {
+          "name": "Document ID"
+        },
+        {
+          "name": "Answer Text Original",
+          "rows": 4
+        },
+        {
+          "name": "Answer Parts",
+          "rows": 4
+        },
+        {
+          "name": "Compliance",
+          "rows": 4
+        },
+        {
+          "name": "Answer Date"
+        },
+        {
+          "name": "Date Precision"
+        },
+        {
+          "name": "Source Location",
+          "rows": 4
+        },
+        {
+          "name": "Location Label"
+        },
+        {
+          "name": "Document Version"
+        },
+        {
+          "name": "Product Version"
+        },
+        {
+          "name": "Answer Status"
+        },
+        {
+          "name": "Answer Key"
+        },
+        {
+          "name": "Citation Verified"
+        },
+        {
+          "name": "Confirmed By"
+        },
+        {
+          "name": "Confirmed At"
+        },
+        {
+          "name": "Revision Of"
+        },
+        {
+          "name": "Correction Note",
+          "rows": 4
+        },
+        {
+          "name": "Access Scope"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Answer ID]",
+          "values[Answer Key]",
+          "values[Question ID]",
+          "values[RFP Source ID]",
+          "values[Document ID]",
+          "values[Answer Status]",
+          "values[Access Scope]",
+          "values[Record Status]"
+        ],
+        "compound": [
+          [
+            "values[Access Scope]",
+            "values[Question ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[Document ID]"
+          ],
+          [
+            "values[Access Scope]",
+            "values[RFP Source ID]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Answer ID]"
+        ],
+        [
+          "values[Answer Key]"
+        ]
+      ]
+    },
+    {
+      "slug": "canonical-questions",
+      "name": "Canonical Questions",
+      "description": "One subject many historical questions share; each keeps its own wording and its own answers",
+      "submissionLabelExpression": "${values('Canonical Question')}",
+      "fields": [
+        {
+          "name": "Canonical Question ID",
+          "required": true
+        },
+        {
+          "name": "Canonical Question",
+          "required": true
+        },
+        {
+          "name": "Subject Key"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Tags"
+        },
+        {
+          "name": "Description",
+          "rows": 4
+        },
+        {
+          "name": "Question Count"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Canonical Question ID]",
+          "values[Record Status]",
+          "values[Category]",
+          "values[Subject Key]"
+        ],
+        "compound": []
+      },
+      "uniqueIndexes": [
+        [
+          "values[Canonical Question ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "approved-answers",
+      "name": "Approved Answers",
+      "description": "Current reusable answers, approved by a reviewer for stated product versions and environments, with evidence and a review date",
+      "submissionLabelExpression": "${values('Canonical Question')}",
+      "fields": [
+        {
+          "name": "Approved Answer ID",
+          "required": true
+        },
+        {
+          "name": "Canonical Question ID"
+        },
+        {
+          "name": "Canonical Question"
+        },
+        {
+          "name": "Approved Answer",
+          "rows": 4
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Product Versions"
+        },
+        {
+          "name": "Deployment Conditions",
+          "rows": 4
+        },
+        {
+          "name": "Applicable Environments"
+        },
+        {
+          "name": "Evidence References",
+          "rows": 4
+        },
+        {
+          "name": "Historical Answer IDs",
+          "rows": 4
+        },
+        {
+          "name": "Owner"
+        },
+        {
+          "name": "Approval Status"
+        },
+        {
+          "name": "Sensitive"
+        },
+        {
+          "name": "Approved By"
+        },
+        {
+          "name": "Approved At"
+        },
+        {
+          "name": "Review Due At"
+        },
+        {
+          "name": "Superseded By"
+        },
+        {
+          "name": "Supersedes"
+        },
+        {
+          "name": "Knowledge ID"
+        },
+        {
+          "name": "Review History",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Approved Answer ID]",
+          "values[Canonical Question ID]",
+          "values[Approval Status]",
+          "values[Category]",
+          "values[Knowledge ID]",
+          "values[Record Status]",
+          "values[Owner]"
+        ],
+        "compound": [
+          [
+            "values[Approval Status]",
+            "values[Category]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Approved Answer ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "rfp-analyses",
+      "name": "RFP Analyses",
+      "description": "A new RFP analysed against the question library: a reviewable requirements matrix of AI-generated drafts",
+      "submissionLabelExpression": "${values('Title')}",
+      "fields": [
+        {
+          "name": "Analysis ID",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "required": true
+        },
+        {
+          "name": "RFP Source ID"
+        },
+        {
+          "name": "Customer Name"
+        },
+        {
+          "name": "Solicitation Number"
+        },
+        {
+          "name": "Due At"
+        },
+        {
+          "name": "Document IDs",
+          "rows": 4
+        },
+        {
+          "name": "Status"
+        },
+        {
+          "name": "Item Count"
+        },
+        {
+          "name": "Drafted Count"
+        },
+        {
+          "name": "No Evidence Count"
+        },
+        {
+          "name": "Conflict Count"
+        },
+        {
+          "name": "Job ID"
+        },
+        {
+          "name": "Notes",
+          "rows": 4
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Source IDs",
+          "rows": 4
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Analysis ID]",
+          "values[Record Status]",
+          "values[Status]",
+          "values[RFP Source ID]"
+        ],
+        "compound": []
+      },
+      "uniqueIndexes": [
+        [
+          "values[Analysis ID]"
+        ]
+      ]
+    },
+    {
+      "slug": "rfp-analysis-items",
+      "name": "RFP Analysis Items",
+      "description": "One requirement of a new RFP with its AI-generated draft, the evidence it used and its review",
+      "submissionLabelExpression": "${values('Question Number')}",
+      "fields": [
+        {
+          "name": "Analysis Item ID",
+          "required": true
+        },
+        {
+          "name": "Analysis ID",
+          "required": true
+        },
+        {
+          "name": "Sequence"
+        },
+        {
+          "name": "Question Number"
+        },
+        {
+          "name": "Question Text Original",
+          "rows": 4
+        },
+        {
+          "name": "Section"
+        },
+        {
+          "name": "Requirement Level"
+        },
+        {
+          "name": "Requirement Basis"
+        },
+        {
+          "name": "Source Location",
+          "rows": 4
+        },
+        {
+          "name": "Location Label"
+        },
+        {
+          "name": "Document ID"
+        },
+        {
+          "name": "Category"
+        },
+        {
+          "name": "Draft Answer",
+          "rows": 4
+        },
+        {
+          "name": "Draft Basis"
+        },
+        {
+          "name": "Content Class"
+        },
+        {
+          "name": "Approved Answer IDs",
+          "rows": 4
+        },
+        {
+          "name": "Matched Questions",
+          "rows": 4
+        },
+        {
+          "name": "Citations",
+          "rows": 4
+        },
+        {
+          "name": "Match Strength"
+        },
+        {
+          "name": "Match Score"
+        },
+        {
+          "name": "Conflicts",
+          "rows": 4
+        },
+        {
+          "name": "Review Status"
+        },
+        {
+          "name": "Final Answer",
+          "rows": 4
+        },
+        {
+          "name": "Reviewed By"
+        },
+        {
+          "name": "Reviewed At"
+        },
+        {
+          "name": "Record Status"
+        },
+        {
+          "name": "Created Via"
+        }
+      ],
+      "indexes": {
+        "single": [
+          "values[Analysis Item ID]",
+          "values[Analysis ID]",
+          "values[Review Status]"
+        ],
+        "compound": [
+          [
+            "values[Analysis ID]",
+            "values[Sequence]"
+          ]
+        ]
+      },
+      "uniqueIndexes": [
+        [
+          "values[Analysis Item ID]"
+        ]
+      ]
+    },
+    {
       "slug": "audit-log",
       "name": "Audit Log",
       "description": "Append-only record of material changes by users and agents (review decisions, merges, ingestion writes)",

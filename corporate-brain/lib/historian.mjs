@@ -119,8 +119,10 @@ export function createHistorian(store, services, retrieval) {
 
   async function answerSearch(question) {
     const r = await retrieval.search({ q: question.replace(/[?]/g, ""), limit: 25 });
+    // RFP history and approved answers say what they are: what Kinetic answered at the time is not a current fact
+    const CLASS_NOTE = { "historical-evidence": " [historical RFP answer — evidence, not a current verified fact]", "current-approved": " [current approved answer]", superseded: " [superseded]", "unapproved-draft": " [draft answer, not approved]" };
     const items = r.hits.map(h => ({
-      text: `${h.title}${h.snippet ? " — " + h.snippet : ""}`, status: h.status || "record", kind: h.type, id: h.id,
+      text: `${h.title}${h.snippet ? " — " + h.snippet : ""}${CLASS_NOTE[h.contentClass] || ""}`, status: h.status || "record", kind: h.type, id: h.id, contentClass: h.contentClass,
       citations: [cite(h.type, h.id, h.title)],
     }));
     return {

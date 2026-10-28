@@ -304,6 +304,8 @@ async function ssoRegisterClient(server, redirectUri) {
 /* ───── Shared helpers object for auto-discovered app handlers ───── */
 const appHelpers = {
   kineticRequest,
+  // the Kinetic server this request targets (X-Kinetic-Server or the launcher default) — for apps that move raw files
+  kineticTarget: () => { const r = requestStore.getStore(); return r ? resolveTarget(r) : proxyTarget; },
   collectByQuery,
   jsonResp,
   readBody,

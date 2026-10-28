@@ -28,6 +28,8 @@ export function extractCandidates(rec, ctx) {
   const out = { events: [], knowledge: [], communications: [] };
   // A Gmail label is a folder name, not a document — "Companies/Staples RFP" is not an RFP on file.
   if (rec.sourceType === "label") return out;
+  // RFP Intelligence documents are described by their RFP record and extracted question by question, not by file name
+  if (rec.sourceType === "rfp-document") return out;
   const company = ctx.companies[0];
   const kind = classifyDocument(rec.title);
   const titleDate = parseDateMention(rec.title);

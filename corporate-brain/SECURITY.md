@@ -62,6 +62,15 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
   - Audit rows record which fields changed, never the amounts, because members can read the audit log.
   - Tested: a plain member gets 0 rows from a direct Core query, and a `Sales` member sees the prices.
 
+## RFP Intelligence controls
+- Every RFP row (`rfp-sources`, `rfp-documents`, `rfp-questions`, `rfp-answers`) carries `Access Scope`; the `CB Restricted Source` policy hides restricted ones (e.g. price proposals) from non-reviewers, members' queries are always scoped, and only reviewers can import into a restricted RFP.
+- `CB RFP Answer Modification`: members may change a historical answer only while it is a candidate or needs review. A confirmed answer is immutable — the server only ever changes its status; a reviewer's correction is a new revision that must be text found in the original document.
+- `CB Approved Answer Modification`: members edit drafts only. Approval is reviewer-only and human-only (agents get 403); sensitive categories (security, compliance, authentication, pricing/licensing, contractual/legal, data/privacy, availability, backup/DR) need an explicit confirmation and a comment.
+- RFP forms are not writable through the generic `/entities` API (400) — only through `/rfp/…`, so citations and approvals stay verifiable.
+- Original files are Kinetic attachments read with the caller's credentials (`GET /rfp/documents/{id}/file`); nothing is cached on the launcher's disk.
+- Retrieved document text is data. Extraction is rule-based; analysis drafts are copied from approved or confirmed answers, never generated from document instructions.
+- Tested with real temporary users (`tests/rfp-api.test.mjs`): outsiders refused, members cannot see or import into restricted RFPs, cannot change approval status, cannot change a confirmed answer through the Core API.
+
 ## Workflow enforcement (Kinetic Task)
 - **Verification Guard:** catches direct Core API writes that bypass the app. Any knowledge marked `verified` without a `Verified By`, or without evidence when evidence is required, is reverted to `needs-research`, with a review-history entry and an audit row. Tested live by setting `verified` through the Core API.
 - **Contradiction Review:** contradicting proposals become `disputed`.

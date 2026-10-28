@@ -9,7 +9,8 @@
  * Agents (e.g. Claude Code using MCP connectors) call the same API with an extra
  * `X-CB-Agent: <name>` header: their writes are recorded as agent actions and they can never verify.
  */
-import { FORMS, FORM_BY_SLUG, KAPP, ENTITY_FORMS, SALES_KINDS, SALES_FORMS } from "./model.mjs";
+import crypto from "crypto";
+import { FORMS, FORM_BY_SLUG, KAPP, ENTITY_FORMS, SALES_KINDS, SALES_FORMS, RFP_FORMS, RFP_SCOPED_FORMS } from "./model.mjs";
 import { createStore, kq, KineticError } from "./lib/store.mjs";
 import { createServices } from "./lib/services.mjs";
 import { createRetrieval, SEARCHABLE, providers } from "./lib/retrieval.mjs";
@@ -17,6 +18,40 @@ import { createIngestion } from "./lib/ingest.mjs";
 import { createHistorian, activeProvider } from "./lib/historian.mjs";
 import { CONNECTORS, connectorStatus } from "./lib/connectors/index.mjs";
 import { REVIEW_ACTIONS, parseJson, nameKey } from "./lib/core.mjs";
+import { createRfp, bustRfpIndex, STRENGTH, MAX_FILE_BYTES } from "./lib/rfp.mjs";
+import { CATEGORIES, SENSITIVE_CATEGORIES } from "./lib/rfp-extract.mjs";
+import { FORMATS } from "./lib/docparse.mjs";
+
+// Raw file transfer for RFP documents: Kinetic attachments go through the multipart submission endpoint and come back as
+// bytes, which the launcher's JSON helper cannot carry. Same caller credentials, same Kinetic server.
+function rfpFiles(target, auth, kapp) {
+  const flat = (s) => ({ _id: s.id, _createdAt: s.createdAt, _createdBy: s.createdBy, _updatedAt: s.updatedAt, _updatedBy: s.updatedBy, ...s.values });
+  // the multipart JSON part is decoded with the JVM default charset: escape everything non-ASCII (see location-scout)
+  const ascii = (o) => JSON.stringify(o).replace(/[\u007f-\uffff]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  return {
+    async upload(form, values, file) {
+      // a fixed-length multipart body (Kinetic does not read a chunked FormData stream)
+      const boundary = "----cbrfp" + crypto.randomBytes(12).toString("hex");
+      const safeName = String(file.name).replace(/["\r\n]/g, "_");
+      const body = Buffer.concat([
+        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="_submission"\r\nContent-Type: application/json\r\n\r\n${ascii({ values })}\r\n`),
+        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="Original File"; filename="${safeName}"\r\nContent-Type: ${file.type || "application/octet-stream"}\r\n\r\n`),
+        file.buf, Buffer.from(`\r\n--${boundary}--\r\n`)]);
+      const r = await fetch(`${target}/app/api/v1/kapps/${kapp}/forms/${form}/submissions-multipart?completed=true&include=values,details`,
+        { method: "POST", headers: { Authorization: auth, "Content-Type": `multipart/form-data; boundary=${boundary}`, "Content-Length": String(body.length) }, body });
+      const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = { error: t.slice(0, 200) }; }
+      if (!r.ok) throw Object.assign(new Error(`storing the original file failed (${r.status}): ${d.error || d.message || ""}`), { status: r.status === 403 ? 403 : 502 });
+      return flat({ ...d.submission, values: { ...values, ...(d.submission?.values || {}) } });
+    },
+    async download(doc) {
+      const f = (Array.isArray(doc["Original File"]) ? doc["Original File"] : parseJson(doc["Original File"], []))[0];
+      const name = f?.name || doc["File Name"];
+      const r = await fetch(`${target}/app/api/v1/submissions/${encodeURIComponent(doc._id)}/files/${encodeURIComponent("Original File")}/0/${encodeURIComponent(name)}`, { headers: { Authorization: auth } });
+      if (!r.ok) throw Object.assign(new Error(`The original file could not be read (${r.status})`), { status: r.status === 404 ? 404 : 502 });
+      return Buffer.from(await r.arrayBuffer());
+    },
+  };
+}
 
 export const appId = "corporate-brain";
 export const apiPrefix = "/api/corporate-brain";
@@ -77,14 +112,19 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     me = me.me;
     // mirrors CB Restricted Source: non-reviewers only ever query the sources they may see
     if (!me.roles.reviewer) store.setScope("sources", `values[Access Scope] = "internal"`);
+    // RFP Intelligence rows carry their own scope, judged by the same policy (CB Restricted Source)
+    if (!me.roles.reviewer) for (const f of RFP_SCOPED_FORMS) store.setScope(f, `values[Access Scope] = "internal"`);
     const agentName = String(req.headers["x-cb-agent"] || "").replace(/[^\w .:@()-]/g, "").slice(0, 60);
     const actor = agentName
       ? { username: me.username, type: "agent", label: `${agentName} (for ${me.username})` }
       : { username: me.username, type: "user", label: me.username };
     const services = createServices(store, actor);
-    const retrieval = createRetrieval(store);
+    let rfp = null;   // RFP Intelligence (assigned below); retrieval reaches it lazily for historical RFP questions
+    const retrieval = createRetrieval(store, { rfp: { search: (x) => rfp.search(x) } });
     const ingestion = createIngestion(store, services, { kineticRequest, auth, actor });
     const historian = createHistorian(store, services, retrieval);
+    const target = (helpers.kineticTarget ? helpers.kineticTarget() : "") || req.headers["x-kinetic-server"] || process.env.KINETIC_URL || "";
+    rfp = createRfp(store, services, ingestion, { actor, me, scopeKey, files: rfpFiles(String(target).replace(/\/+$/, ""), auth, kapp) });
     const requireMember = () => { if (!me.roles.member) throw Object.assign(new Error("Corporate Brain is private. Ask an administrator to add you to Corporate Brain::Members."), { status: 403 }); };
     const requireReviewer = () => { if (!me.roles.reviewer) throw Object.assign(new Error("Only Corporate Brain reviewers can do this"), { status: 403 }); };
     const bust = () => { statsCache.delete(scopeKey); tlCache.clear(); };
@@ -164,6 +204,8 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const form = m[1]; const def = FORM_BY_SLUG[form];
       if (!def) return send(404, { error: `Unknown entity form ${form}` });
       if (form === "deal-pricing") return send(404, { error: "Deal prices are read and written through their deal: /sales/deal/{id}" });
+      // RFP Intelligence keeps its invariants (exact text, verified citations, immutable confirmed answers) in /rfp/…
+      if (RFP_FORMS.has(form) && method !== "GET") return send(400, { error: "RFP Intelligence records are written through /rfp/… so citations and approvals stay verifiable" });
       if (method === "GET") {
         const parts = []; let orderBy = "";
         const filt = (field, val) => { if (val) parts.push(`values[${field}] = ${kq(val)}`); };
@@ -215,6 +257,7 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const [, form, subId] = m; const def = FORM_BY_SLUG[form];
       if (!def) return send(404, { error: `Unknown entity form ${form}` });
       if (form === "deal-pricing") return send(404, { error: "Deal prices are read and written through their deal: /sales/deal/{id}" });
+      if (RFP_FORMS.has(form) && method !== "GET") return send(400, { error: "RFP Intelligence records are written through /rfp/… so citations and approvals stay verifiable" });
       const cur = await store.bySubmissionId(subId);
       if (!cur || cur._form !== form) return send(404, { error: "Record not found" });
       if (method === "GET") return send(200, { item: cur });
@@ -435,6 +478,93 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       const job = await ingestion.createJob({ title: b.title || `Research: ${b.question}`.slice(0, 200), jobType: "research", connector: "", scope: { question: b.question, openQuestions: b.openQuestions || [] }, subjectType: b.subjectType || "", subjectId: b.subjectId || "" });
       await store.update(job._id, { "Open Questions": JSON.stringify(b.openQuestions || []) });
       bust(); return send(201, { job });
+    }
+
+    // ── RFP Intelligence ──
+    if (route.startsWith("/rfp/")) {
+      const r = route.slice(4);
+      const off = () => +qp("offset") || 0;
+      const done = (x, status = 200) => { if (method !== "GET") { bust(); } return send(status, x); };
+      if (r === "/meta" && method === "GET") return send(200, { categories: CATEGORIES, sensitive: [...SENSITIVE_CATEGORIES], strength: STRENGTH.map(([name, min, meaning]) => ({ name, min, meaning })),
+        formats: FORMATS, maxFileMB: MAX_FILE_BYTES / 1024 / 1024, canApprove: me.roles.reviewer });
+      if (r === "/summary" && method === "GET") return send(200, await rfp.summary());
+      if (r === "/sources" && method === "GET") {
+        let items = await rfp.allRfps();
+        const lib = qp("library") || "historical";
+        items = items.filter(x => (lib === "all" || (x["Library Status"] || "historical") === lib) && (!qp("type") || x["Procurement Type"] === qp("type")) && (!qp("status") || (x["Opportunity Status"] || "unknown") === qp("status"))
+          && (!qp("q") || `${x["Opportunity Name"]} ${x["Customer Name"]} ${x["Solicitation Number"]}`.toLowerCase().includes(qp("q").toLowerCase())));
+        const key = qp("sort") || "received";
+        const field = { received: "Received At", due: "Due At", submitted: "Submitted At", name: "Opportunity Name", customer: "Customer Name", questions: "Question Count" }[key] || "Received At";
+        items.sort((a, b) => field === "Question Count" ? (+b[field] || 0) - (+a[field] || 0) : field.endsWith("At") ? String(b[field] || "").localeCompare(String(a[field] || "")) : String(a[field] || "").localeCompare(String(b[field] || "")));
+        return send(200, { items: items.slice(off(), off() + 25), total: items.length, offset: off(), next: off() + 25 < items.length ? off() + 25 : null });
+      }
+      if (r === "/sources" && method === "POST") { const b = await body(); return done({ item: await rfp.createRfp({ ...(b.values || {}), restricted: !!b.restricted }) }, 201); }
+      if ((m = r.match(/^\/sources\/([\w-]+)$/))) {
+        if (method === "GET") { const d = await rfp.getRfp(m[1]); return d ? send(200, d) : send(404, { error: "RFP not found or not visible to you" }); }
+        if (method === "PUT") { const b = await body(); return done({ item: await rfp.updateRfp(m[1], b.values || {}) }); }
+      }
+      if (r === "/import" && method === "POST") {
+        const b = await body();
+        return done(await rfp.importDocument({ rfpId: b.rfpId, rfp: b.rfp, file: b.file, role: b.role, origin: b.origin, documentDate: b.documentDate || "", restricted: !!b.restricted }), 201);
+      }
+      if ((m = r.match(/^\/documents\/([\w-]+)$/)) && method === "GET") { const d = await rfp.documentRows(m[1]); return d ? send(200, d) : send(404, { error: "Document not found or not visible to you" }); }
+      if ((m = r.match(/^\/documents\/([\w-]+)\/file$/)) && method === "GET") {
+        const d = await store.byId("rfp-documents", m[1]); if (!d) return send(404, { error: "Document not found or not visible to you" });
+        const buf = await rfpFiles(String(target).replace(/\/+$/, ""), auth, kapp).download(d);
+        const type = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", csv: "text/csv", text: "text/plain" }[d["File Type"]] || "application/octet-stream";
+        res.writeHead(200, { "Content-Type": type, "Content-Length": buf.length, "Content-Disposition": `inline; filename="${String(d["File Name"]).replace(/[^\w .()-]/g, "_")}"`, "Cache-Control": "private, no-store" });
+        res.end(buf); return true;
+      }
+      if ((m = r.match(/^\/documents\/([\w-]+)\/extract$/)) && method === "POST") {
+        const d = await store.byId("rfp-documents", m[1]); if (!d) return send(404, { error: "Document not found" });
+        rfp.runExtraction(m[1]).catch(e => console.error("[corporate-brain] rfp extraction", m[1], e.message));
+        return send(202, { started: true });
+      }
+      if ((m = r.match(/^\/documents\/([\w-]+)\/confirm$/)) && method === "POST") { const b = await body(); return done(await rfp.confirmRows(m[1], { questionIds: b.questionIds || [], all: !!b.all })); }
+      if (r === "/questions" && method === "GET") return send(200, await rfp.listQuestions({ rfpId: qp("rfpId"), documentId: qp("documentId"), status: qp("status"), category: qp("category"), answer: qp("answer"), canonical: qp("canonical"), offset: off() }));
+      if ((m = r.match(/^\/questions\/([\w-]+)$/))) {
+        if (method === "GET") { const d = await rfp.questionDetail(m[1]); return d ? send(200, d) : send(404, { error: "Question not found or not visible to you" }); }
+        if (method === "POST") { const b = await body(); return done(await rfp.updateRow(m[1], b)); }
+      }
+      if ((m = r.match(/^\/answers\/([\w-]+)\/correct$/)) && method === "POST") { const b = await body(); return done(await rfp.correctAnswer(m[1], b)); }
+      if (r === "/answers" && method === "GET") return send(200, await rfp.listHistorical({ status: qp("status"), rfpId: qp("rfpId"), offset: off() }));
+      if (r === "/search" && method === "GET") return send(200, await rfp.search({ q: qp("q"), category: qp("category"), rfpId: qp("rfpId"), customer: qp("customer"), from: qp("from"), to: qp("to"), answered: qp("answered"), offset: off() }));
+      if (r === "/retrieve" && method === "GET") return send(200, await rfp.retrieve({ q: qp("q"), limit: +qp("limit") || 10, includeDrafts: qp("drafts") === "1" }));
+      if (r === "/canonical" && method === "GET") {
+        const items = (await store.collect("canonical-questions", `values[Record Status] = "active"`, { maxPages: 40 })).items.filter(c => !qp("category") || c.Category === qp("category"))
+          .sort((a, b) => (+b["Question Count"] || 0) - (+a["Question Count"] || 0));
+        return send(200, { items: items.slice(off(), off() + 25), total: items.length, offset: off(), next: off() + 25 < items.length ? off() + 25 : null });
+      }
+      if (r === "/canonical" && method === "POST") { const b = await body(); return done({ item: await rfp.createCanonical(b) }, 201); }
+      if (r === "/canonical/suggest" && method === "GET") return send(200, await rfp.suggestGroups({ category: qp("category") }));
+      if ((m = r.match(/^\/canonical\/([\w-]+)\/link$/)) && method === "POST") { const b = await body(); return done(await rfp.linkCanonical(m[1], b.questionIds || [], { unlink: !!b.unlink })); }
+      if (r === "/approved" && method === "GET") return send(200, await rfp.listApproved({ status: qp("status"), category: qp("category"), offset: off() }));
+      if (r === "/approved" && method === "POST") { const b = await body(); return done({ item: await rfp.createApproved(b.values || {}) }, 201); }
+      if (r === "/approved/promote" && method === "POST") { const b = await body(); return done({ item: await rfp.promote(b) }, 201); }
+      if ((m = r.match(/^\/approved\/([\w-]+)$/))) {
+        if (method === "GET") { const d = await rfp.approvedDetail(m[1]); return d ? send(200, d) : send(404, { error: "Approved answer not found" }); }
+        if (method === "PUT") { const b = await body(); return done({ item: await rfp.updateApproved(m[1], b.values || {}) }); }
+      }
+      if ((m = r.match(/^\/approved\/([\w-]+)\/(submit|approve|reject|outdate|supersede|historical-only|reopen)$/)) && method === "POST") {
+        const b = await body(); return done({ item: await rfp.transitionApproved(m[1], m[2], b) });
+      }
+      if (r === "/analyses" && method === "GET") {
+        const items = (await store.collect("rfp-analyses", `values[Record Status] = "active"`, { maxPages: 8 })).items.sort((a, b) => String(b._createdAt).localeCompare(a._createdAt));
+        return send(200, { items: items.slice(off(), off() + 25), total: items.length, next: off() + 25 < items.length ? off() + 25 : null });
+      }
+      if (r === "/analyses" && method === "POST") { const b = await body(); return done(await rfp.createAnalysis(b), 201); }
+      if ((m = r.match(/^\/analyses\/([\w-]+)$/)) && method === "GET") {
+        const an = await store.byId("rfp-analyses", m[1]); if (!an) return send(404, { error: "Analysis not found" });
+        return send(200, { analysis: an, ...(await rfp.analysisItems(m[1], { filter: qp("filter"), offset: off() })) });
+      }
+      if ((m = r.match(/^\/analyses\/([\w-]+)\/run$/)) && method === "POST") { rfp.runAnalysis(m[1]).catch(e => console.error("[corporate-brain] rfp analysis", m[1], e.message)); return send(202, { started: true }); }
+      if ((m = r.match(/^\/analyses\/([\w-]+)\/export\.csv$/)) && method === "GET") {
+        const csv = await rfp.exportCsv(m[1]);
+        res.writeHead(200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="requirements-matrix-${m[1]}.csv"`, "Cache-Control": "private, no-store" });
+        res.end(csv); return true;
+      }
+      if ((m = r.match(/^\/analysis-items\/([\w-]+)\/review$/)) && method === "POST") { const b = await body(); return done({ item: await rfp.reviewItem(m[1], b) }); }
+      return send(404, { error: `Unknown RFP Intelligence route ${r}` });
     }
 
     if (route === "/audit" && method === "GET") {

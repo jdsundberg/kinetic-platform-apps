@@ -143,6 +143,17 @@ Kapp `corporate-brain`, 12 forms. The only source of truth is `model.mjs`; `node
 - `partner-models`: `Partner Model ID`*, `Name`*, `Partner Type`, `Start Date`, `End Date`, `Terms`, `Partner Company IDs`, `Rationale`
 - `knowledge-entries` gains `Lens` (`sales`, or empty) and the index `[Lens, Review Status]` for the sales review queue.
 
+## RFP Intelligence forms (see RFP_INTELLIGENCE.md)
+- `rfp-sources`: `RFP Source ID`*, `Opportunity Name`*, `Customer Name`, `Company ID`, `Solicitation Number`, `Procurement Type`, `Received At`, `Due At`, `Submitted At`, `Opportunity Status`, `Status Basis`, `Deal ID`, `Library Status`, `Document IDs`, `Question Count`, `Answered Count`, `Approved Count`, `Notes`, `Access Scope`
+- `rfp-documents`: `Document ID`*, `RFP Source ID`*, `File Name`*, `File Type`, `Document Role`, `Revision`, `Supersedes Document ID`, `Content Hash`, `Document Key` (unique), `Source ID`, `Original URL`, `Original File` (attachment), `File Size`, `Page Count`, `Document Date`, `Extraction Status`, `Extraction Notes`, counts, `Import Job ID`, `Access Scope`
+- `rfp-questions`: `Question ID`*, `RFP Source ID`*, `Document ID`, `Question Number`, `Question Text Original`, `Question Text Normalized`, `Question Key`, `Row Key` (unique), `Sequence`, `Section`, `Subsection`, `Category`, `Tags`, `Category Source`, `Source Location`, `Location Label`, `Requirement Level`, `Requirement Basis`, `Extraction Status`, `Extraction Reason`, `Answer Status`, `Answer Preview`, `Latest Answer ID`, `Possible Duplicate Of`, `Duplicate Score`, `Canonical Question ID`, `Citation Verified`, `Confirmed By`, `Confirmed At`, `Access Scope`
+- `rfp-answers`: `Answer ID`*, `Question ID`*, `RFP Source ID`, `Document ID`, `Answer Text Original`, `Answer Parts`, `Compliance`, `Answer Date`, `Date Precision`, `Source Location`, `Location Label`, `Document Version`, `Product Version`, `Answer Status`, `Answer Key` (unique), `Citation Verified`, `Confirmed By`, `Confirmed At`, `Revision Of`, `Correction Note`, `Access Scope`
+- `canonical-questions`: `Canonical Question ID`*, `Canonical Question`*, `Subject Key`, `Category`, `Tags`, `Description`, `Question Count`
+- `approved-answers`: `Approved Answer ID`*, `Canonical Question ID`, `Canonical Question`, `Approved Answer`, `Category`, `Product Versions`, `Deployment Conditions`, `Applicable Environments`, `Evidence References`, `Historical Answer IDs`, `Owner`, `Approval Status`, `Sensitive`, `Approved By`, `Approved At`, `Review Due At`, `Superseded By`, `Supersedes`, `Knowledge ID`, `Review History`
+- `rfp-analyses`: `Analysis ID`*, `Title`*, `RFP Source ID`, `Customer Name`, `Solicitation Number`, `Due At`, `Document IDs`, `Status`, counts, `Job ID`, `Notes`
+- `rfp-analysis-items`: `Analysis Item ID`*, `Analysis ID`*, `Sequence`, `Question Number`, `Question Text Original`, `Section`, `Requirement Level`, `Requirement Basis`, `Source Location`, `Location Label`, `Document ID`, `Category`, `Draft Answer`, `Draft Basis`, `Content Class`, `Approved Answer IDs`, `Matched Questions`, `Citations`, `Match Strength`, `Match Score`, `Conflicts`, `Review Status`, `Final Answer`, `Reviewed By`, `Reviewed At`
+- `knowledge-entries`: Lens `rfp` and Knowledge Type `approved-answer` for approved answers (evidence required to verify).
+
 ## Indexes
 `deploy.mjs` merges these with existing definitions plus the system indexes (`createdBy`, `updatedBy`, `submittedBy`, `closedBy`, and unique `handle`).
 

@@ -13,6 +13,8 @@ const f = (name, opts = {}) => ({ name, ...opts });
 const long = name => f(name, { rows: 4 });
 const PROV = [f("Record Status"), long("Source IDs"), f("Created Via")];
 const SALES_REVIEW = [f("Knowledge ID"), f("Verification Status")];
+// RFP Intelligence rows carry their own Access Scope so the CB Restricted Source policy can judge each submission.
+const SCOPED = [f("Access Scope")];
 
 export const FORMS = [
   {
@@ -211,6 +213,97 @@ export const FORMS = [
     single: ["values[Verification Status]", "values[Partner Type]", "values[Knowledge ID]", "values[Record Status]"],
     compound: [["values[Verification Status]", "values[Partner Type]"]],
   },
+  // ── RFP Intelligence: every question Kinetic has been asked in a procurement, the exact answer it gave and where
+  // that answer sits in the original document. Historical answers are evidence; approved answers are current knowledge.
+  {
+    slug: "rfp-sources", name: "RFP Sources", idField: "RFP Source ID", label: "Opportunity Name",
+    description: "A procurement (RFP, RFQ, RFI, questionnaire) and its documents; unknown dates and outcomes stay unknown",
+    fields: [f("RFP Source ID", { required: true }), f("Opportunity Name", { required: true }), f("Customer Name"), f("Company ID"),
+      f("Solicitation Number"), f("Procurement Type"), f("Received At"), f("Due At"), f("Submitted At"), f("Opportunity Status"),
+      long("Status Basis"), f("Deal ID"), f("Library Status"), long("Document IDs"), f("Question Count"), f("Answered Count"), f("Approved Count"),
+      long("Notes"), ...SCOPED, ...PROV],
+    unique: ["values[RFP Source ID]"],
+    single: ["values[Record Status]", "values[Company ID]", "values[Solicitation Number]", "values[Access Scope]", "values[Procurement Type]", "values[Library Status]"],
+    compound: [["values[Access Scope]", "values[Record Status]"]],
+  },
+  {
+    slug: "rfp-documents", name: "RFP Documents", idField: "Document ID", label: "File Name",
+    description: "One revision of one procurement document; the original file is kept as an attachment and never changed",
+    fields: [f("Document ID", { required: true }), f("RFP Source ID", { required: true }), f("File Name", { required: true }), f("File Type"),
+      f("Document Role"), f("Revision"), f("Supersedes Document ID"), f("Content Hash"), f("Document Key"), f("Source ID"), f("Original URL"),
+      f("Original File", { renderType: "attachment", allowMultiple: false }), f("File Size"), f("Page Count"), f("Document Date"), f("Extraction Status"), long("Extraction Notes"),
+      f("Question Count"), f("Answered Count"), f("Needs Review Count"), f("Import Job ID"), ...SCOPED, ...PROV],
+    unique: ["values[Document ID]", "values[Document Key]"],
+    single: ["values[RFP Source ID]", "values[Source ID]", "values[Content Hash]", "values[Extraction Status]", "values[Record Status]", "values[Access Scope]"],
+    compound: [["values[Access Scope]", "values[RFP Source ID]"]],
+  },
+  {
+    slug: "rfp-questions", name: "RFP Questions", idField: "Question ID", label: "Question Number",
+    description: "A question exactly as a procurement asked it, where it sits in the document, and its extraction review state",
+    fields: [f("Question ID", { required: true }), f("RFP Source ID", { required: true }), f("Document ID"), f("Question Number"),
+      long("Question Text Original"), long("Question Text Normalized"), f("Question Key"), f("Row Key"), f("Sequence"), f("Section"), f("Subsection"),
+      f("Category"), f("Tags"), f("Category Source"), long("Source Location"), f("Location Label"), f("Requirement Level"), f("Requirement Basis"),
+      f("Extraction Status"), long("Extraction Reason"), f("Answer Status"), long("Answer Preview"), f("Latest Answer ID"), f("Possible Duplicate Of"),
+      f("Duplicate Score"), f("Canonical Question ID"), f("Citation Verified"), f("Confirmed By"), f("Confirmed At"), ...SCOPED, ...PROV],
+    unique: ["values[Question ID]", "values[Row Key]"],
+    single: ["values[RFP Source ID]", "values[Document ID]", "values[Canonical Question ID]", "values[Question Key]", "values[Extraction Status]",
+      "values[Category]", "values[Access Scope]", "values[Record Status]"],
+    compound: [["values[Access Scope]", "values[RFP Source ID]"], ["values[Access Scope]", "values[Document ID]"],
+      ["values[Access Scope]", "values[Canonical Question ID]"], ["values[Access Scope]", "values[Question Key]"]],
+  },
+  {
+    slug: "rfp-answers", name: "RFP Historical Answers", idField: "Answer ID", label: "Answer ID",
+    description: "The exact answer Kinetic gave (or drafted) in one document revision; immutable once confirmed — corrections are new revisions",
+    fields: [f("Answer ID", { required: true }), f("Question ID", { required: true }), f("RFP Source ID"), f("Document ID"),
+      long("Answer Text Original"), long("Answer Parts"), long("Compliance"), f("Answer Date"), f("Date Precision"), long("Source Location"),
+      f("Location Label"), f("Document Version"), f("Product Version"), f("Answer Status"), f("Answer Key"), f("Citation Verified"),
+      f("Confirmed By"), f("Confirmed At"), f("Revision Of"), long("Correction Note"), ...SCOPED, ...PROV],
+    unique: ["values[Answer ID]", "values[Answer Key]"],
+    single: ["values[Question ID]", "values[RFP Source ID]", "values[Document ID]", "values[Answer Status]", "values[Access Scope]", "values[Record Status]"],
+    compound: [["values[Access Scope]", "values[Question ID]"], ["values[Access Scope]", "values[Document ID]"], ["values[Access Scope]", "values[RFP Source ID]"]],
+  },
+  {
+    slug: "canonical-questions", name: "Canonical Questions", idField: "Canonical Question ID", label: "Canonical Question",
+    description: "One subject many historical questions share; each keeps its own wording and its own answers",
+    fields: [f("Canonical Question ID", { required: true }), f("Canonical Question", { required: true }), f("Subject Key"), f("Category"), f("Tags"),
+      long("Description"), f("Question Count"), ...PROV],
+    unique: ["values[Canonical Question ID]"],
+    single: ["values[Record Status]", "values[Category]", "values[Subject Key]"],
+    compound: [],
+  },
+  {
+    slug: "approved-answers", name: "Approved Answers", idField: "Approved Answer ID", label: "Canonical Question",
+    description: "Current reusable answers, approved by a reviewer for stated product versions and environments, with evidence and a review date",
+    fields: [f("Approved Answer ID", { required: true }), f("Canonical Question ID"), f("Canonical Question"), long("Approved Answer"), f("Category"),
+      f("Product Versions"), long("Deployment Conditions"), f("Applicable Environments"), long("Evidence References"), long("Historical Answer IDs"),
+      f("Owner"), f("Approval Status"), f("Sensitive"), f("Approved By"), f("Approved At"), f("Review Due At"), f("Superseded By"), f("Supersedes"),
+      f("Knowledge ID"), long("Review History"), ...PROV],
+    unique: ["values[Approved Answer ID]"],
+    single: ["values[Canonical Question ID]", "values[Approval Status]", "values[Category]", "values[Knowledge ID]", "values[Record Status]", "values[Owner]"],
+    compound: [["values[Approval Status]", "values[Category]"]],
+  },
+  {
+    slug: "rfp-analyses", name: "RFP Analyses", idField: "Analysis ID", label: "Title",
+    description: "A new RFP analysed against the question library: a reviewable requirements matrix of AI-generated drafts",
+    fields: [f("Analysis ID", { required: true }), f("Title", { required: true }), f("RFP Source ID"), f("Customer Name"), f("Solicitation Number"),
+      f("Due At"), long("Document IDs"), f("Status"), f("Item Count"), f("Drafted Count"), f("No Evidence Count"), f("Conflict Count"),
+      f("Job ID"), long("Notes"), ...PROV],
+    unique: ["values[Analysis ID]"],
+    single: ["values[Record Status]", "values[Status]", "values[RFP Source ID]"],
+    compound: [],
+  },
+  {
+    slug: "rfp-analysis-items", name: "RFP Analysis Items", idField: "Analysis Item ID", label: "Question Number",
+    description: "One requirement of a new RFP with its AI-generated draft, the evidence it used and its review",
+    fields: [f("Analysis Item ID", { required: true }), f("Analysis ID", { required: true }), f("Sequence"), f("Question Number"),
+      long("Question Text Original"), f("Section"), f("Requirement Level"), f("Requirement Basis"), long("Source Location"), f("Location Label"),
+      f("Document ID"), f("Category"), long("Draft Answer"), f("Draft Basis"), f("Content Class"), long("Approved Answer IDs"), long("Matched Questions"),
+      long("Citations"), f("Match Strength"), f("Match Score"), long("Conflicts"), f("Review Status"), long("Final Answer"), f("Reviewed By"),
+      f("Reviewed At"), f("Record Status"), f("Created Via")],
+    unique: ["values[Analysis Item ID]"],
+    single: ["values[Analysis ID]", "values[Review Status]"],
+    compound: [["values[Analysis ID]", "values[Sequence]"]],
+  },
   {
     slug: "audit-log", name: "Audit Log", idField: "Audit ID", label: "Action",
     description: "Append-only record of material changes by users and agents (review decisions, merges, ingestion writes)",
@@ -232,7 +325,15 @@ export const ENTITY_FORMS = {
   decision: "decisions", knowledge: "knowledge-entries", source: "sources", project: "projects", product: "products", job: "research-jobs",
   principle: "sales-principles", pricingmodel: "pricing-models", deal: "deals", objection: "sales-objections",
   competitor: "competitors", partnermodel: "partner-models",
+  rfp: "rfp-sources", rfpdocument: "rfp-documents", rfpquestion: "rfp-questions", rfpanswer: "rfp-answers",
+  canonical: "canonical-questions", approvedanswer: "approved-answers", rfpanalysis: "rfp-analyses",
 };
+// RFP Intelligence forms whose rows carry Access Scope (members only ever see "internal" rows)
+export const RFP_SCOPED_FORMS = ["rfp-sources", "rfp-documents", "rfp-questions", "rfp-answers"];
+export const RFP_FORMS = new Set([...RFP_SCOPED_FORMS, "canonical-questions", "approved-answers", "rfp-analyses", "rfp-analysis-items"]);
+export const PROCUREMENT_TYPES = ["rfp", "rfq", "rfi", "questionnaire", "other"];
+export const DOCUMENT_ROLES = ["response", "solicitation", "combined", "reference"];
+export const APPROVAL_STATUSES = ["draft", "needs-review", "approved", "outdated", "superseded", "historical-only"];
 
 // Sales lens: entity type → its form and the Knowledge Type of the entry that carries its review.
 // Deal pricing is deliberately not an entity type: it is only reachable through its deal, by permitted roles.
@@ -253,11 +354,13 @@ export const ID_PREFIX = {
   "knowledge-entries": "KN", sources: "SR", projects: "PR", products: "PD", "research-jobs": "JB", "audit-log": "AU",
   "sales-principles": "SP", "pricing-models": "PM", deals: "DL", "deal-pricing": "DP", "sales-objections": "OB",
   competitors: "CP", "partner-models": "PT",
+  "rfp-sources": "RS", "rfp-documents": "RD", "rfp-questions": "RQ", "rfp-answers": "RA", "canonical-questions": "CQ",
+  "approved-answers": "AA", "rfp-analyses": "AN", "rfp-analysis-items": "AI",
 };
 
 export const REVIEW_STATUSES = ["proposed", "verified", "disputed", "rejected", "superseded", "needs-research"];
 export const KNOWLEDGE_TYPES = ["fact", "interpretation", "narrative", "lesson", "claim", "commitment", "recollection", "summary",
-  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model"];
+  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model", "approved-answer"];
 export const DATE_PRECISIONS = ["exact", "month", "year", "approximate", "unknown"];
 
 export function toAppJson() {

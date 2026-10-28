@@ -3,7 +3,7 @@
 // Creates what is missing and adds what is new; never deletes forms, fields, indexes or submissions.
 //   1. kapp            2. teams (Members / Reviewers / Admins)   3. security policy definitions
 //   4. forms + fields  5. index definitions (merged, unique flags) + build   6. kapp/form security policies
-import { FORMS, KAPP, SALES_FORMS, toAppJson } from "./model.mjs";
+import { FORMS, KAPP, SALES_FORMS, RFP_SCOPED_FORMS, toAppJson } from "./model.mjs";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -53,6 +53,15 @@ export const POLICIES = [
     message: "Only reviewers can change a sales record after it has been reviewed." },
   { name: "CB Deal Pricing", type: "Submission", rule: `(${IS_MEMBER}) && (${IS_PRICING})`,
     message: "Deal prices are visible only to the Sales, Legal and Executive teams and Corporate Brain reviewers." },
+  // RFP Intelligence: a historical answer is evidence — once confirmed only a reviewer may touch it (and the server only
+  // ever changes its status: corrections are new revisions). Restricted RFP rows stay reviewer-only, as for sources.
+  { name: "CB RFP Answer Modification", type: "Submission",
+    rule: `((${IS_REVIEWER}) || ((${IS_MEMBER}) && values('Access Scope') !== 'restricted' && ['candidate','needs_review'].indexOf(values('Answer Status')) >= 0))`,
+    message: "A confirmed historical answer cannot be changed. A reviewer can record a correction as a new revision." },
+  // Approved answers are current organizational knowledge: members draft them, only reviewers change one once submitted.
+  { name: "CB Approved Answer Modification", type: "Submission",
+    rule: `(${IS_REVIEWER}) || ((${IS_MEMBER}) && ['draft',''].indexOf(values('Approval Status')) >= 0)`,
+    message: "Only reviewers can change an approved answer after it has been submitted for review." },
 ];
 
 function buildPages(fields) {
@@ -61,6 +70,11 @@ function buildPages(fields) {
   return [{ name: "Page 1", type: "page", renderType: "submittable", elements, events: [] }];
 }
 function fieldElement(f) {
+  // Attachment fields use dataType "file" and must not carry `rows` (Kinetic answers 400 Invalid Form otherwise)
+  if (f.attachment || f.renderType === "attachment") return { type: "field", name: f.name, label: f.name, key: crypto.randomBytes(16).toString("hex"), dataType: "file",
+    renderType: "attachment", enabled: true, visible: true, required: !!f.required, allowMultiple: false, constraints: [], events: [],
+    renderAttributes: {}, defaultDataSource: "none", defaultValue: null, defaultResourceName: null, requiredMessage: null,
+    omitWhenHidden: null, pattern: null };
   return { type: "field", name: f.name, label: f.name, key: crypto.randomBytes(16).toString("hex"), dataType: "string",
     renderType: "text", enabled: true, visible: true, required: !!f.required, rows: f.rows || 1, constraints: [], events: [],
     renderAttributes: {}, defaultDataSource: "none", defaultValue: "", defaultResourceName: "", requiredMessage: "",
@@ -162,6 +176,9 @@ async function main() {
     "audit-log": [{ endpoint: "Submission Modification", name: "CB Append Only" }],
     "deal-pricing": [{ endpoint: "Submission Access", name: "CB Deal Pricing" }, { endpoint: "Submission Modification", name: "CB Deal Pricing" }],
     ...Object.fromEntries([...SALES_FORMS].map(f => [f, [{ endpoint: "Submission Modification", name: "CB Sales Modification" }]])),
+    ...Object.fromEntries(RFP_SCOPED_FORMS.map(f => [f, [{ endpoint: "Submission Access", name: "CB Restricted Source" },
+      { endpoint: "Submission Modification", name: f === "rfp-answers" ? "CB RFP Answer Modification" : "CB Restricted Source" }]])),
+    "approved-answers": [{ endpoint: "Submission Modification", name: "CB Approved Answer Modification" }],
   };
   for (const [slug, sp] of Object.entries(formPolicies)) {
     const r = await api("PUT", `/kapps/${KAPP.slug}/forms/${slug}`, { securityPolicies: sp });

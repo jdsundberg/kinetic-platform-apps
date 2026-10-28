@@ -54,7 +54,7 @@ const TRANSITIONS = {
 };
 // Knowledge types that assert something about the past and therefore need evidence to be verified.
 const EVIDENCE_REQUIRED = new Set(["fact", "narrative", "lesson", "summary", "interpretation", "commitment",
-  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model"]);
+  "principle", "pricing-model", "deal", "objection", "competitor", "partner-model", "approved-answer"]);
 
 // Extra conditions a sales record must meet before its knowledge entry can be verified (checked by the
 // review service, which loads the record). Returns an error message, or "" when the record qualifies.

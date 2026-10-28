@@ -18,7 +18,21 @@ export const SEARCHABLE = {
   decision: { form: "decisions", id: "Decision ID", title: "Title", text: ["Context", "Decision", "Rationale"], date: "Decision Date", status: "Verification Status", company: "Company ID" },
   source: { form: "sources", id: "Source ID", title: "Title", text: ["Excerpt", "Owner", "Source Type"], date: "Source Date", status: "Processing Status", company: "Company ID", kind: "Source System" },
   communication: { form: "communications", id: "Communication ID", title: "Subject", text: ["Summary", "Participants"], date: "Communication Date", company: "Company ID", kind: "Channel" },
+  // RFP Intelligence: historical questions (with the answer Kinetic gave at the time) and approved, reusable answers
+  rfpquestion: { form: "rfp-questions", id: "Question ID", title: "Question Text Original", text: ["Answer Preview", "Section", "Location Label"], status: "Extraction Status", kind: "Category" },
+  approvedanswer: { form: "approved-answers", id: "Approved Answer ID", title: "Canonical Question", text: ["Approved Answer", "Product Versions", "Applicable Environments"], status: "Approval Status", kind: "Category", date: "Approved At" },
 };
+
+// What a hit IS, so agents never mistake history or drafts for current verified fact.
+export function contentClass(type, rec) {
+  const st = (f) => String(rec[f] || "");
+  if (type === "rfpquestion") return "historical-evidence";
+  if (type === "approvedanswer") return st("Approval Status") === "approved" ? "current-approved" : ["superseded", "outdated"].includes(st("Approval Status")) ? "superseded" : "unapproved-draft";
+  if (type === "source" || type === "communication") return "evidence";
+  const v = st(type === "knowledge" ? "Review Status" : "Verification Status");
+  if (["knowledge", "event", "decision"].includes(type)) return v === "verified" ? "verified-knowledge" : v === "superseded" ? "superseded" : "unreviewed-proposal";
+  return "record";
+}
 
 const tokens = (s) => nameKey(s).split(" ").filter(t => t.length > 1);
 
@@ -29,7 +43,7 @@ function toHit(type, rec, score, matchedBy) {
     type, form: d.form, id: rec[d.id], submissionId: rec._id, title: rec[d.title] || "(untitled)",
     snippet: text.slice(0, 220), status: d.status ? rec[d.status] || "" : "", kind: d.kind ? rec[d.kind] || "" : "",
     date: d.date ? rec[d.date] || "" : "", companyId: d.company ? rec[d.company] || "" : (type === "company" ? rec[d.id] : ""),
-    score, matchedBy,
+    score, matchedBy, contentClass: contentClass(type, rec),
   };
 }
 
@@ -62,8 +76,14 @@ export const providers = {
   semantic: { name: "Native Kinetic semantic search", kind: "semantic", available: false, note: "Planned platform enhancement — see FUTURE_NATIVE_VECTOR_SEARCH.md" },
 };
 
-export function createRetrieval(store, { scanPages = 8 } = {}) {
+export function createRetrieval(store, { scanPages = 8, rfp = null } = {}) {
   async function searchType(type, q, f) {
+    // historical RFP questions are searched through the RFP index (the whole library the caller may see), not a recent-records scan
+    if (type === "rfpquestion" && rfp && q) {
+      const r = await rfp.search({ q, category: f.kind || "", limit: 25 });
+      return { hits: r.hits.map(h => ({ type, form: "rfp-questions", id: h.id, title: h.text, snippet: [h.answerPreview, h.rfp, h.location].filter(Boolean).join(" · ").slice(0, 220),
+        status: h.extractionStatus, kind: h.category, date: h.rfpDate, companyId: "", score: Math.round(h.score * 10 * 10) / 10, matchedBy: "rfp-index", contentClass: "historical-evidence" })), notes: [] };
+    }
     const d = SEARCHABLE[type]; const toks = tokens(q); const notes = [];
     let recs = [], matchedBy = "keyword", truncated = false;
     const sq = structuredQuery(type, f);
