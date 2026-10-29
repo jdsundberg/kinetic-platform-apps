@@ -18,7 +18,7 @@ import { createIngestion } from "./lib/ingest.mjs";
 import { createHistorian, activeProvider } from "./lib/historian.mjs";
 import { CONNECTORS, connectorStatus } from "./lib/connectors/index.mjs";
 import { REVIEW_ACTIONS, parseJson, nameKey } from "./lib/core.mjs";
-import { createRfp, bustRfpIndex, STRENGTH, MAX_FILE_BYTES } from "./lib/rfp.mjs";
+import { createRfp, bustRfpIndex, bustRfpLists, STRENGTH, MAX_FILE_BYTES } from "./lib/rfp.mjs";
 import { CATEGORIES, SENSITIVE_CATEGORIES } from "./lib/rfp-extract.mjs";
 import { FORMATS } from "./lib/docparse.mjs";
 
@@ -484,34 +484,27 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
     if (route.startsWith("/rfp/")) {
       const r = route.slice(4);
       const off = () => +qp("offset") || 0;
-      const done = (x, status = 200) => { if (method !== "GET") { bust(); } return send(status, x); };
+      const done = (x, status = 200) => { if (method !== "GET") { bust(); bustRfpLists(); } return send(status, x); };
       if (r === "/meta" && method === "GET") return send(200, { categories: CATEGORIES, sensitive: [...SENSITIVE_CATEGORIES], strength: STRENGTH.map(([name, min, meaning]) => ({ name, min, meaning })),
         formats: FORMATS, maxFileMB: MAX_FILE_BYTES / 1024 / 1024, canApprove: me.roles.reviewer });
       if (r === "/summary" && method === "GET") return send(200, await rfp.summary());
-      if (r === "/sources" && method === "GET") {
-        let items = await rfp.allRfps();
-        const lib = qp("library") || "historical";
-        items = items.filter(x => (lib === "all" || (x["Library Status"] || "historical") === lib) && (!qp("type") || x["Procurement Type"] === qp("type")) && (!qp("status") || (x["Opportunity Status"] || "unknown") === qp("status"))
-          && (!qp("q") || `${x["Opportunity Name"]} ${x["Customer Name"]} ${x["Solicitation Number"]}`.toLowerCase().includes(qp("q").toLowerCase())));
-        const key = qp("sort") || "received";
-        const field = { received: "Received At", due: "Due At", submitted: "Submitted At", name: "Opportunity Name", customer: "Customer Name", questions: "Question Count" }[key] || "Received At";
-        items.sort((a, b) => field === "Question Count" ? (+b[field] || 0) - (+a[field] || 0) : field.endsWith("At") ? String(b[field] || "").localeCompare(String(a[field] || "")) : String(a[field] || "").localeCompare(String(b[field] || "")));
-        return send(200, { items: items.slice(off(), off() + 25), total: items.length, offset: off(), next: off() + 25 < items.length ? off() + 25 : null });
-      }
+      if (r === "/sources" && method === "GET") return send(200, await rfp.listRfps({ library: qp("library"), type: qp("type"), status: qp("status"), q: qp("q"), sort: qp("sort"), pageToken: qp("pageToken") }));
       if (r === "/sources" && method === "POST") { const b = await body(); return done({ item: await rfp.createRfp({ ...(b.values || {}), restricted: !!b.restricted }) }, 201); }
       if ((m = r.match(/^\/sources\/([\w-]+)$/))) {
         if (method === "GET") { const d = await rfp.getRfp(m[1]); return d ? send(200, d) : send(404, { error: "RFP not found or not visible to you" }); }
         if (method === "PUT") { const b = await body(); return done({ item: await rfp.updateRfp(m[1], b.values || {}) }); }
       }
+      if ((m = r.match(/^\/sources\/([\w-]+)\/link-sources$/)) && method === "POST") { const b = await body(); return done(await rfp.linkSources(m[1], b.sourceIds || [])); }
       if (r === "/import" && method === "POST") {
         const b = await body();
         return done(await rfp.importDocument({ rfpId: b.rfpId, rfp: b.rfp, file: b.file, role: b.role, origin: b.origin, documentDate: b.documentDate || "", restricted: !!b.restricted }), 201);
       }
+      if (r === "/documents" && method === "GET") return send(200, await rfp.reviewDocuments({ pageToken: qp("pageToken") }));
       if ((m = r.match(/^\/documents\/([\w-]+)$/)) && method === "GET") { const d = await rfp.documentRows(m[1]); return d ? send(200, d) : send(404, { error: "Document not found or not visible to you" }); }
       if ((m = r.match(/^\/documents\/([\w-]+)\/file$/)) && method === "GET") {
         const d = await store.byId("rfp-documents", m[1]); if (!d) return send(404, { error: "Document not found or not visible to you" });
         const buf = await rfpFiles(String(target).replace(/\/+$/, ""), auth, kapp).download(d);
-        const type = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", csv: "text/csv", text: "text/plain" }[d["File Type"]] || "application/octet-stream";
+        const type = { pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", csv: "text/csv", text: "text/plain" }[d["File Type"]] || "application/octet-stream";
         res.writeHead(200, { "Content-Type": type, "Content-Length": buf.length, "Content-Disposition": `inline; filename="${String(d["File Name"]).replace(/[^\w .()-]/g, "_")}"`, "Cache-Control": "private, no-store" });
         res.end(buf); return true;
       }

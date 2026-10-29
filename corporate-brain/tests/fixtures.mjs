@@ -93,6 +93,55 @@ export function pdf(pages, { scannedPage = false } = {}) {
 }
 
 // A small fictional RFP response set used across tests.
+// Minimal Word 97 (.doc) writer: OLE compound file with WordDocument + 1Table streams, one compressed text piece and
+// one paragraph-property page. paras: [{ text, heading?: 1-9 } | { row: [cell, …] }] — table rows get cell + row-end marks.
+export function doc(paras) {
+  let text = ""; const props = [];   // [startChar, endChar, papx]
+  const papx = (istd, sprms = []) => { const b = Buffer.alloc(2 + sprms.length * 3); b.writeUInt16LE(istd, 0); sprms.forEach(([sp, v], i) => { b.writeUInt16LE(sp, 2 + i * 3); b[4 + i * 3] = v; }); return b; };
+  for (const p of paras) {
+    if (p.row) {
+      for (const c of p.row) { const s = text.length; text += c + "\x07"; props.push([s, text.length, papx(0, [[0x2416, 1]])]); }
+      const s = text.length; text += "\x07"; props.push([s, text.length, papx(0, [[0x2416, 1], [0x2417, 1]])]);
+    } else { const s = text.length; text += p.text + "\r"; props.push([s, text.length, p.heading ? papx(p.heading) : null]); }
+  }
+  const TEXT_AT = 1536, FKP_PN = 2;
+  const wd = Buffer.alloc(Math.max(4096, Math.ceil((TEXT_AT + text.length) / 512) * 512));
+  wd.writeUInt16LE(0xa5ec, 0); wd.writeUInt16LE(0x00c1, 2); wd.writeUInt16LE(0x0200, 0x0a);   // fWhichTblStm → 1Table
+  let o = 32; wd.writeUInt16LE(14, o); o += 2 + 28; wd.writeUInt16LE(22, o); const lw = o + 2; wd.writeInt32LE(text.length, lw + 12); o = lw + 88;
+  wd.writeUInt16LE(93, o); const fcl = o + 2;
+  const CP = "€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ";   // compressed pieces are cp1252
+  Buffer.from([...text].map(ch => CP.includes(ch) && ch > "\u00ff" ? 0x80 + CP.indexOf(ch) : ch.charCodeAt(0))).copy(wd, TEXT_AT);
+  // FKP: rgfc, BxPap (13 bytes each), PAPX stored from the end of the page down
+  const fkp = wd.subarray(FKP_PN * 512, FKP_PN * 512 + 512); const crun = props.length; let top = 510;
+  props.forEach(([s, e, px], r) => {
+    fkp.writeUInt32LE(TEXT_AT + s, r * 4); fkp.writeUInt32LE(TEXT_AT + e, r * 4 + 4);
+    if (!px) return;
+    const cb = Math.ceil((px.length + 1) / 2); top -= 2 * cb; top -= top % 2;
+    fkp[top] = cb; px.copy(fkp, top + 1); fkp[(crun + 1) * 4 + r * 13] = top / 2;
+  });
+  fkp[511] = crun;
+  // table stream: CLX (one compressed piece) + PlcBtePapx (one page)
+  const tbl = Buffer.alloc(4096);
+  tbl[0] = 0x02; tbl.writeUInt32LE(4 + 4 + 8, 1); tbl.writeUInt32LE(0, 5); tbl.writeUInt32LE(text.length, 9); tbl.writeUInt32LE((TEXT_AT * 2) | 0x40000000, 13 + 2);
+  const clxLen = 21, bte = 64;
+  tbl.writeUInt32LE(TEXT_AT, bte); tbl.writeUInt32LE(TEXT_AT + text.length, bte + 4); tbl.writeUInt32LE(FKP_PN, bte + 8);
+  wd.writeUInt32LE(0, fcl + 33 * 8); wd.writeUInt32LE(clxLen, fcl + 33 * 8 + 4); wd.writeUInt32LE(bte, fcl + 13 * 8); wd.writeUInt32LE(12, fcl + 13 * 8 + 4);
+  // compound file: header · FAT sector · directory sector · WordDocument · 1Table
+  const ss = 512, nWd = wd.length / ss, nTb = tbl.length / ss, END = 0xfffffffe, FREE = 0xffffffff;
+  const hdr = Buffer.alloc(ss, 0); hdr.writeUInt32LE(0xe011cfd0, 0); hdr.writeUInt32LE(0xe11ab1a1, 4); hdr.writeUInt16LE(0x3e, 0x18); hdr.writeUInt16LE(3, 0x1a); hdr.writeUInt16LE(0xfffe, 0x1c);
+  hdr.writeUInt16LE(9, 0x1e); hdr.writeUInt16LE(6, 0x20); hdr.writeUInt32LE(1, 0x2c); hdr.writeUInt32LE(1, 0x30); hdr.writeUInt32LE(4096, 0x38);
+  hdr.writeUInt32LE(END, 0x3c); hdr.writeUInt32LE(END, 0x44); for (let i = 0; i < 109; i++) hdr.writeUInt32LE(FREE, 0x4c + i * 4); hdr.writeUInt32LE(0, 0x4c);
+  const fat = Buffer.alloc(ss, 0xff); fat.writeUInt32LE(0xfffffffd, 0); fat.writeUInt32LE(END, 4);
+  const chain = (start, n) => { for (let i = 0; i < n; i++) fat.writeUInt32LE(i === n - 1 ? END : start + i + 1, (start + i) * 4); };
+  chain(2, nWd); chain(2 + nWd, nTb);
+  const dir = Buffer.alloc(ss, 0);
+  const entry = (i, name, type, start, size) => { const o = i * 128; Buffer.from(name + "\0", "utf16le").copy(dir, o); dir.writeUInt16LE((name.length + 1) * 2, o + 0x40); dir[o + 0x42] = type;
+    dir.writeUInt32LE(FREE, o + 0x44); dir.writeUInt32LE(FREE, o + 0x48); dir.writeUInt32LE(FREE, o + 0x4c); dir.writeUInt32LE(start, o + 0x74); dir.writeUInt32LE(size, o + 0x78); };
+  entry(0, "Root Entry", 5, END, 0); entry(1, "WordDocument", 2, 2, wd.length); entry(2, "1Table", 2, 2 + nWd, tbl.length);
+  dir.writeUInt32LE(1, 0x4c);   // root's child → WordDocument
+  return Buffer.concat([hdr, fat, dir, wd, tbl]);
+}
+
 export const SAMPLE = {
   docxResponse: () => docx([
     { h: 1, text: "3 Technical Requirements" },

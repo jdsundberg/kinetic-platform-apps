@@ -58,7 +58,7 @@ h1{font-size:20px;color:var(--blue);margin-bottom:4px}
 .card h2{font-size:15px;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .card h2 .muted{font-weight:500;font-size:12px}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.three-col{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:16px}
 @media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr}.gsearch input{width:130px}}
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--orange);cursor:pointer}
@@ -1179,7 +1179,7 @@ async function loadRfpKpis(){
     const d=await cb('/rfp/summary');
     const k=(v,l,sub,view,cls='ink')=>`<div class="kpi ${cls}" onclick="rfpView(${jsArg(view)})"><div class="val">${v}</div><div class="label">${esc(l)}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
     rbox('rf-kpis').innerHTML=k(d.rfps,'Historical RFPs',`${d.analyses} new-RFP analyses`,'library')+k(d.questions,'Questions',`${d.answered} with a historical answer`,'questions')
-      +k(d.confirmed,'Confirmed rows',`${d.needsReview} need review`,'review',d.needsReview?'amber':'green')+k(d.grouped,'Grouped questions','under canonical questions','review')
+      +k(d.needsReview,'Rows to review',`in ${d.docsToReview} document(s)`,'review',d.needsReview?'amber':'green')+k(d.canonical,'Canonical questions','groups of the same question across RFPs','review')
       +k(d.approved,'Approved answers',`${d.awaitingApproval} awaiting approval · ${d.drafts} drafts`,'answers','green');
   }catch(e){rbox('rf-kpis').innerHTML=`<div class="notice bad">Failed to load: ${esc(e.message)}</div>`}
 }
@@ -1192,24 +1192,24 @@ function rfpView(view){
 
 // RFP Library
 function rfLibrary(){
-  rbox('rf-body').innerHTML=`<div class="controls"><input id="rl-q" placeholder="Customer, RFP or solicitation number" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter'){rfpOff.rl=0;rfLibList()}">
-    <select id="rl-type" onchange="rfpOff.rl=0;rfLibList()"><option value="">All types</option>${['rfp','rfq','rfi','questionnaire','other'].map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}</select>
-    <select id="rl-status" onchange="rfpOff.rl=0;rfLibList()"><option value="">Any outcome</option>${['unknown','submitted','won','lost','no-bid','cancelled','in-progress'].map(t=>`<option>${t}</option>`).join('')}</select>
-    <select id="rl-lib" onchange="rfpOff.rl=0;rfLibList()"><option value="historical">Historical library</option><option value="analysis">New-RFP analyses</option><option value="all">All</option></select>
-    <select id="rl-sort" onchange="rfLibList()"><option value="received">Sort: received (newest)</option><option value="due">Sort: due date</option><option value="submitted">Sort: submitted</option><option value="customer">Sort: customer</option><option value="name">Sort: name</option><option value="questions">Sort: most questions</option></select>
+  rbox('rf-body').innerHTML=`<div class="controls"><input id="rl-q" placeholder="Customer, RFP or solicitation number" style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter'){resetPg('rl');rfLibList()}">
+    <select id="rl-type" onchange="resetPg('rl');rfLibList()"><option value="">All types</option>${['rfp','rfq','rfi','questionnaire','other'].map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}</select>
+    <select id="rl-status" onchange="resetPg('rl');rfLibList()"><option value="">Any outcome</option>${['unknown','submitted','won','lost','no-bid','cancelled','in-progress'].map(t=>`<option>${t}</option>`).join('')}</select>
+    <select id="rl-lib" onchange="resetPg('rl');rfLibList()"><option value="historical">Historical library</option><option value="analysis">New-RFP analyses</option></select>
+    <select id="rl-sort" onchange="resetPg('rl');rfLibList()"><option value="received">Sort: received (newest)</option><option value="due">Sort: due date (newest)</option><option value="customer">Sort: customer</option><option value="name">Sort: name</option></select>
     <div class="spacer-h"></div><button class="btn-primary" onclick="editRfp()">+ RFP</button></div><div id="rl-list"></div>`;
-  rfpOff.rl=0;rfLibList();
+  resetPg('rl');rfLibList();
 }
 async function rfLibList(){
   loading('rl-list');
   try{
-    const qs=new URLSearchParams({q:box('rl-q').value.trim(),type:box('rl-type').value,status:box('rl-status').value,library:box('rl-lib').value,sort:box('rl-sort').value,offset:rfpOff.rl||0});
+    const qs=new URLSearchParams({q:box('rl-q').value.trim(),type:box('rl-type').value,status:box('rl-status').value,library:box('rl-lib').value,sort:box('rl-sort').value,pageToken:pg('rl').tokens[pg('rl').idx]||''});
     const r=await cb('/rfp/sources?'+qs);
     rbox('rl-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Customer / agency</th><th>RFP</th><th>Solicitation</th><th>Type</th><th>Received</th><th>Due</th><th>Submitted</th><th>Outcome</th><th>Docs</th><th>Questions</th><th>Answered</th><th>Approved</th></tr></thead><tbody>${r.items.map(x=>`<tr onclick="openRef('rfp',${jsArg(x['RFP Source ID'])})">
       <td>${x['Company ID']?idRef('company',x['Company ID'],x['Customer Name']||x['Company ID']):unknown(x['Customer Name'])}</td><td><strong>${esc(x['Opportunity Name'])}</strong>${x['Access Scope']==='restricted'?' '+badge('restricted'):''}${x['Library Status']==='analysis'?' <span class="pill">analysis</span>':''}</td>
       <td class="mono">${unknown(x['Solicitation Number'])}</td><td>${esc((x['Procurement Type']||'').toUpperCase())}</td><td>${unknown(x['Received At'])}</td><td>${unknown(x['Due At'])}</td><td>${unknown(x['Submitted At'])}</td>
       <td>${x['Opportunity Status']&&x['Opportunity Status']!=='unknown'?`<span class="pill" title="${esc(x['Status Basis'])}">${esc(x['Opportunity Status'])}</span>`:'<span class="muted">unknown</span>'}</td>
-      <td>${list(x['Document IDs']).length}</td><td>${n(x['Question Count'])}</td><td>${n(x['Answered Count'])}</td><td>${n(x['Approved Count'])}</td></tr>`).join('')}</tbody></table></div>${offPager('rl',r,'rfLibList')}`
+      <td>${list(x['Document IDs']).length||(list(x['Source IDs']).length?`<span class="muted small" title="Files are in Corporate Brain but not imported into RFP Intelligence yet">0 · ${list(x['Source IDs']).length} in brain</span>`:'0')}</td><td>${n(x['Question Count'])}</td><td>${n(x['Answered Count'])}</td><td>${n(x['Approved Count'])}</td></tr>`).join('')}</tbody></table></div>${r.search?`<div class="small muted" style="margin-top:6px">RFPs matching “${esc(box('rl-q').value.trim())}” in the customer, name or solicitation number${r.more?' — showing the first 25; add a word to narrow it':''}.</div>`:pager('rl',r.nextPageToken,'rfLibList')}${r.sort!==box('rl-sort').value&&!r.search?'<div class="small muted">Filtered lists are sorted by customer.</div>':''}`
       :`<div class="empty">No RFPs yet. Use <a onclick="rfpView('import')">Import Documents</a> to add a historical RFP and its response.</div>`;
   }catch(e){failBox('rl-list',e)}
 }
@@ -1244,7 +1244,8 @@ async function showRfp(id){
     showDetail(`<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><h1>${esc(x['Opportunity Name'])}</h1><div class="page-sub"><span class="mono">${esc(id)}</span> · ${esc((x['Procurement Type']||'').toUpperCase())} ${x['Access Scope']==='restricted'?badge('restricted'):''} ${x['Library Status']==='analysis'?'<span class="pill">new-RFP analysis</span>':''}</div></div>
       <button class="btn-secondary" onclick="editRfp(window._rfpCur,()=>openRef('rfp',${jsArg(id)}))">Edit</button><button class="btn-primary" onclick="RFP_IMPORT_TARGET=${jsArg(id)};rfpView('import')">+ Import documents</button></div>
       <div class="three-col"><div>
-        <div class="card"><h2>Documents <span class="muted">${d.documents.length}</span></h2>${d.documents.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>File</th><th>Role</th><th>Revision</th><th>Extraction</th><th>Questions</th><th>Answered</th><th>Review</th><th></th></tr></thead><tbody>${d.documents.map(docRow).join('')}</tbody></table></div>`:'<div class="empty">No documents yet.</div>'}</div>
+        <div class="card"><h2>Documents <span class="muted">${d.documents.length}</span></h2>${d.documents.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>File</th><th>Role</th><th>Revision</th><th>Extraction</th><th>Questions</th><th>Answered</th><th>Review</th><th></th></tr></thead><tbody>${d.documents.map(docRow).join('')}</tbody></table></div>`:'<div class="empty">No documents imported yet.</div>'}</div>
+        ${(d.linkedSources||[]).length?`<div class="card"><h2>Files in Corporate Brain <span class="muted">${d.linkedSources.length}</span></h2><div class="help">Already in Corporate Brain but not imported into RFP Intelligence, so no questions or answers are extracted from them yet. Download an original and use <strong>+ Import documents</strong> to extract it.</div><div class="table-wrap"><table class="clickable"><thead><tr><th>File</th><th>Date</th><th>System</th><th></th></tr></thead><tbody>${d.linkedSources.map(s=>`<tr onclick="openRef('source',${jsArg(s.id)})"><td><strong>${esc(s.title)}</strong><div class="small muted mono">${esc(s.id)}</div></td><td>${unknown(s.date)}</td><td class="small">${esc(s.system)}</td><td>${s.url?`<a class="btn-secondary btn-sm" href="${esc(s.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open ↗</a>`:''}</td></tr>`).join('')}</tbody></table></div></div>`:''}
         <div class="card"><h2>Questions</h2><div id="rq-list"></div></div>
       </div><div>
         <div class="card"><h2>Procurement</h2><dl class="dl">
@@ -1253,13 +1254,13 @@ async function showRfp(id){
           <dt>Outcome</dt><dd>${x['Opportunity Status']&&x['Opportunity Status']!=='unknown'?esc(x['Opportunity Status'])+`<div class="small muted">${esc(x['Status Basis'])}</div>`:'<span class="muted">unknown — not inferred from the documents</span>'}</dd>
           ${x['Deal ID']?`<dt>Sales deal</dt><dd>${idRef('deal',x['Deal ID'])}</dd>`:''}
           <dt>Questions</dt><dd>${n(x['Question Count'])} · ${n(x['Answered Count'])} answered · ${n(x['Approved Count'])} with an approved answer</dd>
-          <dt>Evidence</dt><dd>${cites(list(x['Source IDs']).map(s=>({type:'source',id:s})))||'<span class="muted">—</span>'}</dd>
+          <dt>Evidence</dt><dd>${cites(d.documents.map(doc=>doc['Source ID']).filter(Boolean).map(s=>({type:'source',id:s})))||(d.linkedSources||[]).length&&`<span class="muted">${d.linkedSources.length} linked file(s) — see Files in Corporate Brain</span>`||'<span class="muted">—</span>'}</dd>
           ${x.Notes?`<dt>Notes</dt><dd class="statement">${esc(x.Notes)}</dd>`:''}</dl></div>
       </div></div>`,x['Opportunity Name'],'rfp',id);
     window._rfpCur=x;RQ_RFP=id;rfpOff.rq=0;loadRfpQuestions(id);
   }catch(e){showDetail(`<div class="notice bad">${esc(e.status===404?'RFP not found or not visible to you.':e.message)}</div>`)}
 }
-const FORMATS_LABEL={docx:'Word',xlsx:'Excel',csv:'CSV',text:'Text',pdf:'PDF',unsupported:'Unsupported'};
+const FORMATS_LABEL={docx:'Word',doc:'Word 97–2003',xlsx:'Excel',csv:'CSV',text:'Text',pdf:'PDF',unsupported:'Unsupported'};
 let RQ_RFP='';function rqReload(){loadRfpQuestions(RQ_RFP)}
 async function loadRfpQuestions(rfpId){
   loading('rq-list');
@@ -1481,13 +1482,20 @@ function approvedAction(id,action,sensitive){
 
 // Import Documents
 let RFP_IMPORT_TARGET='';
+function riOptions(rfps){return `<option value="">+ New RFP…</option>${rfps.map(r=>`<option value="${esc(r['RFP Source ID'])}" ${r['RFP Source ID']===RFP_IMPORT_TARGET?'selected':''}>${esc(r['Customer Name']?r['Customer Name']+' — ':'')}${esc(r['Opportunity Name'])}</option>`).join('')}`}
+async function riFind(){
+  const q=box('ri-find').value.trim();
+  try{const r=await cb('/rfp/sources?'+new URLSearchParams({library:'historical',sort:'customer',q}));RFP_IMPORT_TARGET='';box('ri-rfp').innerHTML=riOptions(r.items);box('ri-new').style.display='block';
+    if(r.items.length){box('ri-rfp').value=r.items[0]['RFP Source ID'];box('ri-new').style.display='none'}else toast('No RFP matches — choose "+ New RFP…" or try another word')}catch(e){toast(e.message,true)}
+}
 async function rfImport(){
   rbox('rf-body').innerHTML='<div class="empty">Loading…</div>';
-  let rfps=[];try{rfps=(await cb('/rfp/sources?library=historical&sort=name')).items;let off=25;while(rfps.length<200){const r=await cb('/rfp/sources?library=historical&sort=name&offset='+off);if(!r.items.length)break;rfps.push(...r.items);if(r.next==null)break;off=r.next}}catch(e){}
+  // one page only: the target RFP when coming from its page, else the first 25 by customer; "Find" narrows the list
+  let rfps=[];try{rfps=RFP_IMPORT_TARGET?[(await cb('/rfp/sources/'+encodeURIComponent(RFP_IMPORT_TARGET))).rfp]:(await cb('/rfp/sources?library=historical&sort=customer')).items}catch(e){}
   rbox('rf-body').innerHTML=`<h2>Import historical RFP documents</h2>
     <div class="small muted" style="margin-bottom:12px">1 Select documents → 2 the originals are stored and registered as Corporate Brain sources → 3 structure is analysed → 4 questions and answers are extracted with their exact locations → 5 possible duplicates are flagged → 6 you review → 7 you confirm or correct → 8 confirmed records join the library. Re-importing the same file creates nothing; a changed file becomes a new revision.</div>
     <div class="two-col"><div>
-      <label class="lbl">RFP</label><select id="ri-rfp" class="inp" style="width:100%" onchange="box('ri-new').style.display=this.value?'none':'block'"><option value="">+ New RFP…</option>${rfps.map(r=>`<option value="${esc(r['RFP Source ID'])}" ${r['RFP Source ID']===RFP_IMPORT_TARGET?'selected':''}>${esc(r['Customer Name']?r['Customer Name']+' — ':'')}${esc(r['Opportunity Name'])}</option>`).join('')}</select>
+      <label class="lbl">RFP</label><input id="ri-find" class="inp" style="width:100%;margin-bottom:6px" placeholder="Find an RFP: any word of the customer, name or solicitation number — Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();riFind()}"><select id="ri-rfp" class="inp" style="width:100%" onchange="box('ri-new').style.display=this.value?'none':'block'">${riOptions(rfps)}</select>
       <div id="ri-new" style="display:${RFP_IMPORT_TARGET?'none':'block'}">
         <label class="lbl">RFP name</label><input id="ri-name" class="inp" style="width:100%"><label class="lbl">Customer or agency</label><input id="ri-cust" class="inp" style="width:100%">
         <label class="lbl">Solicitation number</label><input id="ri-sol" class="inp" style="width:100%">
@@ -1495,7 +1503,7 @@ async function rfImport(){
         <label class="lbl">Received (optional)</label><input id="ri-rec" class="inp" placeholder="YYYY-MM-DD"> <label class="lbl">Due (optional)</label><input id="ri-due" class="inp" placeholder="YYYY-MM-DD">
         <div class="small muted" style="margin-top:6px">Submission date and outcome stay unknown unless you set them on the RFP.</div>
       </div></div><div>
-      <label class="lbl">Documents (.docx, .xlsx, .csv, .txt, text-based .pdf — up to ${esc(RFPMETA?.maxFileMB||25)} MB each)</label><input type="file" id="ri-files" multiple accept=".docx,.xlsx,.csv,.txt,.pdf" onchange="rfImportFiles()">
+      <label class="lbl">Documents (.docx, .doc, .xlsx, .csv, .txt, text-based .pdf — up to ${esc(RFPMETA?.maxFileMB||25)} MB each)</label><input type="file" id="ri-files" multiple accept=".docx,.doc,.xlsx,.csv,.txt,.pdf" onchange="rfImportFiles()">
       <div id="ri-filelist" style="margin-top:10px"></div>
       <label class="lbl">Document date (optional — the date the answers were given, if known)</label><input id="ri-date" class="inp" placeholder="YYYY-MM-DD">
       ${ME.roles.reviewer?'<label class="lbl"><input type="checkbox" id="ri-restricted"> Restricted — reviewers only (e.g. price proposals)</label>':''}
@@ -1561,7 +1569,7 @@ async function rfAnalyses(){
   rbox('rf-body').innerHTML=`<div class="two-col"><div><h2>Analyse a new RFP</h2><div class="small muted" style="margin-bottom:10px">Upload the RFP and its attachments. Each requirement is matched against the question library; drafts are built only from approved or confirmed historical answers and are labelled AI-generated drafts. Requirements without adequate evidence get no draft.</div>
       <label class="lbl">Title</label><input id="na-title" class="inp" style="width:100%"><label class="lbl">Customer or agency</label><input id="na-cust" class="inp" style="width:100%">
       <label class="lbl">Solicitation number</label><input id="na-sol" class="inp" style="width:100%"><label class="lbl">Due (optional)</label><input id="na-due" class="inp" placeholder="YYYY-MM-DD">
-      <label class="lbl">Documents</label><input type="file" id="na-files" multiple accept=".docx,.xlsx,.csv,.txt,.pdf">
+      <label class="lbl">Documents</label><input type="file" id="na-files" multiple accept=".docx,.doc,.xlsx,.csv,.txt,.pdf">
       <div style="margin-top:12px"><button class="btn-primary" id="na-go" onclick="newAnalysisGo()">Analyse</button></div></div>
     <div><h2>Analyses</h2><div id="na-list"></div></div></div>`;
   try{const r=await cb('/rfp/analyses');rbox('na-list').innerHTML=r.items.length?r.items.map(a=>`<div class="finding" style="cursor:pointer" onclick="openRef('rfpanalysis',${jsArg(a['Analysis ID'])})"><strong>${esc(a.Title)}</strong> ${badge(a.Status)}<div class="small muted">${esc(a['Customer Name']||'')} · ${n(a['Item Count'])} requirements · ${n(a['Drafted Count'])} drafted · ${n(a['No Evidence Count'])} without evidence · ${ago(a._createdAt)}</div></div>`).join(''):'<div class="empty">No analyses yet.</div>'}catch(e){failBox('na-list',e)}
@@ -1625,10 +1633,13 @@ async function rfReview(){
   cb('/rfp/approved?status=needs-review').then(r=>rbox('rv-approve').innerHTML=r.items.length?r.items.map(row).join(''):'<div class="empty">Nothing waiting.</div>').catch(e=>failBox('rv-approve',e));
   cb('/rfp/approved?status=draft').then(r=>rbox('rv-drafts').innerHTML=r.items.length?r.items.map(row).join(''):'<div class="empty">No drafts.</div>').catch(e=>failBox('rv-drafts',e));
   cb('/rfp/approved?status=approved').then(r=>{const due=r.items.filter(a=>a['Review Due At']&&a['Review Due At']<new Date().toISOString().slice(0,10));rbox('rv-due').innerHTML=due.length?due.map(row).join(''):'<div class="empty">None overdue.</div>'}).catch(e=>failBox('rv-due',e));
-  (async()=>{try{const rf=await cb('/rfp/sources?library=historical');const docs=[];for(const r of rf.items.slice(0,25)){const d=await cb('/rfp/sources/'+encodeURIComponent(r['RFP Source ID']));docs.push(...d.documents.filter(x=>+x['Needs Review Count']||['extracted','partial'].includes(x['Extraction Status'])).map(x=>({...x,_rfp:r})))}
-    rbox('rv-docs').innerHTML=docs.length?docs.map(x=>`<div class="finding proposed" style="cursor:pointer" onclick="openRef('rfpdocument',${jsArg(x['Document ID'])})"><strong>${esc(x['File Name'])}</strong> ${badge(x['Extraction Status'])}<div class="small muted">${esc(x._rfp['Opportunity Name'])} · ${n(x['Question Count'])} rows · ${n(x['Needs Review Count'])} need review</div></div>`).join(''):'<div class="empty">Every extracted document is confirmed.</div>'}catch(e){failBox('rv-docs',e)}})();
+  resetPg('rvd');rvDocs();;
   cb('/rfp/canonical/suggest').then(r=>rbox('rv-groups').innerHTML=r.groups.length?r.groups.slice(0,15).map(g=>`<div class="finding"><strong>${snip(g.lead.text,150)}</strong> <span class="small muted">${esc(g.lead.rfp)}</span>${g.members.map(m=>`<div class="small">${strengthPill(m.score>=0.6?'strong':'partial')} <a onclick="openRef('rfpquestion',${jsArg(m.id)})">${snip(m.text,140)}</a> <span class="muted">${esc(m.rfp)}</span></div>`).join('')}
     <button class="btn-secondary btn-sm" style="margin-top:6px" onclick="newCanon(${esc(JSON.stringify([g.lead.id,...g.members.map(m=>m.id)]))},${jsArg(g.lead.text)},${jsArg(g.lead.category)},rfReview)">Group these…</button></div>`).join(''):'<div class="empty">No ungrouped similar questions across RFPs.</div>').catch(e=>failBox('rv-groups',e));
+}
+async function rvDocs(){
+  try{const r=await cb('/rfp/documents?pageToken='+tok('rvd'));
+    rbox('rv-docs').innerHTML=r.items.length?r.items.map(x=>`<div class="finding proposed" style="cursor:pointer" onclick="openRef('rfpdocument',${jsArg(x['Document ID'])})"><strong>${esc(x['File Name'])}</strong> ${badge(x['Extraction Status'])}<div class="small muted">${esc(x.rfp.customer?x.rfp.customer+' — ':'')}${esc(x.rfp.name)} · ${n(x['Question Count'])} rows · ${n(x['Needs Review Count'])} need review</div></div>`).join('')+pager('rvd',r.nextPageToken,'rvDocs'):'<div class="empty">Every extracted document is confirmed.</div>'}catch(e){failBox('rv-docs',e)}
 }
 async function openRfpAnswer(id){try{const r=await cb('/ref/rfpanswer/'+encodeURIComponent(id));openRef('rfpquestion',r.item['Question ID'])}catch(e){toast(e.message,true)}}
 

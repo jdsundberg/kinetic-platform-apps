@@ -3,7 +3,7 @@
 import zlib from "zlib";
 import { parseDocument, locLabel, detectFormat } from "../lib/docparse.mjs";
 import { extractQuestions, verifyCitation, locate, similarity, classify, tokens, levelFromValue } from "../lib/rfp-extract.mjs";
-import { SAMPLE, docx, xlsx, pdf } from "./fixtures.mjs";
+import { SAMPLE, docx, xlsx, pdf, doc } from "./fixtures.mjs";
 
 let pass = 0, fail = 0;
 const check = (name, ok, extra = "") => { ok ? pass++ : fail++; console.log(`${ok ? "✓" : "✗"} ${name}${extra && !ok ? " — " + extra : ""}`); };
@@ -11,7 +11,16 @@ const ex = (buf, name, role = "response") => extractQuestions(parseDocument(buf,
 
 // ── formats ──
 check("format detection by content, not just extension", detectFormat("x.bin", SAMPLE.pdfRfp()) === "pdf" && detectFormat("x.bin", SAMPLE.docxResponse()) === "docx" && detectFormat("x.bin", SAMPLE.xlsxQuestionnaire()) === "xlsx");
-check("legacy binary Office files are reported unsupported", parseDocument(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0, 0]), "old.doc").format === "unsupported");
+check("legacy Excel (.xls) is reported unsupported", parseDocument(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0, 0]), "old.xls").format === "unsupported");
+{ const bad = parseDocument(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0, 0]), "broken.doc");
+  check("a damaged .doc is reported as unreadable, not thrown", bad.format === "unsupported" && /could not be read/i.test(bad.warnings.join(" ")), JSON.stringify(bad.warnings)); }
+{ const wd = parseDocument(doc([{ text: "Security Requirements", heading: 1 }, { text: "1.\tDescribe your backup schedule." }, { row: ["Does the system support SSO?", "Yes – SAML 2.0 and OIDC."] }, { row: ["Is data encrypted at rest?", "Yes, AES-256."] }, { text: "Closing remarks \x13 PAGE \x14" + "7\x15 end" }]), "legacy.doc");
+  const t = wd.blocks.find(b => b.kind === "table"), paras = wd.blocks.filter(b => b.kind === "para");
+  check("legacy Word (.doc) parses: format, heading and section", wd.format === "doc" && paras[0]?.heading === 1 && paras[1]?.loc.section === "Security Requirements", JSON.stringify(wd.blocks).slice(0, 300));
+  check("legacy Word (.doc) tables keep rows and cells from paragraph properties", t?.rows.length === 2 && t.rows[0].length === 2 && t.rows[0][1].text === "Yes – SAML 2.0 and OIDC." && locLabel(t.rows[1][0].loc) === "Word table 1, row 2, column 1 (section \"Security Requirements\")", JSON.stringify(t?.rows));
+  check("legacy Word (.doc) drops field codes but keeps field results", paras.at(-1)?.text === "Closing remarks 7 end", paras.at(-1)?.text);
+  const { items } = extractQuestions(wd, { role: "response" });
+  check("legacy Word (.doc) response yields question/answer pairs", items.some(i => /SSO/.test(i.text) && /SAML/.test(i.answer?.text || "")), JSON.stringify(items).slice(0, 300)); }
 
 // ── Word: table matrix + numbered narrative ──
 const w = ex(SAMPLE.docxResponse(), "r.docx");

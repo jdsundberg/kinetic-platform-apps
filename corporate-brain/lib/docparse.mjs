@@ -8,7 +8,7 @@
 // Nothing here interprets content: text is kept exactly as stored in the file (only XML entities are decoded).
 import zlib from "zlib";
 
-export const FORMATS = { docx: "Word (.docx)", xlsx: "Excel (.xlsx)", csv: "CSV", text: "Plain text", pdf: "PDF" };
+export const FORMATS = { docx: "Word (.docx)", doc: "Word 97–2003 (.doc)", xlsx: "Excel (.xlsx)", csv: "CSV", text: "Plain text", pdf: "PDF" };
 
 export function detectFormat(name = "", buf) {
   const ext = String(name).toLowerCase().split(".").pop();
@@ -20,7 +20,7 @@ export function detectFormat(name = "", buf) {
       if (names.includes("xl/workbook.xml")) return "xlsx";
       return "unsupported";
     }
-    if (buf[0] === 0xd0 && buf[1] === 0xcf) return "unsupported";   // legacy .doc/.xls (OLE)
+    if (buf[0] === 0xd0 && buf[1] === 0xcf) return ext === "doc" || ext === "dot" ? "doc" : "unsupported";   // OLE: legacy Word reads; .xls does not
   }
   if (ext === "csv") return "csv";
   if (["txt", "text", "md"].includes(ext)) return "text";
@@ -30,11 +30,12 @@ export function detectFormat(name = "", buf) {
 export function parseDocument(buf, name = "") {
   const format = detectFormat(name, buf);
   if (format === "docx") return parseDocx(buf);
+  if (format === "doc") { try { return parseDoc(buf); } catch (e) { return { format: "unsupported", pages: 0, blocks: [], warnings: [`The legacy Word file "${name}" could not be read (${e.message}). Save it as .docx and import that.`] }; } }
   if (format === "xlsx") return parseXlsx(buf);
   if (format === "pdf") return parsePdf(buf);
   if (format === "csv") return parseCsv(buf.toString("utf8"));
   if (format === "text") return parseText(buf.toString("utf8"));
-  return { format: "unsupported", pages: 0, blocks: [], warnings: [`Unsupported file type for "${name}". Supported: .docx, .xlsx, .csv, .txt and text-based PDF (legacy .doc/.xls: save as .docx/.xlsx first).`] };
+  return { format: "unsupported", pages: 0, blocks: [], warnings: [`Unsupported file type for "${name}". Supported: .docx, .doc, .xlsx, .csv, .txt and text-based PDF (legacy .xls: save as .xlsx first).`] };
 }
 
 // ── citations ──
@@ -45,7 +46,7 @@ export function locLabel(loc = {}) {
     case "pdf": return `PDF page ${loc.page}${loc.line ? `, line ${loc.line}` : ""}`;
     case "xlsx": return `Worksheet "${loc.sheet}", cell ${loc.cell}`;
     case "csv": return `CSV row ${loc.row}, column ${colName((loc.col || 1) - 1)} (cell ${loc.cell || colName((loc.col || 1) - 1) + loc.row})`;
-    case "docx": return loc.table ? `Word table ${loc.table}, row ${loc.row}, column ${loc.col}${sec}` : `Word paragraph ${loc.paragraph}${sec}`;
+    case "doc": case "docx": return loc.table ? `Word table ${loc.table}, row ${loc.row}, column ${loc.col}${sec}` : `Word paragraph ${loc.paragraph}${sec}`;
     case "text": return `Line ${loc.line}`;
     default: return loc.label || "location unknown";
   }
@@ -208,6 +209,149 @@ function parseDocx(buf) {
   walk(kid(kid(doc, "w:document"), "w:body") || doc);
   if (!blocks.length) warnings.push("The Word document contains no text.");
   return { format: "docx", pages: 0, warnings, blocks };
+}
+
+// ── legacy Word 97–2003 (.doc): OLE compound file → piece table text + paragraph properties (tables, headings) ──
+function cfbStreams(buf) {
+  if (buf.length < 512 || buf.readUInt32LE(0) !== 0xe011cfd0) throw new Error("not an OLE compound file");
+  const ss = 1 << buf.readUInt16LE(0x1e), mss = 1 << buf.readUInt16LE(0x20), cutoff = buf.readUInt32LE(0x38);
+  const sec = (id) => buf.subarray((id + 1) * ss, (id + 2) * ss);
+  const fatIds = [];
+  for (let i = 0; i < 109; i++) { const v = buf.readUInt32LE(0x4c + i * 4); if (v < 0xfffffffa) fatIds.push(v); }
+  for (let d = buf.readUInt32LE(0x44), n = 0; d < 0xfffffffa && n < buf.readUInt32LE(0x48); n++) {
+    const s = sec(d); for (let i = 0; i < ss / 4 - 1; i++) { const v = s.readUInt32LE(i * 4); if (v < 0xfffffffa) fatIds.push(v); }
+    d = s.readUInt32LE(ss - 4);
+  }
+  const fat = []; for (const id of fatIds) { const s = sec(id); for (let i = 0; i < ss / 4; i++) fat.push(s.readUInt32LE(i * 4)); }
+  const chain = (start, table, max = 1e6) => { const out = []; for (let id = start; id < 0xfffffffa && out.length < max; id = table[id]) { if (id >= table.length) break; out.push(id); } return out; };
+  const read = (start) => Buffer.concat(chain(start, fat).map(sec));
+  const dir = read(buf.readUInt32LE(0x30)); const entries = [];
+  for (let o = 0; o + 128 <= dir.length; o += 128) {
+    const nl = dir.readUInt16LE(o + 0x40); const type = dir[o + 0x42];
+    if (!type) continue;
+    entries.push({ name: dir.subarray(o, o + Math.max(0, nl - 2)).toString("utf16le"), type, start: dir.readUInt32LE(o + 0x74), size: dir.readUInt32LE(o + 0x78) });
+  }
+  const root = entries.find(e => e.type === 5);
+  const miniFat = []; { const mf = read(buf.readUInt32LE(0x3c)); for (let i = 0; i * 4 + 4 <= mf.length; i++) miniFat.push(mf.readUInt32LE(i * 4)); }
+  const mini = root ? read(root.start) : Buffer.alloc(0);
+  return (name) => {
+    const e = entries.find(x => x.name === name && x.type === 2); if (!e) return null;
+    if (e.size < cutoff) return Buffer.concat(chain(e.start, miniFat).map(id => mini.subarray(id * mss, (id + 1) * mss))).subarray(0, e.size);
+    return read(e.start).subarray(0, e.size);
+  };
+}
+const CP1252 = "€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ";
+// operand size of a property modifier (sprm), by its spra bits
+function sprmSize(sprm, b, o) {
+  switch (sprm >> 13) { case 0: case 1: return 1; case 2: case 4: case 5: return 2; case 3: return 4; case 7: return 3;
+    default: return sprm === 0xd608 || sprm === 0xd606 ? 2 + b.readUInt16LE(o) - 1 : 1 + b[o]; }   // 6 = variable
+}
+function parseDoc(buf) {
+  const warnings = [];
+  const stream = cfbStreams(buf);
+  const wd = stream("WordDocument"); if (!wd || wd.readUInt16LE(0) !== 0xa5ec) throw new Error("no Word document stream (an .xls or other Office file?)");
+  const flags = wd.readUInt16LE(0x0a);
+  if (flags & 0x0100) return { format: "doc", pages: 0, blocks: [], warnings: ["The Word document is password-protected (encrypted) and cannot be read."] };
+  const table = stream(flags & 0x0200 ? "1Table" : "0Table"); if (!table) throw new Error("the Word table stream is missing");
+  // FIB: FibBase (32) · csw + fibRgW · cslw + fibRgLw · cbRgFcLcb + fibRgFcLcb
+  let o = 32; o += 2 + wd.readUInt16LE(o) * 2;
+  const lw = o + 2; const ccpText = wd.readInt32LE(lw + 3 * 4); o = lw + wd.readUInt16LE(o) * 4;
+  const fcl = o + 2; const pair = (i) => [wd.readUInt32LE(fcl + i * 8), wd.readUInt32LE(fcl + i * 8 + 4)];
+  const [fcClx, lcbClx] = pair(33), [fcBtePapx, lcbBtePapx] = pair(13);
+  // piece table (CLX): skip Prc entries, then Pcdt → PlcPcd
+  let c = fcClx; const end = fcClx + lcbClx;
+  while (c < end && table[c] === 0x01) c += 3 + table.readUInt16LE(c + 1);
+  if (table[c] !== 0x02) throw new Error("the Word piece table is missing");
+  const lcb = table.readUInt32LE(c + 1); const plc = c + 5; const n = (lcb - 4) / 12;
+  const chars = [], fcs = [];   // text (CP order) and each character's file position — paragraph properties are keyed by position
+  for (let i = 0; i < n && chars.length < ccpText; i++) {
+    const cpS = table.readUInt32LE(plc + i * 4), cpE = table.readUInt32LE(plc + (i + 1) * 4);
+    const pcd = plc + (n + 1) * 4 + i * 8; const fcRaw = table.readUInt32LE(pcd + 2);
+    const compressed = !!(fcRaw & 0x40000000); const fc = compressed ? (fcRaw & 0x3fffffff) / 2 : fcRaw;
+    for (let k = 0; k < cpE - cpS && chars.length < ccpText; k++) {
+      if (compressed) { const b = wd[fc + k]; chars.push(b >= 0x80 && b <= 0x9f ? CP1252[b - 0x80] : String.fromCharCode(b)); fcs.push(fc + k); }
+      else { chars.push(String.fromCharCode(wd.readUInt16LE(fc + k * 2))); fcs.push(fc + k * 2); }
+    }
+  }
+  // paragraph properties: PlcBtePapx → FKP pages → PAPX (istd + sprms) for each paragraph-end position
+  const runs = [];   // { fcS, fcE, istd, inTable, ttp, itap, innerTtp }
+  if (lcbBtePapx) {
+    const nb = (lcbBtePapx - 4) / 8;
+    for (let i = 0; i < nb; i++) {
+      const pn = table.readUInt32LE(fcBtePapx + (nb + 1) * 4 + i * 4) & 0x3fffff; const pg = wd.subarray(pn * 512, pn * 512 + 512);
+      if (pg.length < 512) continue;
+      const crun = pg[511];
+      for (let r = 0; r < crun; r++) {
+        const p = { fcS: pg.readUInt32LE(r * 4), fcE: pg.readUInt32LE(r * 4 + 4), istd: 0, inTable: false, ttp: false, itap: 0, innerTtp: false, innerCell: false };
+        const bOff = pg[(crun + 1) * 4 + r * 13] * 2;
+        if (bOff) {
+          let cb = pg[bOff], q = bOff + 1; if (!cb) { cb = pg[q]; q++; }
+          const len = cb * 2 - (pg[bOff] ? 1 : 0); const stop = Math.min(q + len, 511);
+          p.istd = pg.readUInt16LE(q); q += 2;
+          while (q + 2 <= stop) {
+            const sprm = pg.readUInt16LE(q); q += 2; const sz = sprmSize(sprm, pg, q);
+            if (sprm === 0x2416) p.inTable = !!pg[q]; else if (sprm === 0x2417) p.ttp = !!pg[q];
+            else if (sprm === 0x6649) p.itap = pg.readInt32LE(q); else if (sprm === 0x244c) p.innerTtp = !!pg[q]; else if (sprm === 0x244b) p.innerCell = !!pg[q];
+            q += sz;
+          }
+        }
+        runs.push(p);
+      }
+    }
+    runs.sort((a, b) => a.fcS - b.fcS);
+  }
+  const propsAt = (fc) => { let lo = 0, hi = runs.length - 1; while (lo <= hi) { const m = (lo + hi) >> 1; if (fc < runs[m].fcS) hi = m - 1; else if (fc >= runs[m].fcE) lo = m + 1; else return runs[m]; } return null; };
+  // text clean-up: drop field codes (keep field results), object anchors and optional hyphens
+  function clean(s) {
+    let out = "", depth = 0; const inCode = [];
+    for (const ch of s) {
+      if (ch === "\x13") { inCode.push(true); depth++; continue; }
+      if (ch === "\x14") { if (inCode.length) inCode[inCode.length - 1] = false; continue; }
+      if (ch === "\x15") { inCode.pop(); depth--; continue; }
+      if (inCode.some(Boolean)) continue;
+      if (ch === "\x0b") out += "\n"; else if (ch === "\x1e") out += "-"; else if (ch === "\t") out += "\t";
+      else if (ch < " " || ch === "\x1f") continue; else out += ch;
+    }
+    return out;
+  }
+  // walk paragraphs (each ends in \r, \x07 cell/row mark or \x0c break)
+  const blocks = []; const headings = []; const section = () => headings.map(h => h.text).slice(-1)[0] || "";
+  let paraNo = 0, tableNo = 0, buf2 = "", cur = null, row = [], cell = [];
+  const flushTable = () => { if (cur) { if (cur.rows.length) blocks.push(cur); cur = null; } };
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (ch !== "\r" && ch !== "\x07" && ch !== "\x0c") { buf2 += ch; continue; }
+    const p = propsAt(fcs[i]) || { istd: 0, inTable: false, ttp: false, itap: 0 };
+    const text = clean(buf2).replace(/\s+$/, ""); buf2 = "";
+    const inTable = p.inTable || p.itap > 0 || (ch === "\x07" && !runs.length);
+    if (inTable) {
+      if (!cur) { tableNo++; cur = { kind: "table", loc: { format: "doc", table: tableNo, section: section() }, rows: [] }; row = []; cell = []; }
+      if (p.itap > 1) {   // nested table: flatten into the outer cell's text
+        if (text) cell.push(text);
+        if (ch === "\x07" && p.innerTtp) cell.push("\n"); else if (ch === "\x07" && cell.length) cell.push(" | ");
+        continue;
+      }
+      if (ch === "\x07" && p.ttp) { if (row.length) cur.rows.push(row); row = []; cell = []; continue; }   // row-end mark
+      if (text) cell.push(text);
+      if (ch === "\x07") {
+        const ri = cur.rows.length + 1, ci = row.length + 1;
+        row.push({ text: cell.join("\n").replace(/\n?( \| |\n)+$/, "").replace(/\n \| /g, " | "), loc: { format: "doc", table: tableNo, row: ri, col: ci, section: cur.loc.section } });
+        cell = [];
+      }
+      continue;
+    }
+    if (cur) { if (row.length) cur.rows.push(row); row = []; flushTable(); }
+    paraNo++;
+    if (!text.trim()) continue;
+    const level = p.istd >= 1 && p.istd <= 9 ? p.istd : 0;   // built-in styles 1–9 are Heading 1–9
+    if (level) { while (headings.length && headings[headings.length - 1].level >= level) headings.pop(); headings.push({ level, text: text.trim() }); }
+    blocks.push({ kind: "para", text, heading: level, list: "", style: level ? `Heading ${level}` : "", loc: { format: "doc", paragraph: paraNo, section: level ? headings.slice(-2, -1)[0]?.text || "" : section() } });
+  }
+  if (cur) { if (row.length) cur.rows.push(row); flushTable(); }
+  if (!runs.length) warnings.push("Paragraph properties could not be read; tables were inferred from cell marks.");
+  warnings.push("Legacy Word (.doc): automatic list numbering is not reproduced — numbers typed into the text are kept.");
+  if (!blocks.length) warnings.push("The Word document contains no text.");
+  return { format: "doc", pages: 0, warnings, blocks };
 }
 
 // ── xlsx ──

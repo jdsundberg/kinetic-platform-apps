@@ -143,13 +143,34 @@ requirements workbooks, Kinetic's draft responses to both (kept as revisions v1�
 James. The outcome and submission date are unknown and recorded as unknown. A real 2026 state ITSM RFQ was also run
 through New RFP Analysis.
 
-The other historical opportunities named in the brief are in Google Drive, not in the app. The Drive connector available
-to the build agent returns file bytes inline, which does not scale to these files. Import path: download them from Drive
-and use **Import Documents**, or run a loader against a local folder.
+**Historical discovery (2026-10-28).** Corporate Brain already held Kinetic's RFx history as ordinary sources (the
+Drive waves), so a discovery pass registered every past opportunity it could find as an RFP record: 89 more
+procurements from 2007 to 2026 (RFPs, RFQs, RFIs, sources-sought notices, questionnaires, CSO calls), each linked to the
+Drive files already loaded for it (368 sources) or to the Proposal Library's Bid History. They are searchable in the RFP
+Library now; the detail page lists the linked files (**Files in Corporate Brain**) with links to the originals. Dates are
+only what a title, folder name or the Bid History states; outcomes stay unknown. No questions or answers exist for them
+until their files are imported. The curated list and loader live under `ingest/rfp/history/` (not published);
+`POST /rfp/sources/{id}/link-sources` links existing sources (refuses sources that do not exist or are not visible).
+Not yet covered: RFx email threads (~200 in John's mailbox) and the RFx working folder named in the Bid History, which is
+not on this machine.
+
+**Importing historical files from Google Drive (on demand, no sync).** `ingest/rfp/drive/import-rfp.mjs <client.json> <RS-id>`
+downloads an RFP's linked Drive files into memory with a read-only OAuth "Desktop app" client (PKCE on a loopback port;
+the token lives in the OS temp directory; the client JSON stays outside the repo), imports them through `POST /rfp/import`
+and keeps no local copies. Roles come from the file name: the buyer's RFP / requirements / attachments are `solicitation`,
+Kinetic's answer is `response`; SOWs, charters, contracts, diagrams and spreadsheets the parser cannot read stay linked
+files. **Order matters:** the solicitation is imported and extracted first, then responses — a response's answers attach
+to the solicitation's questions (a solicitation never matches existing rows). One document at a time; the loader waits
+for the RFP recount (the document turns "extracted" before the recount is written). `--skip=SR-…` leaves out a linked
+file that belongs to another RFP; `--dry-run` prints the plan. First imports (2026-10-28): two
+legacy-Word RFPs of one public-sector customer — one with its draft and final response (121 questions, 83 answered),
+one solicitation-only (57 questions).
 
 ## Limitations (first release)
 
-- Scanned PDFs: reported, not OCR'd. Encrypted PDFs: refused with instructions. Legacy .doc/.xls: save as .docx/.xlsx.
+- Scanned PDFs: reported, not OCR'd. Encrypted PDFs: refused with instructions. Legacy Word 97–2003 `.doc` is read
+  natively (OLE piece table + paragraph properties: text, headings, tables; automatic list numbers are not reproduced);
+  encrypted `.doc` is refused. Legacy `.xls`: save as .xlsx.
 - Word page numbers are not computed (Word citations are table/row/column or paragraph + section; PDFs cite page and line).
 - PDF tables are read as text lines (narrative extraction applies); Word and Excel tables keep their structure.
 - Narrative extraction from long solicitations is noisy (instructions with "shall/must" are flagged `needs_review`).

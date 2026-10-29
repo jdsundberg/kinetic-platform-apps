@@ -51,7 +51,12 @@ export const strengthOf = (s) => (STRENGTH.find(([, min]) => s >= min) || ["none
 // ── per-user search index (keyed by login: it only ever holds rows that login may see) ──
 const INDEX_TTL = 10 * 60 * 1000;
 const indexes = new Map();   // scopeKey → { at, building, data }
-export function bustRfpIndex() { indexes.clear(); }
+const summaries = new Map();   // scopeKey → { at, data } | { building } — KPI tiles, 5-minute cache
+const SUMMARY_TTL = 5 * 60 * 1000;
+const searchLists = new Map();   // scope|library → { at, items } — what a library search matches against
+const SEARCH_TTL = 2 * 60 * 1000;
+export function bustRfpIndex() { indexes.clear(); summaries.clear(); searchLists.clear(); }
+export function bustRfpLists() { summaries.clear(); searchLists.clear(); }   // after any RFP write: KPI tiles and search list
 
 export function createRfp(store, services, ingestion, { actor, me, scopeKey, files }) {
   const who = actor.label || actor.username;
@@ -62,11 +67,58 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
   async function allRfps() {
     return (await store.collect("rfp-sources", `values[Record Status] = "active"`, { maxPages: 40 })).items;
   }
+  // The library list: one Kinetic page (≤25) per request, pageToken for Next — never a walk, never a total.
+  // Each filter/sort combination has its own compound index (Library Status first; app.json); filtering by type or
+  // outcome orders by customer. A search (the user asked for it) matches words anywhere in the customer, RFP name or
+  // solicitation number over a short-lived per-scope list, and returns the first 25 matches.
+  const LIB_SORT = { received: ["Received At", "DESC"], due: ["Due At", "DESC"], customer: ["Customer Name", "ASC"], name: ["Opportunity Name", "ASC"] };
+  async function listRfps({ library = "historical", type = "", status = "", q = "", sort = "received", pageToken = "" } = {}) {
+    const libName = library === "analysis" ? "analysis" : "historical";
+    const lib = `values[Library Status] = ${kq(libName)}`;
+    const filters = [type && `values[Procurement Type] = ${kq(type)}`, status && `values[Opportunity Status] = ${kq(status)}`].filter(Boolean);
+    q = String(q || "").trim().toLowerCase();
+    if (q) {
+      const words = q.split(/\s+/);
+      const hits = (await searchList(libName)).filter(x => (!type || x["Procurement Type"] === type) && (!status || (x["Opportunity Status"] || "unknown") === status)
+        && words.every(w => `${x["Customer Name"]} ${x["Opportunity Name"]} ${x["Solicitation Number"]}`.toLowerCase().includes(w)))
+        .sort((a, b) => String(a["Customer Name"]).localeCompare(String(b["Customer Name"])) || String(a["Opportunity Name"]).localeCompare(String(b["Opportunity Name"])));
+      return { items: hits.slice(0, 25), nextPageToken: null, sort: "customer", search: true, more: hits.length > 25 };
+    }
+    const key = filters.length ? "customer" : LIB_SORT[sort] ? sort : "received";
+    const [field, direction] = LIB_SORT[key];
+    const r = await store.page("rfp-sources", { q: [lib, ...filters].join(" AND "), orderBy: `values[${field}]`, direction, pageToken, limit: 25 });
+    return { items: r.items, nextPageToken: r.nextPageToken, sort: key };
+  }
+  async function searchList(libName) {
+    const k = `${scopeKey}|${libName}`; const e = searchLists.get(k);
+    if (e && Date.now() - e.at < SEARCH_TTL) return e.items;
+    const items = (await store.collect("rfp-sources", `values[Library Status] = ${kq(libName)}`, { maxPages: 40 })).items;
+    searchLists.set(k, { at: Date.now(), items });
+    return items;
+  }
+  // documents still waiting for review (extracted, or partly extracted) — one page, with their RFP's name
+  async function reviewDocuments({ pageToken = "" } = {}) {
+    const r = await store.page("rfp-documents", { q: `values[Extraction Status] IN ("extracted", "partial")`, orderBy: "values[RFP Source ID]", pageToken, limit: 25 });
+    const ids = [...new Set(r.items.map(d => d["RFP Source ID"]))];
+    const rfps = new Map((await pool(ids, CONCURRENCY, id => store.byId("rfp-sources", id))).filter(Boolean).map(x => [x["RFP Source ID"], x]));
+    return { items: r.items.map(d => ({ ...d, rfp: { id: d["RFP Source ID"], name: rfps.get(d["RFP Source ID"])?.["Opportunity Name"] || "", customer: rfps.get(d["RFP Source ID"])?.["Customer Name"] || "" } })), nextPageToken: r.nextPageToken };
+  }
   async function getRfp(id) {
     const rfp = await store.byId("rfp-sources", id); if (!rfp) return null;
     const docs = (await store.collect("rfp-documents", `values[RFP Source ID] = ${kq(id)}`, { maxPages: 8 })).items
       .sort((a, b) => String(a["File Name"]).localeCompare(b["File Name"]) || (+a.Revision || 0) - (+b.Revision || 0));
-    return { rfp, documents: docs };
+    // Corporate Brain sources linked to the RFP but not imported as documents (Drive files, email threads, Bid History)
+    const own = new Set(docs.map(d => d["Source ID"]));
+    const driveId = (u) => (String(u || "").match(/\/d\/([\w-]+)/) || [])[1];
+    const importedOriginals = new Set(docs.map(d => driveId(d["Original URL"])).filter(Boolean));   // the Drive file a document was imported from
+    const ids = parseList(rfp["Source IDs"]).filter(s => !own.has(s));
+    const linked = [];
+    for (let i = 0; i < ids.length; i += 25) {
+      const page = (await store.collect("sources", `values[Source ID] IN (${ids.slice(i, i + 25).map(kq).join(", ")})`, { maxPages: 2 })).items;
+      linked.push(...page.filter(x => !importedOriginals.has(driveId(x["Original URL"]))).map(x => ({ id: x["Source ID"], title: x.Title, date: x["Source Date"], url: x["Original URL"], system: x["Source System"], type: x["Source Type"] })));
+    }
+    linked.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+    return { rfp, documents: docs, linkedSources: linked };
   }
   function cleanRfpInput(v, { partial = false } = {}) {
     const out = {};
@@ -103,6 +155,19 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
     await audit("update", "rfp", id, { details: { changed: Object.fromEntries(Object.keys(changed).map(k => [k, { from: cur[k] || "", to: changed[k] }])) } });
     return rec;
   }
+  // Link Corporate Brain sources already loaded (Drive files, email threads) to an RFP whose documents are not imported
+  // yet — the RFP becomes findable; nothing is extracted until someone imports the files themselves.
+  async function linkSources(id, sourceIds) {
+    const cur = await store.byId("rfp-sources", id); if (!cur) throw err(404, "RFP not found");
+    const want = [...new Set(parseList(sourceIds))].filter(s => !parseList(cur["Source IDs"]).includes(s));
+    if (!want.length) return { item: cur, linked: [] };
+    const found = await pool(want, CONCURRENCY, s => store.byId("sources", s));
+    const missing = want.filter((s, i) => !found[i]);
+    if (missing.length) throw err(400, `Sources not found or not visible to you: ${missing.join(", ")}`);
+    const rec = await store.update(cur._id, { "Source IDs": listValue([...parseList(cur["Source IDs"]), ...want]) });
+    await audit("link-sources", "rfp", id, { details: { sources: want } });
+    return { item: rec, linked: want };
+  }
   async function recount(rfpId) {
     const rfp = await store.byId("rfp-sources", rfpId); if (!rfp) return;
     const qs = (await store.collect("rfp-questions", `values[RFP Source ID] = ${kq(rfpId)}`, { maxPages: 40 })).items.filter(q => q["Extraction Status"] !== "rejected");
@@ -113,6 +178,7 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
       approved = qs.filter(q => q["Canonical Question ID"] && aa.some(a => a["Canonical Question ID"] === q["Canonical Question ID"])).length;
     }
     await store.update(rfp._id, { "Question Count": String(qs.length), "Answered Count": String(qs.filter(q => ["answered", "needs_review"].includes(q["Answer Status"])).length), "Approved Count": String(approved) });
+    bustRfpLists();
   }
 
   // ── import: register the original, then extract in the background ──
@@ -869,21 +935,34 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
     return { query: q, results: out.slice(0, Math.max(limit, 10) * 2), provider: r.provider };
   }
 
+  // KPI tiles from the counters stored on each RFP and document (a few small pages) — not the full question index,
+  // which costs one query per RFP and is built only when someone searches. Cached per scope; concurrent callers share one build.
   async function summary() {
-    const idx = await index();
-    const historical = [...idx.rfps.values()].filter(r => r["Library Status"] !== "analysis");
-    const qs = idx.questions;
-    const cnt = (f) => qs.filter(f).length;
-    return { rfps: historical.length, analyses: [...idx.rfps.values()].length - historical.length, questions: qs.length, answered: cnt(o => !!o.latestAnswerId),
-      unanswered: cnt(o => o.answerStatus === "unanswered"), needsReview: cnt(o => o.extractionStatus === "needs_review" || o.answerStatus === "needs_review"),
-      confirmed: cnt(o => o.extractionStatus === "confirmed"), grouped: cnt(o => !!o.canonicalId),
-      approved: idx.approved.filter(a => a.status === "approved").length, awaitingApproval: idx.approved.filter(a => a.status === "needs-review").length,
-      drafts: idx.approved.filter(a => a.status === "draft").length,
-      byCategory: Object.entries(qs.reduce((m, o) => (m[o.category || "uncategorized"] = (m[o.category || "uncategorized"] || 0) + 1, m), {})).sort((a, b) => b[1] - a[1]),
-      builtAt: new Date(idx.at).toISOString() };
+    const e = summaries.get(scopeKey);
+    if (e?.data && Date.now() - e.at < SUMMARY_TTL) return e.data;
+    if (e?.building) return e.building;
+    const building = (async () => {
+      const sum = (rows, f) => rows.reduce((t, x) => t + (+x[f] || 0), 0);
+      const [hist, analyses, docs, approved, canon] = await Promise.all([
+        store.collect("rfp-sources", `values[Library Status] = "historical"`, { maxPages: 40 }),
+        store.collect("rfp-sources", `values[Library Status] = "analysis"`, { maxPages: 40 }),
+        store.collect("rfp-documents", `values[Extraction Status] IN ("extracted", "partial")`, { maxPages: 40 }),
+        store.collect("approved-answers", `values[Record Status] = "active"`, { maxPages: 40 }),
+        store.collect("canonical-questions", `values[Record Status] = "active"`, { maxPages: 40 }),
+      ]);
+      const h = hist.items, aa = approved.items;
+      const data = { rfps: h.length, analyses: analyses.items.length, questions: sum(h, "Question Count"), answered: sum(h, "Answered Count"),
+        withApproved: sum(h, "Approved Count"), needsReview: sum(docs.items, "Needs Review Count"), docsToReview: docs.items.length, canonical: canon.items.length,
+        approved: aa.filter(a => a["Approval Status"] === "approved").length, awaitingApproval: aa.filter(a => a["Approval Status"] === "needs-review").length,
+        drafts: aa.filter(a => a["Approval Status"] === "draft").length, builtAt: new Date().toISOString() };
+      summaries.set(scopeKey, { at: Date.now(), data });
+      return data;
+    })().catch(err => { summaries.delete(scopeKey); throw err; });
+    summaries.set(scopeKey, { ...(e || {}), building });
+    return building;
   }
 
-  return { allRfps, getRfp, createRfp, updateRfp, importDocument, runExtraction, documentRows, confirmRows, updateRow, correctAnswer, questionDetail, listQuestions,
+  return { allRfps, listRfps, reviewDocuments, getRfp, createRfp, updateRfp, linkSources, importDocument, runExtraction, documentRows, confirmRows, updateRow, correctAnswer, questionDetail, listQuestions,
     createCanonical, linkCanonical, suggestGroups, promote, createApproved, updateApproved, transitionApproved, approvedDetail, listApproved, listHistorical,
     search, index, createAnalysis, runAnalysis, analysisItems, reviewItem, exportCsv, retrieve, summary, recount };
 }

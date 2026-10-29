@@ -66,6 +66,21 @@ try {
   const again = await call("POST", "/rfp/import", { rfpId: RFP, role: "response", file: { name: "Example Security Response.docx", base64: b64(docxBuf) } });
   check("re-importing the same file creates nothing (idempotent)", again.status === 201 && again.body.duplicate === true && again.body.document["Document ID"] === DOC1);
 
+  // ── link Corporate Brain sources to an RFP whose documents are not imported (historical discovery) ──
+  const hist = await call("POST", "/rfp/sources", { values: { "Opportunity Name": `TEST historical RFP ${stamp}`, "Procurement Type": "rfi" } });
+  const HIST = hist.body.item["RFP Source ID"]; created.rfps.push(HIST);
+  const SRC = imp.body.document["Source ID"];
+  const lk = await call("POST", `/rfp/sources/${HIST}/link-sources`, { sourceIds: [SRC] });
+  check("link an existing Corporate Brain source to an RFP", lk.status === 200 && lk.body.linked.join() === SRC && JSON.parse(lk.body.item["Source IDs"]).includes(SRC), JSON.stringify(lk.body).slice(0, 200));
+  const lk2 = await call("POST", `/rfp/sources/${HIST}/link-sources`, { sourceIds: [SRC] });
+  check("re-linking the same source changes nothing", lk2.status === 200 && lk2.body.linked.length === 0);
+  const lkBad = await call("POST", `/rfp/sources/${HIST}/link-sources`, { sourceIds: ["SR-DOESNOTEXIST"] });
+  check("linking a source that does not exist is refused", lkBad.status === 400);
+  const histD = (await call("GET", `/rfp/sources/${HIST}`)).body;
+  check("a linked-only RFP has evidence but no documents", histD.documents.length === 0 && JSON.parse(histD.rfp["Source IDs"]).length === 1);
+  check("the RFP detail lists linked files with their titles", histD.linkedSources?.length === 1 && histD.linkedSources[0].id === SRC && !!histD.linkedSources[0].title, JSON.stringify(histD.linkedSources));
+  check("an RFP with imported documents does not repeat them as linked files", ((await call("GET", `/rfp/sources/${RFP}`)).body.linkedSources || []).length === 0);
+
   const d1 = await settled(DOC1);
   check("extraction finished", d1.document["Extraction Status"] === "extracted", d1.document["Extraction Status"] + " " + d1.document["Extraction Notes"]);
   const byNum = (rows, n) => rows.find(r => r.question["Question Number"] === n);
@@ -201,7 +216,7 @@ try {
   check("non-members are refused", (await call("GET", "/rfp/summary", null, { auth: OUTSIDER })).status === 403);
   const restrictedRfp = await call("POST", "/rfp/sources", { values: { "Opportunity Name": `TEST restricted RFP ${stamp}` }, restricted: true });
   created.rfps.push(restrictedRfp.body.item["RFP Source ID"]);
-  const mList = await call("GET", "/rfp/sources?library=all", null, { auth: MEMBER });
+  const mList = await call("GET", `/rfp/sources?library=historical&q=${encodeURIComponent(stamp)}`, null, { auth: MEMBER });   // the library pages 25 at a time — find this run's RFPs
   check("members see internal RFPs but not restricted ones", mList.status === 200 && mList.body.items.some(x => x["RFP Source ID"] === RFP) && !mList.body.items.some(x => x["Access Scope"] === "restricted"), `status ${mList.status}`);
   const mRestricted = await call("GET", `/rfp/sources/${restrictedRfp.body.item["RFP Source ID"]}`, null, { auth: MEMBER });
   check("a restricted RFP is not visible to a member (Kinetic policy)", mRestricted.status === 404);
