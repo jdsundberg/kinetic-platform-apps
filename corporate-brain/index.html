@@ -42,9 +42,6 @@ a:hover{text-decoration:underline}
 .nav-tabs button.active{background:var(--orange);color:#fff}
 .nav-tabs .count{display:inline-block;background:var(--kinetic);color:#fff;border-radius:9px;font-size:10px;padding:0 6px;margin-left:4px;line-height:16px}
 .topbar .spacer{flex:1}
-.gsearch{display:flex;align-items:center}
-.gsearch input{width:220px;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:13px}
-.gsearch input::placeholder{color:rgba(255,255,255,.55)}
 .user-info{font-size:12px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:8px;white-space:nowrap}
 .user-info strong{color:#fff}
 .logout-btn{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
@@ -96,6 +93,14 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 .b-needs-research,.b-running,.b-changed{background:#E8EAFD;color:#3730A3}
 .b-restricted,.b-permission-restricted{background:#FCE7F3;color:#9D174D}
 .b-unknown,.b-default{background:#F1F3F4;color:#5F6368}
+.b-found{background:#E8F5E9;color:#2E7D32}
+.b-nothing-found{background:#FDECEA;color:#C62828}
+.b-pending{background:#FFF7E0;color:#8D5B00}
+/* wally */
+.wally-hero{display:flex;gap:16px;align-items:center;margin-bottom:6px}
+.wally-face{width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;flex:none}
+.wally-ask textarea{font-size:16px;min-height:64px}
+.wally-sec .empty{padding:10px 0}
 .b-former-customer{background:#FFF3E0;color:#B45309}
 .b-prospect{background:#E3F2FD;color:#1565C0}
 .kind{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;background:#EEEAFB;color:#4C35B5}
@@ -234,14 +239,13 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 
 <div id="app">
   <div class="topbar">
-    <div class="logo" onclick="switchTab('dash')">Corporate <span>Brain</span></div>
+    <div class="logo" onclick="switchTab('wally')">Corporate <span>Brain</span></div>
     <div class="nav-tabs" id="nav"></div>
     <div class="spacer"></div>
-    <form class="gsearch" onsubmit="event.preventDefault();runSearch(document.getElementById('gq').value)"><input id="gq" placeholder="Search companies, people, knowledge…"></form>
     <div class="user-info"><strong id="user-display"></strong><span id="role-display" class="pill" style="background:rgba(255,255,255,.12);border-color:transparent;color:#fff"></span><button class="logout-btn" onclick="doLogout()">Sign out</button></div>
   </div>
   <div class="wrap">
-    <div id="c-dash" class="console"></div>
+    <div id="c-wally" class="console"></div>
     <div id="c-companies" class="console"></div>
     <div id="c-people" class="console"></div>
     <div id="c-timeline" class="console"></div>
@@ -251,7 +255,7 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
     <div id="c-sales" class="console"></div>
     <div id="c-rfp" class="console"></div>
     <div id="c-historian" class="console"></div>
-    <div id="c-ingest" class="console"></div>
+    <div id="c-dash" class="console"><div id="dash-main"></div><div id="c-ingest" style="margin-top:22px"></div></div>
     <div id="c-search" class="console"></div>
     <div id="c-detail" class="console"></div>
   </div>
@@ -265,9 +269,9 @@ select:focus,input:focus,textarea:focus{outline:none;border-color:var(--orange);
 let API={server:'',auth:'',user:'',displayName:''};
 let ME=null, MODEL=null;
 const PREFIX='/api/corporate-brain';
-const TABS=[['dash','Dashboard'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['sales','Sales'],['rfp','RFP Intelligence'],['historian','Historian'],['ingest','Ingestion']];
+const TABS=[['wally','Wally'],['companies','Companies'],['people','People'],['timeline','Timeline'],['knowledge','Knowledge'],['sources','Sources'],['review','Review'],['sales','Sales'],['rfp','RFP Intelligence'],['historian','Historian'],['dash','Dashboard']];
 const pages={};          // per-list pagination: {tokens:[...], idx}
-let current='dash';
+let current='wally';
 const history_=[];       // detail breadcrumbs
 
 // ── helpers ──
@@ -324,7 +328,7 @@ async function enterApp(){
   renderNav();
   const h=location.hash.slice(1);
   if(h.startsWith('ref/')){const [,t,i]=h.split('/');openRef(t,decodeURIComponent(i))}
-  else switchTab(TABS.some(t=>t[0]===h)?h:'dash');
+  else switchTab(h==='ingest'?'dash':TABS.some(t=>t[0]===h)?h:'wally');
 }
 function renderNav(count){
   box('nav').innerHTML=TABS.map(([id,label])=>`<button id="tab-${id}" class="${id===current?'active':''}" onclick="switchTab('${id}')">${label}${id==='review'&&count?`<span class="count">${count}</span>`:''}</button>`).join('');
@@ -335,7 +339,7 @@ function switchTab(tab){
   box('c-'+tab).classList.add('active');
   document.querySelectorAll('.nav-tabs button').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
   if(TABS.some(t=>t[0]===tab))history.replaceState(null,'','#'+tab);
-  ({dash:loadDash,companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,sales:loadSales,rfp:loadRfp,historian:renderHistorian,ingest:loadIngest}[tab]||(()=>{}))();
+  ({wally:renderWally,dash:()=>{loadIngest();loadDash()},companies:loadCompanies,people:loadPeople,timeline:loadTimeline,knowledge:loadKnowledge,sources:loadSources,review:loadReview,sales:loadSales,rfp:loadRfp,historian:renderHistorian}[tab]||(()=>{}))();
 }
 
 // ── pagination (≤25 per page, pageToken stack) ──
@@ -349,14 +353,14 @@ const tok=(key)=>encodeURIComponent(pg(key).tokens[pg(key).idx]||'');
 
 // ── dashboard ──
 async function loadDash(fresh){
-  loading('c-dash');
+  loading('dash-main');
   try{
     const d=await cb('/stats'+(fresh?'?fresh=1':''));
     const c=d.counts,s=d.byStatus;
     const total=+n(c['knowledge-entries'])||0, ver=s.verified?.n||0, unv=total-ver;
     renderNav(s.proposed?.n||0);
     const seg=(val,col)=>total?`<i style="width:${val/total*100}%;background:${col}"></i>`:'';
-    box('c-dash').innerHTML=`
+    box('dash-main').innerHTML=`
       <h1>Dashboard</h1><div class="page-sub">What Corporate Brain knows, how much of it is verified, and what is waiting for review. ${d.cached?'<span class="muted small">(cached · <a onclick="loadDash(true)">refresh</a>)</span>':''}</div>
       <div class="kpi-row">
         <div class="kpi ink" onclick="switchTab('companies')"><div class="val">${n(c.companies)}</div><div class="label">Companies</div></div>
@@ -381,7 +385,7 @@ async function loadDash(fresh){
         <div class="card"><h2>Recent research &amp; ingestion jobs</h2>${d.recentJobs.length?`<table class="clickable"><tbody>${d.recentJobs.map(j=>`<tr onclick="openJob(${jsArg(j['Job ID'])})"><td>${esc(j.Title)}<div class="small muted">${esc(j['Job Type'])} · ${esc(j.Connector||'—')} · ${ago(j._createdAt)}</div></td><td>${badge(j.Status)}</td><td class="small muted">${esc(j['Items Processed']||0)} processed</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No jobs yet.</div>'}</div>
         <div class="card"><h2>Data ingestion status</h2>${d.connectors.map(cn=>`<div class="conn"><div class="dot ${cn.configured?(cn.mode==='pull'||cn.pull?'ok':'warn'):'off'}"></div><div style="flex:1"><strong>${esc(cn.name)}</strong> <span class="pill">${esc(cn.mode==='pull'?'server pull':'agent / manual push')}</span> <span class="small muted">${n(d.bySystem[cn.id])} sources</span><div class="small muted">${esc(cn.detail)}</div></div></div>`).join('')}</div>
       </div>`;
-  }catch(e){failBox('c-dash',e)}
+  }catch(e){failBox('dash-main',e)}
 }
 function knowledgeFilter(st){switchTab('knowledge');box('kf-status').value=st;resetPg('kn');loadKnowledgeList()}
 
@@ -906,6 +910,80 @@ async function loadReviewList(){
   }catch(e){failBox('rq-list',e)}
 }
 
+// ── Wally: ask anything ──
+// One question searches the RFP library (instant), the historian and Corporate Brain records in parallel; each section
+// fills in as it arrives. Every question is logged (wally-questions); historians see everyone's in "Questions people asked".
+let wallyView='ask';
+function renderWally(){
+  if(!renderWally.warmed){renderWally.warmed=1;cb('/wally/warm',{method:'POST'}).catch(()=>{})}
+  if(box('wq'))return wallyRecent();
+  box('c-wally').innerHTML=`<div class="wally-hero"><div class="wally-face">W</div><div><h1 style="margin:0">Ask Wally</h1><div class="page-sub" style="margin:2px 0 0">Your Kinetic helper. Ask anything — Wally searches past RFP answers, the corporate history and every Corporate Brain record you can see.</div></div></div>
+    ${ME.roles.historian?`<div class="controls" style="margin:10px 0"><button id="wv-ask" class="btn-primary btn-sm" onclick="wallyShow('ask')">Ask</button><button id="wv-log" class="btn-secondary btn-sm" onclick="wallyShow('log')">Questions people asked</button></div>`:''}
+    <div id="wally-ask"><div class="card"><div class="ask-box wally-ask"><textarea id="wq" placeholder="e.g. Do we support SAML single sign-on?" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askWally()}"></textarea><button class="btn-primary" onclick="askWally()">Ask Wally</button></div>
+      <div class="chips small muted" style="margin-top:8px">Try: ${['Do we support SAML single sign-on?','Tell me everything we know about Vattenfall','How have we answered data retention questions?'].map(q=>`<button class="btn-secondary btn-sm" onclick="box('wq').value=${jsArg(q)};askWally()">${esc(q)}</button>`).join('')}</div></div>
+      <div id="w-res"></div>
+      <div class="card"><h2>Your recent questions</h2><div id="w-recent"><div class="empty">Loading…</div></div></div></div>
+    <div id="wally-log" style="display:none"></div>`;
+  wallyShow(wallyView);
+}
+function wallyShow(v){
+  wallyView=v;box('wally-ask').style.display=v==='ask'?'':'none';box('wally-log').style.display=v==='log'?'':'none';
+  if(box('wv-ask')){box('wv-ask').className=v==='ask'?'btn-primary btn-sm':'btn-secondary btn-sm';box('wv-log').className=v==='log'?'btn-primary btn-sm':'btn-secondary btn-sm'}
+  v==='log'?wallyLog():wallyRecent();
+}
+const wallyBadge=(a)=>badge(a==='yes'?'found':a==='no'?'nothing found':'pending');
+async function wallyRecent(){
+  try{const r=await cb('/wally/questions?user='+encodeURIComponent(ME.username));
+    box('w-recent').innerHTML=r.items.length?r.items.slice(0,8).map(x=>`<div class="small" style="margin-bottom:6px;cursor:pointer" onclick="box('wq').value=${jsArg(x.Question)};askWally()">${wallyBadge(x.Answered)} ${esc(x.Question)} <span class="muted">· ${ago(x['Asked At']||x._createdAt)}</span></div>`).join(''):'<div class="empty">Nothing asked yet.</div>';
+  }catch(e){failBox('w-recent',e)}
+}
+async function askWally(){
+  const q=box('wq').value.trim();if(!q)return;
+  const t0=Date.now();
+  box('w-res').innerHTML=`<div class="card wally-sec"><h2>Past RFP answers</h2><div id="w-rfp"><div class="empty">Searching the RFP library…</div></div></div>
+    <div class="two-col"><div class="card wally-sec"><h2>Corporate history</h2><div id="w-hist"><div class="empty">Asking the historian…</div></div></div>
+    <div class="card wally-sec"><h2>Companies, people &amp; projects</h2><div id="w-rec"><div class="empty">Looking up names in the question…</div></div></div></div>`;
+  const out={rfp:0,records:0,findings:0,subject:null};
+  const ask=cb('/wally/ask',{method:'POST',body:{question:q}}).catch(e=>{toast(e.message,true);return {}});
+  const rfpQ=cb('/rfp/search?'+new URLSearchParams({q})).then(a=>{
+    const h=(a.hits||[]).filter(x=>x.strength==='strong'||x.strength==='partial').slice(0,5), ap=a.approved||[];
+    out.rfp=h.length+ap.length;
+    box('w-rfp').innerHTML=(ap.length||h.length)?ap.map(x=>`<div class="finding ${x.contentClass==='current-approved'?'verified':'proposed'}" style="cursor:pointer" onclick="openRef('approvedanswer',${jsArg(x.id)})">${clsPill(x.contentClass)} <strong>${esc(x.question)}</strong><div class="small" style="margin-top:4px">${esc(x.text)}</div></div>`).join('')
+      +h.map(x=>`<div class="finding" style="cursor:pointer" onclick="openRef('rfpquestion',${jsArg(x.id)})"><span class="pill">${esc(x.strength)} match</span> <strong>${esc(String(x.text).slice(0,300))}</strong><div class="small" style="margin-top:4px">${x.answerPreview?esc(String(x.answerPreview).slice(0,400)):'<span class="muted">no answer recorded</span>'}</div><div class="small muted">${esc([x.customer,x.rfp].filter(Boolean).join(' — '))}${x.rfpDate?' · '+esc(String(x.rfpDate).slice(0,10)):''}</div></div>`).join('')
+      +`<div class="small"><a onclick="rfpSearchFor(${jsArg(q)})">Search all RFP questions for this →</a></div>`
+      :'<div class="empty">No past RFP answer closely matches this question.</div>';
+  }).catch(e=>failBox('w-rfp',e));
+  const hist=cb('/historian/ask',{method:'POST',body:{question:q,narrative:false}}).then(a=>{
+    out.subject=a.subject||null;out.findings=a.sections.reduce((n,s)=>n+s.items.length,0);
+    const items=a.sections.flatMap(s=>s.items.map(it=>({...it,sec:s.title}))).slice(0,6);
+    box('w-hist').innerHTML=`${a.subject?`<div style="margin-bottom:8px"><strong>${esc(a.subject.name)}</strong> <span class="pill">${esc(a.subject.type)}</span> <a class="small" onclick="openRef(${jsArg(a.subject.type)},${jsArg(a.subject.id)})">open profile</a></div>`:''}
+      <div class="notice info small">${esc(a.summary)}</div>
+      ${items.map(it=>`<div class="finding ${esc(it.status)}">${badge(it.status)} <span class="small muted">${esc(it.sec)}</span><div class="small" style="margin-top:4px">${esc(it.text).slice(0,300)}</div><div>${cites(it.citations)}</div></div>`).join('')}
+      <div class="small"><a onclick="historianFor(${jsArg(q)})">Full answer in Historian →</a></div>`;
+  }).catch(e=>failBox('w-hist',e));
+  const recs=cb('/wally/names?'+new URLSearchParams({q})).then(r=>{
+    out.records=r.total;
+    box('w-rec').innerHTML=(r.hits.length?`<table class="clickable"><tbody>${r.hits.map(h=>`<tr onclick="openRef(${jsArg(h.type)},${jsArg(h.id)})"><td style="width:80px"><span class="pill">${esc(h.type)}</span></td><td><strong>${esc(h.title)}</strong>${h.snippet?`<div class="small muted">${esc(h.snippet)}</div>`:''}</td><td>${h.status?badge(h.status):''}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No company, person, project or product is named in the question.</div>')
+      +`<div class="small" style="margin-top:6px"><a onclick="runSearch(${jsArg(q)})">Search all records — knowledge, events, sources (slower) →</a></div>`;
+  }).catch(e=>failBox('w-rec',e));
+  const [a]=await Promise.all([ask,rfpQ,hist,recs]);
+  if(a.questionId)cb('/wally/questions/'+encodeURIComponent(a.questionId)+'/outcome',{method:'POST',body:{...out,durationMs:Date.now()-t0}}).then(wallyRecent).catch(()=>{});
+}
+function historianFor(q){switchTab('historian');box('hq').value=q;askHistorian()}
+function rfpSearchFor(q){rfpView('search');if(current==='rfp')rfpView('search');let n=0;const t=setInterval(()=>{const i=box('rs-q');if(i||++n>40){clearInterval(t);if(i){i.value=q;rfpOff.rs=0;rfSearchGo()}}},100)}
+async function wallyLog(){
+  if(!box('wl-list'))box('wally-log').innerHTML=`<div class="card"><h2>Questions people asked Wally</h2><div class="page-sub">Newest first. Use this to see what people want to know — and what Wally could not find.</div>
+    <div class="controls"><input id="wl-user" placeholder="Username (blank = everyone)" onkeydown="if(event.key==='Enter'){resetPg('wl');wallyLogList()}"><select id="wl-ans" onchange="resetPg('wl');wallyLogList()"><option value="">Any result</option><option value="no">Nothing found</option><option value="yes">Found something</option><option value="pending">Pending</option></select><button class="btn-secondary btn-sm" onclick="resetPg('wl');wallyLogList()">Apply</button></div>
+    <div id="wl-list"></div></div>`;
+  wallyLogList();
+}
+async function wallyLogList(){
+  loading('wl-list');
+  try{const r=await cb(`/wally/questions?user=${encodeURIComponent(box('wl-user').value.trim())}&answered=${encodeURIComponent(box('wl-ans').value)}&pageToken=${tok('wl')}`);
+    box('wl-list').innerHTML=r.items.length?`<div class="table-wrap"><table class="clickable"><thead><tr><th>Question</th><th>Asked by</th><th>When</th><th>Result</th><th>Found</th></tr></thead><tbody>${r.items.map(x=>`<tr onclick="wallyShow('ask');box('wq').value=${jsArg(x.Question)};askWally()"><td><strong>${esc(x.Question)}</strong>${x['Subject Name']?`<div class="small muted">about ${esc(x['Subject Name'])}</div>`:''}</td><td>${esc(x['Asked By Name']||x['Asked By'])}${x['Asked By Name']&&x['Asked By Name']!==x['Asked By']?`<div class="small muted">${esc(x['Asked By'])}</div>`:''}</td><td class="small">${esc(String(x['Asked At']||x._createdAt||'').slice(0,16).replace('T',' '))}<div class="muted">${ago(x['Asked At']||x._createdAt)}</div></td><td>${wallyBadge(x.Answered)}</td><td class="small muted">${esc(x['RFP Matches']||0)} RFP · ${esc(x['Historian Findings']||0)} history · ${esc(x['Record Matches']||0)} records</td></tr>`).join('')}</tbody></table></div>${pager('wl',r.nextPageToken,'wallyLogList')}`:'<div class="empty">No questions match.</div>';
+  }catch(e){failBox('wl-list',e)}
+}
+
 // ── historian ──
 function renderHistorian(){
   if(box('hq'))return;
@@ -947,7 +1025,7 @@ async function saveNarrative(){
 // ── ingestion ──
 async function loadIngest(){
   if(!box('jb-list')){
-    box('c-ingest').innerHTML=`<h1>Ingestion &amp; Research Jobs</h1><div class="page-sub">Bounded, resumable jobs. Each source record is processed once (hashed source identity); changed, deleted or restricted originals are detected on re-sync.</div>
+    box('c-ingest').innerHTML=`<h2 style="font-size:20px">Ingestion &amp; Research Jobs</h2><div class="page-sub">Bounded, resumable jobs. Each source record is processed once (hashed source identity); changed, deleted or restricted originals are detected on re-sync.</div>
       <div class="two-col"><div class="card"><h2>Connectors</h2><div id="cn-list"><div class="empty">Loading…</div></div></div>
       <div class="card"><h2>New job</h2><div class="controls" style="flex-direction:column;align-items:stretch">
         <select id="nj-conn"><option value="kinetic">Kinetic Platform records (server pull)</option><option value="github">GitHub commits (server pull)</option><option value="google-drive">Google Drive (agent-mediated / pull if configured)</option><option value="gmail">Gmail (agent-mediated / pull if configured)</option></select>

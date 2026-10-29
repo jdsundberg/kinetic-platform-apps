@@ -15,6 +15,9 @@ const PROV = [f("Record Status"), long("Source IDs"), f("Created Via")];
 const SALES_REVIEW = [f("Knowledge ID"), f("Verification Status")];
 // RFP Intelligence rows carry their own Access Scope so the CB Restricted Source policy can judge each submission.
 const SCOPED = [f("Access Scope")];
+// RFP library sorts (Received / Due / Customer / Name / Solicitation #) and the type / outcome filters, which sort by customer
+const LIB_IDX = [...["Received At", "Due At", "Customer Name", "Opportunity Name", "Solicitation Number"].map(x => ["values[Library Status]", `values[${x}]`]),
+  ...[["Procurement Type"], ["Opportunity Status"], ["Procurement Type", "Opportunity Status"]].map(x => ["values[Library Status]", ...x.map(y => `values[${y}]`), "values[Customer Name]"])];
 
 export const FORMS = [
   {
@@ -224,7 +227,9 @@ export const FORMS = [
       long("Notes"), ...SCOPED, ...PROV],
     unique: ["values[RFP Source ID]"],
     single: ["values[Record Status]", "values[Company ID]", "values[Solicitation Number]", "values[Access Scope]", "values[Procurement Type]", "values[Library Status]"],
-    compound: [["values[Access Scope]", "values[Record Status]"]],
+    // library list: one sorted page per sort / filter, plus the same with Access Scope first for members (exact field sets)
+    compound: [["values[Access Scope]", "values[Record Status]"], ...LIB_IDX, ...LIB_IDX.map(c => ["values[Access Scope]", ...c]),
+      ["values[Access Scope]", "values[Library Status]"]],
   },
   {
     slug: "rfp-documents", name: "RFP Documents", idField: "Document ID", label: "File Name",
@@ -235,7 +240,8 @@ export const FORMS = [
       f("Question Count"), f("Answered Count"), f("Needs Review Count"), f("Import Job ID"), ...SCOPED, ...PROV],
     unique: ["values[Document ID]", "values[Document Key]"],
     single: ["values[RFP Source ID]", "values[Source ID]", "values[Content Hash]", "values[Extraction Status]", "values[Record Status]", "values[Access Scope]"],
-    compound: [["values[Access Scope]", "values[RFP Source ID]"]],
+    compound: [["values[Access Scope]", "values[RFP Source ID]"], ["values[Extraction Status]", "values[RFP Source ID]"],
+      ["values[Access Scope]", "values[Extraction Status]", "values[RFP Source ID]"], ["values[Access Scope]", "values[Extraction Status]"]],
   },
   {
     slug: "rfp-questions", name: "RFP Questions", idField: "Question ID", label: "Question Number",
@@ -305,6 +311,18 @@ export const FORMS = [
     compound: [["values[Analysis ID]", "values[Sequence]"]],
   },
   {
+    // Every question asked of Wally (the landing helper): who asked, when, and what it found. Readable by the asker and by
+    // Corporate Brain historians and admins only (CB Wally Question), so historians can see what people want to know.
+    slug: "wally-questions", name: "Wally Questions", idField: "Question ID", label: "Question",
+    description: "Questions people asked Wally, with what each search found",
+    fields: [f("Question ID", { required: true }), long("Question"), f("Asked By"), f("Asked By Name"), f("Asked At"),
+      f("Answered"), f("Subject Type"), f("Subject ID"), f("Subject Name"), f("RFP Matches"), f("Record Matches"),
+      f("Historian Findings"), f("Duration Ms")],
+    unique: ["values[Question ID]"],
+    single: ["values[Asked By]", "values[Answered]"],
+    compound: [["values[Asked By]", "values[Answered]"]],
+  },
+  {
     slug: "audit-log", name: "Audit Log", idField: "Audit ID", label: "Action",
     description: "Append-only record of material changes by users and agents (review decisions, merges, ingestion writes)",
     fields: [f("Audit ID", { required: true }), f("Action", { required: true }), f("Entity Type"), f("Entity ID"),
@@ -355,7 +373,7 @@ export const ID_PREFIX = {
   "sales-principles": "SP", "pricing-models": "PM", deals: "DL", "deal-pricing": "DP", "sales-objections": "OB",
   competitors: "CP", "partner-models": "PT",
   "rfp-sources": "RS", "rfp-documents": "RD", "rfp-questions": "RQ", "rfp-answers": "RA", "canonical-questions": "CQ",
-  "approved-answers": "AA", "rfp-analyses": "AN", "rfp-analysis-items": "AI",
+  "approved-answers": "AA", "rfp-analyses": "AN", "rfp-analysis-items": "AI", "wally-questions": "WQ",
 };
 
 export const REVIEW_STATUSES = ["proposed", "verified", "disputed", "rejected", "superseded", "needs-research"];

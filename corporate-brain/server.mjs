@@ -459,6 +459,65 @@ export async function handleAPI(req, res, pathname, auth, helpers) {
       bust(); return send(200, { job: { ...job, ...values } });
     }
 
+    // ── Wally: the landing helper. Every question is logged here; the browser then asks the RFP library, the historian
+    // and the named-record lookup in parallel, shows each as it arrives, and reports back what was found.
+    if (route === "/wally/ask" && method === "POST") {
+      const q = String((await body()).question || "").trim().slice(0, 500);
+      if (!q) return send(400, { error: "Ask Wally a question" });
+      const log = await store.create("wally-questions", { Question: q, "Asked By": me.username, "Asked By Name": me.displayName || me.username,
+        "Asked At": new Date().toISOString(), Answered: "pending" }).catch(e => { console.error("[corporate-brain] wally log", e.message); return null; });
+      return send(200, { questionId: log?.["Question ID"] || null, question: q });
+    }
+    // the RFP library index takes seconds to build per login: Wally starts it when the tab opens, before the first question
+    if (route === "/wally/warm" && method === "POST") {
+      rfp.search({ q: "warm", limit: 1 }).catch(() => {});
+      return send(202, { warming: true });
+    }
+    // Named records in the question — companies, people, projects, products — by indexed Name Key prefix only (no scans,
+    // so it answers in well under a second). A record counts when every word of its name is in the question ("full"), or
+    // its first, distinctive word is ("partial"). The full keyword scan stays behind /search.
+    if (route === "/wally/names" && method === "GET") {
+      const STOP = new Set("the and for with about what who whom whose when where which how did does do our we you they are was were have has had any all from into that this there tell know everything kinetic data customer customers".split(" "));
+      const SUFFIX = new Set(["inc", "llc", "ltd", "co", "corp", "corporation", "company", "ab", "ag", "gmbh", "plc", "sa", "the", "of"]);
+      const qt = nameKey(qp("q")).split(" ").filter(t => t.length >= 3 && !STOP.has(t));
+      const toks = [...new Set(qt)].sort((a, b) => b.length - a.length).slice(0, 5);
+      const words = new Set(qt);
+      const types = [["company", "companies", "Company ID", "Name"], ["person", "people", "Person ID", "Full Name"], ["project", "projects", "Project ID", "Name"], ["product", "products", "Product ID", "Name"]];
+      const seen = new Set(), hits = [];
+      await Promise.all(types.flatMap(([type, form, idf, title]) => toks.map(async t => {
+        const r = await store.page(form, { q: `values[Name Key] =* ${kq(t)}`, orderBy: "values[Name Key]", limit: 25 }).catch(() => ({ items: [] }));
+        for (const x of r.items) {
+          if (x["Merged Into"] || (x["Record Status"] && x["Record Status"] !== "active") || seen.has(x._id)) continue;
+          const core = String(x["Name Key"] || nameKey(x[title])).split(" ").filter(w => w && !SUFFIX.has(w));
+          const full = core.length && core.every(w => words.has(w)), partial = !full && core[0] && core[0].length >= 5 && words.has(core[0]);
+          if (!full && !partial) continue;
+          seen.add(x._id);
+          hits.push({ type, id: x[idf], title: x[title] || x.Name || "", match: full ? "full" : "partial", status: x["Customer Status"] || x["Kinetic Relationship"] || x["Project Status"] || x["Product Status"] || "",
+            snippet: String(x.Description || x.Title || x.Industry || "").slice(0, 160) });
+        }
+      })));
+      hits.sort((a, b) => (a.match === "full" ? 0 : 1) - (b.match === "full" ? 0 : 1) || a.title.localeCompare(b.title));
+      return send(200, { hits: hits.slice(0, 15), total: hits.length });
+    }
+    if ((m = route.match(/^\/wally\/questions\/(WQ-[\w-]+)\/outcome$/)) && method === "POST") {
+      const b = await body();
+      const rec = await store.byId("wally-questions", m[1]);
+      if (!rec || rec["Asked By"] !== me.username) return send(404, { error: "Question not found" });
+      const num = (x) => String(Math.max(0, parseInt(x, 10) || 0));
+      const found = [b.rfp, b.records, b.findings].some(x => +x > 0) || !!b.subject?.id;
+      await store.update(rec._id, { Answered: found ? "yes" : "no", "RFP Matches": num(b.rfp), "Record Matches": num(b.records), "Historian Findings": num(b.findings),
+        "Subject Type": String(b.subject?.type || "").slice(0, 40), "Subject ID": String(b.subject?.id || "").slice(0, 60),
+        "Subject Name": String(b.subject?.name || "").slice(0, 200), "Duration Ms": num(b.durationMs) });
+      return send(200, { ok: true, answered: found ? "yes" : "no" });
+    }
+    if (route === "/wally/questions" && method === "GET") {
+      // people see their own questions; historians and admins see everyone's (Kinetic enforces the same via CB Wally Question)
+      const user = me.roles.historian ? qp("user") : me.username, answered = qp("answered");
+      const q = [user && `values[Asked By] = ${kq(user)}`, answered && `values[Answered] = ${kq(answered)}`].filter(Boolean).join(" AND ");
+      const r = await store.page("wally-questions", { q, pageToken: qp("pageToken") || "" });
+      return send(200, { ...r, all: me.roles.historian && !qp("user") });
+    }
+
     // ── historian ──
     if (route === "/historian/ask" && method === "POST") {
       const b = await body();

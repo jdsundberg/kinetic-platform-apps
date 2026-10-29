@@ -27,10 +27,13 @@ const ok = (m) => console.log("  ✓ " + m), warn = (m) => console.log("  • " 
 export const TEAMS = ["Corporate Brain", "Corporate Brain::Members", "Corporate Brain::Reviewers", "Corporate Brain::Admins",
   // Sales Brain audiences (John, 2026-10-27). Sales, Legal and Executive may see deal-level prices; Marketing sees the playbook only.
   // These teams grant no Corporate Brain access by themselves — readers are added to Members too until playbook-only access exists.
-  "Corporate Brain::Sales", "Corporate Brain::Marketing", "Corporate Brain::Legal", "Corporate Brain::Executive"];
+  "Corporate Brain::Sales", "Corporate Brain::Marketing", "Corporate Brain::Legal", "Corporate Brain::Executive",
+  // Historians see every question asked of Wally (John, 2026-10-29). Like the sales teams, grants no membership on its own.
+  "Corporate Brain::Historians"];
 const IS_ADMIN = "identity('spaceAdmin') || identity('teams').indexOf('Corporate Brain::Admins') >= 0";
 const IS_REVIEWER = `${IS_ADMIN} || identity('teams').indexOf('Corporate Brain::Reviewers') >= 0`;
 const IS_MEMBER = `${IS_REVIEWER} || identity('teams').indexOf('Corporate Brain::Members') >= 0`;
+const IS_HISTORIAN = `${IS_ADMIN} || identity('teams').indexOf('Corporate Brain::Historians') >= 0`;
 const IS_PRICING = `${IS_REVIEWER} || identity('teams').indexOf('Corporate Brain::Sales') >= 0 || identity('teams').indexOf('Corporate Brain::Legal') >= 0 || identity('teams').indexOf('Corporate Brain::Executive') >= 0`;
 export const POLICIES = [
   { name: "CB Member", type: "Kapp", rule: IS_MEMBER, message: "Corporate Brain is private. Ask an administrator to add you to the Corporate Brain::Members team." },
@@ -62,6 +65,10 @@ export const POLICIES = [
   { name: "CB Approved Answer Modification", type: "Submission",
     rule: `(${IS_REVIEWER}) || ((${IS_MEMBER}) && ['draft',''].indexOf(values('Approval Status')) >= 0)`,
     message: "Only reviewers can change an approved answer after it has been submitted for review." },
+  // Wally's question log: people see their own questions; historians and admins see everyone's.
+  { name: "CB Wally Question", type: "Submission",
+    rule: `((${IS_MEMBER}) && (${IS_HISTORIAN})) || ((${IS_MEMBER}) && submission('createdBy') === identity('username'))`,
+    message: "Questions asked of Wally are visible to the person who asked and to Corporate Brain historians." },
 ];
 
 function buildPages(fields) {
@@ -179,6 +186,7 @@ async function main() {
     ...Object.fromEntries(RFP_SCOPED_FORMS.map(f => [f, [{ endpoint: "Submission Access", name: "CB Restricted Source" },
       { endpoint: "Submission Modification", name: f === "rfp-answers" ? "CB RFP Answer Modification" : "CB Restricted Source" }]])),
     "approved-answers": [{ endpoint: "Submission Modification", name: "CB Approved Answer Modification" }],
+    "wally-questions": [{ endpoint: "Submission Access", name: "CB Wally Question" }, { endpoint: "Submission Modification", name: "CB Wally Question" }],
   };
   for (const [slug, sp] of Object.entries(formPolicies)) {
     const r = await api("PUT", `/kapps/${KAPP.slug}/forms/${slug}`, { securityPolicies: sp });

@@ -9,6 +9,7 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | `Corporate Brain::Reviewers` | reviewer | All of the above, plus approve, reject, dispute and supersede; read and modify restricted sources; edit reviewed knowledge |
 | `Corporate Brain::Admins` | admin | Everything, including products and form changes |
 | `Corporate Brain::Sales`, `::Legal`, `::Executive` | pricing | See and record **deal-level prices** (Sales Brain). No Corporate Brain access on their own: members are added to `Members` as well |
+| `Corporate Brain::Historians` | historian | See every question asked of Wally ("Questions people asked"). No Corporate Brain access on its own: members are added to `Members` as well |
 | `Corporate Brain::Marketing` | — | Sales Brain playbook audience (no prices). Grants nothing yet; playbook-only access is planned for Sales Brain phase 4 |
 | (space admin) | admin | Bypasses all policies |
 
@@ -25,6 +26,7 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | CB Append Only | Submission | admin |
 | CB Sales Modification | Submission | reviewer, **or** (member **and** creator **and** Verification Status ∈ proposed / needs-research) |
 | CB Deal Pricing | Submission | member **and** (reviewer **or** Sales / Legal / Executive team) |
+| CB Wally Question | Submission | member **and** (admin **or** Historians team), **or** (member **and** creator) |
 
 ## Bindings
 | Level | Endpoint → policy |
@@ -35,6 +37,7 @@ Corporate Brain is **private by default**. Kinetic itself enforces access throug
 | audit-log | Submission Modification → CB Append Only |
 | sales-principles, pricing-models, deals, sales-objections, competitors, partner-models | Submission Modification → CB Sales Modification |
 | deal-pricing | Submission Access, Submission Modification → CB Deal Pricing |
+| wally-questions | Submission Access, Submission Modification → CB Wally Question |
 
 `Submission Support` and `Default Form Modification` grant access to *all* submissions and override form-level rules. Binding them to members was the cause of two privacy gaps found in testing. Both are now admin-only.
 

@@ -48,9 +48,13 @@ export const STRENGTH = [
 ];
 export const strengthOf = (s) => (STRENGTH.find(([, min]) => s >= min) || ["none"])[0];
 
-// ── per-user search index (keyed by login: it only ever holds rows that login may see) ──
+// ── search index, shared per access level ──
+// What RFP rows a person may see depends only on whether they are a reviewer (CB Restricted Source judges Access Scope;
+// members are also scoped to "internal" by the store), so one index serves every reviewer and one every member on a
+// server. If RFP visibility ever depends on more than that, key this by login again. An expired index is still served
+// while a fresh one builds in the background, so only the first search after a server start waits for a build.
 const INDEX_TTL = 10 * 60 * 1000;
-const indexes = new Map();   // scopeKey → { at, building, data }
+const indexes = new Map();   // server|access → { at, building, data }
 const summaries = new Map();   // scopeKey → { at, data } | { building } — KPI tiles, 5-minute cache
 const SUMMARY_TTL = 5 * 60 * 1000;
 const searchLists = new Map();   // scope|library → { at, items } — what a library search matches against
@@ -61,6 +65,7 @@ export function bustRfpLists() { summaries.clear(); searchLists.clear(); }   // 
 export function createRfp(store, services, ingestion, { actor, me, scopeKey, files }) {
   const who = actor.label || actor.username;
   const isReviewer = !!me.roles.reviewer;
+  const indexKey = `${String(scopeKey).split("|")[0]}|${isReviewer ? "reviewer" : "member"}`;
   const audit = services.audit;
 
   // ── RFP sources ──
@@ -731,9 +736,9 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
 
   // ── search index ──
   async function index(fresh = false) {
-    let e = indexes.get(scopeKey);
+    let e = indexes.get(indexKey);
     if (!fresh && e?.data && Date.now() - e.at < INDEX_TTL) return e.data;
-    if (e?.building) return e.building;
+    if (e?.building) return !fresh && e.data ? e.data : e.building;
     const building = (async () => {
       const rfps = await allRfps();
       const rfpMap = new Map(rfps.map(r => [r["RFP Source ID"], r]));
@@ -749,10 +754,11 @@ export function createRfp(store, services, ingestion, { actor, me, scopeKey, fil
       const approvedLight = approved.map(a => ({ id: a["Approved Answer ID"], rec: a, canonicalId: a["Canonical Question ID"], status: a["Approval Status"], category: a.Category || "",
         tokens: tokens(`${a["Canonical Question"]}`), text: a["Approved Answer"] || "", question: a["Canonical Question"] || "", reviewDue: a["Review Due At"] || "" }));
       const data = { at: Date.now(), questions, approved: approvedLight, rfps: rfpMap };
-      indexes.set(scopeKey, { at: Date.now(), data });
+      indexes.set(indexKey, { at: Date.now(), data });
       return data;
-    })().finally(() => { const x = indexes.get(scopeKey); if (x) delete x.building; });
-    indexes.set(scopeKey, { ...(e || {}), building });
+    })().finally(() => { const x = indexes.get(indexKey); if (x) delete x.building; });
+    indexes.set(indexKey, { ...(e || {}), building });
+    if (!fresh && e?.data) { building.catch(() => {}); return e.data; }   // stale copy now, fresh one next time
     return building;
   }
   function lightOut(o, idx) {

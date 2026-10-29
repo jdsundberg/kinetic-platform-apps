@@ -105,6 +105,8 @@ export function createStore(kineticRequest, auth, { kapp = KAPP.slug } = {}) {
         admin, reviewer,
         // mirrors the CB Member policy exactly; the sales audience teams (Sales, Marketing, Legal, Executive) don't grant membership on their own
         member: reviewer || teams.includes("Corporate Brain::Members"),
+        // mirrors CB Wally Question: historians (and admins) see every question asked of Wally
+        historian: admin || (teams.includes("Corporate Brain::Historians") && (reviewer || teams.includes("Corporate Brain::Members"))),
         // mirrors CB Deal Pricing: deal-level prices are for reviewers and the Sales, Legal and Executive teams (John, 2026-10-27)
         pricing: reviewer || PRICING_TEAMS.some(t => teams.includes(t)),
       },

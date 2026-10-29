@@ -23,6 +23,7 @@ Kapp `corporate-brain`, 12 forms. The only source of truth is `model.mjs`; `node
 | Products | products | PD |
 | Research Jobs | research-jobs | JB |
 | Audit Log | audit-log | AU (workflow rows use `AU-WF-<run id>`) |
+| Wally Questions | wally-questions | WQ |
 
 ## Forms and fields
 
@@ -131,6 +132,13 @@ Kapp `corporate-brain`, 12 forms. The only source of truth is `model.mjs`; `node
 - `Details`: JSON, at most 4000 characters
 - `Occurred At`
 
+**wally-questions** (every question asked of Wally; the asker and historians see it)
+- `Question ID`*, `Question`
+- `Asked By`, `Asked By Name`, `Asked At`
+- `Answered`: pending / yes / no (yes when any section found something)
+- `Subject Type`, `Subject ID`, `Subject Name`: the company or person the historian matched
+- `RFP Matches`, `Record Matches`, `Historian Findings`, `Duration Ms`
+
 (* = required)
 
 **Sales Brain forms.** See SALES_BRAIN.md for how they fit together. Each form below except `deal-pricing` also carries `Knowledge ID`, which links to its review entry with `Lens = sales`. It also carries `Verification Status`, which follows that entry's review, plus the provenance fields.
@@ -171,6 +179,7 @@ Kapp `corporate-brain`, 12 forms. The only source of truth is `model.mjs`; `node
 | products | Product ID | Record Status, Name Key, Category | — | prefix search |
 | research-jobs | Job ID | Status, Job Type, Subject ID, Connector, Record Status | [Status, Job Type] | jobs list |
 | audit-log | Audit ID | Entity ID, Action, Actor, Occurred At | [Entity ID, Occurred At] | audit trail on knowledge detail |
+| wally-questions | Question ID | Asked By, Answered | [Asked By, Answered] | your recent questions; historians' question log (newest first) |
 
 Kinetic unique indexes are **case-insensitive**, while Drive, Gmail and GitHub IDs are case-sensitive. That is why deduplication uses the hashed `Source ID`; `[Source System, Original ID]` is a plain lookup index, not a unique one.
 

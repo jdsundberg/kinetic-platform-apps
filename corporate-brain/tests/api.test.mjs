@@ -12,7 +12,7 @@ const ADMIN = basic();
 let pass = 0, fail = 0;
 const check = (name, ok, extra = "") => { ok ? pass++ : fail++; console.log(`${ok ? "✓" : "✗"} ${name}${extra ? " — " + extra : ""}`); };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const created = { users: [], companyId: null, jobIds: [], sales: [] };   // sales: [form, idField, id, knowledgeId]
+const created = { users: [], companyId: null, jobIds: [], sales: [], wally: [] };   // sales: [form, idField, id, knowledgeId]
 
 async function cleanup() {
   const del = async (form, q) => {
@@ -33,6 +33,8 @@ async function cleanup() {
     if (kid) await del("knowledge-entries", `values[Knowledge ID] = "${kid}"`);
     if (form === "deals") await del("deal-pricing", `values[Deal ID] = "${id}"`);
   }
+  for (const u of created.users) await del("wally-questions", `values[Asked By] = "${u}"`);
+  for (const id of created.wally) await del("wally-questions", `values[Question ID] = "${id}"`);
   for (const u of created.users) await kineticRequest("DELETE", `/users/${encodeURIComponent(u)}`, null, ADMIN);
 }
 
@@ -229,6 +231,37 @@ try {
   const mObj = await mkSales("objection", { Title: `TEST objection ${stamp}`, Objection: "Renewal pricing is shocking", Category: "renewal" }, [], basic(MEMBER, pw));
   const mObjEdit = mObj.body.item ? await kineticRequest("PUT", `/submissions/${mObj.body.item._id}`, { values: { Responses: "Showed the 3-year plan" } }, basic(MEMBER, pw)) : { status: 0 };
   check("members can propose and edit their own sales records while under review", mObj.status === 201 && mObjEdit.status < 300, `create ${mObj.status} ${mObj.body.error || ""}, edit ${mObjEdit.status}`);
+
+  // ── Wally: every question is logged; askers see their own, historians see everyone's ──
+  const wq = `TEST wally ${stamp} single sign-on`;
+  const mAsk = await call("POST", "/wally/ask", { question: wq }, { auth: basic(MEMBER, pw) });
+  check("a member asks Wally and the question is logged", mAsk.status === 200 && /^WQ-/.test(mAsk.body.questionId || ""), `status ${mAsk.status} ${mAsk.body.error || ""}`);
+  const names = await call("GET", `/wally/names?q=${encodeURIComponent(`Tell me everything we know about TEST Corp ${stamp}`)}`, null, { auth: basic(MEMBER, pw) });
+  check("Wally finds a company named in the question by its indexed name", names.status === 200 && names.body.hits.some(h => h.type === "company" && h.id === CO && h.match === "full"), `status ${names.status} ${JSON.stringify(names.body.hits?.slice(0, 3))}`);
+  const noNames = await call("GET", `/wally/names?q=${encodeURIComponent("How do we handle data retention?")}`, null, { auth: basic(MEMBER, pw) });
+  check("…and does not invent names for a question without one", noNames.status === 200 && !noNames.body.hits.some(h => h.match === "full"), JSON.stringify(noNames.body.hits?.slice(0, 3)));
+  const empty = await call("POST", "/wally/ask", { question: "  " }, { auth: basic(MEMBER, pw) });
+  check("an empty question is refused", empty.status === 400);
+  const outc = await call("POST", `/wally/questions/${mAsk.body.questionId}/outcome`, { rfp: 1, records: 2, findings: 0, subject: { type: "company", id: "CO-X", name: "Example" }, durationMs: 1234 }, { auth: basic(MEMBER, pw) });
+  check("the asker records what Wally found", outc.status === 200 && outc.body.answered === "yes", `status ${outc.status} ${outc.body.error || ""}`);
+  const sOut = await call("POST", `/wally/questions/${mAsk.body.questionId}/outcome`, { records: 0 }, { auth: basic(salesUser, pw) });
+  check("another member cannot change someone else's question", sOut.status === 404, `status ${sOut.status}`);
+  const mMine = await call("GET", "/wally/questions", null, { auth: basic(MEMBER, pw) });
+  const mRow = (mMine.body.items || []).find(x => x["Question ID"] === mAsk.body.questionId);
+  check("members see their own questions with the outcome", mMine.status === 200 && mRow?.Answered === "yes" && mRow["Record Matches"] === "2" && mRow["Subject Name"] === "Example", `status ${mMine.status} ${mMine.body.error || ""}`);
+  const sAll = await call("GET", `/wally/questions?user=${encodeURIComponent(MEMBER)}`, null, { auth: basic(salesUser, pw) });
+  check("a member cannot list someone else's questions", sAll.status === 200 && !(sAll.body.items || []).some(x => x["Asked By"] === MEMBER), `status ${sAll.status}`);
+  const sCore = await kineticRequest("GET", `/kapps/corporate-brain/forms/wally-questions/submissions?limit=5&include=values&q=${encodeURIComponent(`values[Question ID] = "${mAsk.body.questionId}"`)}`, null, basic(salesUser, pw));
+  check("…nor read it through the Core API (CB Wally Question)", sCore.status >= 400 || (sCore.data.submissions || []).length === 0, `status ${sCore.status}`);
+  const aAll = await call("GET", "/wally/questions");
+  check("admins see everyone's questions, newest first", aAll.status === 200 && aAll.body.all === true && (aAll.body.items || []).some(x => x["Question ID"] === mAsk.body.questionId), `status ${aAll.status} ${aAll.body.error || ""}`);
+  const aFound = await call("GET", `/wally/questions?user=${encodeURIComponent(MEMBER)}&answered=yes`);
+  check("historians filter by person and result", aFound.status === 200 && aFound.body.items.length === 1, `status ${aFound.status} ${aFound.body.error || ""}`);
+  const histUser = `cb-test-historian-${stamp}`.toLowerCase();
+  if ((await kineticRequest("POST", "/users", { username: histUser, displayName: histUser, email: `${histUser}@example.invalid`, password: pw, enabled: true, spaceAdmin: false }, ADMIN)).status < 300) created.users.push(histUser);
+  for (const team of ["Corporate Brain::Members", "Corporate Brain::Historians"]) await kineticRequest("POST", "/memberships", { team: { name: team }, user: { username: histUser } }, ADMIN);
+  const hAll = await call("GET", `/wally/questions?user=${encodeURIComponent(MEMBER)}`, null, { auth: basic(histUser, pw) });
+  check("a member of Corporate Brain::Historians sees everyone's questions", hAll.status === 200 && (hAll.body.items || []).some(x => x["Question ID"] === mAsk.body.questionId), `status ${hAll.status} ${(hAll.body.items || []).length} rows`);
 } catch (e) {
   fail++; console.log("✗ unexpected error:", e.stack || e.message);
 } finally {
